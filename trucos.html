@@ -1,0 +1,32 @@
+
+
+
+PARA CREAR CONTRASEÑA ROOT EN GUADALINEX
+
+sudo passwd root
+
+
+------------------------------------------------------------------------
+
+sudo su
+sudo gedit /etc/crontab
+
+añadimos en la segunda línea 
+35 14 *  *  *  root shutdown -h now
+
+guardamos y luego en el terminal
+
+sudo service cron restart
+
+-------------------------------------------------------------------------
+
+COPIAR EN EL TERMINAL
+
+
+tar -zcf .configura.tgz .cache .config .gconf .local
+
+sudo gedit /etc/rc.local
+
+COLOCAR ESTO EN LA PENÚLTIMA LÍNEA
+
+tar -zxf /home/usuario/.configura.tgz -C /home/usuario --overwrite
