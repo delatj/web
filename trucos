@@ -1,3 +1,37 @@
+Hacer que no se pueda borrar la carpeta
+1- paso 1 creamos la carpeta tic en el escritorio
+2- en el teminal
+ sudo chattr -R +i ./Escritorio/tic 
+
+para quita bloqueo
+cd Escritorio
+sudo chattr  -i tic 
+
+------------------------------------------------------------------------
+
+sudo su
+sudo gedit /etc/crontab
+
+añadimos en la segunda línea 
+35 14 *  *  *  root shutdown -h now
+
+guardamos y luego en el terminal
+
+sudo service cron restart
+
+-------------------------------------------------------------------------
+
+COPIAR EN EL TERMINAL
+
+
+tar -zcf .configura.tgz .cache .config .gconf .local
+
+sudo gedit /etc/rc.local
+
+COLOCAR ESTO EN LA PENÚLTIMA LÍNEA
+
+tar -zxf /home/usuario/.configura.tgz -C /home/usuario --overwrite
+
 INSTALAR PAQUETES DEBS
 https://wiki.openoffice.org/wiki/ES/Manuales/Instalar/Linux
 
@@ -39,9 +73,6 @@ Arduino en vitallinux
 contraseña careidega
 
 copiar carpeta arduino 1.8.1.3 en home/dga
-o en profesor o alumno según corresponda
-extraemos
-
 
 escribimos
 
@@ -49,6 +80,9 @@ escribimos
 
 
 ./install.sh
+
+
+
 
 
 
