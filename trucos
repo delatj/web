@@ -1,12 +1,20 @@
 
+Hacer que no se pueda borrar la carpeta
+1- paso 1 creamos la carpeta tic en el escritorio
+2- en el teminal
+ sudo chattr -R +i ./Escritorio/tic 
+
+para quita bloqueo
+cd Escritorio
+sudo chattr  -i tic 
 
 
-PARA CREAR CONTRASEÑA ROOT EN GUADALINEX
-
-sudo passwd root
 
 
-------------------------------------------------------------------------
+-----------------------------------------------
+-------------------------
+APAGADO AUTOMÁTICO
+
 
 sudo su
 sudo gedit /etc/crontab
@@ -18,7 +26,11 @@ guardamos y luego en el terminal
 
 sudo service cron restart
 
--------------------------------------------------------------------------
+-----------------------------------------------
+--------------------------
+
+CONGELADOR ESCRITORIO
+
 
 COPIAR EN EL TERMINAL
 
@@ -30,4 +42,5 @@ sudo gedit /etc/rc.local
 COLOCAR ESTO EN LA PENÚLTIMA LÍNEA
 
 tar -zxf /home/usuario/.configura.tgz -C /home/usuario --overwrite
+
 
