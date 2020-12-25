@@ -1,46 +1,54 @@
+INSTALAR PAQUETES DEBS
+https://wiki.openoffice.org/wiki/ES/Manuales/Instalar/Linux
 
-Hacer que no se pueda borrar la carpeta
-1- paso 1 creamos la carpeta tic en el escritorio
-2- en el teminal
- sudo chattr -R +i ./Escritorio/tic 
+dentro de la carpeta donde está el archivo comprimido---- cd Escritorio
+tar -vxzf nombre-archivo o descomprimirla con botón derecho extraer aquí
 
-para quita bloqueo
-cd Escritorio
-sudo chattr  -i tic 
+TODO PARA LOS PAQUETES DEBIAN .deb
+entrar en la carpeta DEBS
 
+sudo dpkg -i *.deb
 
-
-
------------------------------------------------
--------------------------
-APAGADO AUTOMÁTICO
+soluciones dependencias
+sudo apt -f install
 
 
-sudo su
-sudo gedit /etc/crontab
+cd desktop-integration
 
-añadimos en la segunda línea 
-35 14 *  *  *  root shutdown -h now
+sudo dpkg -i *.deb
 
-guardamos y luego en el terminal
-
-sudo service cron restart
-
------------------------------------------------
---------------------------
-
-CONGELADOR ESCRITORIO
+INSTALAR Q4WINE DESDE EL TERMINAL
+instalar Q4wine desde terminal
+sudo apt-get install q4wine
 
 
-COPIAR EN EL TERMINAL
+SI EL PAQUETE ES TAR.GZ
+descomprimimos el archivo y entramos con sudo su dentro de la carpeta descomprimida
+
+./configure
+make (si no esta instalado antes hay que hacerlo con apt-get install make)
+make install
 
 
-tar -zcf .configura.tgz .cache .config .gconf .local
+PROGRAMAS QUE SE DESCARGAN EN LÍNEA
+por ejemplo para instalar make
+apt-get install make
 
-sudo gedit /etc/rc.local
+Arduino en vitallinux
 
-COLOCAR ESTO EN LA PENÚLTIMA LÍNEA
+contraseña careidega
 
-tar -zxf /home/usuario/.configura.tgz -C /home/usuario --overwrite
+copiar carpeta arduino 1.8.1.3 en home/dga
+o en profesor o alumno según corresponda
+extraemos
+
+
+escribimos
+
+./arduino-linux-setup.sh $USER
+
+
+./install.sh
+
 
 
