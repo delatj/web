@@ -1,3 +1,5 @@
+IMBORRABLE
+
 Hacer que no se pueda borrar la carpeta
 1- paso 1 creamos la carpeta tic en el escritorio
 2- en el teminal
@@ -9,8 +11,12 @@ sudo chattr  -i tic
 
 ------------------------------------------------------------------------
 
+APAGADO AUTOMÁTICO
+
 sudo su
 sudo gedit /etc/crontab
+O
+sudo leafpad /etc/crontab
 
 añadimos en la segunda línea 
 35 14 *  *  *  root shutdown -h now
@@ -21,21 +27,23 @@ sudo service cron restart
 
 -------------------------------------------------------------------------
 
-COPIAR EN EL TERMINAL
+CONGELADOR ESCRITORIO
 
 
 tar -zcf .configura.tgz .cache .config .gconf .local
 
 sudo gedit /etc/rc.local
+O
+sudo leadpad /etc/rc.local
 
 COLOCAR ESTO EN LA PENÚLTIMA LÍNEA
 
 tar -zxf /home/usuario/.configura.tgz -C /home/usuario --overwrite
 
-INSTALAR PAQUETES DEBS
-https://wiki.openoffice.org/wiki/ES/Manuales/Instalar/Linux
 
-dentro de la carpeta donde está el archivo comprimido---- cd Escritorio
+
+INSTALAR PAQUETES DEBS
+Dentro de la carpeta donde está el archivo comprimido---- cd Escritorio
 tar -vxzf nombre-archivo o descomprimirla con botón derecho extraer aquí
 
 TODO PARA LOS PAQUETES DEBIAN .deb
@@ -51,10 +59,6 @@ cd desktop-integration
 
 sudo dpkg -i *.deb
 
-INSTALAR Q4WINE DESDE EL TERMINAL
-instalar Q4wine desde terminal
-sudo apt-get install q4wine
-
 
 SI EL PAQUETE ES TAR.GZ
 descomprimimos el archivo y entramos con sudo su dentro de la carpeta descomprimida
@@ -64,11 +68,9 @@ make (si no esta instalado antes hay que hacerlo con apt-get install make)
 make install
 
 
-PROGRAMAS QUE SE DESCARGAN EN LÍNEA
-por ejemplo para instalar make
-apt-get install make
+INSTALAR IDE ARDUINO VITALINUX
 
-Arduino en vitallinux
+Entrar en sesión usuario dga
 
 contraseña careidega
 
