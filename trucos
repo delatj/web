@@ -33,8 +33,8 @@ CONGELADOR ESCRITORIO
 tar -zcf .configura.tgz .cache .config .gconf .local
 
 sudo gedit /etc/rc.local
-O
-sudo leadpad /etc/rc.local
+
+En vitallinux no se puede
 
 COLOCAR ESTO EN LA PENÚLTIMA LÍNEA
 
