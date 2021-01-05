@@ -34,7 +34,9 @@ tar -zcf .configura.tgz .cache .config .gconf .local
 
 sudo gedit /etc/rc.local
 
-En vitallinux no se puede
+En vitallinux no se puede...control y space
+Regenerar todos los escritorios
+Control space... Cerrar sesion
 
 COLOCAR ESTO EN LA PENÚLTIMA LÍNEA
 
