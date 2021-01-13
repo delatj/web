@@ -86,6 +86,25 @@ escribimos
 ./install.sh
 
 
+ICONO INICIO UBUNTU
+Dentro de usr..share... Plymouth..
+Abrir dentro la carpeta themes como terminal
+
+Ponemos
+
+sudo update-alternatives --config default.plymouth
+
+Elegimos opción 0 
+
+$ sudo update-initramfs -u
+
+
+
+
+
+
+
+
 
 
 
