@@ -88,16 +88,14 @@ escribimos
 
 ICONO INICIO UBUNTU
 Cerrar sesión y entrar como profesor o cda
-Dentro de usr..share... Plymouth..
-Abrir dentro la carpeta themes como terminal
 
 Ponemos
 
 sudo update-alternatives --config default.plymouth
 
-Elegimos opción 0 
+Elegimos opción 1
 
-$ sudo update-initramfs -u
+sudo update-initramfs -u
 
 Reiniciar
 
