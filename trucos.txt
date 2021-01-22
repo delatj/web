@@ -80,10 +80,10 @@ copiar carpeta arduino 1.8.1.3 en home/dga
 
 escribimos
 
-./arduino-linux-setup.sh $USER
+./arduino-1.8.13/arduino-linux-setup.sh $USER
 
 
-./install.sh
+./arduino-1.8.13/install.sh
 
 
 ICONO INICIO UBUNTU
