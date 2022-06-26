@@ -1,0 +1,182 @@
+OFRIS
+
+
+if [ $(uname -m) == "x86_64" ]; then deb="http://goo.gl/DleLl"; else deb="http://goo.gl/V94Qs"; fi && wget -q $deb -O ofris.deb && sudo dpkg -i ofris.deb && rm ofris.deb
+
+
+
+ AUTOMÁTICO
+
+sudo su
+sudo gedit /etc/crontab
+O
+sudo leafpad /etc/crontab
+
+añadimos en la segunda línea 
+35 14 *  *  *  root shutdown -h now
+
+guardamos y luego en el terminal
+
+sudo service cron restart
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+Primero para formateo
+Cliente
+Nombre alumno1
+Contraseña alumno
+En el disco duro picamos,seleccionamos 15000GB en crear nuevo 50000 MB y le damos a la fecha
+que apunta a a izquierda
+En la otra parte que no pone member que se ha creado le damos también a la fecha de a
+izquierda para crear nuevo
+En esa parte de nuevo poner en punto de montaje / ext4 y cargamos con la fecha, picamos en
+transferencia de archivos y formatear   .....Siguiente
+xxxxxxxxxxxx
+Formateo ordenador con Windows 10 creamos una partición con Windows como dice el vídeo de biblioteca de YouTube...casa, 
+Luego formateamos las nueva partición como siempre pero la primera
+De 15000 queda como ntfs 
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Epoptes en servidor
+usar pen usb profesor
+
+(si da problemas con el puerto 789)
+Poner en terminal
+gufw ...para quitar cortafuego
+Picamos en reglas....+....simple
+Nombre epoptes
+Protocolo TCP
+Puerto 789
+Picamos en añadir
+Ponemos otra con
+Nombre epoptes1
+Protocolo TCP
+Puerto 1024:65535
+Picamos en añadir...cerramos y salimos
+
+Añadimos usuario profe al grupo
+sudo gpasswd -a profe epoptes ........si se ha puesto otro nombre al usuario del profe se cambia
+Reiniciar ordenador
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Epoptes cliente
+sudo nano /etc/default/epoptes-client
+En la línea SERVER poner IP del pc del profe
+SERVER=192.168.1.64
+Control O ......intro......control x
+sería conveniente poner fija a IP del profe en ajustes de red...manual
+sudo epoptes-client -c
+Reiniciar
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+congelar con ofris... en terminal....ofris-en.......1 para congelar usuario, 4 para descongelar
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+...............................................................................................
+EN GUADALINEX EDU
+
+IMBORRABLE
+
+Hacer que no se pueda borrar la carpeta
+1- paso 1 creamos la carpeta tic en el escritorio
+2- en el teminal
+ sudo chattr -R +i ./Escritorio/tic 
+
+para quita bloqueo
+cd Escritorio
+sudo chattr  -i tic 
+
+-------------------------------------------------------------------------
+
+CONGELADOR ESCRITORIO instalar otros desde terminal o en guadalinex 
+
+
+tar -zcf .configura.tgz .cache .config .gconf .local
+
+sudo gedit /etc/rc.local
+
+sudo leafpad /etc/rc.local
+
+COLOCAR ESTO EN LA PENÚLTIMA LÍNEA
+
+tar -zxf /home/usuario/.configura.tgz -C /home/usuario --overwrite
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+INSTALAR PAQUETES DEBS
+Dentro de la carpeta donde está el archivo comprimido---- cd Escritorio
+tar -vxzf nombre-archivo o descomprimirla con botón derecho extraer aquí
+
+TODO PARA LOS PAQUETES DEBIAN .deb
+entrar en la carpeta DEBS
+
+sudo dpkg -i *.deb
+
+soluciones dependencias
+sudo apt -f install
+
+
+cd desktop-integration
+
+sudo dpkg -i *.deb
+
+
+SI EL PAQUETE ES TAR.GZ
+descomprimimos el archivo y entramos con sudo su dentro de la carpeta descomprimida
+
+./configure
+make (si no esta instalado antes hay que hacerlo con apt-get install make)
+make install
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+INSTALAR IDE ARDUINO 
+
+Entrar en sesión usuario dga
+
+contraseña careidega
+
+copiar carpeta arduino 1.8.1.3 en home/dga
+
+escribimos
+
+./arduino-linux-setup.sh $USER
+
+
+./install.sh
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+NORMAS BÁSICAS DE CLASE
+1. Habla y trata con respeto a tus compañeros y profesor.
+2. No le levantes de tu sitio sin que el profesor te de permiso.
+3. Atiende cuando el profesor explica.
+4. Usa las herramientas o ordenadores de forma correcta, si desconoces su manejo
+pregunta al profesor,cuida el material y recicla lo que puedas.
+
+MATERIALES PARA CLASE
+1. Juego de regla,escuadra y cartabón o por lo menos una regla.
+2. Cuaderno o blog con hojas de cuadritos.
+3. Tijeras.
+4. Lápiz o portaminas, goma y bolígrafo.
+5. Calculadora (que habrá que traer cuando avise el profesor)
+6. Pegameento de barra.
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+CREAR ISO linux PROPIO
+
+entramos en systemback tras colocarlo todo a nuestro gusto y instalr el idioma paquete
+picamos en cdlive......tras ponerle un nombre
+cuando termina seleccionamos en la ventana el archivo creado y le damos a crear iso... te lo crea en alumno
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Programas a instalar
+Wine,ofris,kexi, Chrome,pinta,
+Synapse, paquete de idiomas, 
+
+
+
+
+
+
+
+
+
+
