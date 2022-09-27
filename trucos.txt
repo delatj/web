@@ -171,6 +171,15 @@ Programas a instalar
 Wine,ofris,kexi, Chrome,pinta,
 Synapse, paquete de idiomas, 
 
+____________________________
+Instalar javas en Linux Lite 5.8
+
+sudo apt-get install default-jdk
+
+Luego en abrir con usar comando javac
+
+La próxima vez ya aparece openjdk al dar botón derecho
+
 
 
 
