@@ -3,9 +3,11 @@ OFRIS
 
 if [ $(uname -m) == "x86_64" ]; then deb="http://goo.gl/DleLl"; else deb="http://goo.gl/V94Qs"; fi && wget -q $deb -O ofris.deb && sudo dpkg -i ofris.deb && rm ofris.deb
 
+congelar con ofris... en terminal....ofris-en.......1 para congelar usuario, 4 para descongelar
 
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
- AUTOMÁTICO
+APAGADO AUTOMÁTICO
 
 sudo su
 sudo gedit /etc/crontab
@@ -20,16 +22,17 @@ guardamos y luego en el terminal
 sudo service cron restart
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
-Primero para formateo
-Cliente
+FORMATEO CLIENTE 
+
 Nombre alumno1
 Contraseña alumno
 En el disco duro picamos,seleccionamos 15000GB en crear nuevo 50000 MB y le damos a la fecha
 que apunta a a izquierda
 En la otra parte que no pone member que se ha creado le damos también a la fecha de a
 izquierda para crear nuevo
-En esa parte de nuevo poner en punto de montaje / ext4 y cargamos con la fecha, picamos en
+En esa parte de nuevo poner en punto de montaje / ((raiz) y cargamos con la fecha, picamos en
 transferencia de archivos y formatear   .....Siguiente
+
 xxxxxxxxxxxx
 Formateo ordenador con Windows 10 creamos una partición con Windows como dice el vídeo de biblioteca de YouTube...casa, 
 Luego formateamos las nueva partición como siempre pero la primera
@@ -59,6 +62,7 @@ Reiniciar ordenador
 
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 Epoptes cliente
+
 sudo nano /etc/default/epoptes-client
 En la línea SERVER poner IP del pc del profe
 SERVER=192.168.1.64
@@ -67,37 +71,7 @@ sería conveniente poner fija a IP del profe en ajustes de red...manual
 sudo epoptes-client -c
 Reiniciar
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-congelar con ofris... en terminal....ofris-en.......1 para congelar usuario, 4 para descongelar
 
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-...............................................................................................
-EN GUADALINEX EDU
-
-IMBORRABLE
-
-Hacer que no se pueda borrar la carpeta
-1- paso 1 creamos la carpeta tic en el escritorio
-2- en el teminal
- sudo chattr -R +i ./Escritorio/tic 
-
-para quita bloqueo
-cd Escritorio
-sudo chattr  -i tic 
-
--------------------------------------------------------------------------
-
-CONGELADOR ESCRITORIO instalar otros desde terminal o en guadalinex 
-
-
-tar -zcf .configura.tgz .cache .config .gconf .local
-
-sudo gedit /etc/rc.local
-
-sudo leafpad /etc/rc.local
-
-COLOCAR ESTO EN LA PENÚLTIMA LÍNEA
-
-tar -zxf /home/usuario/.configura.tgz -C /home/usuario --overwrite
 
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
@@ -125,6 +99,16 @@ descomprimimos el archivo y entramos con sudo su dentro de la carpeta descomprim
 ./configure
 make (si no esta instalado antes hay que hacerlo con apt-get install make)
 make install
+
+PARCHIVOS BIN O SH (DENTRO DE LA CARPETA)
+
+$ sudo chmod a+x nombre_archivo.bin (si se trata de un archivo con extensión .bin)
+$ sudo chmod a+x nombre_archivo.sh (si se trata de un archivo con extensión .sh)
+
+04 Posteriormente ya podrás ejecutar el archivo:
+
+$ sudo ./nombre_archivo.bin o $ sudo sh nombre_archivo.bin (si se trata de un archivo con extensión .bin)
+$ sudo ./nombre_archivo.sh o $ sudo sh nombre_archivo.sh (si se trata de un archivo con extensión .sh)
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 INSTALAR IDE ARDUINO 
