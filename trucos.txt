@@ -26,7 +26,7 @@ FORMATEO CLIENTE
 
 Nombre alumno1
 Contraseña alumno
-En el disco duro picamos,seleccionamos 15000GB en crear nuevo 50000 MB y le damos a la fecha
+En el disco duro picamos,seleccionamos 15000GB en crear nuevo (15000 sería para los azules del centro, 4 veces el tamaño de la RAM que es 2,5) SOLO FORMATEAR EL DISCO EN LOS AZULES QUE TIENE 74, CUIDADO DE ELIMINAR EL PENDRIVE QUE TAMBIÉN APARECE. y le damos a la fecha
 que apunta a a izquierda
 En la otra parte que no pone member que se ha creado le damos también a la fecha de a
 izquierda para crear nuevo
