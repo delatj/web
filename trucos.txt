@@ -164,10 +164,9 @@ Luego en abrir con usar comando javac
 
 La próxima vez ya aparece openjdk al dar botón derecho
 
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
-
-
-
+acoplar ventana en impress tras piscar sobre ella ... control+mays+F10
 
 
 
