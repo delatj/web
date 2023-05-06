@@ -44,7 +44,7 @@ usar pen usb profesor
 
 (si da problemas con el puerto 789)
 Poner en terminal
-gufw ...para quitar cortafuego
+gufw ..o gfw.para quitar cortafuego
 Picamos en reglas....+....simple
 Nombre epoptes
 Protocolo TCP
