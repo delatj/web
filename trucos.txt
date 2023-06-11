@@ -7,7 +7,7 @@ congelar con ofris... en terminal....ofris-en.......1 para congelar usuario, 4 p
 
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
-escritorio de cd
+cd Escritorio 
 sudo dd if=lubuntu.iso of=/dev/sdb
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 APAGADO AUTOMÁTICO
