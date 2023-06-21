@@ -171,7 +171,8 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 acoplar ventana en impress tras piscar sobre ella ... control+mays+F10
 
-
+SONIDO DELL
+F12... BIOS SETUP...INTEGRATES DEVICES....EN AUDIO QUITAR ENABLE MICROPHONE
 
 
 
