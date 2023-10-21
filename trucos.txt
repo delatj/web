@@ -1,3 +1,7 @@
+SUBIR BRILLO
+
+echo 9500 > /sys/class/backlight/intel_backlight/brightness
+
 OFRIS
 
 
