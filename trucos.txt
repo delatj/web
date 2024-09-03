@@ -1,3 +1,17 @@
+____________________________________________________________
+CLONADO
+No borrar clonados de los pen, porque al instalar cosas luego pesa mas y no se puede hacer el clonado.
+*** últimos programas a instalar...librecad/  freecad  /exelearning   /kturtle
+*** añadir carpetas test y web
+*** borrar red casa
+*** cambiar nombre equipo
+*** conectar con epoptes en terminal cambiare de usuario con ... su dga  ...  flecha superior
+
+____________________________________________________________
+
+
+
+
 SUBIR BRILLO
 
 echo 9500 > /sys/class/backlight/intel_backlight/brightness
