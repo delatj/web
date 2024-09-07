@@ -1,7 +1,8 @@
 ____________________________________________________________
 CLONADO
 No borrar clonados de los pen, porque al instalar cosas luego pesa mas y no se puede hacer el clonado.
-*** últimos programas a instalar...librecad/  freecad  /exelearning   /kturtle
+*** últimos programas a instalar...librecad/  freecad  /exelearning   /kturtle   
+(para instalar exelearning desde terminal:sudo apt-get install snapd   /   sudo snap install exelearning    /   y reiniciar)
 *** añadir carpetas test y web
 *** borrar red casa
 *** cambiar nombre equipo
