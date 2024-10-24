@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productos y Materiales</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            background-color: #f0f8ff;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+        }
+        .question {
+            margin-bottom: 15px;
+        }
+        .result-text {
+            font-size: 16px;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+        #timer {
+            font-size: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #result {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        button {
+            display: block;
+            margin: 0 auto;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Productos y Materiales</h1>
+    <div id="timer">Tiempo restante: <span id="countdown">360</span> segundos</div>
+
+    <div id="questions-container"></div>
+
+    <button onclick="checkAnswers()">Comprobar Respuestas</button>
+    <div id="result"></div>
+
+    <script>
+        const questions = [
+            { question: "Di el nombre de la etapa del ciclo de vida de un producto en la cual el producto acaba de ser lanzado al mercado...", answer: "Introducción" },
+            { question: "Las personas en la fase de introducción de un producto nuevo están...", answer: "Emocionadas" },
+            { question: "¿Cuál es la fase en la que el producto empieza a ganar popularidad y más y más personas lo compran?", answer: "Crecimiento" },
+            { question: "Cuando la empresa empieza a fabricar más unidades de un producto, pueden bajar el...", answer: "Precio" },
+            { question: "Di el nombre de la fase en la que un producto se ha vuelto muy común y la mayoría de las personas que querían uno ya lo tienen...", answer: "Madurez" },
+            { question: "Di el nombre de la fase en la que la empresa empieza a competir ofreciendo características adicionales o mejoras para mantener el interés de los consumidores...", answer: "Madurez" },
+            { question: "Di el nombre de la fase en la que el producto ya no es tan popular como antes y hay productos nuevos y mejores en el mercado...", answer: "Declive" },
+            { question: "Cuando una persona quiere diseñar un producto o algo nuevo, debe pensar en los...", answer: "Materiales" },
+            { question: "Si queremos construir, por ejemplo, un puente, necesitamos un material que sea fuerte y resistente, como es por ejemplo el...", answer: "Acero" },
+            { question: "Si estamos diseñando, por ejemplo, un avión, necesita un material ligero que pese poco, como por ejemplo el...", answer: "Aluminio" },
+            { question: "Si estamos diseñando, por ejemplo, una papelera, debe ser de un material resistente a la...", answer: "Corrosión" },
+            { question: "Si están montando un circuito eléctrico, necesitas un material que conduzca bien la electricidad, por eso se utilizan cables de...", answer: "Cobre" },
+            { question: "Si se necesita un material aislante de la electricidad, por ejemplo, para la carcasa de un electrodoméstico, podemos utilizar...", answer: "Plástico" },
+            { question: "¿En qué tipo de análisis se estudian las características físicas del objeto?", answer: "Morfológico" },
+            { question: "¿Qué análisis responde a cuestiones como para qué sirve el objeto, qué necesidad satisface o cómo funciona?", answer: "Funcional" },
+            { question: "El análisis que se refiere a la constitución y el sistema de funcionamiento del objeto es el...", answer: "Técnico" },
+            { question: "¿Qué análisis profundiza en los costos del proceso de diseño, fabricación y comercialización?", answer: "Económico" },
+            { question: "El análisis que estudia la relación entre el objeto y las necesidades humanas que satisface es el...", answer: "Sociológico" },
+            { question: "¿Qué análisis trata sobre las sensaciones que el objeto crea en el usuario debido a su estética?", answer: "Estético" },
+            { question: "El análisis que evalúa el impacto ambiental generado por el objeto a lo largo de su ciclo de vida es el...", answer: "Medioambiental" },
+            { question: "¿Qué análisis estudia la evolución tecnológica del objeto a lo largo de la historia?", answer: "Histórico" }
+        ];
+
+        // Función para mezclar las preguntas y respuestas juntas
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Cargar preguntas en orden aleatorio
+        function loadQuestions() {
+            shuffleArray(questions);  // Mezclar preguntas y respuestas
+            const container = document.getElementById('questions-container');
+            container.innerHTML = ''; // Limpiar contenido anterior
+            questions.forEach((q, index) => {
+                container.innerHTML += `
+                    <div class="question">
+                        <strong>${index + 1}.</strong> ${q.question}
+                        <input type="text" id="q${index + 1}">
+                        <div id="result${index + 1}" class="result-text"></div>
+                    </div>
+                `;
+            });
+        }
+
+        let timeLeft = 360; // 6 minutos (360 segundos)
+        const countdownElement = document.getElementById('countdown');
+
+        const countdown = setInterval(() => {
+            if (timeLeft <= 0) {
+                clearInterval(countdown);
+                alert("¡Tiempo terminado!");
+                checkAnswers();
+            } else {
+                countdownElement.textContent = timeLeft;
+                timeLeft--;
+            }
+        }, 1000);
+
+        // Función para comprobar respuestas
+        function checkAnswers() {
+            let score = 0;
+            for (let i = 0; i < questions.length; i++) {
+                const userAnswer = document.getElementById(`q${i + 1}`).value.trim();
+                const resultElement = document.getElementById(`result${i + 1}`);
+                if (userAnswer.toLowerCase() === questions[i].answer.toLowerCase()) {
+                    score++;
+                    resultElement.textContent = "Correcto";
+                    resultElement.style.color = "green";
+                } else {
+                    resultElement.textContent = `Incorrecto. Respuesta correcta: ${questions[i].answer}`;
+                    resultElement.style.color = "red";
+                }
+            }
+            const percentage = (score / questions.length) * 100;
+            document.getElementById('result').textContent = `Acertaste ${score} de ${questions.length} respuestas. Porcentaje: ${percentage.toFixed(2)}%`;
+        }
+
+        // Cargar las preguntas al inicio
+        loadQuestions();
+    </script>
+</body>
+</html>
