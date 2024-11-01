@@ -1,21 +1,28 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ejercicio de Movimiento en Cuadrícula 6x6</title>
+    <meta charset="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0">
+    <title>Ejercicio de Movimiento en Cuadrícula</title>
     <style>
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
         .grid-container {
             display: grid;
-            grid-template-columns: repeat(6, 60px);
-            grid-template-rows: repeat(6, 60px);
+            grid-template-columns: repeat(6, 50px);
+            grid-template-rows: repeat(6, 50px);
             gap: 2px;
-            width: 370px;
-            margin: 20px auto;
+            width: 320px;
         }
 
         .grid-item {
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
             border: 1px solid #ccc;
             display: flex;
             align-items: center;
@@ -40,14 +47,15 @@
 
         .controls {
             display: flex;
-            justify-content: center;
-            margin-top: 20px;
+            flex-direction: column;
+            gap: 10px;
         }
 
         .controls button {
-            margin: 5px;
             padding: 10px;
             font-size: 16px;
+            width: 100px;
+            transition: background-color 0.3s;
         }
 
         #message, #score {
@@ -60,74 +68,65 @@
 </head>
 <body>
 
-    <h2 style="text-align: center;">Movimiento en Cuadrícula 6x6</h2>
-    <div class="grid-container" id="grid"></div>
+    <h2 style="text-align: center;">Movimiento en Cuadrícula</h2>
+    
+    <div class="container">
+        <div class="grid-container" id="grid"></div>
+        <div class="controls">
+            <button onclick="moveWithEffect('up', this)">Arriba</button>
+            <button onclick="moveWithEffect('left', this)">Izquierda</button>
+            <button onclick="moveWithEffect('right', this)">Derecha</button>
+            <button onclick="moveWithEffect('down', this)">Abajo</button>
+        </div>
+    </div>
 
-    <!-- Mensajes de puntuación y resultado -->
     <div id="score">Puntuación: 0</div>
     <div id="message"></div>
 
-    <!-- Controles para mover el personaje -->
-    <div class="controls">
-        <button onclick="move('up')">Arriba</button>
-        <button onclick="move('left')">Izquierda</button>
-        <button onclick="move('right')">Derecha</button>
-        <button onclick="move('down')">Abajo</button>
-    </div>
-
     <script>
-        const gridSize = 6;  // Ajustado para cuadrícula 6x6
+        const gridSize = 6;
         let characterPosition = { x: 0, y: 0 };
-        let goalPosition = { x: 5, y: 5 };
+        let goalPosition = { x: 0, y: 0 };
         let obstacles = [];
         let score = 0;
+        let path = [characterPosition];
 
-        // Generar obstáculos iniciales con verificación de ruta
         function generateObstacles() {
-            let numberOfObstacles = Math.floor(score / 10) + 3;
+            let numberOfObstacles = Math.floor(score / 10) + 5; // Añadir 5 obstáculos como base
 
-            do {
-                obstacles = [];
-                while (obstacles.length < numberOfObstacles) {
-                    const obstaclePosition = {
-                        x: Math.floor(Math.random() * gridSize),
-                        y: Math.floor(Math.random() * gridSize)
-                    };
-                    if (
-                        (obstaclePosition.x !== characterPosition.x || obstaclePosition.y !== characterPosition.y) &&
-                        (obstaclePosition.x !== goalPosition.x || obstaclePosition.y !== goalPosition.y) &&
-                        !obstacles.some(o => o.x === obstaclePosition.x && o.y === obstaclePosition.y)
-                    ) {
-                        obstacles.push(obstaclePosition);
-                    }
+            obstacles = [];
+            while (obstacles.length < numberOfObstacles) {
+                const obstaclePosition = {
+                    x: Math.floor(Math.random() * gridSize),
+                    y: Math.floor(Math.random() * gridSize)
+                };
+                if (
+                    (obstaclePosition.x !== characterPosition.x || obstaclePosition.y !== characterPosition.y) &&
+                    (obstaclePosition.x !== goalPosition.x || obstaclePosition.y !== goalPosition.y) &&
+                    !obstacles.some(o => o.x === obstaclePosition.x && o.y === obstaclePosition.y)
+                ) {
+                    obstacles.push(obstaclePosition);
                 }
-            } while (!isPathAvailable(characterPosition, goalPosition)); // Repetir hasta que haya una ruta
+            }
         }
 
-        // Verificar si existe un camino libre entre el inicio y la meta usando BFS
         function isPathAvailable(start, goal) {
             const queue = [start];
             const visited = Array.from({ length: gridSize }, () => Array(gridSize).fill(false));
             visited[start.y][start.x] = true;
 
             const directions = [
-                { x: 0, y: -1 }, // arriba
-                { x: 0, y: 1 },  // abajo
-                { x: -1, y: 0 }, // izquierda
-                { x: 1, y: 0 }   // derecha
+                { x: 0, y: -1 }, { x: 0, y: 1 },
+                { x: -1, y: 0 }, { x: 1, y: 0 }
             ];
 
             while (queue.length > 0) {
                 const { x, y } = queue.shift();
-
-                if (x === goal.x && y === goal.y) {
-                    return true;
-                }
+                if (x === goal.x && y === goal.y) return true;
 
                 for (const { x: dx, y: dy } of directions) {
                     const newX = x + dx;
                     const newY = y + dy;
-
                     if (
                         newX >= 0 && newX < gridSize && newY >= 0 && newY < gridSize &&
                         !visited[newY][newX] &&
@@ -138,11 +137,25 @@
                     }
                 }
             }
-
             return false;
         }
 
-        // Inicializar cuadrícula
+        function placeRandomCharacterAndGoal() {
+            do {
+                characterPosition = {
+                    x: Math.floor(Math.random() * gridSize),
+                    y: Math.floor(Math.random() * gridSize)
+                };
+                goalPosition = {
+                    x: Math.floor(Math.random() * gridSize),
+                    y: Math.floor(Math.random() * gridSize)
+                };
+            } while (
+                (characterPosition.x === goalPosition.x && characterPosition.y === goalPosition.y) ||
+                !isPathAvailable(characterPosition, goalPosition)
+            );
+        }
+
         function initGrid() {
             const gridContainer = document.getElementById("grid");
             gridContainer.innerHTML = "";
@@ -152,8 +165,7 @@
                     const cell = document.createElement("div");
                     cell.classList.add("grid-item");
 
-                    // Añadir el personaje en la casilla de inicio, el objetivo y los obstáculos
-                    if (x === characterPosition.x && y === characterPosition.y) {
+                    if (x === characterPosition.x && y === characterPosition.y && path.length === 1) {
                         cell.classList.add("character");
                         cell.innerText = "🐱";
                     } else if (x === goalPosition.x && y === goalPosition.y) {
@@ -168,70 +180,75 @@
             }
         }
 
-        // Mover el personaje de forma invisible después de la casilla inicial
+        function moveWithEffect(direction, button) {
+            button.style.backgroundColor = "green";
+            setTimeout(() => {
+                button.style.backgroundColor = "";
+            }, 500);
+
+            move(direction);
+        }
+
         function move(direction) {
             const newPosition = { ...characterPosition };
-
             if (direction === "up") newPosition.y--;
             else if (direction === "down") newPosition.y++;
             else if (direction === "left") newPosition.x--;
             else if (direction === "right") newPosition.x++;
 
+            path.push(newPosition);
             checkResult(newPosition);
         }
 
-        // Verificar el resultado de los movimientos
         function checkResult(newPosition) {
             const messageElement = document.getElementById("message");
 
-            // Verificar si el personaje se sale de los límites
             if (newPosition.x < 0 || newPosition.x >= gridSize || newPosition.y < 0 || newPosition.y >= gridSize) {
                 messageElement.innerText = "¡Has perdido! Te has salido de la cuadrícula.";
                 updateScore(-1);
+                displayPath();
                 resetGame();
                 return;
             }
 
-            // Verificar si la nueva posición es un obstáculo
             if (obstacles.some(o => o.x === newPosition.x && o.y === newPosition.y)) {
                 messageElement.innerText = "¡Has perdido! Has chocado con un obstáculo.";
                 updateScore(-1);
+                displayPath();
                 resetGame();
                 return;
             }
 
-            // Verificar si ha alcanzado el objetivo
             if (newPosition.x === goalPosition.x && newPosition.y === goalPosition.y) {
                 messageElement.innerText = "¡Lo has conseguido!";
                 updateScore(1);
+                displayPath();
                 resetGame();
                 return;
             }
 
-            // Actualizar la posición del personaje solo si no hay errores
             characterPosition = newPosition;
         }
 
-        // Actualizar la puntuación y ajustar obstáculos si es necesario
+        function displayPath() {
+            initGrid();
+            path = [characterPosition];
+        }
+
         function updateScore(change) {
             score += change;
             document.getElementById("score").innerText = `Puntuación: ${score}`;
-
-            // Añadir un nuevo obstáculo por cada 10 puntos alcanzados
             if (change > 0 && score % 10 === 0) {
-                generateObstacles();
+                generateObstacles(); // Generar un obstáculo más cada 10 puntos
             }
         }
 
-        // Reiniciar el juego
         function resetGame() {
-            characterPosition = { x: 0, y: 0 };
-            goalPosition = { x: gridSize - 1, y: gridSize - 1 };
-            generateObstacles();
+            placeRandomCharacterAndGoal();
             initGrid();
         }
 
-        // Inicializar el juego
+        placeRandomCharacterAndGoal();
         generateObstacles();
         initGrid();
     </script>
