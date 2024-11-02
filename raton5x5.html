@@ -4,10 +4,14 @@
     <meta charset="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ejercicio de Movimiento en Cuadrícula</title>
     <style>
+        body {
+            transition: background-color 0.5s;
+        }
+
         .container {
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start; /* Alinear hacia la parte superior */
             gap: 20px;
             margin-top: 20px;
         }
@@ -17,13 +21,12 @@
             grid-template-columns: repeat(5, 60px);
             grid-template-rows: repeat(5, 60px);
             gap: 2px;
-            width: 310px;
         }
 
         .grid-item {
             width: 60px;
             height: 60px;
-            border: 1px solid #ccc;
+            border: 2px solid black;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -58,11 +61,19 @@
             transition: background-color 0.3s;
         }
 
-        #message, #score {
+        #message {
             text-align: center;
             font-size: 18px;
             color: green;
             margin-top: 10px;
+        }
+
+        #score {
+            position: absolute; /* Posición absoluta para ubicarlo donde queremos */
+            top: 20px; /* Distancia desde la parte superior */
+            left: 20px; /* Distancia desde la izquierda */
+            font-size: 36px; /* Tamaño más grande */
+            color: green;
         }
     </style>
 </head>
@@ -71,6 +82,7 @@
     <h2 style="text-align: center;">Movimiento en Cuadrícula</h2>
     
     <div class="container">
+        <div id="score">Puntuación: 0</div> <!-- Mueve aquí la puntuación -->
         <div class="grid-container" id="grid"></div>
         <div class="controls">
             <button onclick="moveWithEffect('up', this)">Arriba</button>
@@ -80,21 +92,20 @@
         </div>
     </div>
 
-    <div id="score">Puntuación: 0</div>
     <div id="message"></div>
 
     <script>
         const gridSize = 5;
         let characterPosition = { x: 0, y: 0 };
-        let goalPosition = { x: 4, y: 4 };
+        let goalPosition = { x: 0, y: 0 };
         let obstacles = [];
         let score = 0;
         let path = [characterPosition];
 
         function generateObstacles() {
-            let numberOfObstacles = Math.floor(score / 10) + 3;
-            obstacles = [];
+            let numberOfObstacles = Math.floor(score / 10) + 4;
 
+            obstacles = [];
             while (obstacles.length < numberOfObstacles) {
                 const obstaclePosition = {
                     x: Math.floor(Math.random() * gridSize),
@@ -238,11 +249,23 @@
         function updateScore(change) {
             score += change;
             document.getElementById("score").innerText = `Puntuación: ${score}`;
-            if (change > 0 && score % 10 === 0) generateObstacles();
+
+            if (score >= 80) {
+                document.body.style.backgroundColor = "pink";
+            } else if (score >= 50) {
+                document.body.style.backgroundColor = "lightyellow";
+            } else if (score >= 30) {
+                document.body.style.backgroundColor = "lightblue";
+            } else {
+                document.body.style.backgroundColor = "";
+            }
+
+            if (change > 0 && score % 10 === 0) {
+                generateObstacles();
+            }
         }
 
         function resetGame() {
-            generateObstacles();
             placeRandomCharacterAndGoal();
             initGrid();
         }
