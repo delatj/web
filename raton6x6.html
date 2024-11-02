@@ -4,6 +4,10 @@
     <meta charset="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0">
     <title>Ejercicio de Movimiento en Cuadrícula</title>
     <style>
+        body {
+            transition: background-color 0.5s;
+        }
+
         .container {
             display: flex;
             justify-content: center;
@@ -18,12 +22,13 @@
             grid-template-rows: repeat(6, 50px);
             gap: 2px;
             width: 320px;
+            border: 2px solid black; /* Borde negro y un poco más grueso */
         }
 
         .grid-item {
             width: 50px;
             height: 50px;
-            border: 1px solid #ccc;
+            border: 2px solid black; /* Borde negro y más grueso */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -92,7 +97,7 @@
         let path = [characterPosition];
 
         function generateObstacles() {
-            let numberOfObstacles = Math.floor(score / 10) + 5; // Añadir 5 obstáculos como base
+            let numberOfObstacles = Math.floor(score / 10) + 5;
 
             obstacles = [];
             while (obstacles.length < numberOfObstacles) {
@@ -238,8 +243,20 @@
         function updateScore(change) {
             score += change;
             document.getElementById("score").innerText = `Puntuación: ${score}`;
+
+            // Cambiar el color de fondo basado en la puntuación
+            if (score >= 80) {
+                document.body.style.backgroundColor = "pink";
+            } else if (score >= 50) {
+                document.body.style.backgroundColor = "lightyellow";
+            } else if (score >= 30) {
+                document.body.style.backgroundColor = "lightblue";
+            } else {
+                document.body.style.backgroundColor = "";
+            }
+
             if (change > 0 && score % 10 === 0) {
-                generateObstacles(); // Generar un obstáculo más cada 10 puntos
+                generateObstacles();
             }
         }
 
