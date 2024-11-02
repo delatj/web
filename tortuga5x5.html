@@ -70,11 +70,19 @@
             transition: background-color 0.3s;
         }
 
-        #message, #score {
+        #message {
             text-align: center;
             font-size: 18px;
             color: green;
             margin-top: 10px;
+        }
+
+        #score {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            font-size: 3em; /* Tamaño ajustado para ser tres veces más grande */
+            color: green;
         }
     </style>
 </head>
@@ -92,7 +100,7 @@
         </div>
     </div>
 
-    <div id="score">Puntuación: 0</div>
+    <div id="score">Punt: 0 </div>
     <div id="message"></div>
 
     <script>
@@ -243,14 +251,14 @@
 
         function updateScore(change) {
             score += change;
-            document.getElementById("score").innerText = `Puntuación: ${score}`;
+            document.getElementById("score").innerText = `punt: ${score} P`;
 
             // Añadir obstáculos adicionales por cada 10 puntos
             if (change > 0 && score % 10 === 0) {
                 generateObstacles(obstacles.length + 1);
             }
 
-            // Cambiar el color de fondo según la puntuación
+            // Cambiar el color de fondo según la punt
             if (score >= 70) {
                 document.body.style.backgroundColor = "lightcoral";
             } else if (score >= 50) {
@@ -275,4 +283,3 @@
 
 </body>
 </html>
-
