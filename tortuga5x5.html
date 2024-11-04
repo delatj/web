@@ -81,7 +81,7 @@
             position: fixed;
             top: 20px;
             left: 20px;
-            font-size: 3em; /* Tamaño ajustado para ser tres veces más grande */
+            font-size: 3em;
             color: green;
         }
     </style>
@@ -100,7 +100,7 @@
         </div>
     </div>
 
-    <div id="score">Punt: 0 </div>
+    <div id="score">Punt: 0</div>
     <div id="message"></div>
 
     <script>
@@ -124,7 +124,8 @@
                 if (
                     (rewardPosition.x !== characterPosition.x || rewardPosition.y !== characterPosition.y) &&
                     !rewards.some(r => r.x === rewardPosition.x && r.y === rewardPosition.y) &&
-                    !obstacles.some(o => o.x === rewardPosition.x && o.y === rewardPosition.y)
+                    !obstacles.some(o => o.x === rewardPosition.x && o.y === rewardPosition.y) &&
+                    !((rewardPosition.x === 0 || rewardPosition.x === 1) && (rewardPosition.y === 0 || rewardPosition.y === 1)) // Evita las 4 primeras casillas
                 ) {
                     rewards.push(rewardPosition);
                 }
@@ -141,7 +142,8 @@
                 if (
                     (obstaclePosition.x !== characterPosition.x || obstaclePosition.y !== characterPosition.y) &&
                     !rewards.some(r => r.x === obstaclePosition.x && r.y === obstaclePosition.y) &&
-                    !obstacles.some(o => o.x === obstaclePosition.x && o.y === obstaclePosition.y)
+                    !obstacles.some(o => o.x === obstaclePosition.x && o.y === obstaclePosition.y) &&
+                    !((obstaclePosition.x === 0 || obstaclePosition.x === 1) && (obstaclePosition.y === 0 || obstaclePosition.y === 1)) // Evita las 4 primeras casillas
                 ) {
                     obstacles.push(obstaclePosition);
                 }
@@ -251,19 +253,17 @@
 
         function updateScore(change) {
             score += change;
-            document.getElementById("score").innerText = `punt: ${score} P`;
+            document.getElementById("score").innerText = `Punt: ${score} P`;
 
-            // Añadir obstáculos adicionales por cada 10 puntos
             if (change > 0 && score % 10 === 0) {
                 generateObstacles(obstacles.length + 1);
             }
 
-            // Cambiar el color de fondo según la punt
-            if (score >= 70) {
+            if (score >= 30) {
                 document.body.style.backgroundColor = "lightcoral";
-            } else if (score >= 50) {
+            } else if (score >= 20) {
                 document.body.style.backgroundColor = "lightyellow";
-            } else if (score >= 30) {
+            } else if (score >= 10) {
                 document.body.style.backgroundColor = "lightblue";
             }
         }
@@ -283,3 +283,4 @@
 
 </body>
 </html>
+
