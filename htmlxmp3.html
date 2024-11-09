@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de HTML Interactivo</title>
+</head>
+<body>
+    <h1>Generador de HTML con Imagen y Audio</h1>
+    
+    <label for="imageInput">Sube una imagen:</label>
+    <input type="file" id="imageInput" accept="image/*">
+    <br><br>
+    
+    <label for="audioInput">Sube un audio:</label>
+    <input type="file" id="audioInput" accept="audio/*">
+    <br><br>
+    
+    <button onclick="generateHtml()">Generar HTML y Descargar</button>
+
+    <script>
+        let imageDataUrl = '';
+        let audioDataUrl = '';
+
+        // Convertir imagen a base64
+        document.getElementById('imageInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imageDataUrl = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Convertir audio a base64
+        document.getElementById('audioInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    audioDataUrl = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function generateHtml() {
+            if (!imageDataUrl || !audioDataUrl) {
+                alert('Por favor, sube una imagen y un audio antes de generar el archivo HTML.');
+                return;
+            }
+
+            const htmlContent = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imagen con Audio</title>
+</head>
+<body>
+    <h1>Haz clic en la imagen para reproducir el audio</h1>
+    <img src="${imageDataUrl}" alt="Imagen" style="cursor: pointer;" onclick="document.getElementById('audio').play()">
+    <audio id="audio" src="${audioDataUrl}"></audio>
+</body>
+</html>
+            `;
+
+            // Crear blob y link para descargar el HTML
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'imagen_con_audio.html';
+            link.click();
+        }
+    </script>
+</body>
+</html>
+

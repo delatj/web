@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de HTML Interactivo con Mensaje</title>
+</head>
+<body>
+    <h1>Generador de HTML con Imagen y Mensaje</h1>
+    
+    <label for="imageInput">Sube una imagen:</label>
+    <input type="file" id="imageInput" accept="image/*">
+    <br><br>
+    
+    <label for="textInput">Escribe el mensaje que quieres mostrar:</label>
+    <input type="text" id="textInput" placeholder="Escribe tu mensaje aquí">
+    <br><br>
+    
+    <button onclick="generateHtml()">Generar HTML y Descargar</button>
+
+    <script>
+        let imageDataUrl = '';
+
+        // Convertir imagen a base64
+        document.getElementById('imageInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imageDataUrl = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function generateHtml() {
+            const messageText = document.getElementById('textInput').value;
+            
+            if (!imageDataUrl || !messageText) {
+                alert('Por favor, sube una imagen y escribe un mensaje antes de generar el archivo HTML.');
+                return;
+            }
+
+            // Escapar comillas en el mensaje para evitar problemas en el HTML generado
+            const escapedMessage = messageText.replace(/"/g, '&quot;');
+
+            const htmlContent = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imagen con Mensaje</title>
+    <style>
+        .container {
+            display: flex;
+            align-items: center;
+        }
+        .message {
+            display: none;
+            margin-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Haz clic en la imagen para ver el mensaje</h1>
+    <div class="container">
+        <img src="${imageDataUrl}" alt="Imagen" style="cursor: pointer;" onclick="mostrarMensaje()">
+        <p class="message" id="messageText">${escapedMessage}</p> <!-- Mensaje oculto a la derecha de la imagen -->
+    </div>
+
+    <script>
+        let mensajeVisible = false; // Bandera para saber si el mensaje está visible
+        let timeoutId; // ID del temporizador
+
+        function mostrarMensaje() {
+            const messageElement = document.getElementById('messageText');
+            
+            if (!mensajeVisible) {
+                // Mostrar el mensaje y activar la bandera
+                messageElement.style.display = 'block';
+                mensajeVisible = true;
+
+                // Ocultar el mensaje después de 2 segundos
+                timeoutId = setTimeout(() => {
+                    messageElement.style.display = 'none';
+                    mensajeVisible = false;
+                }, 2000);
+            } else {
+                // Si el mensaje está visible y se hace clic, detener el temporizador y ocultarlo de inmediato
+                clearTimeout(timeoutId);
+                messageElement.style.display = 'none';
+                mensajeVisible = false;
+            }
+        }
+    <\/script>
+</body>
+</html>
+            `;
+
+            // Crear blob y link para descargar el HTML
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'imagen_con_mensaje.html';
+            link.click();
+        }
+    </script>
+</body>
+</html>
+
