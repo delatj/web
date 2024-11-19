@@ -9,7 +9,10 @@ No borrar clonados de los pen, porque al instalar cosas luego pesa mas y no se p
 *** conectar con epoptes en terminal cambiare de usuario con ... su dga  ...  flecha superior
 
 ____________________________________________________________
-
+actualizar repositorios
+sudo apt-get update
+sudo apt-get upgrade
+___________________________________
 
 
 
