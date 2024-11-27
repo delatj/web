@@ -1,0 +1,193 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generador de Sopa de Letras</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      text-align: center;
+    }
+    textarea {
+      width: 80%;
+      height: 150px;
+      margin: 10px 0;
+      font-size: 16px;
+    }
+    .button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      cursor: pointer;
+      text-align: center;
+    }
+    .button:hover {
+      background-color: #45a049;
+    }
+    table {
+      margin: 20px auto;
+      border-collapse: collapse;
+    }
+    td {
+      width: 30px;
+      height: 30px;
+      text-align: center;
+      border: 1px solid #000;
+      font-size: 18px;
+    }
+    .extra-text {
+      margin-top: 20px;
+      text-align: left;
+      padding: 10px;
+      border: 1px solid #000;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <h1>Generador de Sopa de Letras</h1>
+  <p>Introduce 10 palabras, cada una en una línea, y haz clic en "Generar Sopa de Letras".</p>
+  <textarea id="wordsInput" placeholder="Ejemplo:
+Taladro
+Martillo
+Sierra"></textarea>
+  <br>
+  <p>Pega un texto adicional que se mostrará organizado en el archivo generado:</p>
+  <textarea id="extraTextInput" placeholder="Introduce aquí un texto adicional."></textarea>
+  <br>
+  <button class="button" onclick="generateHTML()">Generar Sopa de Letras</button>
+  <br><br>
+  <a id="downloadLink" style="display: none;" class="button">Descargar Sopa de Letras</a>
+
+  <script>
+    function generateHTML() {
+      const input = document.getElementById("wordsInput").value.trim();
+      const extraText = document.getElementById("extraTextInput").value.trim();
+      const words = input.split("\n").map(word => word.trim().toUpperCase()).filter(Boolean);
+
+      if (words.length !== 10) {
+        alert("Por favor, introduce exactamente 10 palabras, cada una en una línea.");
+        return;
+      }
+
+      const gridSize = 15;
+      const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      const grid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(''));
+
+      // Función para colocar palabras en la sopa de letras
+      function placeWords() {
+        // Colocar dos palabras en diagonal
+        const diagonalWords = [words[0], words[1]];
+        diagonalWords.forEach((word, index) => {
+          for (let i = 0; i < word.length; i++) {
+            if (i < gridSize && i + index < gridSize) {
+              grid[i + index][i] = word[i];
+            }
+          }
+        });
+
+        // Colocar el resto de palabras horizontal o verticalmente
+        words.slice(2).forEach(word => {
+          let placed = false;
+          while (!placed) {
+            const direction = Math.random() > 0.5 ? "H" : "V";
+            const startRow = Math.floor(Math.random() * gridSize);
+            const startCol = Math.floor(Math.random() * gridSize);
+            if (direction === "H" && startCol + word.length <= gridSize) {
+              if (grid[startRow].slice(startCol, startCol + word.length).every(cell => cell === '')) {
+                for (let i = 0; i < word.length; i++) {
+                  grid[startRow][startCol + i] = word[i];
+                }
+                placed = true;
+              }
+            } else if (direction === "V" && startRow + word.length <= gridSize) {
+              if (grid.slice(startRow, startRow + word.length).every(row => row[startCol] === '')) {
+                for (let i = 0; i < word.length; i++) {
+                  grid[startRow + i][startCol] = word[i];
+                }
+                placed = true;
+              }
+            }
+          }
+        });
+      }
+
+      // Rellenar espacios vacíos con letras aleatorias
+      function fillEmptySpaces() {
+        for (let row = 0; row < gridSize; row++) {
+          for (let col = 0; col < gridSize; col++) {
+            if (grid[row][col] === '') {
+              grid[row][col] = alphabet[Math.floor(Math.random() * alphabet.length)];
+            }
+          }
+        }
+      }
+
+      placeWords();
+      fillEmptySpaces();
+
+      // Crear el archivo HTML con la sopa de letras y el texto adicional organizado
+      let htmlContent = `
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Sopa de Letras</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              text-align: center;
+              margin: 20px;
+            }
+            table {
+              margin: 20px auto;
+              border-collapse: collapse;
+            }
+            td {
+              width: 30px;
+              height: 30px;
+              text-align: center;
+              border: 1px solid #000;
+              font-size: 18px;
+            }
+            .extra-text {
+              margin-top: 20px;
+              text-align: left;
+              padding: 10px;
+              border: 1px solid #000;
+              display: inline-block;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>Sopa de Letras</h1>
+          <table>`;
+      for (let row = 0; row < gridSize; row++) {
+        htmlContent += "<tr>";
+        for (let col = 0; col < gridSize; col++) {
+          htmlContent += `<td>${grid[row][col]}</td>`;
+        }
+        htmlContent += "</tr>";
+      }
+      htmlContent += `
+          </table>
+          <p>Palabras a buscar: ${words.join(", ")}</p>
+          <div class="extra-text"><h3>Texto adicional:</h3><p>${extraText.replace(/\n/g, "<br>")}</p></div>
+        </body>
+        </html>`;
+
+      // Crear un blob y enlace para descargar el archivo
+      const blob = new Blob([htmlContent], { type: "text/html" });
+      const link = document.getElementById("downloadLink");
+      link.href = URL.createObjectURL(blob);
+      link.download = "sopa_de_letras.html";
+      link.style.display = "inline-block";
+    }
+  </script>
+</body>
+</html>
