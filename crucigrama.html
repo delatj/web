@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -80,23 +79,13 @@ Sierra"></textarea>
 
       // Función para colocar palabras en la sopa de letras
       function placeWords() {
-        // Colocar dos palabras en diagonal
-        const diagonalWords = [words[0], words[1]];
-        diagonalWords.forEach((word, index) => {
-          for (let i = 0; i < word.length; i++) {
-            if (i < gridSize && i + index < gridSize) {
-              grid[i + index][i] = word[i];
-            }
-          }
-        });
-
-        // Colocar el resto de palabras horizontal o verticalmente
-        words.slice(2).forEach(word => {
+        words.forEach(word => {
           let placed = false;
           while (!placed) {
-            const direction = Math.random() > 0.5 ? "H" : "V";
+            const direction = Math.random() < 0.33 ? "H" : Math.random() < 0.5 ? "V" : "D";
             const startRow = Math.floor(Math.random() * gridSize);
             const startCol = Math.floor(Math.random() * gridSize);
+
             if (direction === "H" && startCol + word.length <= gridSize) {
               if (grid[startRow].slice(startCol, startCol + word.length).every(cell => cell === '')) {
                 for (let i = 0; i < word.length; i++) {
@@ -108,6 +97,20 @@ Sierra"></textarea>
               if (grid.slice(startRow, startRow + word.length).every(row => row[startCol] === '')) {
                 for (let i = 0; i < word.length; i++) {
                   grid[startRow + i][startCol] = word[i];
+                }
+                placed = true;
+              }
+            } else if (direction === "D" && startRow + word.length <= gridSize && startCol + word.length <= gridSize) {
+              let canPlace = true;
+              for (let i = 0; i < word.length; i++) {
+                if (grid[startRow + i][startCol + i] !== '') {
+                  canPlace = false;
+                  break;
+                }
+              }
+              if (canPlace) {
+                for (let i = 0; i < word.length; i++) {
+                  grid[startRow + i][startCol + i] = word[i];
                 }
                 placed = true;
               }
@@ -191,3 +194,4 @@ Sierra"></textarea>
   </script>
 </body>
 </html>
+
