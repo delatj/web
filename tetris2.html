@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Tetris para Dos Jugadores</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .game-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #f0f0f0; /* Fondo inicial */
+            transition: background-color 0.5s ease;
+            border: 2px solid #444;
+        }
+        .game {
+            display: grid;
+            grid-template-columns: repeat(10, 20px);
+            grid-template-rows: repeat(20, 20px);
+            gap: 1px;
+            background-color: #333;
+        }
+        .cell {
+            width: 20px;
+            height: 20px;
+            background-color: #222;
+        }
+        .active {
+            background-color: #61dafb;
+        }
+        .occupied {
+            background-color: #777;
+        }
+        .score, .clock {
+            font-size: 20px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-container" id="container1">
+    <div class="clock" id="clock1">Tiempo: 0s</div>
+    <div class="game" id="game1"></div>
+    <div class="score" id="score1">Puntuación: 0</div>
+</div>
+
+<div class="game-container" id="container2">
+    <div class="clock" id="clock2">Tiempo: 0s</div>
+    <div class="game" id="game2"></div>
+    <div class="score" id="score2">Puntuación: 0</div>
+</div>
+
+<script>
+    class Tetris {
+        constructor(gameId, clockId, scoreId, containerId, controls) {
+            this.game = document.getElementById(gameId);
+            this.clockDisplay = document.getElementById(clockId);
+            this.scoreDisplay = document.getElementById(scoreId);
+            this.container = document.getElementById(containerId);
+            this.rows = 20;
+            this.cols = 10;
+            this.grid = Array.from({ length: this.rows }, () => Array(this.cols).fill(0));
+            this.score = 0;
+            this.currentPiece = null;
+            this.piecePosition = null;
+            this.startTime = Date.now();
+            this.controls = controls;
+
+            this.pieces = [
+                [[1, 1, 1, 1]], // I
+                [[1, 1], [1, 1]], // O
+                [[1, 1, 0], [0, 1, 1]], // Z
+                [[0, 1, 1], [1, 1, 0]], // S
+                [[1, 0, 0], [1, 1, 1]], // J
+                [[0, 0, 1], [1, 1, 1]], // L
+                [[0, 1, 0], [1, 1, 1]]  // T
+            ];
+
+            this.createBoard();
+            this.resetPiece();
+            this.updateClock();
+            this.gameLoop();
+
+            document.addEventListener("keydown", (event) => this.handleInput(event));
+        }
+
+        createBoard() {
+            for (let i = 0; i < this.rows * this.cols; i++) {
+                const cell = document.createElement("div");
+                cell.classList.add("cell");
+                this.game.appendChild(cell);
+            }
+        }
+
+        drawPiece() {
+            this.currentPiece.forEach((row, y) => {
+                row.forEach((cell, x) => {
+                    if (cell) {
+                        const index = (this.piecePosition.y + y) * this.cols + this.piecePosition.x + x;
+                        if (index >= 0 && index < this.rows * this.cols) {
+                            this.game.children[index].classList.add("active");
+                        }
+                    }
+                });
+            });
+        }
+
+        erasePiece() {
+            this.currentPiece.forEach((row, y) => {
+                row.forEach((cell, x) => {
+                    if (cell) {
+                        const index = (this.piecePosition.y + y) * this.cols + this.piecePosition.x + x;
+                        if (index >= 0 && index < this.rows * this.cols) {
+                            this.game.children[index].classList.remove("active");
+                        }
+                    }
+                });
+            });
+        }
+
+        collides(piece, position) {
+            return piece.some((row, y) => {
+                return row.some((cell, x) => {
+                    if (cell) {
+                        const newX = position.x + x;
+                        const newY = position.y + y;
+                        if (newX < 0 || newX >= this.cols || newY >= this.rows || (newY >= 0 && this.grid[newY][newX])) {
+                            return true;
+                        }
+                    }
+                    return false;
+                });
+            });
+        }
+
+        mergePiece() {
+            this.currentPiece.forEach((row, y) => {
+                row.forEach((cell, x) => {
+                    if (cell) {
+                        const posY = this.piecePosition.y + y;
+                        const posX = this.piecePosition.x + x;
+                        if (posY >= 0 && posY < this.rows && posX >= 0 && posX < this.cols) {
+                            this.grid[posY][posX] = cell;
+                        }
+                    }
+                });
+            });
+            this.updateGridDisplay();
+        }
+
+        updateGridDisplay() {
+            for (let y = 0; y < this.rows; y++) {
+                for (let x = 0; x < this.cols; x++) {
+                    const index = y * this.cols + x;
+                    this.game.children[index].classList.toggle("occupied", this.grid[y][x] === 1);
+                }
+            }
+        }
+
+        removeFullLines() {
+            let linesRemoved = 0;
+
+            this.grid = this.grid.filter(row => {
+                if (row.every(cell => cell)) {
+                    linesRemoved++;
+                    return false;
+                }
+                return true;
+            });
+
+            while (this.grid.length < this.rows) {
+                this.grid.unshift(Array(this.cols).fill(0));
+            }
+
+            if (linesRemoved > 0) {
+                setTimeout(() => {
+                    this.score += linesRemoved;
+                    this.updateScore();
+                }, 100);
+            }
+        }
+
+        updateScore() {
+            this.scoreDisplay.textContent = `Puntuación: ${this.score}`;
+            if (this.score >= 60) {
+                this.container.style.backgroundColor = "darkyellow";
+            } else if (this.score >= 40) {
+                this.container.style.backgroundColor = "darkgreen";
+            } else if (this.score >= 20) {
+                this.container.style.backgroundColor = "darkblue";
+            } else {
+                this.container.style.backgroundColor = "#f0f0f0";
+            }
+        }
+
+        resetPiece() {
+            this.currentPiece = this.pieces[Math.floor(Math.random() * this.pieces.length)];
+            this.piecePosition = { x: Math.floor(this.cols / 2) - 1, y: 0 };
+
+            if (this.collides(this.currentPiece, this.piecePosition)) {
+                alert("¡Juego terminado!");
+                this.grid = Array.from({ length: this.rows }, () => Array(this.cols).fill(0));
+                this.updateGridDisplay();
+            }
+        }
+
+        updateClock() {
+            const elapsedTime = Math.floor((Date.now() - this.startTime) / 1000);
+            this.clockDisplay.textContent = `Tiempo: ${elapsedTime}s`;
+            requestAnimationFrame(() => this.updateClock());
+        }
+
+        gameLoop() {
+            this.erasePiece();
+            this.piecePosition.y++;
+
+            if (this.collides(this.currentPiece, this.piecePosition)) {
+                this.piecePosition.y--;
+                this.mergePiece();
+                this.removeFullLines();
+                this.resetPiece();
+            }
+
+            this.drawPiece();
+            setTimeout(() => this.gameLoop(), 500);
+        }
+
+        handleInput(event) {
+            const { left, right, down, rotate } = this.controls;
+
+            this.erasePiece();
+
+            if (event.key === left && !this.collides(this.currentPiece, { x: this.piecePosition.x - 1, y: this.piecePosition.y })) {
+                this.piecePosition.x--;
+            } else if (event.key === right && !this.collides(this.currentPiece, { x: this.piecePosition.x + 1, y: this.piecePosition.y })) {
+                this.piecePosition.x++;
+            } else if (event.key === down && !this.collides(this.currentPiece, { x: this.piecePosition.x, y: this.piecePosition.y + 1 })) {
+                this.piecePosition.y++;
+            } else if (event.key === rotate) {
+                const rotatedPiece = this.currentPiece[0].map((_, i) => this.currentPiece.map(row => row[i])).reverse();
+                if (!this.collides(rotatedPiece, this.piecePosition)) {
+                    this.currentPiece = rotatedPiece;
+                }
+            }
+
+            this.drawPiece();
+        }
+    }
+
+    const player1Controls = { left: "a", right: "d", down: "s", rotate: "w" };
+    const player2Controls = { left: "ArrowLeft", right: "ArrowRight", down: "ArrowDown", rotate: "ArrowUp" };
+
+    const player1 = new Tetris("game1", "clock1", "score1", "container1", player1Controls);
+    const player2 = new Tetris("game2", "clock2", "score2", "container2", player2Controls);
+</script>
+
+</body>
+</html>
+

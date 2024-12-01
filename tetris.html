@@ -38,7 +38,8 @@
             position: absolute;
             top: 20px;
             right: 20px;
-            font-size: 20px; /* Tamaño reducido */
+            font-size: 30px; /* Tamaño aumentado */
+            color: #000;
         }
         #clock {
             position: absolute;
@@ -178,8 +179,12 @@
 
     function updateScore() {
         scoreDisplay.textContent = `Puntuación: ${score}`;
-        if (score >= 30) {
-            body.style.backgroundColor = "blue";
+        if (score >= 60) {
+            body.style.backgroundColor = "yellowgreen"; // Amarillo oscuro
+        } else if (score >= 40) {
+            body.style.backgroundColor = "darkgreen"; // Verde oscuro
+        } else if (score >= 20) {
+            body.style.backgroundColor = "darkblue"; // Azul oscuro
         }
     }
 
