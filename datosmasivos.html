@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuestionario sobre Datos Masivos y Metadatos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            padding: 20px;
+            background-color: white;
+            transition: background-color 0.5s;
+        }
+        .timer {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: red;
+        }
+        .score {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            font-size: 2em;
+            font-weight: bold;
+        }
+        .question {
+            margin-bottom: 20px;
+        }
+        .hidden-answer {
+            display: none;
+            font-weight: bold;
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <h1>Cuestionario sobre Datos Masivos y Metadatos</h1>
+
+    <div id="date-time"></div>
+
+    <div class="timer" id="timer">4:30</div>
+    <div class="score" id="score">Aciertos: 0%</div>
+
+    <form id="quiz-form">
+        <div id="questions-container"></div>
+    </form>
+
+    <button onclick="validateAnswers()">Validar respuestas</button>
+    <button onclick="showAnswers()">Ver respuestas</button>
+
+    <script>
+        const questions = [
+            { text: "Los datos masivos también son conocidos con el nombre de Big----", answer: "data" },
+            { text: "El conjunto de datos extremadamente grandes y complejos que supera la capacidad de manejo se llama Big----", answer: "data" },
+            { text: "De los datos masivos Big Data se extraen patrones, tendencias y----", answer: "conocimientos" },
+            { text: "Los metadatos son datos que proporcionan información sobre otros----", answer: "datos" },
+            { text: "Los metadatos que proporcionan información sobre el contenido de los datos se llaman----descriptivos", answer: "descriptivos" },
+            { text: "Los metadatos que ofrecen detalles sobre la creación y gestión de los datos son los ---- administrativos", answer: "administrativos" },
+            { text: "Los metadatos que describen la organización y formato de los datos son los ---- estructurales", answer: "estructurales" },
+            { text: "Dentro del uso de metadatos tenemos el organizar y categorizar datos facilitando su----", answer: "búsqueda" },
+            { text: "Dentro del uso de los metadatos tenemos la gestión para facilitar la administración y ---- de la información", answer: "control" },
+            { text: "Dentro del uso de los metadatos tenemos la interoperabilidad que permite la integración y ---- de datos", answer: "compartición" },
+            { text: "Los metadatos pueden almacenarse dentro de los propios archivos de datos o en ---- de datos especializadas", answer: "bases" },
+            { text: "El proceso de extracción automática de la información de sitios web se llama data----", answer: "scraping" },
+            { text: "El data scraping puede implicar análisis del código fuente de una página web para extraer datos----", answer: "específicos" },
+            { text: "En el ejemplo de una cadena de supermercados la recopilación de datos se da por ejemplo en las transacciones de compra o datos de----", answer: "inventario" },
+            { text: "La herramienta para ver cuáles son las tendencias estacionales y las ---- de los clientes", answer: "preferencias" },
+            { text: "El análisis de datos del Big Data permite personalizar las ofertas y----", answer: "promociones" },
+            { text: "El análisis de datos de Big Data permite también optimizar el inventario por ejemplo para prever----", answer: "demandas" },
+            { text: "El análisis de datos de Big Data también permite mejorar la experiencia del cliente por ejemplo con una mejor ---- de los productos de la tienda", answer: "disposición" }
+        ];
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function loadQuestions() {
+            shuffleArray(questions);
+            const container = document.getElementById('questions-container');
+            questions.forEach((question, index) => {
+                const questionElement = document.createElement('div');
+                questionElement.classList.add('question');
+                questionElement.innerHTML = `${question.text} <input type="text" data-answer="${question.answer}"> <span class="hidden-answer">${question.answer}</span>`;
+                container.appendChild(questionElement);
+            });
+        }
+
+        function validateAnswers() {
+            const inputs = document.querySelectorAll('input');
+            let correctAnswers = 0;
+            inputs.forEach(input => {
+                const userAnswer = input.value.trim().toLowerCase();
+                const correctAnswer = input.dataset.answer;
+                if (userAnswer === correctAnswer) {
+                    correctAnswers++;
+                }
+                input.disabled = true;
+            });
+
+            const percentage = Math.round((correctAnswers / inputs.length) * 100);
+            scoreElement.textContent = `Aciertos: ${percentage}%`;
+
+            if (percentage >= 80) {
+                document.body.style.backgroundColor = 'darkblue';
+            } else if (percentage >= 60) {
+                document.body.style.backgroundColor = 'darkgreen';
+            } else {
+                document.body.style.backgroundColor = 'white';
+            }
+        }
+
+        function lockAnswers() {
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => input.disabled = true);
+        }
+
+        function showAnswers() {
+            const password = prompt("Introduce la contraseña para ver las respuestas:");
+            if (password === "1979") {
+                document.querySelectorAll('.hidden-answer').forEach(answer => {
+                    answer.style.display = 'inline';
+                });
+            } else {
+                alert("Contraseña incorrecta.");
+            }
+        }
+
+        const timerElement = document.getElementById('timer');
+        const scoreElement = document.getElementById('score');
+        let timeRemaining = 270; // 4 minutes and 30 seconds
+
+        function updateTimer() {
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+            if (timeRemaining <= 0) {
+                clearInterval(timerInterval);
+                lockAnswers();
+                validateAnswers();
+            } else {
+                timeRemaining--;
+            }
+        }
+
+        const timerInterval = setInterval(updateTimer, 1000);
+
+        document.addEventListener('DOMContentLoaded', loadQuestions);
+
+        function updateDateTime() {
+            const now = new Date();
+            document.getElementById('date-time').textContent = now.toLocaleString();
+        }
+
+        updateDateTime();
+    </script>
+</body>
+</html>
+
