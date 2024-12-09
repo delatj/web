@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor de Archivos HTML y PDF</title>
+    <title>Gestor de Archivos HTML, HTM y PDF</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -32,7 +32,7 @@
             background-color: #0056b3;
         }
         input[type="file"] {
-            margin-bottom: 10px;
+            display: none; /* Oculta el input para que solo se use el botón azul */
         }
         table {
             width: 80%;
@@ -92,11 +92,10 @@
         async function handleFiles(event) {
             const newFiles = event.target.files;
             if (newFiles.length > 0) {
-                // Agregar los nuevos archivos a la lista
                 for (let file of newFiles) {
                     filesList.push(file);
                 }
-                updateFileList();  // Actualizar la tabla con los archivos seleccionados
+                updateFileList();
             }
         }
 
@@ -146,6 +145,16 @@
         tr:hover {
             background-color: #e9f7ff;
         }
+        .pdf-row {
+            background-color: #fff8dc; /* Amarillo claro */
+            color: red; /* Texto rojo */
+        }
+        .pdf-row a {
+            color: red; /* Enlaces en rojo */
+        }
+        .pdf-row:hover {
+            background-color: #ffe4b5; /* Amarillo más oscuro al pasar el ratón */
+        }
         a {
             color: #007BFF;
             text-decoration: none;
@@ -168,12 +177,14 @@
         <tbody id="fileTableBody">
 `;
 
-            // Añadir los archivos seleccionados al archivo ZIP y a la tabla del índice
-            filesList.forEach(file => {
+            filesList.forEach((file, index) => {
+                const isPDF = file.name.toLowerCase().endsWith(".pdf");
+                const rowClass = isPDF ? 'class="pdf-row"' : '';
                 zip.file(file.name, file);
+
                 indexContent += `
-            <tr>
-                <td>${filesList.indexOf(file) + 1}</td>
+            <tr ${rowClass}>
+                <td>${index + 1}</td>
                 <td>${file.name}</td>
                 <td><a href="${file.name}" target="_blank">Abrir</a></td>
             </tr>`;
@@ -185,16 +196,13 @@
 </body>
 </html>`;
 
-            // Añadir el índice a los archivos del ZIP
             zip.file("index.html", indexContent);
 
-            // Generar el archivo ZIP y descargarlo
             zip.generateAsync({ type: "blob" }).then(content => {
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(content);
-                link.download = "archivos_html_y_pdf.zip";
+                link.download = "archivos_html_htm_pdf.zip";
                 link.click();
-                console.log("ZIP generado y descargado.");
             }).catch(error => {
                 console.error("Error al generar el ZIP:", error);
             });
@@ -203,9 +211,9 @@
 </head>
 <body>
     <div class="container">
-        <h1>Gestor de Archivos HTML y PDF</h1>
-        <p>Sube tus archivos HTML y PDF y genera una carpeta con un índice para acceder a ellos.</p>
-        <input type="file" id="fileInput" multiple accept=".html, .pdf" onchange="handleFiles(event)">
+        <h1>Gestor de Archivos HTML, HTM y PDF</h1>
+        <p>Sube tus archivos HTML, HTM y PDF y genera una carpeta con un índice para acceder a ellos.</p>
+        <input type="file" id="fileInput" multiple accept=".html, .htm, .pdf" onchange="handleFiles(event)">
         <button onclick="document.getElementById('fileInput').click()">Seleccionar Archivos</button>
         <table>
             <thead>
