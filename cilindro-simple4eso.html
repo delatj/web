@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cálculo Cilindro Simple Efecto</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        .success {
+            background-color: lightblue;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        input[type="number"] {
+            padding: 5px;
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+        input:disabled {
+            background-color: #f2f2f2;
+            cursor: not-allowed;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <script>
+        function getRandomValue(baseValue, margin) {
+            const lowerBound = baseValue * (1 - margin);
+            const upperBound = baseValue * (1 + margin);
+            return Math.round(Math.random() * (upperBound - lowerBound) + lowerBound);
+        }
+
+        function initializeQuiz() {
+            const basePistonDiameter = 50; // mm
+            const basePressureWork = 800; // kPa
+
+            const pistonDiameter = getRandomValue(basePistonDiameter, 0.2); // 20% margen
+            const pressureWork = getRandomValue(basePressureWork, 0.2); // 20% margen
+
+            const pistonRadius = pistonDiameter / 2 / 1000; // m
+            const pistonArea = Math.PI * Math.pow(pistonRadius, 2); // m²
+
+            const workingPressurePa = pressureWork * 1e3; // Pa (convertir de kPa a Pa)
+
+            const effectiveAdvanceForce = workingPressurePa * pistonArea; // N
+
+            document.getElementById("pistonDiameter").textContent = pistonDiameter;
+            document.getElementById("pressureWork").textContent = pressureWork;
+
+            document.getElementById("validateBtn").onclick = function () {
+                const answerA1 = parseFloat(document.getElementById("answerA1").value);
+
+                let resultA1 = "Errado";
+
+                if (Math.abs(answerA1 - effectiveAdvanceForce) <= 0.05 * effectiveAdvanceForce) {
+                    resultA1 = "Acertado";
+                }
+
+                alert(`Resultado de la Fuerza de avance: ${resultA1}`);
+
+                if (resultA1 === "Acertado") {
+                    document.body.className = "success";
+                }
+
+                document.getElementById("answerA1").disabled = true;
+                document.getElementById("validateBtn").disabled = true;
+            };
+
+            document.getElementById("showAnswersBtn").onclick = function () {
+                const key = prompt("Introduce la clave para ver las respuestas:");
+                if (key === "1979") {
+                    alert(`Respuestas correctas:\n\nFuerza efectiva de avance: ${effectiveAdvanceForce.toFixed(0)} N\n\nDetalles:\n - Área del émbolo: ${pistonArea.toFixed(6)} m²`);
+                } else {
+                    alert("Clave incorrecta.");
+                }
+            };
+
+            document.getElementById("resetBtn").onclick = function () {
+                location.reload(); // Reinicia la página
+            };
+        }
+    </script>
+</head>
+<body onload="initializeQuiz()">
+    <div class="container">
+        <h1>Cálculo Cilindro Simple Efecto</h1>
+        <p>Una máquina selladora utiliza un cilindro de simple efecto con un émbolo de <span id="pistonDiameter"></span> mm de diámetro. La presión de trabajo es de <span id="pressureWork"></span> kPa.</p>
+        <p>Se pide calcular:</p>
+        <ol>
+            <li>Fuerza efectiva que ejerce el vástago en la carrera de avance (en N).</li>
+        </ol>
+
+        <p>Introduce tu respuesta:</p>
+        <label for="answerA1">Fuerza efectiva de avance (N):</label>
+        <input type="number" id="answerA1" step="1" required><br>
+
+        <button id="validateBtn">Validar</button>
+        <button id="showAnswersBtn">Mostrar Respuestas</button>
+        <button id="resetBtn">Reiniciar</button>
+    </div>
+</body>
+</html>
+

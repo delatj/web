@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circuito Eléctrico Serie de 3 Resistencias (obtener intensidad)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        .success {
+            background-color: lightblue;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        input[type="number"] {
+            padding: 5px;
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <script>
+        function initializeCircuit() {
+            function getRandomInt(min, max) {
+                return Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+
+            const resistances = [getRandomInt(2, 20), getRandomInt(2, 20), getRandomInt(2, 20)]; // Valores aleatorios de las resistencias
+            const current = getRandomInt(2, 20); // Intensidad aleatoria en amperios
+
+            const totalResistance = resistances.reduce((sum, r) => sum + r, 0); // Resistencia total
+            const voltage = totalResistance * current; // Voltaje total
+            const power = voltage * current; // Potencia total
+
+            document.getElementById("resistances").textContent = resistances.join(", ");
+            document.getElementById("current").textContent = current;
+
+            document.getElementById("validateBtn").onclick = function () {
+                const answerVoltage = parseFloat(document.getElementById("answerVoltage").value);
+                const answerPower = parseFloat(document.getElementById("answerPower").value);
+
+                let resultVoltage = "Errado";
+                let resultPower = "Errado";
+
+                if (Math.abs(answerVoltage - voltage) <= 0.05 * voltage) {
+                    resultVoltage = "Acertado";
+                }
+
+                if (Math.abs(answerPower - power) <= 0.05 * power) {
+                    resultPower = "Acertado";
+                }
+
+                alert(`Resultado del Voltaje: ${resultVoltage}\nResultado de la Potencia: ${resultPower}`);
+
+                if (resultVoltage === "Acertado" && resultPower === "Acertado") {
+                    document.body.className = "success";
+                } else {
+                    alert("Inténtalo nuevamente.");
+                }
+
+                document.getElementById("answerVoltage").disabled = true;
+                document.getElementById("answerPower").disabled = true;
+                document.getElementById("validateBtn").disabled = true;
+            };
+
+            document.getElementById("showAnswersBtn").onclick = function () {
+                const key = prompt("Introduce la clave para ver las respuestas:");
+                if (key ==="1979") {
+                    alert(`Respuestas correctas:\n\nVoltaje total: ${voltage} V\nPotencia total: ${power} W`);
+                } else {
+                    alert("Clave incorrecta.");
+                }
+            };
+        }
+    </script>
+</head>
+<body onload="initializeCircuit()">
+    <div class="container">
+        <h1>Circuito Eléctrico Serie de 3 Resistencias (obtener intensidad)</h1>
+        <p>En un circuito en serie formado por resistencias de <span id="resistances"></span> ohmios, y una intensidad de corriente de <span id="current"></span> amperios, calcula:</p>
+        <ol>
+            <li>El voltaje total del circuito (en V).</li>
+            <li>La potencia total del circuito (en W).</li>
+        </ol>
+
+        <p>Introduce tus respuestas:</p>
+        <label for="answerVoltage">Voltaje total (V):</label>
+        <input type="number" id="answerVoltage" step="0.01" required><br>
+
+        <label for="answerPower">Potencia total (W):</label>
+        <input type="number" id="answerPower" step="0.01" required><br>
+
+        <button id="validateBtn">Validar</button>
+        <button id="showAnswersBtn">Mostrar Respuestas</button>
+    </div>
+</body>
+</html>
+

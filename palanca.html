@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cálculo de Fuerza con Palanca</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        .success {
+            background-color: lightblue;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        input[type="number"] {
+            padding: 5px;
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+        input:disabled {
+            background-color: #f2f2f2;
+            cursor: not-allowed;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <script>
+        function getRandomValue(baseValue, margin) {
+            const lowerBound = baseValue * (1 - margin);
+            const upperBound = baseValue * (1 + margin);
+            return Math.round(Math.random() * (upperBound - lowerBound) + lowerBound);
+        }
+
+        function initializeQuiz() {
+            const baseWeight = 100; // Peso de la piedra en kg
+            const baseDistanceLoad = 50; // Distancia de la piedra al punto de apoyo en cm
+            const baseDistanceEffort = 200; // Distancia de la fuerza al punto de apoyo en cm
+
+            const weight = getRandomValue(baseWeight, 0.2); // 20% margen
+            const distanceLoad = getRandomValue(baseDistanceLoad, 0.2); // 20% margen
+            const distanceEffort = getRandomValue(baseDistanceEffort, 0.2); // 20% margen
+
+            const gravity = 9.81; // m/s^2
+            const weightForce = weight * gravity; // Fuerza en N
+
+            const effortForce = (weightForce * distanceLoad) / distanceEffort; // Fuerza a aplicar en N
+
+            document.getElementById("weight").textContent = weight;
+            document.getElementById("distanceLoad").textContent = distanceLoad;
+            document.getElementById("distanceEffort").textContent = distanceEffort;
+
+            document.getElementById("validateBtn").onclick = function () {
+                const answerEffort = parseFloat(document.getElementById("answerEffort").value);
+
+                let resultEffort = "Errado";
+
+                if (Math.abs(answerEffort - effortForce) <= 0.05 * effortForce) {
+                    resultEffort = "Acertado";
+                }
+
+                alert(`Resultado de la fuerza aplicada: ${resultEffort}`);
+
+                if (resultEffort === "Acertado") {
+                    document.body.className = "success";
+                }
+
+                document.getElementById("answerEffort").disabled = true;
+                document.getElementById("validateBtn").disabled = true;
+            };
+
+            document.getElementById("showAnswersBtn").onclick = function () {
+                const key = prompt("Introduce la clave para ver las respuestas:");
+                if (key === "1979") {
+                    alert(`Respuestas correctas:\n\nFuerza a aplicar: ${effortForce.toFixed(2)} N`);
+                } else {
+                    alert("Clave incorrecta.");
+                }
+            };
+
+            document.getElementById("resetBtn").onclick = function () {
+                location.reload(); // Reinicia la página
+            };
+        }
+    </script>
+</head>
+<body onload="initializeQuiz()">
+    <div class="container">
+        <h1>Cálculo de Fuerza con Palanca</h1>
+        <p>Queremos levantar una piedra de <span id="weight"></span> kg usando una palanca, la distancia de la piedra al punto de apoyo es de <span id="distanceLoad"></span> cm, y la distancia de la fuerza a aplicar al punto de apoyo es de <span id="distanceEffort"></span> cm.</p>
+        <p>Se pide calcular:</p>
+        <ol>
+            <li>La fuerza necesaria para levantar la piedra (en N).</li>
+        </ol>
+
+        <p>Introduce tu respuesta:</p>
+        <label for="answerEffort">Fuerza a aplicar (N):</label>
+        <input type="number" id="answerEffort" step="0.01" required><br>
+
+        <button id="validateBtn">Validar</button>
+        <button id="showAnswersBtn">Mostrar Respuestas</button>
+        <button id="resetBtn">Reiniciar</button>
+    </div>
+</body>
+</html>
+
