@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movimiento de Tortuga: Dos Jugadores</title>
+    <style>
+        body {
+            transition: background-color 0.5s;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .game-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            width: 50%;
+            transition: background-color 0.5s;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(6, 50px);
+            grid-template-rows: repeat(6, 50px);
+            gap: 2px;
+            border: 2px solid black;
+        }
+
+        .grid-item {
+            width: 50px;
+            height: 50px;
+            border: 1px solid black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .character {
+            width: 40px;
+            height: 20px;
+            background-color: lightblue;
+            border-radius: 0px 10px 10px 0px;
+            border-right: 3px solid black;
+            transform-origin: center center;
+            transition: transform 0.3s;
+        }
+
+        .goal {
+            background-color: lightgreen;
+            border-radius: 50%;
+            color: black;
+            font-weight: bold;
+        }
+
+        .obstacle {
+            background-color: red;
+            border-radius: 50%;
+            color: white;
+            font-weight: bold;
+        }
+
+        .score {
+            font-size: 2em;
+            color: green;
+        }
+
+        .instructions {
+            font-size: 16px;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .divider {
+            height: 100%;
+            width: 2px;
+            background-color: black;
+            position: absolute;
+            left: 50%;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-area" id="leftArea">
+        <h2>Jugador Izquierdo</h2>
+        <div class="grid-container" id="gridLeft"></div>
+        <div class="score" id="scoreLeft">Punt: 0</div>
+        <div class="instructions">
+            Controles:<br>
+            W - Avanzar<br>
+            S - Retroceder<br>
+            A - Girar a la izquierda 90&deg;<br>
+            D - Girar a la derecha 90&deg;
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="game-area" id="rightArea">
+        <h2>Jugador Derecho</h2>
+        <div class="grid-container" id="gridRight"></div>
+        <div class="score" id="scoreRight">Punt: 0</div>
+        <div class="instructions">
+            Controles:<br>
+            Flecha Arriba - Avanzar<br>
+            Flecha Abajo - Retroceder<br>
+            Flecha Izquierda - Girar a la izquierda 90&deg;<br>
+            Flecha Derecha - Girar a la derecha 90&deg;
+        </div>
+    </div>
+
+    <script>
+        const gridSize = 6;
+        let players = {
+            left: {
+                position: { x: 0, y: 0 },
+                direction: 0,
+                score: 0,
+                rewards: [],
+                obstacles: [],
+                currentRewardIndex: 0
+            },
+            right: {
+                position: { x: 0, y: 0 },
+                direction: 0,
+                score: 0,
+                rewards: [],
+                obstacles: [],
+                currentRewardIndex: 0
+            }
+        };
+
+        function generateRewardsAndObstacles(player) {
+            player.rewards = [];
+            player.obstacles = [];
+
+            const usedPositions = new Set();
+
+            function positionKey(pos) {
+                return `${pos.x},${pos.y}`;
+            }
+
+            function uniqueRandomPosition() {
+                let pos;
+                do {
+                    pos = randomPosition();
+                } while (usedPositions.has(positionKey(pos)));
+                usedPositions.add(positionKey(pos));
+                return pos;
+            }
+
+            for (let i = 0; i < 4; i++) {
+                const rewardPos = uniqueRandomPosition();
+                player.rewards.push({ ...rewardPos, order: i + 1 });
+            }
+
+            for (let i = 0; i < 3; i++) {
+                const obstaclePos = uniqueRandomPosition();
+                player.obstacles.push(obstaclePos);
+            }
+        }
+
+        function randomPosition() {
+            return {
+                x: Math.floor(Math.random() * gridSize),
+                y: Math.floor(Math.random() * gridSize)
+            };
+        }
+
+        function renderGrid(player, gridId) {
+            const grid = document.getElementById(gridId);
+            grid.innerHTML = "";
+
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    const cell = document.createElement("div");
+                    cell.classList.add("grid-item");
+
+                    if (x === player.position.x && y === player.position.y) {
+                        const character = document.createElement("div");
+                        character.classList.add("character");
+                        character.style.transform = `rotate(${player.direction}deg)`;
+                        cell.appendChild(character);
+                    } else {
+                        const reward = player.rewards.find(r => r.x === x && r.y === y);
+                        const obstacle = player.obstacles.find(o => o.x === x && o.y === y);
+
+                        if (reward) {
+                            cell.classList.add("goal");
+                            cell.textContent = reward.order;
+                        } else if (obstacle) {
+                            cell.classList.add("obstacle");
+                        }
+                    }
+
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        function movePlayer(player, direction, gridId) {
+            const newPosition = { ...player.position };
+
+            if (direction === "forward") {
+                if (player.direction === 0) newPosition.x++;
+                if (player.direction === 90) newPosition.y++;
+                if (player.direction === 180) newPosition.x--;
+                if (player.direction === 270) newPosition.y--;
+            } else if (direction === "backward") {
+                if (player.direction === 0) newPosition.x--;
+                if (player.direction === 90) newPosition.y--;
+                if (player.direction === 180) newPosition.x++;
+                if (player.direction === 270) newPosition.y++;
+            }
+
+            if (
+                newPosition.x < 0 ||
+                newPosition.x >= gridSize ||
+                newPosition.y < 0 ||
+                newPosition.y >= gridSize
+            ) {
+                player.score--;
+                updateScore(player, gridId);
+                return; // Salir si choca con el borde
+            }
+
+            checkPosition(player, newPosition, gridId);
+        }
+
+        function rotatePlayer(player, rotation, gridId) {
+            player.direction = (player.direction + rotation + 360) % 360;
+            renderGrid(player, gridId);
+        }
+
+        function checkPosition(player, newPosition, gridId) {
+            const obstacle = player.obstacles.find(o => o.x === newPosition.x && o.y === newPosition.y);
+            const reward = player.rewards.find(r => r.x === newPosition.x && r.y === newPosition.y);
+
+            if (obstacle) {
+                player.score--;
+            } else if (reward) {
+                if (reward.order === player.currentRewardIndex + 1) {
+                    player.currentRewardIndex++;
+                    if (player.currentRewardIndex === player.rewards.length) {
+                        player.score++;
+                        player.currentRewardIndex = 0;
+                        generateRewardsAndObstacles(player);
+                    }
+                } else {
+                    return; // No avanzar si no es el orden correcto
+                }
+            }
+
+            player.position = newPosition;
+            updateScore(player, gridId);
+        }
+
+        function updateScore(player, gridId) {
+            const scoreElementId = gridId === "gridLeft" ? "scoreLeft" : "scoreRight";
+            const areaId = gridId === "gridLeft" ? "leftArea" : "rightArea";
+            const areaElement = document.getElementById(areaId);
+
+            document.getElementById(scoreElementId).textContent = `Punt: ${player.score}`;
+
+            if (player.score >= 50) {
+                areaElement.style.backgroundColor = "yellow";
+            } else if (player.score >= 40) {
+                areaElement.style.backgroundColor = "green";
+            } else if (player.score >= 30) {
+                areaElement.style.backgroundColor = "blue";
+            } else {
+                areaElement.style.backgroundColor = "white";
+            }
+
+            renderGrid(player, gridId);
+        }
+
+        window.addEventListener("keydown", (event) => {
+            switch (event.key) {
+                // Controles del jugador izquierdo
+                case "w":
+                    movePlayer(players.left, "forward", "gridLeft");
+                    break;
+                case "s":
+                    movePlayer(players.left, "backward", "gridLeft");
+                    break;
+                case "a":
+                    rotatePlayer(players.left, -90, "gridLeft");
+                    break;
+                case "d":
+                    rotatePlayer(players.left, 90, "gridLeft");
+                    break;
+
+                // Controles del jugador derecho
+                case "ArrowUp":
+                    movePlayer(players.right, "forward", "gridRight");
+                    break;
+                case "ArrowDown":
+                    movePlayer(players.right, "backward", "gridRight");
+                    break;
+                case "ArrowLeft":
+                    rotatePlayer(players.right, -90, "gridRight");
+                    break;
+                case "ArrowRight":
+                    rotatePlayer(players.right, 90, "gridRight");
+                    break;
+            }
+        });
+
+        // Inicializar los jugadores
+        generateRewardsAndObstacles(players.left);
+        generateRewardsAndObstacles(players.right);
+        renderGrid(players.left, "gridLeft");
+        renderGrid(players.right, "gridRight");
+    </script>
+
+</body>
+</html>
+
