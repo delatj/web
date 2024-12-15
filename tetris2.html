@@ -209,6 +209,8 @@
 
             if (this.collides(this.currentPiece, this.piecePosition)) {
                 alert("¡Juego terminado!");
+                this.score = Math.max(0, this.score - 2); // Restar 2 puntos al jugador
+                this.updateScore();
                 this.grid = Array.from({ length: this.rows }, () => Array(this.cols).fill(0));
                 this.updateGridDisplay();
             }
