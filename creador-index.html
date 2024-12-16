@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor de Archivos HTML, HTM y PDF</title>
+    <title>Gestor de Archivos HTML, HTM, PDF, EXE y JAR</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -32,7 +32,7 @@
             background-color: #0056b3;
         }
         input[type="file"] {
-            display: none; /* Oculta el input para que solo se use el botón azul */
+            display: none;
         }
         table {
             width: 80%;
@@ -57,20 +57,26 @@
             background-color: #e9f7ff;
         }
         a {
-            color: #007BFF;
             text-decoration: none;
         }
-        a:hover {
-            text-decoration: underline;
+        /* Estilos por tipo de archivo */
+        .pdf-row a, .pdf-row td.file-name {
+            color: red;
+        }
+        .html-row a, .html-row td.file-name {
+            color: blue;
+        }
+        .exe-jar-row a, .exe-jar-row td.file-name {
+            color: darkgreen;
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script>
-        let filesList = [];  // Lista para almacenar los archivos seleccionados
+        let filesList = []; // Lista para almacenar los archivos seleccionados
 
         function updateFileList() {
             const tableBody = document.getElementById("fileTableBody");
-            tableBody.innerHTML = "";  // Limpiar la tabla
+            tableBody.innerHTML = ""; // Limpiar la tabla
 
             filesList.forEach((file, index) => {
                 const row = document.createElement("tr");
@@ -78,9 +84,31 @@
                 const cellName = document.createElement("td");
                 const cellAction = document.createElement("td");
 
+                // Detectar tipo de archivo
+                const fileNameLower = file.name.toLowerCase();
+                const isPDF = fileNameLower.endsWith(".pdf");
+                const isHTML = fileNameLower.endsWith(".html") || fileNameLower.endsWith(".htm");
+                const isExeJar = fileNameLower.endsWith(".exe") || fileNameLower.endsWith(".jar");
+
+                // Asignar clases para colores según tipo
+                if (isPDF) {
+                    row.className = "pdf-row";
+                } else if (isHTML) {
+                    row.className = "html-row";
+                } else if (isExeJar) {
+                    row.className = "exe-jar-row";
+                }
+
                 cellIndex.textContent = index + 1;
+
+                // Aplicar clase personalizada al nombre del archivo
                 cellName.textContent = file.name;
-                cellAction.innerHTML = `<a href="${file.name}" target="_blank">Abrir</a>`;
+                cellName.className = "file-name";
+
+                // Generar el botón de acción
+                cellAction.innerHTML = isExeJar
+                    ? `<a href="${URL.createObjectURL(file)}" download="${file.name}">Descargar</a>`
+                    : `<a href="${URL.createObjectURL(file)}" target="_blank">Abrir</a>`;
 
                 row.appendChild(cellIndex);
                 row.appendChild(cellName);
@@ -145,22 +173,17 @@
         tr:hover {
             background-color: #e9f7ff;
         }
-        .pdf-row {
-            background-color: #fff8dc; /* Amarillo claro */
-            color: red; /* Texto rojo */
-        }
-        .pdf-row a {
-            color: red; /* Enlaces en rojo */
-        }
-        .pdf-row:hover {
-            background-color: #ffe4b5; /* Amarillo más oscuro al pasar el ratón */
-        }
         a {
-            color: #007BFF;
             text-decoration: none;
         }
-        a:hover {
-            text-decoration: underline;
+        .pdf-row a, .pdf-row td.file-name {
+            color: red;
+        }
+        .html-row a, .html-row td.file-name {
+            color: blue;
+        }
+        .exe-jar-row a, .exe-jar-row td.file-name {
+            color: darkgreen;
         }
     </style>
 </head>
@@ -174,19 +197,23 @@
                 <th>Acción</th>
             </tr>
         </thead>
-        <tbody id="fileTableBody">
+        <tbody>
 `;
 
             filesList.forEach((file, index) => {
-                const isPDF = file.name.toLowerCase().endsWith(".pdf");
-                const rowClass = isPDF ? 'class="pdf-row"' : '';
+                const fileNameLower = file.name.toLowerCase();
+                const rowClass = fileNameLower.endsWith(".pdf") ? "pdf-row"
+                    : (fileNameLower.endsWith(".html") || fileNameLower.endsWith(".htm")) ? "html-row"
+                    : (fileNameLower.endsWith(".exe") || fileNameLower.endsWith(".jar")) ? "exe-jar-row"
+                    : "";
+
                 zip.file(file.name, file);
 
                 indexContent += `
-            <tr ${rowClass}>
+            <tr class="${rowClass}">
                 <td>${index + 1}</td>
-                <td>${file.name}</td>
-                <td><a href="${file.name}" target="_blank">Abrir</a></td>
+                <td class="file-name">${file.name}</td>
+                <td><a href="${file.name}" ${rowClass === "exe-jar-row" ? 'download' : 'target="_blank"'}>${rowClass === "exe-jar-row" ? "Descargar" : "Abrir"}</a></td>
             </tr>`;
             });
 
@@ -201,7 +228,7 @@
             zip.generateAsync({ type: "blob" }).then(content => {
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(content);
-                link.download = "archivos_html_htm_pdf.zip";
+                link.download = "archivos.zip";
                 link.click();
             }).catch(error => {
                 console.error("Error al generar el ZIP:", error);
@@ -211,9 +238,9 @@
 </head>
 <body>
     <div class="container">
-        <h1>Gestor de Archivos HTML, HTM y PDF</h1>
-        <p>Sube tus archivos HTML, HTM y PDF y genera una carpeta con un índice para acceder a ellos.</p>
-        <input type="file" id="fileInput" multiple accept=".html, .htm, .pdf" onchange="handleFiles(event)">
+        <h1>Gestor de Archivos HTML, HTM, PDF, EXE y JAR</h1>
+        <p>Sube tus archivos y genera una carpeta con un índice para acceder a ellos.</p>
+        <input type="file" id="fileInput" multiple accept=".html, .htm, .pdf, .exe, .jar" onchange="handleFiles(event)">
         <button onclick="document.getElementById('fileInput').click()">Seleccionar Archivos</button>
         <table>
             <thead>
