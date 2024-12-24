@@ -3,22 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor de Archivos HTML, HTM, PDF, EXE y JAR</title>
+    <title>Gestor de Archivos con Jerarquía</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 20px;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f9f9f9;
         }
-        .container {
-            max-width: 600px;
-            margin: auto;
-            border: 1px solid #ccc;
+        .content {
+            width: 90%;
+            max-width: 1000px;
+            margin: 20px auto;
             padding: 20px;
+            background-color: #ffffff;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        button {
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .button-container button {
             padding: 10px 20px;
             font-size: 1rem;
             background-color: #007BFF;
@@ -26,23 +39,17 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            margin: 5px;
         }
-        button:hover {
+        .button-container button:hover {
             background-color: #0056b3;
         }
-        input[type="file"] {
-            display: none;
-        }
         table {
-            width: 80%;
-            margin: 20px auto;
+            width: 100%;
             border-collapse: collapse;
-            background-color: #fff;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
         }
         th, td {
-            padding: 15px;
+            padding: 10px;
             text-align: left;
             border-bottom: 1px solid #ddd;
         }
@@ -56,27 +63,30 @@
         tr:hover {
             background-color: #e9f7ff;
         }
-        a {
-            text-decoration: none;
-        }
-        /* Estilos por tipo de archivo */
-        .pdf-row a, .pdf-row td.file-name {
+        .pdf-row {
             color: red;
         }
-        .html-row a, .html-row td.file-name {
-            color: blue;
-        }
-        .exe-jar-row a, .exe-jar-row td.file-name {
-            color: darkgreen;
+        .exe-jar-row {
+            color: green;
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script>
         let filesList = []; // Lista para almacenar los archivos seleccionados
 
-        function updateFileList() {
+        function handleFiles(event) {
+            const newFiles = event.target.files;
+            if (newFiles.length > 0) {
+                for (let file of newFiles) {
+                    filesList.push(file);
+                }
+                updateFileTable();
+            }
+        }
+
+        function updateFileTable() {
             const tableBody = document.getElementById("fileTableBody");
-            tableBody.innerHTML = ""; // Limpiar la tabla
+            tableBody.innerHTML = "";
 
             filesList.forEach((file, index) => {
                 const row = document.createElement("tr");
@@ -84,47 +94,25 @@
                 const cellName = document.createElement("td");
                 const cellAction = document.createElement("td");
 
-                // Detectar tipo de archivo
                 const fileNameLower = file.name.toLowerCase();
                 const isPDF = fileNameLower.endsWith(".pdf");
-                const isHTML = fileNameLower.endsWith(".html") || fileNameLower.endsWith(".htm");
                 const isExeJar = fileNameLower.endsWith(".exe") || fileNameLower.endsWith(".jar");
 
-                // Asignar clases para colores según tipo
                 if (isPDF) {
                     row.className = "pdf-row";
-                } else if (isHTML) {
-                    row.className = "html-row";
                 } else if (isExeJar) {
                     row.className = "exe-jar-row";
                 }
 
                 cellIndex.textContent = index + 1;
-
-                // Aplicar clase personalizada al nombre del archivo
                 cellName.textContent = file.name;
-                cellName.className = "file-name";
-
-                // Generar el botón de acción
-                cellAction.innerHTML = isExeJar
-                    ? `<a href="${URL.createObjectURL(file)}" download="${file.name}">Descargar</a>`
-                    : `<a href="${URL.createObjectURL(file)}" target="_blank">Abrir</a>`;
+                cellAction.innerHTML = `<a href="${encodeURIComponent(file.name)}" target="_blank">Abrir</a>`;
 
                 row.appendChild(cellIndex);
                 row.appendChild(cellName);
                 row.appendChild(cellAction);
                 tableBody.appendChild(row);
             });
-        }
-
-        async function handleFiles(event) {
-            const newFiles = event.target.files;
-            if (newFiles.length > 0) {
-                for (let file of newFiles) {
-                    filesList.push(file);
-                }
-                updateFileList();
-            }
         }
 
         async function generateZIP() {
@@ -134,18 +122,113 @@
             }
 
             const zip = new JSZip();
-            let indexContent = `
-<!DOCTYPE html>
-<html lang="es">
+            const groupedFiles = {};
+
+            filesList.forEach(file => {
+                const category = file.name.split(" ")[0]; // Obtener la primera palabra del nombre del archivo
+                if (!groupedFiles[category]) {
+                    groupedFiles[category] = [];
+                }
+                groupedFiles[category].push(file);
+            });
+
+            // Generar índices por categoría y agregar archivos correspondientes
+            for (const [category, files] of Object.entries(groupedFiles)) {
+                let categoryIndex = `<!DOCTYPE html>
+<html lang=\"es\">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Índice de Archivos</title>
+    <meta charset=\"UTF-8\">
+    <title>${category} - Archivos</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
-            background-color: #f9f9f9;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .button-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .button-container button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .button-container button:hover {
+            background-color: #0056b3;
+        }
+        table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #007BFF;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #e9f7ff;
+        }
+        .pdf-row {
+            color: red;
+        }
+        .exe-jar-row {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+<div class="button-container">
+    <button onclick=\"window.location.href='../index.html'\">Volver al Índice Principal</button>
+</div>
+<h1>Archivos de ${category}</h1>
+<table>
+<thead><tr><th>#</th><th>Nombre</th><th>Acción</th></tr></thead><tbody>`;
+
+                files.forEach((file, index) => {
+                    const fileNameLower = file.name.toLowerCase();
+                    const rowClass = fileNameLower.endsWith(".pdf") ? "pdf-row"
+                        : (fileNameLower.endsWith(".exe") || fileNameLower.endsWith(".jar")) ? "exe-jar-row"
+                        : "";
+
+                    zip.folder(category).file(file.name, file); // Agregar archivo a la carpeta correspondiente
+
+                    categoryIndex += `<tr class=\"${rowClass}\"><td>${index + 1}</td><td>${file.name}</td><td><a href=\"${encodeURIComponent(file.name)}\">Abrir</a></td></tr>`;
+                });
+
+                categoryIndex += `</tbody></table>
+</body>
+</html>`;
+                zip.folder(category).file("index.html", categoryIndex); // Agregar el índice a la carpeta correspondiente
+            }
+
+            // Generar índice principal
+            let mainIndex = `<!DOCTYPE html>
+<html lang=\"es\">
+<head>
+    <meta charset=\"UTF-8\">
+    <title>Índice Principal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
         }
         h1 {
             color: #333;
@@ -159,7 +242,7 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
         th, td {
-            padding: 15px;
+            padding: 10px;
             text-align: left;
             border-bottom: 1px solid #ddd;
         }
@@ -173,75 +256,38 @@
         tr:hover {
             background-color: #e9f7ff;
         }
-        a {
-            text-decoration: none;
-        }
-        .pdf-row a, .pdf-row td.file-name {
-            color: red;
-        }
-        .html-row a, .html-row td.file-name {
-            color: blue;
-        }
-        .exe-jar-row a, .exe-jar-row td.file-name {
-            color: darkgreen;
-        }
     </style>
 </head>
 <body>
-    <h1>Índice de Archivos</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Nombre del Archivo</th>
-                <th>Acción</th>
-            </tr>
-        </thead>
-        <tbody>
-`;
+<h1>Índice Principal</h1>
+<table>
+<thead><tr><th>#</th><th>Categoría</th><th>Acción</th></tr></thead><tbody>`;
 
-            filesList.forEach((file, index) => {
-                const fileNameLower = file.name.toLowerCase();
-                const rowClass = fileNameLower.endsWith(".pdf") ? "pdf-row"
-                    : (fileNameLower.endsWith(".html") || fileNameLower.endsWith(".htm")) ? "html-row"
-                    : (fileNameLower.endsWith(".exe") || fileNameLower.endsWith(".jar")) ? "exe-jar-row"
-                    : "";
-
-                zip.file(file.name, file);
-
-                indexContent += `
-            <tr class="${rowClass}">
-                <td>${index + 1}</td>
-                <td class="file-name">${file.name}</td>
-                <td><a href="${file.name}" ${rowClass === "exe-jar-row" ? 'download' : 'target="_blank"'}>${rowClass === "exe-jar-row" ? "Descargar" : "Abrir"}</a></td>
-            </tr>`;
+            Object.keys(groupedFiles).forEach((category, index) => {
+                mainIndex += `<tr><td>${index + 1}</td><td>${category}</td><td><a href=\"${encodeURIComponent(category)}/index.html\">Abrir</a></td></tr>`;
             });
 
-            indexContent += `
-        </tbody>
-    </table>
+            mainIndex += `</tbody></table>
 </body>
 </html>`;
 
-            zip.file("index.html", indexContent);
+            zip.file("index.html", mainIndex);
 
             zip.generateAsync({ type: "blob" }).then(content => {
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(content);
                 link.download = "archivos.zip";
                 link.click();
-            }).catch(error => {
-                console.error("Error al generar el ZIP:", error);
             });
         }
     </script>
 </head>
 <body>
-    <div class="container">
-        <h1>Gestor de Archivos HTML, HTM, PDF, EXE y JAR</h1>
-        <p>Sube tus archivos y genera una carpeta con un índice para acceder a ellos.</p>
+    <div class="content">
+        <h1>Gestor de Archivos con Jerarquía</h1>
+        <p>Sube tus archivos para organizarlos según la primera palabra y generar un índice jerárquico.</p>
         <input type="file" id="fileInput" multiple accept=".html, .htm, .pdf, .exe, .jar" onchange="handleFiles(event)">
-        <button onclick="document.getElementById('fileInput').click()">Seleccionar Archivos</button>
+        <button onclick="generateZIP()">Generar ZIP</button>
         <table>
             <thead>
                 <tr>
@@ -254,7 +300,6 @@
                 <!-- Aquí se agregarán los archivos seleccionados -->
             </tbody>
         </table>
-        <button onclick="generateZIP()">Generar ZIP</button>
     </div>
 </body>
 </html>
