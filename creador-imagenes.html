@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Actividad con Imágenes</title>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.0/dist/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip-utils@0.1.0/dist/jszip-utils.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+</head>
+<body>
+    <h1>Generador de Actividad con Imágenes</h1>
+    <input type="file" id="imageInput" multiple accept="image/png, image/jpeg">
+    <div id="imageList"></div>
+    <button id="generateZip">Generar ZIP</button>
+
+    <script>
+        const imageList = document.getElementById('imageList');
+        const imageInput = document.getElementById('imageInput');
+        const generateZip = document.getElementById('generateZip');
+        const zip = new JSZip();
+
+        imageInput.addEventListener('change', () => {
+            imageList.innerHTML = '';
+            for (const file of imageInput.files) {
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <p>${file.name}</p>
+                    <input type="text" placeholder="Escribe el nombre de esta imagen" data-filename="${file.name}">
+                `;
+                imageList.appendChild(div);
+            }
+        });
+
+        generateZip.addEventListener('click', async () => {
+            const indexHtml = [];
+            indexHtml.push('<!DOCTYPE html>');
+            indexHtml.push('<html lang="es">');
+            indexHtml.push('<head><meta charset="UTF-8"><title>Actividad</title></head>');
+            indexHtml.push('<body>');
+            indexHtml.push('<h1>Actividad: Nombra las imágenes relacionándolas con lo estudiado en el tema</h1>');
+            indexHtml.push('<div id="activity">');
+
+            const inputs = imageList.querySelectorAll('input');
+            const images = [];
+
+            for (const input of inputs) {
+                const filename = input.getAttribute('data-filename');
+                const correctName = input.value;
+
+                // Agrega la imagen al ZIP
+                const file = Array.from(imageInput.files).find(f => f.name === filename);
+                if (file) {
+                    const fileData = await file.arrayBuffer();
+                    zip.file(`images/${filename}`, fileData);
+                    images.push({ filename, correctName });
+                }
+            }
+
+            // Función para mezclar las imágenes aleatoriamente
+            function shuffleArray(array) {
+                return array.sort(() => Math.random() - 0.5);
+            }
+
+            // Mezclar imágenes antes de agregarlas al HTML
+            const shuffledImages = shuffleArray(images);
+
+            // Agregar las imágenes al HTML
+            shuffledImages.forEach(image => {
+                indexHtml.push(`
+                    <div>
+                        <img src="./images/${image.filename}" alt="Imagen" width="200">
+                        <input type="text" class="student-answer" data-correct="${image.correctName}">
+                    </div>
+                `);
+            });
+
+            indexHtml.push('</div>');
+            indexHtml.push('<button onclick="checkAnswers()">Ver Respuestas</button>');
+            indexHtml.push('<p id="result"></p>');
+            indexHtml.push(`
+                <script>
+                    function checkAnswers() {
+                        const answers = document.querySelectorAll('.student-answer');
+                        let correct = 0;
+                        answers.forEach(answer => {
+                            if (answer.value.trim().toLowerCase() === answer.dataset.correct.trim().toLowerCase()) {
+                                correct++;
+                            }
+                            // Inhabilitar las entradas
+                            answer.setAttribute('disabled', 'true');
+                        });
+                        const percentage = (correct / answers.length) * 100;
+                        document.getElementById('result').textContent = \`Porcentaje de acierto: \${percentage.toFixed(2)}%\`;
+                    }
+               <\/script>
+</body>
+</html>
+            `);
+            indexHtml.push('</body></html>');
+
+            zip.file('index.html', indexHtml.join('\n'));
+
+            zip.generateAsync({ type: 'blob' }).then(content => {
+                saveAs(content, 'actividad.zip');
+            });
+        });
+    </script>
+</body>
+</html>
+
