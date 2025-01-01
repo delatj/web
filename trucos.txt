@@ -7,7 +7,11 @@ No borrar clonados de los pen, porque al instalar cosas luego pesa mas y no se p
 *** borrar red casa
 *** cambiar nombre equipo
 *** conectar con epoptes en terminal cambiare de usuario con ... su dga  ...  flecha superior
-
+_____________________________________________________________
+chat gpt en el codigo de descargar html antes de las ultimas instrucciones
+     <\/script>
+</body>
+</html>
 ____________________________________________________________
 actualizar repositorios
 sudo apt-get update
