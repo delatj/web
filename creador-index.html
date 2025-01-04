@@ -69,6 +69,10 @@
         .exe-jar-row {
             color: green;
         }
+        .zip-row {
+            color: green;
+            font-weight: bold;
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script>
@@ -97,16 +101,19 @@
                 const fileNameLower = file.name.toLowerCase();
                 const isPDF = fileNameLower.endsWith(".pdf");
                 const isExeJar = fileNameLower.endsWith(".exe") || fileNameLower.endsWith(".jar");
+                const isZIP = fileNameLower.endsWith(".zip");
 
                 if (isPDF) {
                     row.className = "pdf-row";
                 } else if (isExeJar) {
                     row.className = "exe-jar-row";
+                } else if (isZIP) {
+                    row.className = "zip-row";
                 }
 
                 cellIndex.textContent = index + 1;
                 cellName.textContent = file.name;
-                cellAction.innerHTML = `<a href="${encodeURIComponent(file.name)}" target="_blank">Abrir</a>`;
+                cellAction.innerHTML = `<a href="#" onclick="alert('No se puede abrir el archivo directamente. Descárgalo primero.')">Abrir</a>`;
 
                 row.appendChild(cellIndex);
                 row.appendChild(cellName);
@@ -125,7 +132,8 @@
             const groupedFiles = {};
 
             filesList.forEach(file => {
-                const category = file.name.split(" ")[0]; // Obtener la primera palabra del nombre del archivo
+                // Obtener la categoría por la primera palabra antes del guion
+                const category = file.name.split(/[- ]/)[0]; 
                 if (!groupedFiles[category]) {
                     groupedFiles[category] = [];
                 }
@@ -210,7 +218,7 @@
 
                     zip.folder(category).file(file.name, file); // Agregar archivo a la carpeta correspondiente
 
-                    categoryIndex += `<tr class=\"${rowClass}\"><td>${index + 1}</td><td>${file.name}</td><td><a href=\"${encodeURIComponent(file.name)}\">Abrir</a></td></tr>`;
+                    categoryIndex += `<tr class=\"${rowClass}\"><td>${index + 1}</td><td>${file.name}</td><td><a href=\"${encodeURIComponent(file.name)}\" target=\"_blank\">Abrir</a></td></tr>`;
                 });
 
                 categoryIndex += `</tbody></table>
@@ -264,7 +272,7 @@
 <thead><tr><th>#</th><th>Categoría</th><th>Acción</th></tr></thead><tbody>`;
 
             Object.keys(groupedFiles).forEach((category, index) => {
-                mainIndex += `<tr><td>${index + 1}</td><td>${category}</td><td><a href=\"${encodeURIComponent(category)}/index.html\">Abrir</a></td></tr>`;
+                mainIndex += `<tr><td>${index + 1}</td><td>${category}</td><td><a href=\"${encodeURIComponent(category)}/index.html\" target=\"_blank\">Abrir</a></td></tr>`;
             });
 
             mainIndex += `</tbody></table>
@@ -285,8 +293,8 @@
 <body>
     <div class="content">
         <h1>Gestor de Archivos con Jerarquía</h1>
-        <p>Sube tus archivos para organizarlos según la primera palabra y generar un índice jerárquico.</p>
-        <input type="file" id="fileInput" multiple accept=".html, .htm, .pdf, .exe, .jar" onchange="handleFiles(event)">
+        <p>Sube tus archivos para organizarlos según la primera palabra seguida de guión, ejemplo: Materiales-teoría.pdf, Materiales-test.htm,....</p>
+        <input type="file" id="fileInput" multiple accept=".html, .htm, .pdf, .exe, .jar, .zip" onchange="handleFiles(event)">
         <button onclick="generateZIP()">Generar ZIP</button>
         <table>
             <thead>
