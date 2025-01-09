@@ -3,54 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de HTML Interactivo con Mensaje</title>
+    <title>Generador de HTML Interactivo con Múltiples Imágenes</title>
 </head>
 <body>
-    <h1>Generador de HTML con Imagen y Mensaje <br>  <H4> 
-    Instrucciones:<br> 
-1. Elige un personaje de Scratch que sea un animal y hazle una captura de pantalla seleccionando solo la parte donde está el animal o descarga una imagen de Internet de un animal.<br> 
-2. Pica en el botón de "Seleccionar archivo" para cargar la imagen. Recuerda que la imagen debe terminar en .png o .jpg.<br> 
-3. Añade el texto que quieras para que diga el animal cuando presiones sobre él.<br> 
-4. Dale al botón de "Generar HTML y Descargar". Una vez descargado, abre el archivo en tu navegador.<br> 
-5. Comprueba, al hacer clic sobre la imagen, que aparece el texto que escribiste.<br> 
-6. Manda una captura de pantalla al profesor o muéstralo en clase si no tienes internet.<br> 
-    </h1>
+    <h1>Generador de HTML con Múltiples Imágenes y Mensajes</h1>
+    <p>Instrucciones:</p>
+    <ol>
+        <li>Sube una o más imágenes en formato .png o .jpg.</li>
+        <li>Escribe un mensaje para cada imagen.</li>
+        <li>Haz clic en "Añadir otra imagen" para agregar más imágenes y mensajes.</li>
+        <li>Haz clic en "Generar HTML y Descargar" para crear el archivo.</li>
+        <li>Abre el archivo generado en tu navegador y prueba haciendo clic en las imágenes.</li>
+    </ol>
     
-    <label for="imageInput">Sube una imagen:</label>
-    <input type="file" id="imageInput" accept="image/*">
+    <div id="imageContainer">
+        <!-- Contenedor dinámico para las imágenes -->
+        <div class="image-input">
+            <label for="imageInput0">Sube una imagen:</label>
+            <input type="file" id="imageInput0" accept="image/*" onchange="handleImageUpload(event, 0)">
+            <br>
+            <label for="textInput0">Escribe el mensaje:</label>
+            <input type="text" id="textInput0" placeholder="Escribe tu mensaje aquí">
+        </div>
+    </div>
+    <br>
+    <button onclick="addImageInput()">Añadir otra imagen</button>
     <br><br>
-    
-    <label for="textInput">Escribe el mensaje que quieres mostrar:</label>
-    <input type="text" id="textInput" placeholder="Escribe tu mensaje aquí">
-    <br><br>
-    
     <button onclick="generateHtml()">Generar HTML y Descargar</button>
 
     <script>
-        let imageDataUrl = '';
+        let imageCount = 1; // Contador de imágenes
+        const imageData = []; // Array para guardar datos de las imágenes y mensajes
 
-        // Convertir imagen a base64
-        document.getElementById('imageInput').addEventListener('change', function(event) {
+        function handleImageUpload(event, index) {
             const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    imageDataUrl = e.target.result;
+                    imageData[index] = { src: e.target.result, message: '' }; // Guardar la imagen
                 };
                 reader.readAsDataURL(file);
             }
-        });
+        }
+
+        function addImageInput() {
+            const container = document.getElementById('imageContainer');
+            const div = document.createElement('div');
+            div.classList.add('image-input');
+            div.innerHTML = `
+                <label for="imageInput${imageCount}">Sube una imagen:</label>
+                <input type="file" id="imageInput${imageCount}" accept="image/*" onchange="handleImageUpload(event, ${imageCount})">
+                <br>
+                <label for="textInput${imageCount}">Escribe el mensaje:</label>
+                <input type="text" id="textInput${imageCount}" placeholder="Escribe tu mensaje aquí">
+            `;
+            container.appendChild(div);
+            imageData.push({ src: '', message: '' }); // Agregar un espacio para la nueva imagen
+            imageCount++;
+        }
 
         function generateHtml() {
-            const messageText = document.getElementById('textInput').value;
-            
-            if (!imageDataUrl || !messageText) {
-                alert('Por favor, sube una imagen y escribe un mensaje antes de generar el archivo HTML.');
+            for (let i = 0; i < imageCount; i++) {
+                const messageInput = document.getElementById(`textInput${i}`);
+                if (imageData[i]) {
+                    imageData[i].message = messageInput.value; // Guardar mensaje
+                }
+            }
+
+            if (imageData.some(data => !data.src || !data.message)) {
+                alert('Asegúrate de que todas las imágenes tengan un mensaje asociado.');
                 return;
             }
 
-            // Escapar comillas en el mensaje para evitar problemas en el HTML generado
-            const escapedMessage = messageText.replace(/"/g, '&quot;');
+            let imageElements = '';
+            imageData.forEach((data, index) => {
+                // Escapar comillas en el mensaje
+                const escapedMessage = data.message.replace(/"/g, '&quot;');
+                imageElements += `
+                <div class="container">
+                    <img src="${data.src}" alt="Imagen ${index + 1}" style="cursor: pointer;" onclick="mostrarMensaje(${index})">
+                    <p class="message" id="messageText${index}" style="display: none;">${escapedMessage}</p>
+                </div>`;
+            });
 
             const htmlContent = `
 <!DOCTYPE html>
@@ -58,47 +92,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Imagen con Mensaje</title>
+    <title>Imágenes con Mensajes</title>
     <style>
-        .container {
-            display: flex;
-            align-items: center;
-        }
-        .message {
-            display: none;
-            margin-left: 20px;
+       body {
+        background-color: #FFFACD; /* Amarillo claro */
+        font-family: Arial, sans-serif; /* Fuente general de la página */
+    }
+    .container {
+        margin-bottom: 20px;
+    }
+    .message {
+        display: none;
+        margin-left: 20px;
+        font-size: 20px; /* Tamaño de letra más grande */
+        font-family: 'Georgia', serif; /* Tipo de letra más elegante */
+        color: blue; /* Texto de color azul */;
         }
     </style>
 </head>
 <body>
-    <h1>Haz clic en la imagen para ver el mensaje</h1>
-    <div class="container">
-        <img src="${imageDataUrl}" alt="Imagen" style="cursor: pointer;" onclick="mostrarMensaje()">
-        <p class="message" id="messageText">${escapedMessage}</p> <!-- Mensaje oculto a la derecha de la imagen -->
-    </div>
-
+    <h1>Haz clic en las imágenes</h1>
+    ${imageElements}
     <script>
-        let mensajeVisible = false; // Bandera para saber si el mensaje está visible
-        let timeoutId; // ID del temporizador
-
-        function mostrarMensaje() {
-            const messageElement = document.getElementById('messageText');
-            
-            if (!mensajeVisible) {
-                // Mostrar el mensaje y activar la bandera
+        function mostrarMensaje(index) {
+            const messageElement = document.getElementById('messageText' + index);
+            if (messageElement.style.display === 'none') {
                 messageElement.style.display = 'block';
-                mensajeVisible = true;
-
-                // Ocultar el mensaje después de 2 segundos
-                timeoutId = setTimeout(() => {
+                setTimeout(() => {
                     messageElement.style.display = 'none';
-                    mensajeVisible = false;
-                }, 2000);
-            } else {
-                // Si el mensaje está visible y se hace clic, detener el temporizador y ocultarlo de inmediato
-                clearTimeout(timeoutId);
-                messageElement.style.display = 'none';
-                mensajeVisible = false;
+                }, 30000);
             }
         }
     <\/script>
@@ -106,14 +128,32 @@
 </html>
             `;
 
-            // Crear blob y link para descargar el HTML
+            // Crear blob y enlace para descarga
             const blob = new Blob([htmlContent], { type: 'text/html' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = 'imagen_con_mensaje.html';
+            link.download = 'imagenes_con_mensajes.html';
             link.click();
         }
     </script>
 </body>
 </html>
+
+<style>
+    body {
+        background-color: #FFFACD; /* Amarillo claro */
+        font-family: Arial, sans-serif; /* Fuente general de la página */
+    }
+    .container {
+        margin-bottom: 20px;
+    }
+    .message {
+        display: none;
+        margin-left: 20px;
+        font-size: 20px; /* Tamaño de letra más grande */
+        font-family: 'Georgia', serif; /* Tipo de letra más elegante */
+        color: blue; /* Texto de color azul */
+    }
+</style>
+
 
