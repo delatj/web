@@ -40,20 +40,21 @@
             indexHtml.push('<!DOCTYPE html>');
             indexHtml.push('<html lang="es">');
             indexHtml.push('<head><meta charset="UTF-8"><title>Actividad</title>');
-            indexHtml.push('<style>body { background-color: #90ee90; }</style></head>'); // Color verde claro
+            indexHtml.push('<style>body { background-color: #90ee90; }</style></head>');
             indexHtml.push('<body>');
+            indexHtml.push('<h1 style="font-size: 16px; width: 300px; line-height: 1.2; text-align: center;">Si la respuesta tiene varias palabras sepáralas por "-", ejemplo: sierra-eléctrica</h1>');
+            indexHtml.push('<p id="description"></p>');
+            indexHtml.push('<div id="activity"></div>');
+            indexHtml.push('<button onclick="checkAnswers()">Validar Soluciones</button>');
+            indexHtml.push('<button onclick="showAnswers()">Ver Respuestas</button>');
+            indexHtml.push('<p id="result" style="font-size: 24px; font-weight: bold;"></p>');
+            indexHtml.push('<p id="timer" style="font-size: 20px; color: red;"></p>');
+            indexHtml.push('<script>');
 
-            // Agregar descripción al HTML
-            const description = descriptionInput.value.trim();
-            if (description) {
-                indexHtml.push(`<p>${description}</p>`);
-            }
-indexHtml.push('<h1 style="font-size: 16px; width: 300px; line-height: 1.2; text-align: center;">Si la respuesta tiene varias palabras separalas por -, ejemplo sierra-eléctrica</h1>');
-            indexHtml.push('<div id="activity">');
+            indexHtml.push(`
+                const images = [`);
 
             const inputs = imageList.querySelectorAll('input');
-            const images = [];
-
             for (const input of inputs) {
                 const filename = input.getAttribute('data-filename');
                 const correctName = input.value;
@@ -62,59 +63,103 @@ indexHtml.push('<h1 style="font-size: 16px; width: 300px; line-height: 1.2; text
                 if (file) {
                     const fileData = await file.arrayBuffer();
                     zip.file(`images/${filename}`, fileData);
-                    images.push({ filename, correctName });
+                    indexHtml.push(`{ src: "./images/${filename}", correct: "${correctName}" },`);
                 }
             }
 
-            // Generar HTML con las imágenes en orden original
-            images.forEach(image => {
-                indexHtml.push(`
-                    <div class="image-container">
-                        <img src="./images/${image.filename}" alt="Imagen" width="200">
-                        <input type="text" class="student-answer" data-correct="${image.correctName}">
-                    </div>
-                `);
-            });
-
-            indexHtml.push('</div>');
-            indexHtml.push('<button onclick="checkAnswers()">Ver Respuestas</button>');
-            indexHtml.push('<p id="result"></p>');
-            indexHtml.push(`
-                <script>
-                    // Función para mezclar un array
-                    function shuffleArray(array) {
-                        return array.sort(() => Math.random() - 0.5);
+            indexHtml.push(`];
+                
+                function shuffleArray(array) {
+                    for (let i = array.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [array[i], array[j]] = [array[j], array[i]];
                     }
+                    return array;
+                }
 
-                    // Mezclar las imágenes al cargar la página
-                    document.addEventListener('DOMContentLoaded', () => {
-                        const images = Array.from(document.querySelectorAll('.image-container'));
-                        const shuffledImages = shuffleArray(images);
-                        const activityDiv = document.getElementById('activity');
-                        
-                        // Limpiar y reordenar las imágenes
-                        activityDiv.innerHTML = '';
-                        shuffledImages.forEach(image => activityDiv.appendChild(image));
+                function initializeActivity() {
+                    const activityDiv = document.getElementById("activity");
+                    activityDiv.innerHTML = '';
+
+                    const shuffledImages = shuffleArray([...images]);
+
+                    shuffledImages.forEach(image => {
+                        const container = document.createElement("div");
+                        container.classList.add("image-container");
+                        container.innerHTML = \`
+                            <div style="text-align:center; margin-bottom:10px;">
+                                <img src="\${image.src}" alt="Imagen" width="200">
+                                <input type="text" class="student-answer" data-correct="\${image.correct}" placeholder="Escribe tu respuesta">
+                            </div>
+                        \`;
+                        activityDiv.appendChild(container);
                     });
+                }
 
-                    // Verificar respuestas ingresadas por el estudiante
-                    function checkAnswers() {
+                function startTimer(duration) {
+                    const timerDisplay = document.getElementById("timer");
+                    let time = duration;
+
+                    const timerInterval = setInterval(() => {
+                        const minutes = Math.floor(time / 60);
+                        const seconds = time % 60;
+                        timerDisplay.textContent = \`Tiempo restante: \${minutes}:\${seconds.toString().padStart(2, '0')}\`;
+
+                        if (time <= 0) {
+                            clearInterval(timerInterval);
+                            finalizeActivity();
+                        }
+
+                        time--;
+                    }, 1000);
+                }
+
+                function finalizeActivity() {
+                    checkAnswers();
+                    document.querySelectorAll('.student-answer').forEach(input => {
+                        input.setAttribute('disabled', 'true');
+                    });
+                    document.getElementById('timer').textContent = 'Tiempo finalizado';
+                }
+
+                function checkAnswers() {
+                    const answers = document.querySelectorAll('.student-answer');
+                    let correct = 0;
+                    answers.forEach(answer => {
+                        if (answer.value.trim().toLowerCase() === answer.dataset.correct.trim().toLowerCase()) {
+                            correct++;
+                            answer.style.backgroundColor = 'green';
+                        } else {
+                            answer.style.backgroundColor = 'red';
+                        }
+                    });
+                    const percentage = (correct / answers.length) * 100;
+                    document.getElementById('result').textContent = \`Porcentaje de acierto: \${percentage.toFixed(2)}%\`;
+                }
+
+                function showAnswers() {
+                    const password = prompt("Introduce la contraseña para ver las respuestas:");
+                    if (password === "1979") {
                         const answers = document.querySelectorAll('.student-answer');
-                        let correct = 0;
                         answers.forEach(answer => {
-                            if (answer.value.trim().toLowerCase() === answer.dataset.correct.trim().toLowerCase()) {
-                                correct++;
-                            }
-                            answer.setAttribute('disabled', 'true');
+                            answer.value = answer.dataset.correct;
+                            answer.style.backgroundColor = 'white';
                         });
-                        const percentage = (correct / answers.length) * 100;
-                        document.getElementById('result').textContent = \`Porcentaje de acierto: \${percentage.toFixed(2)}%\`;
+                    } else {
+                        alert("Contraseña incorrecta.");
                     }
-               <\/script>
+                }
+
+                document.addEventListener("DOMContentLoaded", () => {
+                    document.getElementById("description").textContent = "${descriptionInput.value.trim()}";
+                    initializeActivity();
+                    startTimer(300); 
+                });
+            <\/script>
             `);
             indexHtml.push('</body></html>');
 
-            zip.file('index.html', indexHtml.join('\ '));
+            zip.file('index.html', indexHtml.join('\n'));
 
             zip.generateAsync({ type: 'blob' }).then(content => {
                 saveAs(content, 'actividad.zip');
