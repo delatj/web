@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convertir a HTML5 e Insertar Imagen</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #output {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            background-color: #f9f9f9;
+        }
+        button {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Conversor a HTML5 con Inserción de Imagen</h1>
+    <input type="file" id="loadHTML" accept=".html">
+    <button id="convertBtn">Convertir a HTML5</button>
+    <br><br>
+    <textarea id="inputHTML" rows="10" cols="50" placeholder="Pega aquí tu código HTML"></textarea>
+    <br><br>
+    <input type="file" id="imageInput" accept="image/jpeg, image/png">
+    <button id="addImageBtn">Añadir Imagen</button>
+    <button id="downloadBtn">Descargar HTML5</button>
+    <br>
+    <h2>Salida:</h2>
+    <div id="output"></div>
+
+    <script>
+        const convertBtn = document.getElementById('convertBtn');
+        const inputHTML = document.getElementById('inputHTML');
+        const output = document.getElementById('output');
+        const imageInput = document.getElementById('imageInput');
+        const addImageBtn = document.getElementById('addImageBtn');
+        const loadHTML = document.getElementById('loadHTML');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        let convertedHTML = '';
+
+        // Función para cargar un archivo HTML
+        loadHTML.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    inputHTML.value = e.target.result;
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        // Función para convertir el HTML a HTML5
+        convertBtn.addEventListener('click', () => {
+            const htmlContent = inputHTML.value;
+
+            // Asegurar el DOCTYPE HTML5
+            const doctype = '<!DOCTYPE html>';
+            const headTag = '<head>';
+            const metaCharset = '<meta charset="UTF-8">';
+            const viewportMeta = '<meta name="viewport" content="width=device-width, initial-scale=1.0">';
+
+            // Modificar el contenido
+            convertedHTML = htmlContent.replace(/<!DOCTYPE[^>]*>/i, doctype)
+                                        .replace(/<head>/i, `${headTag}\n    ${metaCharset}\n    ${viewportMeta}`);
+
+            output.textContent = convertedHTML;
+        });
+
+        // Función para añadir imagen al HTML5 generado
+        addImageBtn.addEventListener('click', () => {
+            const file = imageInput.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const imageTag = `<img src="${event.target.result}" alt="Imagen agregada">`;
+                    convertedHTML = convertedHTML.replace(/<\/body>/i, `${imageTag}\n</body>`);
+                    output.textContent = convertedHTML;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                alert('Por favor, selecciona una imagen primero.');
+            }
+        });
+
+        // Función para descargar el HTML5 generado
+        downloadBtn.addEventListener('click', () => {
+            if (convertedHTML) {
+                const blob = new Blob([convertedHTML], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'documento.html';
+                a.click();
+                URL.revokeObjectURL(url);
+            } else {
+                alert('Por favor, convierte el HTML antes de descargar.');
+            }
+        });
+    </script>
+</body>
+</html>
+
