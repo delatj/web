@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grabadora de Audio</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #audio-player {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Grabadora de Audio</h1>
+  <button id="recordButton">🎙️ Grabar</button>
+  <button id="stopButton" disabled>✋ Detener</button>
+  <button id="downloadButton" disabled>⬇️ Descargar</button>
+  <div id="audio-player"></div>
+
+  <script>
+    let mediaRecorder;
+    let audioChunks = [];
+
+    const recordButton = document.getElementById("recordButton");
+    const stopButton = document.getElementById("stopButton");
+    const downloadButton = document.getElementById("downloadButton");
+    const audioPlayerDiv = document.getElementById("audio-player");
+
+    // Pedir permisos para acceder al micrófono
+    async function startRecording() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            audioChunks.push(event.data);
+          }
+        };
+
+        mediaRecorder.onstop = () => {
+          const audioBlob = new Blob(audioChunks, { type: "audio/mp3" });
+          audioChunks = [];
+
+          const audioUrl = URL.createObjectURL(audioBlob);
+
+          // Crear el reproductor de audio
+          audioPlayerDiv.innerHTML = `<audio controls src="${audioUrl}"></audio>`;
+
+          // Habilitar el botón de descarga
+          downloadButton.disabled = false;
+          downloadButton.onclick = () => downloadAudio(audioBlob);
+        };
+
+        mediaRecorder.start();
+        recordButton.disabled = true;
+        stopButton.disabled = false;
+        downloadButton.disabled = true;
+      } catch (error) {
+        alert("No se pudo acceder al micrófono: " + error.message);
+      }
+    }
+
+    function stopRecording() {
+      mediaRecorder.stop();
+      recordButton.disabled = false;
+      stopButton.disabled = true;
+    }
+
+    function downloadAudio(blob) {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "grabacion.mp3";
+      a.click();
+    }
+
+    recordButton.addEventListener("click", startRecording);
+    stopButton.addEventListener("click", stopRecording);
+  </script>
+</body>
+</html>
+
