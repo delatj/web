@@ -31,11 +31,11 @@
                 // Reemplazar las líneas específicas
                 content = content.replace(
                     /var YourScoreIs = '.*?';/g,
-                    "var YourScoreIs = '';"
+                    "var YourScoreIs = ':';"
                 );
                 content = content.replace(
-                    /FB = YourScoreIs \+ ' ' \+ Score \;/g,
-                    "FB = '<span style=\"font-size: 450px; font-weight: bold; color: red;\">' + YourScoreIs + ' ' + Score + '%.</span>';"
+                    /FB = YourScoreIs \+ ' ' \+ Score \+ '%.';/g,
+                    "FB = '<span style=\"font-size: 325px; font-weight: bold; color: red;\">' + YourScoreIs + ' ' + Score + '%.</span>';"
                 );
 
                 // Mostrar el resultado en el textarea
