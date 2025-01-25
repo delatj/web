@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor de HTML/HTM</title>
+</head>
+<body>
+    <h1>Editor de HTML/HTM</h1>
+    <p>Sube un archivo HTML o HTM para reemplazar las líneas seleccionadas:</p>
+    <input type="file" id="fileInput" accept=".html,.htm">
+    <button id="processFile">Procesar y Reemplazar</button>
+    <h2>Resultado:</h2>
+    <textarea id="output" rows="20" cols="80" readonly></textarea>
+    <button id="downloadFile" style="display:none;">Descargar Archivo Modificado</button>
+
+    <script>
+        document.getElementById("processFile").addEventListener("click", function () {
+            const fileInput = document.getElementById("fileInput");
+            if (!fileInput.files.length) {
+                alert("Por favor, selecciona un archivo HTML o HTM primero.");
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function (event) {
+                let content = event.target.result;
+
+                // Reemplazar las líneas específicas
+                content = content.replace(
+                    /var YourScoreIs = '.*?';/g,
+                    "var YourScoreIs = 'Nota;n es:';"
+                );
+                content = content.replace(
+                    /FB = YourScoreIs \+ ' ' \+ Score \+ '%.';/g,
+                    "FB = '<span style=\"font-size: 500px; font-weight: bold; color: red;\">' + YourScoreIs + ' ' + Score + '%.</span>';"
+                );
+
+                // Mostrar el resultado en el textarea
+                const output = document.getElementById("output");
+                output.value = content;
+
+                // Activar el botón de descarga
+                const downloadButton = document.getElementById("downloadFile");
+                downloadButton.style.display = "inline-block";
+                downloadButton.addEventListener("click", function () {
+                    const blob = new Blob([content], { type: "text/html" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = file.name.replace(/\.htm(l)?$/, "_modificado.html");
+                    a.click();
+                    URL.revokeObjectURL(url);
+                });
+            };
+
+            reader.readAsText(file);
+        });
+    </script>
+</body>
+</html>
+
