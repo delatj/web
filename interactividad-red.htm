@@ -960,7 +960,7 @@ function ClearTextBoxes(){
 var CurrQNum = 0;
 var CorrectIndicator = ' ';
 var IncorrectIndicator = ' ';
-var YourScoreIs = 'Tu puntuaci&#x00F3;n es:';
+var YourScoreIs = ':';
 
 //New for 6.2.2.0
 var CompletedSoFar = 'Questions completed so far: ';
@@ -1411,7 +1411,7 @@ function CheckFinished(){
 	
 //Report final score and submit if necessary
 		CalculateOverallScore();
-		FB = YourScoreIs + ' ' + Score + '%.';
+		FB = '<span style="font-size: 325px; font-weight: bold; color: red;">' + YourScoreIs + ' ' + Score + '%.</span>';
 		if (ShowCorrectFirstTime == true){
 			var CFT = 0;
 			for (QNum=0; QNum<State.length; QNum++){
