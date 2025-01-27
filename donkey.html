@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donkey Kong Programming Game</title>
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.6.0/lib/p5.js"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: row;
+            font-family: Arial, sans-serif;
+        }
+        #game-container {
+            width: 40%;
+            height: 70vh;
+            background-color: #ddd;
+            position: relative;
+            margin: 20px;
+        }
+        #input-container {
+            width: 60%;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        #points {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        #level {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        #instructions {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #333;
+        }
+        #example-code {
+            margin-top: 20px;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border: 1px solid #ccc;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container"></div>
+    <div id="input-container">
+        <div id="level">Nivel: 1</div>
+        <div id="points">Puntos: 0</div>
+        <textarea id="code-input" placeholder="Escribe tu código aquí..."></textarea>
+        <button id="run-button">Ejecutar Código</button>
+        <button id="reset-button">Volver a casilla de salida</button>
+        <button id="level1-button">Nivel 1</button>
+        <button id="level2-button">Nivel 2</button>
+        <button id="level3-button">Nivel 3</button>
+        <div id="errors" class="error"></div>
+        <div id="instructions">
+            <strong>Instrucciones:el punto azul debe coger al amarillo y solo puedes subir y bajar por las escaleras del edificio.</strong>
+            <ul>
+                <li><strong>derecha</strong>: mueve el mono hacia la derecha.</li>
+                <li><strong>izquierda</strong>: mueve el mono hacia la izquierda.</li>
+                <li><strong>subir</strong>: el mono sube una planta si está en la escalera.</li>
+                <li><strong>bajar</strong>: el mono baja una planta si está en la escalera.</li>
+                <li><strong>coger</strong>: recoge el tonel si está sobre él.</li>
+                <li><strong>repiteN(comando)</strong>: repite el comando N veces.</li>
+                <li><strong>inicio</strong>: marca el inicio del programa.</li>
+                <li><strong>fin</strong>: marca el final del programa.</li>
+            </ul>
+        </div>
+        <div id="example-code">
+            <strong>Ejemplo de código:</strong>
+            <pre>
+inicio
+repite6(derecha)
+subir
+coger
+fin
+            </pre>
+        </div>
+    </div>
+    <script>
+        let mono = { x: 50, y: 450 }; // Posición inicial del mono
+        let tonel = { x: 200, y: 450 }; // Posición inicial del tonel
+        let points = 0;
+        let ladders = [];
+        let intervalId;
+        let currentLevel = 1; // Nivel actual: 1, 2 o 3
+        let backgroundColor = 220; // Color de fondo inicial
+
+        function setup() {
+            const canvas = createCanvas(400, 500);
+            canvas.parent('game-container');
+            generateRandomLadders();
+            noLoop();
+        }
+
+        function generateRandomLadders() {
+            ladders = [];
+            for (let i = 1; i < 5; i++) {
+                const x = random([50, 150, 250, 350]);
+                ladders.push({ x, y: 500 - i * 100 });
+            }
+        }
+
+        function draw() {
+            background(backgroundColor);
+
+            // Dibujar edificio (pisos)
+            for (let i = 0; i < 5; i++) {
+                fill(200);
+                rect(0, i * 100, width, 100);
+            }
+
+            // Dibujar escaleras
+            fill(150);
+            for (let ladder of ladders) {
+                rect(ladder.x, ladder.y, 50, 100);
+            }
+
+            // Dibujar tonel
+            fill(255, 204, 0);
+            ellipse(tonel.x, tonel.y + 20, 40, 40);
+
+            // Dibujar mono
+            fill(100, 100, 255);
+            ellipse(mono.x, mono.y + 20, 40, 40);
+        }
+
+        document.getElementById('run-button').addEventListener('click', () => {
+            const code = document.getElementById('code-input').value;
+            try {
+                runCodeStepByStep(code.toLowerCase());
+                document.getElementById('errors').innerText = '';
+            } catch (error) {
+                document.getElementById('errors').innerText = error.message;
+            }
+        });
+
+        document.getElementById('reset-button').addEventListener('click', () => {
+            if (currentLevel === 1) {
+                mono.x = 50;
+                mono.y = 450;
+                redraw();
+            }
+        });
+
+        document.getElementById('level1-button').addEventListener('click', () => {
+            currentLevel = 1;
+            updateLevelDisplay();
+            resetGame();
+            document.getElementById('reset-button').disabled = false;
+        });
+
+        document.getElementById('level2-button').addEventListener('click', () => {
+            currentLevel = 2;
+            updateLevelDisplay();
+            resetGame();
+            document.getElementById('reset-button').disabled = true;
+        });
+
+        document.getElementById('level3-button').addEventListener('click', () => {
+            currentLevel = 3;
+            updateLevelDisplay();
+            resetGame(true);
+            document.getElementById('reset-button').disabled = true;
+        });
+
+        function updateLevelDisplay() {
+            document.getElementById('level').innerText = `Nivel: ${currentLevel}`;
+        }
+
+        function resetGame(randomPositions = false) {
+            points = 0;
+            document.getElementById('points').innerText = `Puntos: ${points}`;
+            if (randomPositions) {
+                mono.x = random([50, 150, 250, 350]);
+                mono.y = 450 - random([0, 1, 2, 3]) * 100;
+                tonel.x = random([50, 150, 250, 350]);
+                tonel.y = 450 - random([0, 1, 2, 3]) * 100;
+            } else {
+                mono.x = 50;
+                mono.y = 450;
+                tonel.x = 200;
+                tonel.y = 450;
+            }
+            backgroundColor = 220;
+            redraw();
+        }
+
+        function runCodeStepByStep(code) {
+            const lines = code.split('\n').map(line => line.trim());
+            let i = 0;
+
+            clearInterval(intervalId);
+            intervalId = setInterval(() => {
+                if (i >= lines.length) {
+                    clearInterval(intervalId);
+                    if (currentLevel !== 3) {
+                        mono.x = 50;
+                        mono.y = 450;
+                    }
+                    redraw();
+                    return;
+                }
+
+                const line = lines[i];
+                if (/^repite\d+\(.+\)$/.test(line)) {
+                    const match = line.match(/^repite(\d+)\((.+)\)$/);
+                    const repetitions = parseInt(match[1], 10);
+                    const command = match[2].trim();
+
+                    for (let j = 0; j < repetitions; j++) {
+                        executeCommand(command);
+                    }
+                } else {
+                    executeCommand(line);
+                }
+
+                i++;
+                updateBackground();
+                redraw();
+            }, 500);
+        }
+
+        function executeCommand(line) {
+            if (line === 'derecha') mono.x = constrain(mono.x + 50, 0, width - 50);
+            else if (line === 'izquierda') mono.x = constrain(mono.x - 50, 0, width - 50);
+            else if (line === 'subir' && canClimbLadder()) mono.y = constrain(mono.y - 100, 0, height - 50);
+            else if (line === 'bajar' && canClimbLadder()) mono.y = constrain(mono.y + 100, 0, height - 50);
+            else if (line === 'coger' && dist(mono.x, mono.y, tonel.x, tonel.y) < 30) {
+                points++;
+                document.getElementById('points').innerText = `Puntos: ${points}`;
+                updatePositions();
+            } else if (line !== 'inicio' && line !== 'fin') {
+                throw new Error(`Instrucción no válida: ${line}`);
+            }
+        }
+
+        function updateBackground() {
+            if (currentLevel === 1) {
+                if (points >= 50) {
+                    backgroundColor = 'blue';
+                    document.body.style.backgroundColor = 'blue';
+                } else if (points >= 25) {
+                    backgroundColor = 'lightblue';
+                    document.body.style.backgroundColor = 'lightblue';
+                } else {
+                    backgroundColor = 220;
+                    document.body.style.backgroundColor = 'white';
+                }
+            } else if (currentLevel === 2) {
+                if (points >= 50) {
+                    backgroundColor = 'green';
+                    document.body.style.backgroundColor = 'green';
+                } else if (points >= 25) {
+                    backgroundColor = 'lightgreen';
+                    document.body.style.backgroundColor = 'lightgreen';
+                } else {
+                    backgroundColor = 220;
+                    document.body.style.backgroundColor = 'white';
+                }
+            } else if (currentLevel === 3) {
+                if (points >= 50) {
+                    backgroundColor = 'orange';
+                    document.body.style.backgroundColor = 'orange';
+                } else if (points >= 25) {
+                    backgroundColor = 'yellow';
+                    document.body.style.backgroundColor = 'yellow';
+                } else {
+                    backgroundColor = 220;
+                    document.body.style.backgroundColor = 'white';
+                }
+            }
+        }
+
+        function updatePositions() {
+            if (currentLevel === 3) {
+                mono.x = random([50, 150, 250, 350]);
+                mono.y = 450 - random([0, 1, 2, 3]) * 100;
+            }
+            tonel.x = random([50, 150, 250, 350]);
+            tonel.y = 450 - random([0, 1, 2, 3]) * 100;
+        }
+
+        function canClimbLadder() {
+            return ladders.some(ladder => mono.x >= ladder.x && mono.x <= ladder.x + 50 && mono.y === ladder.y + 50);
+        }
+    </script>
+</body>
+</html>
+
