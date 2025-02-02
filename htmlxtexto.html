@@ -81,7 +81,7 @@
                 const escapedMessage = data.message.replace(/"/g, '&quot;');
                 imageElements += `
                 <div class="container">
-                    <img src="${data.src}" alt="Imagen ${index + 1}" style="cursor: pointer;" onclick="mostrarMensaje(${index})">
+                    <img src="${data.src}" alt="Imagen ${index + 1}" style="cursor: pointer; width: 200px; height: auto;" onclick="mostrarMensaje(${index})">
                     <p class="message" id="messageText${index}" style="display: none;">${escapedMessage}</p>
                 </div>`;
             });
