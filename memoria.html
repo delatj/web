@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Proyecto</title>
+    <style>
+        body { background-color: #ADD8E6; font-family: Arial, sans-serif; }
+        table { background-color: #FFFF99; width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid black; padding: 8px; text-align: left; }
+    </style>
+</head>
+<body>
+    <h1>Generador de Informe de Proyecto</h1>
+    
+    <label for="title">Título del Proyecto:</label>
+    <input type="text" id="title"><br><br>
+    
+    <label for="responsables">Personas Responsables:</label>
+    <input type="text" id="responsables"><br><br>
+    
+    <label for="materiales">Materiales y herramientas (Nombre y precio// ejemplo tijeras...1 euro, regla...1 euro,etc.):</label>
+    <textarea id="materiales"></textarea><br><br>
+    
+    <label for="planos">Responsable de Planos y horas invertidas (ejemplo: Juan García...1 hora):</label>
+    <input type="text" id="planos"><br><br>
+    
+    <label for="construccion">Construcción (Responsables y horas invertidas// ejemplo: Juan García...1 hora):</label>
+    <input type="text" id="construccion"><br><br>
+    
+    <label for="comprobacion">Comprobación (Responsables y horas invertidas// ejemplo: Juan García...0.5 horas):</label>
+    <input type="text" id="comprobacion"><br><br>
+    
+    <label for="problemas">Problemas encontrados si ha habido y como se han resuelto:</label>
+    <textarea id="problemas"></textarea><br><br>
+    
+    <label for="audioInput">Sube un audio:</label>
+    <input type="file" id="audioInput" accept="audio/*">
+    <p>En el audio se ha de explicar cómo se ha realizado el proyecto y durar al menos 1 minuto (herramientas y materiales usados, cómo de ha diseñado, cómo se ha construido, cómo de ha comprobado,etc).</p>
+    
+    <button onclick="generateHtml()">Generar HTML y Descargar</button>
+    
+    <script>
+        let audioDataUrl = '';
+        document.getElementById('audioInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    audioDataUrl = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function generateHtml() {
+            const title = document.getElementById('title').value;
+            const responsables = document.getElementById('responsables').value;
+            const materiales = document.getElementById('materiales').value;
+            const planos = document.getElementById('planos').value;
+            const construccion = document.getElementById('construccion').value;
+            const comprobacion = document.getElementById('comprobacion').value;
+            const problemas = document.getElementById('problemas').value;
+
+            const htmlContent = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title}</title>
+    <style>
+        body { background-color: #ADD8E6; font-family: Arial, sans-serif; }
+        table { background-color: #FFFF99; width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid black; padding: 8px; text-align: left; }
+    </style>
+</head>
+<body>
+    <h1>${title}</h1>
+    <table>
+        <tr><th>Personas Responsables</th><td>${responsables}</td></tr>
+        <tr><th>Materiales</th><td>${materiales}</td></tr>
+        <tr><th>Responsable de Planos y Horas</th><td>${planos}</td></tr>
+        <tr><th>Construcción</th><td>${construccion}</td></tr>
+        <tr><th>Comprobación</th><td>${comprobacion}</td></tr>
+        <tr><th>Problemas y Soluciones</th><td>${problemas}</td></tr>
+    </table>
+    <br>
+    <button onclick="document.getElementById('audio').play()">Reproducir Explicación</button>
+    <audio id="audio" src="${audioDataUrl}"></audio>
+</body>
+</html>
+            `;
+
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${title.replace(/\s+/g, '_')}.html`;
+            link.click();
+        }
+    </script>
+</body>
+</html>
