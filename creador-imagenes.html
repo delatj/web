@@ -3,169 +3,167 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Actividad con Imágenes (seleciona varias imágenes a la vez)</title>
-    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.0/dist/jszip.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jszip-utils@0.1.0/dist/jszip-utils.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <title>Generador de Cuestionarios con Imágenes</title>
+    <style>
+        body { background-color: #FFFACD; font-family: Arial, sans-serif; padding: 20px; }
+        .image-container { margin-bottom: 20px; }
+        .option-input { margin: 5px 0; }
+        #score { position: fixed; top: 10px; right: 20px; font-size: 162px; font-family: Arial, sans-serif; color: green; }
+        #timer { position: fixed; top: 10px; left: 20px; font-size: 24px; font-family: Arial, sans-serif; color: red; }
+    </style>
 </head>
 <body>
-    <h1>Generador de Actividad con Imágenes</h1>
-    <label for="descriptionInput">Añade una descripción para la actividad:</label>
-    <textarea id="descriptionInput" placeholder="Escribe aquí la descripción..."></textarea><br><br>
-    <input type="file" id="imageInput" multiple accept="image/png, image/jpeg">
-    <div id="imageList"></div>
-    <button id="generateZip">Generar ZIP</button>
+    <h1>Generador de Cuestionarios con Imágenes</h1>
+
+    <label for="quizTitle">Título del Cuestionario:</label><br>
+    <input type="text" id="quizTitle" placeholder="Introduce el título del cuestionario"><br><br>
+
+    <label for="studentName">Nombre y Apellidos del Alumno:</label><br>
+    <input type="text" id="studentName" placeholder="Introduce tu nombre y apellidos"><br><br>
+
+    <div id="imageContainer"></div>
+    <button onclick="addImage()">Añadir Imagen</button>
+    <button onclick="generateQuiz()">Generar HTML del Cuestionario</button>
 
     <script>
-        const imageList = document.getElementById('imageList');
-        const imageInput = document.getElementById('imageInput');
-        const generateZip = document.getElementById('generateZip');
-        const descriptionInput = document.getElementById('descriptionInput');
-        const zip = new JSZip();
+        let imageCount = 0;
+        const imageData = [];
 
-        imageInput.addEventListener('change', () => {
-            imageList.innerHTML = '';
-            for (const file of imageInput.files) {
+        function addImage() {
+            const container = document.getElementById('imageContainer');
+            const div = document.createElement('div');
+            div.classList.add('image-container');
+            div.innerHTML = `
+                <label>Sube una imagen:</label><br>
+                <input type="file" id="image${imageCount}" accept="image/*" onchange="encodeImageFileAsURL(event, ${imageCount})"><br>
+                <label>Palabra asociada:</label><br>
+                <input type="text" id="answer${imageCount}" placeholder="Introduce la respuesta asociada"><br><br>
+            `;
+            container.appendChild(div);
+            imageData.push({ src: '', answer: '' });
+            imageCount++;
+        }
+
+        function encodeImageFileAsURL(event, index) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onloadend = function () {
+                    imageData[index].src = reader.result; // Guardar imagen en Base64
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function generateQuiz() {
+            const quizTitle = document.getElementById('quizTitle').value || 'Cuestionario';
+            const studentName = document.getElementById('studentName').value || 'Nombre del Alumno';
+
+            for (let i = 0; i < imageCount; i++) {
+                const answer = document.getElementById(`answer${i}`).value;
+                if (imageData[i].src && answer.trim() !== '') {
+                    imageData[i].answer = answer.trim();
+                }
+            }
+
+            const htmlContent = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${quizTitle}</title>
+    <style>
+        body { background-color: #FFFACD; font-family: Arial, sans-serif; padding: 20px; }
+        #score { position: fixed; top: 10px; right: 20px; font-size: 162px; font-family: Arial, sans-serif; color: green; }
+        #timer { position: fixed; top: 10px; left: 20px; font-size: 24px; font-family: Arial, sans-serif; color: red; }
+        img { max-width: 300px; height: auto; display: block; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h1>${quizTitle}</h1>
+    <h3>Alumno: ${studentName}</h3>
+
+    <div id="timer">05:00</div>
+    <div id="quizContainer"></div>
+    <button onclick="checkAnswers()">Comprobar Respuestas</button>
+    <div id="score"></div>
+
+    <script>
+        const images = ${JSON.stringify(imageData)};
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function renderQuiz() {
+            const container = document.getElementById('quizContainer');
+            container.innerHTML = '';
+
+            const shuffledImages = shuffle([...images]);
+
+            shuffledImages.forEach((img, idx) => {
                 const div = document.createElement('div');
-                div.innerHTML = `
-                    <p>${file.name}</p>
-                    <input type="text" placeholder="Escribe el nombre de esta imagen" data-filename="${file.name}">
-                `;
-                imageList.appendChild(div);
-            }
-        });
-
-        generateZip.addEventListener('click', async () => {
-            const indexHtml = [];
-            indexHtml.push('<!DOCTYPE html>');
-            indexHtml.push('<html lang="es">');
-            indexHtml.push('<head><meta charset="UTF-8"><title>Actividad</title>');
-            indexHtml.push('<style>body { background-color: #90ee90; }</style></head>');
-            indexHtml.push('<body>');
-            indexHtml.push('<h1 style="font-size: 16px; width: 300px; line-height: 1.2; text-align: center;">Si la respuesta tiene varias palabras sepáralas por "-", ejemplo: sierra-eléctrica</h1>');
-            indexHtml.push('<p id="description"></p>');
-            indexHtml.push('<div id="activity"></div>');
-            indexHtml.push('<button onclick="checkAnswers()">Validar Soluciones</button>');
-            indexHtml.push('<button onclick="showAnswers()">Ver Respuestas</button>');
-            indexHtml.push('<p id="result" style="font-size: 24px; font-weight: bold;"></p>');
-            indexHtml.push('<p id="timer" style="font-size: 20px; color: red;"></p>');
-            indexHtml.push('<script>');
-
-            indexHtml.push(`
-                const images = [`);
-
-            const inputs = imageList.querySelectorAll('input');
-            for (const input of inputs) {
-                const filename = input.getAttribute('data-filename');
-                const correctName = input.value;
-
-                const file = Array.from(imageInput.files).find(f => f.name === filename);
-                if (file) {
-                    const fileData = await file.arrayBuffer();
-                    zip.file(`images/${filename}`, fileData);
-                    indexHtml.push(`{ src: "./images/${filename}", correct: "${correctName}" },`);
-                }
-            }
-
-            indexHtml.push(`];
-                
-                function shuffleArray(array) {
-                    for (let i = array.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        [array[i], array[j]] = [array[j], array[i]];
-                    }
-                    return array;
-                }
-
-                function initializeActivity() {
-                    const activityDiv = document.getElementById("activity");
-                    activityDiv.innerHTML = '';
-
-                    const shuffledImages = shuffleArray([...images]);
-
-                    shuffledImages.forEach(image => {
-                        const container = document.createElement("div");
-                        container.classList.add("image-container");
-                        container.innerHTML = \`
-                            <div style="text-align:center; margin-bottom:10px;">
-                                <img src="\${image.src}" alt="Imagen" width="200">
-                                <input type="text" class="student-answer" data-correct="\${image.correct}" placeholder="Escribe tu respuesta">
-                            </div>
-                        \`;
-                        activityDiv.appendChild(container);
-                    });
-                }
-
-                function startTimer(duration) {
-                    const timerDisplay = document.getElementById("timer");
-                    let time = duration;
-
-                    const timerInterval = setInterval(() => {
-                        const minutes = Math.floor(time / 60);
-                        const seconds = time % 60;
-                        timerDisplay.textContent = \`Tiempo restante: \${minutes}:\${seconds.toString().padStart(2, '0')}\`;
-
-                        if (time <= 0) {
-                            clearInterval(timerInterval);
-                            finalizeActivity();
-                        }
-
-                        time--;
-                    }, 1000);
-                }
-
-                function finalizeActivity() {
-                    checkAnswers();
-                    document.querySelectorAll('.student-answer').forEach(input => {
-                        input.setAttribute('disabled', 'true');
-                    });
-                    document.getElementById('timer').textContent = 'Tiempo finalizado';
-                }
-
-                function checkAnswers() {
-                    const answers = document.querySelectorAll('.student-answer');
-                    let correct = 0;
-                    answers.forEach(answer => {
-                        if (answer.value.trim().toLowerCase() === answer.dataset.correct.trim().toLowerCase()) {
-                            correct++;
-                            answer.style.backgroundColor = 'green';
-                        } else {
-                            answer.style.backgroundColor = 'red';
-                        }
-                    });
-                    const percentage = (correct / answers.length) * 100;
-                    document.getElementById('result').textContent = \`Porcentaje de acierto: \${percentage.toFixed(2)}%\`;
-                }
-
-                function showAnswers() {
-                    const password = prompt("Introduce la contraseña para ver las respuestas:");
-                    if (password === "1979") {
-                        const answers = document.querySelectorAll('.student-answer');
-                        answers.forEach(answer => {
-                            answer.value = answer.dataset.correct;
-                            answer.style.backgroundColor = 'white';
-                        });
-                    } else {
-                        alert("Contraseña incorrecta.");
-                    }
-                }
-
-                document.addEventListener("DOMContentLoaded", () => {
-                    document.getElementById("description").textContent = "${descriptionInput.value.trim()}";
-                    initializeActivity();
-                    startTimer(300); 
-                });
-            <\/script>
-            `);
-            indexHtml.push('</body></html>');
-
-            zip.file('index.html', indexHtml.join('\n'));
-
-            zip.generateAsync({ type: 'blob' }).then(content => {
-                saveAs(content, 'actividad.zip');
+                div.innerHTML = \`
+                    <img src="\${img.src}" alt="Imagen \${idx + 1}">
+                    <input type="text" data-correct="\${img.answer}" placeholder="Escribe la palabra asociada">
+                \`;
+                container.appendChild(div);
             });
-        });
+        }
+
+        function checkAnswers() {
+            let correctCount = 0;
+            const inputs = document.querySelectorAll('input[type="text"]');
+
+            inputs.forEach(input => {
+                if (input.value.trim().toLowerCase() === input.dataset.correct.toLowerCase()) {
+                    input.style.backgroundColor = 'lightgreen';
+                    correctCount++;
+                } else {
+                    input.style.backgroundColor = 'lightcoral';
+                }
+                input.disabled = true;
+            });
+
+            const score = Math.round((correctCount / inputs.length) * 100);
+            document.getElementById('score').innerText = score + '%';
+        }
+
+        function startTimer(duration) {
+            let timer = duration, minutes, seconds;
+            const display = document.getElementById('timer');
+
+            const interval = setInterval(() => {
+                minutes = String(Math.floor(timer / 60)).padStart(2, '0');
+                seconds = String(timer % 60).padStart(2, '0');
+                display.textContent = \`\${minutes}:\${seconds}\`;
+
+                if (--timer < 0) {
+                    clearInterval(interval);
+                    checkAnswers();
+                }
+            }, 1000);
+        }
+
+        window.onload = () => {
+            renderQuiz();
+            startTimer(300); // 5 minutos (300 segundos)
+        };
+    <\/script>
+</body>
+</html>`;
+
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'cuestionario_con_imagenes.html';
+            link.click();
+        }
     </script>
 </body>
 </html>
-
