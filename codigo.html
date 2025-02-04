@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador y Editor de Archivos HTML</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+        }
+        textarea {
+            width: 80%;
+            height: 200px;
+            margin: 10px 0;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Generador y Editor de Archivos HTML</h2>
+    <input type="file" id="fileInput" accept=".html"><br>
+    <textarea id="htmlContent" placeholder="Escribe o edita tu código HTML aquí..."></textarea><br>
+    <input type="text" id="fileName" placeholder="Nombre del archivo (ej. index.html)"><br>
+    <button onclick="downloadHTML()">Descargar HTML</button>
+    <button onclick="clearText()">Limpiar Pantalla</button>
+
+    <script>
+        function downloadHTML() {
+            let content = document.getElementById("htmlContent").value;
+            let fileName = document.getElementById("fileName").value.trim();
+
+            if (!fileName) {
+                alert("Por favor, ingresa un nombre para el archivo.");
+                return;
+            }
+
+            let blob = new Blob([content], { type: "text/html" });
+            let a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = fileName.endsWith(".html") ? fileName : fileName + ".html";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function clearText() {
+            document.getElementById("htmlContent").value = "";
+            document.getElementById("fileName").value = "";
+        }
+
+        document.getElementById("fileInput").addEventListener("change", function(event) {
+            let file = event.target.files[0];
+            if (file) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById("htmlContent").value = e.target.result;
+                };
+                reader.readAsText(file);
+            }
+        });
+    </script>
+</body>
+</html>
