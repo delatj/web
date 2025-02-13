@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donkey Kong - 2 Jugadores</title>
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.6.0/lib/p5.js"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: white; /* Color de fondo inicial */
+        }
+        #scoreboard {
+            display: flex;
+            justify-content: space-around;
+            width: 700px;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        #game-container {
+            display: flex;
+            justify-content: space-between;
+            width: 900px; /* Aumentamos el ancho para incluir las ventanas de teclas */
+        }
+        #game-area {
+            width: 700px;
+            height: 450px;
+            background-color: #ddd;
+            position: relative;
+        }
+        #key-display {
+            display: flex;
+            justify-content: space-between;
+            width: 900px;
+            margin-top: 10px;
+        }
+        #key-display div {
+            width: 100px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            text-align: center;
+        }
+        #instructions {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #333;
+            text-align: center;
+        }
+        #example {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #333;
+            text-align: center;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        #player-zones {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: -1; /* Colocar detrás del contenido */
+        }
+        #player1-zone, #player2-zone {
+            width: 50%;
+            height: 100%;
+            transition: background-color 0.5s; /* Transición suave para el cambio de color */
+        }
+        #player1-zone {
+            background-color: white; /* Color inicial de la zona del Jugador 1 */
+        }
+        #player2-zone {
+            background-color: white; /* Color inicial de la zona del Jugador 2 */
+        }
+    </style>
+</head>
+<body>
+    <div id="player-zones">
+        <div id="player1-zone"></div>
+        <div id="player2-zone"></div>
+    </div>
+    <h1>Donkey Kong - Modo 2 Jugadores</h1>
+    <div id="scoreboard">
+        <div>Jugador 1: <span id="score1">0</span> puntos</div>
+        <div>Jugador 2: <span id="score2">0</span> puntos</div>
+    </div>
+    <div id="game-container">
+        <div id="game-area"></div>
+        <div id="key-display">
+            <div id="keys1">Secuencia: </div>
+            <div id="keys2">Secuencia: </div>
+        </div>
+    </div>
+    <div id="instructions">
+        <h3>Controles</h3>
+        <p><strong>Jugador 1 (izquierda):</strong> A (izquierda), D (derecha), W (subir), S (bajar), Q (recoger), E (volver a inicio)</p>
+        <p><strong>Jugador 2 (derecha):</strong> ← (izquierda), → (derecha), ↑ (subir), ↓ (bajar), P (recoger), I (volver a inicio)</p>
+        <p>Introduce una secuencia de teclas y pulsa <strong>X</strong> (Jugador 1) o <strong>M</strong> (Jugador 2) para ejecutarla.</p>
+    </div>
+    <div id="example">
+        <h3>Ejemplo</h3>
+        <p>Para coger la bola amarilla a dos pasos a la derecha:</p>
+        <p><strong>d (derecha) d (derecha) q (coger) x (ejecutar)</strong></p>
+    </div>
+    <script>
+        let mono1 = { x: 150, y: 400, visualX: 150, visualY: 400, puntos: 0, path: [], initialPos: { x: 150, y: 400 } };
+        let mono2 = { x: 550, y: 400, visualX: 550, visualY: 400, puntos: 0, path: [], initialPos: { x: 550, y: 400 } };
+        let tonel1 = { x: 200, y: 400 };
+        let tonel2 = { x: 500, y: 400 };
+        let ladders1 = [];
+        let ladders2 = [];
+        let sequence1 = []; // Almacena la secuencia del Jugador 1
+        let sequence2 = []; // Almacena la secuencia del Jugador 2
+
+        // Mapeo de puntos a colores
+        const colorMap = {
+            15: "blue",
+            30: "green",
+            45: "yellow",
+            60: "orange",
+            75: "red",
+            90: "lightgray",
+            115: "violet"
+        };
+
+        function setup() {
+            let canvas = createCanvas(700, 450);
+            canvas.parent('game-area');
+            generateRandomLadders();
+        }
+
+        function draw() {
+            background(220);
+            drawGame(mono1, tonel1, ladders1, 0, width / 2);
+            drawGame(mono2, tonel2, ladders2, width / 2, width);
+            stroke(0);
+            line(width / 2, 0, width / 2, height);
+        }
+
+        function drawGame(mono, tonel, ladders, xStart, xEnd) {
+            fill(200);
+            for (let i = 0; i < 4; i++) {
+                rect(xStart, i * 112.5, xEnd - xStart, 112.5);
+            }
+            fill(150);
+            for (let ladder of ladders) {
+                rect(ladder.x, ladder.y, 40, 112.5);
+            }
+            fill(255, 204, 0);
+            ellipse(tonel.x, tonel.y + 15, 30, 30);
+
+            // Dibujar la trayectoria si existe
+            if (mono.path.length > 0) {
+                noFill();
+                stroke(255, 0, 0);
+                beginShape();
+                for (let pos of mono.path) {
+                    vertex(pos.x, pos.y);
+                }
+                endShape();
+            }
+
+            // Dibujar al mono en su posición visual
+            fill(100, 100, 255);
+            ellipse(mono.visualX, mono.visualY + 15, 30, 30);
+        }
+
+        function generateRandomLadders() {
+            ladders1 = [];
+            ladders2 = [];
+            for (let i = 1; i < 4; i++) {
+                const x1 = random([50, 100, 150]);
+                const x2 = random([450, 500, 550]);
+                ladders1.push({ x: x1, y: 450 - i * 112.5 });
+                ladders2.push({ x: x2, y: 450 - i * 112.5 });
+            }
+        }
+
+        function keyPressed() {
+            // Almacenar la secuencia de teclas
+            if (key === 'a' || key === 'd' || key === 'w' || key === 's' || key === 'q') {
+                sequence1.push(key);
+                document.getElementById('keys1').innerText = "Secuencia: " + sequence1.join(" ");
+            }
+            if (key === 'ArrowLeft' || key === 'ArrowRight' || key === 'ArrowUp' || key === 'ArrowDown' || key === 'p') {
+                sequence2.push(key);
+                document.getElementById('keys2').innerText = "Secuencia: " + sequence2.join(" ");
+            }
+
+            // Ejecutar la secuencia del Jugador 1 al pulsar 'x'
+            if (key === 'x') {
+                executeSequence(mono1, sequence1, 0, width / 2, tonel1, 'score1', ladders1);
+                sequence1 = []; // Reiniciar la secuencia
+                document.getElementById('keys1').innerText = "Secuencia: ";
+            }
+
+            // Ejecutar la secuencia del Jugador 2 al pulsar 'm'
+            if (key === 'm') {
+                executeSequence(mono2, sequence2, width / 2, width, tonel2, 'score2', ladders2);
+                sequence2 = []; // Reiniciar la secuencia
+                document.getElementById('keys2').innerText = "Secuencia: ";
+            }
+
+            // Volver a la casilla de salida para el Jugador 1 al pulsar 'e'
+            if (key === 'e') {
+                mono1.x = mono1.initialPos.x;
+                mono1.y = mono1.initialPos.y;
+                mono1.visualX = mono1.initialPos.x;
+                mono1.visualY = mono1.initialPos.y;
+                mono1.path = []; // Reiniciar la trayectoria
+            }
+
+            // Volver a la casilla de salida para el Jugador 2 al pulsar 'i'
+            if (key === 'i') {
+                mono2.x = mono2.initialPos.x;
+                mono2.y = mono2.initialPos.y;
+                mono2.visualX = mono2.initialPos.x;
+                mono2.visualY = mono2.initialPos.y;
+                mono2.path = []; // Reiniciar la trayectoria
+            }
+        }
+
+        function executeSequence(mono, sequence, xStart, xEnd, tonel, scoreId, ladders) {
+            let delay = 500; // Retardo entre movimientos (500 ms)
+            let index = 0;
+
+            function nextStep() {
+                if (index < sequence.length) {
+                    let key = sequence[index];
+                    if (key === 'a' || key === 'ArrowLeft') {
+                        mono.x = constrain(mono.x - 40, xStart, xEnd - 40);
+                    } else if (key === 'd' || key === 'ArrowRight') {
+                        mono.x = constrain(mono.x + 40, xStart, xEnd - 40);
+                    } else if (key === 'w' || key === 'ArrowUp') {
+                        if (isOnLadder(mono, ladders)) {
+                            mono.y = constrain(mono.y - 40, 0, height - 40);
+                        }
+                    } else if (key === 's' || key === 'ArrowDown') {
+                        if (isOnLadder(mono, ladders)) {
+                            mono.y = constrain(mono.y + 40, 0, height - 40);
+                        }
+                    } else if (key === 'q' || key === 'p') {
+                        if (dist(mono.x, mono.y, tonel.x, tonel.y) < 30) {
+                            mono.puntos++;
+                            document.getElementById(scoreId).innerText = mono.puntos;
+                            tonel.x = random(xStart + 50, xEnd - 50);
+                            tonel.y = random(100, 400);
+
+                            // Cambiar el color de fondo de la zona correspondiente según los puntos
+                            updateZoneColor(mono.puntos, scoreId);
+                        } else {
+                            // Si no se recoge el tonel, volver a la posición inicial
+                            mono.x = mono.initialPos.x;
+                            mono.y = mono.initialPos.y;
+                        }
+                    }
+                    mono.path.push({ x: mono.x, y: mono.y });
+                    mono.visualX = mono.x;
+                    mono.visualY = mono.y;
+                    index++;
+                    setTimeout(nextStep, delay); // Llamar a la siguiente acción con retardo
+                }
+            }
+
+            nextStep(); // Iniciar la ejecución de la secuencia
+        }
+
+        function updateZoneColor(puntos, scoreId) {
+            let color = "white"; // Color por defecto
+            for (let threshold in colorMap) {
+                if (puntos >= threshold) {
+                    color = colorMap[threshold];
+                }
+            }
+            if (scoreId === 'score1') {
+                document.getElementById('player1-zone').style.backgroundColor = color;
+            } else if (scoreId === 'score2') {
+                document.getElementById('player2-zone').style.backgroundColor = color;
+            }
+        }
+
+        function isOnLadder(mono, ladders) {
+            for (let ladder of ladders) {
+                if (mono.x >= ladder.x && mono.x <= ladder.x + 40 && mono.y >= ladder.y && mono.y <= ladder.y + 112.5) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    </script>
+</body>
+</html>
