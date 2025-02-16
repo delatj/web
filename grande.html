@@ -7,58 +7,61 @@
 </head>
 <body>
     <h1>Editor de HTML/HTM</h1>
-    <p>Sube un archivo HTML o HTM para reemplazar las líneas seleccionadas:</p>
-    <input type="file" id="fileInput" accept=".html,.htm">
-    <button id="processFile">Procesar y Reemplazar</button>
-    <h2>Resultado:</h2>
-    <textarea id="output" rows="20" cols="80" readonly></textarea>
-    <button id="downloadFile" style="display:none;">Descargar Archivo Modificado</button>
+    <p>Sube archivos HTML o HTM para reemplazar las líneas seleccionadas:</p>
+    <input type="file" id="fileInput" accept=".html,.htm" multiple>
+    <button id="processFiles">Procesar y Reemplazar</button>
+    <h2>Resultados:</h2>
+    <div id="results"></div>
 
     <script>
-        document.getElementById("processFile").addEventListener("click", function () {
+        document.getElementById("processFiles").addEventListener("click", function () {
             const fileInput = document.getElementById("fileInput");
             if (!fileInput.files.length) {
-                alert("Por favor, selecciona un archivo HTML o HTM primero.");
+                alert("Por favor, selecciona al menos un archivo HTML o HTM.");
                 return;
             }
 
-            const file = fileInput.files[0];
-            const reader = new FileReader();
+            const resultsDiv = document.getElementById("results");
+            resultsDiv.innerHTML = "";
+            
+            Array.from(fileInput.files).forEach(file => {
+                const reader = new FileReader();
 
-            reader.onload = function (event) {
-                let content = event.target.result;
+                reader.onload = function (event) {
+                    let content = event.target.result;
 
-                // Reemplazar las líneas específicas
-                content = content.replace(
-                    /var YourScoreIs = '.*?';/g,
-                    "var YourScoreIs = ':';"
-                );
-                content = content.replace(
-                    /FB = YourScoreIs \+ ' ' \+ Score \+ '%.';/g,
-                    "FB = '<span style=\"font-size: 325px; font-weight: bold; color: red;\">' + YourScoreIs + ' ' + Score + '%.</span>';"
-                );
+                    // Reemplazar las líneas específicas
+                    content = content.replace(
+                        /var YourScoreIs = '.*?';/g,
+                        "var YourScoreIs = ':';"
+                    );
+                    content = content.replace(
+                        /FB = YourScoreIs \+ ' ' \+ Score \+ '%.';/g,
+                        "FB = '<span style=\"font-size: 325px; font-weight: bold; color: red;\">' + YourScoreIs + ' ' + Score + '%.</span>';"
+                    );
 
-                // Mostrar el resultado en el textarea
-                const output = document.getElementById("output");
-                output.value = content;
+                    // Crear botón de descarga para cada archivo modificado
+                    const downloadButton = document.createElement("button");
+                    downloadButton.textContent = `Descargar ${file.name}`;
+                    downloadButton.addEventListener("click", function () {
+                        const blob = new Blob([content], { type: "text/html" });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = file.name;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                    });
 
-                // Activar el botón de descarga
-                const downloadButton = document.getElementById("downloadFile");
-                downloadButton.style.display = "inline-block";
-                downloadButton.addEventListener("click", function () {
-                    const blob = new Blob([content], { type: "text/html" });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = file.name.replace(/\.htm(l)?$/, "_modificado.html");
-                    a.click();
-                    URL.revokeObjectURL(url);
-                });
-            };
+                    // Agregar el botón al área de resultados
+                    const resultItem = document.createElement("div");
+                    resultItem.appendChild(downloadButton);
+                    resultsDiv.appendChild(resultItem);
+                };
 
-            reader.readAsText(file);
+                reader.readAsText(file);
+            });
         });
     </script>
 </body>
 </html>
-
