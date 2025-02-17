@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modificar Test Hot Potatoes</title>
+</head>
+<body>
+    <h2>Modificar Test Hot Potatoes</h2>
+    <input type="file" id="fileInput" accept=".htm">
+    <button onclick="modifyAndDownload()">Modificar y Descargar</button>
+    
+    <script>
+        function modifyAndDownload() {
+            const fileInput = document.getElementById('fileInput');
+            if (fileInput.files.length === 0) {
+                alert('Por favor, selecciona un archivo.');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(event) {
+                let content = event.target.result;
+                
+                // Reemplazar la sección específica en el código JavaScript del archivo
+                content = content.replace(
+                    /if \(AllDone == true\)\{[\s\S]*?ShowMessage\(Feedback\);/g,
+                    `if (AllDone == true){
+                        Feedback = '<span style="font-size: 325px; font-weight: bold; color: red;">' + ' ' + Score + '%.</span>';
+                    }
+                    else {
+                        Feedback = '<span style="font-size: 325px; font-weight: bold; color: red;">'  + ' ' + Score + '%.</span>';
+                    }
+                    ShowMessage(Feedback);`
+                );
+                
+                // Crear un Blob y forzar la descarga
+                const blob = new Blob([content], { type: 'text/html' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = file.name.replace('.htm', '_modificado.htm');
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            };
+            
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>
