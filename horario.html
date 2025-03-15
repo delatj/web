@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planificador de Estudio</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid black; padding: 10px; text-align: center; cursor: pointer; }
+        th { background-color: #f4f4f4; }
+        .selected { background-color: #90EE90; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        tr:nth-child(odd) { background-color: #e6e6e6; }
+    </style>
+</head>
+<body>
+    <h2>Planificador de Estudio</h2>
+    <button onclick="nuevaAsignatura()">Asignatura Nueva</button>
+    <button onclick="finalizarHorario()">Finalizar</button>
+    <button onclick="generarPDF()">Descargar PDF</button>
+    <br><br>
+    <table id="tablaHorario">
+        <thead>
+            <tr>
+                <th>Hora</th>
+                <th>Lunes</th>
+                <th>Martes</th>
+                <th>Miércoles</th>
+                <th>Jueves</th>
+                <th>Viernes</th>
+            </tr>
+        </thead>
+        <tbody id="horario">        
+            <script>
+    let horas = ["8:00-9:00", "9:00-10:00", "10:00-11:00", "11:00-11:30", "11:30-12:30", "12:30-13:30", "13:30-14:30"];
+    for (let i = 0; i < horas.length; i++) {
+        document.write(`<tr>
+            <td>${horas[i]}</td>
+            <td onclick="seleccionarCelda(this)"></td>
+            <td onclick="seleccionarCelda(this)"></td>
+            <td onclick="seleccionarCelda(this)"></td>
+            <td onclick="seleccionarCelda(this)"></td>
+            <td onclick="seleccionarCelda(this)"></td>
+        </tr>`);
+    }
+</script>
+        </tbody>
+    </table>
+    
+    <div id="vistaPrevia" style="display:none; margin-top:20px;">
+        <h3>Vista Previa del Horario</h3>
+        <table id="tablaVistaPrevia" border="1"></table>
+    </div>
+    
+    <script>
+        let asignaturaActual = "";
+        let colores = {};
+        let colorIndex = 0;
+        const paleta = ["#FF5733", "#33FF57", "#337BFF", "#FFC300", "#DA33FF", "#33FFF5"];
+
+        function nuevaAsignatura() {
+            let nombre = prompt("Ingrese el nombre de la asignatura:");
+            if (nombre) {
+                asignaturaActual = nombre;
+                if (!colores[nombre]) {
+                    colores[nombre] = paleta[colorIndex % paleta.length];
+                    colorIndex++;
+                }
+            }
+        }
+
+        function seleccionarCelda(celda) {
+            if (asignaturaActual) {
+                celda.textContent = asignaturaActual;
+                celda.style.backgroundColor = colores[asignaturaActual];
+            } else {
+                alert("Primero ingrese una asignatura.");
+            }
+        }
+
+        function previsualizarHorario() {
+            let tablaOriginal = document.getElementById("tablaHorario").cloneNode(true);
+            let vistaPrevia = document.getElementById("tablaVistaPrevia");
+            vistaPrevia.innerHTML = tablaOriginal.innerHTML;
+            document.getElementById("vistaPrevia").style.display = "block";
+        }
+
+        function generarPDF() {
+            const { jsPDF } = window.jspdf;
+            let doc = new jsPDF();
+            doc.text("Horario de Estudio", 10, 10);
+            let filas = [];
+            let coloresPDF = [];
+            document.querySelectorAll("tbody tr").forEach(tr => {
+                let fila = [];
+                let coloresFila = [];
+                tr.querySelectorAll("td").forEach(td => {
+                    fila.push(td.textContent.trim());
+                    coloresFila.push(td.style.backgroundColor || "#FFFFFF");
+                });
+                filas.push(fila);
+                coloresPDF.push(coloresFila);
+            });
+            
+           doc.autoTable({
+    head: [["Hora", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]],
+    body: filas,
+    styles: { 
+        cellPadding: 3, 
+        lineWidth: 0.5, 
+        halign: 'center', 
+        valign: 'middle', 
+        lineColor: [0, 0, 0]  // Color negro para los bordes
+    },
+    headStyles: { 
+        fillColor: [100, 100, 100], 
+        textColor: [255, 255, 255], 
+        lineColor: [0, 0, 0]  // Borde negro en la cabecera
+    },
+    alternateRowStyles: { 
+        fillColor: [240, 240, 240],
+        lineColor: [0, 0, 0]  // Borde negro en filas alternas
+    },
+    rowStyles: { 
+        fillColor: [255, 255, 255], 
+        lineColor: [0, 0, 0]  // Borde negro en filas normales
+    },
+    didDrawCell: function(data) {
+        if (data.section === 'body' && data.column.index > 0) {
+            let color = coloresPDF[data.row.index][data.column.index];
+            if (color !== "#FFFFFF") {
+                doc.setFillColor(color);
+                doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
+            }
+            doc.setTextColor(0, 0, 0);
+            doc.text(filas[data.row.index][data.column.index], data.cell.x + 2, data.cell.y + 6);
+        }
+    }
+});
+
+           
+            doc.save("horario_estudio.pdf");
+        }
+    </script>
+</body>
+</html>
