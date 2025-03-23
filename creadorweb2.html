@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Páginas HTML</title>
+    <style>
+        body { font-family: Arial, sans-serif; transition: background 0.3s ease; }
+        #sidebar { width: 250px; position: fixed; left: 0; top: 0; bottom: 0; background: #333; color: white; padding: 10px; overflow-y: auto; }
+        #content { margin-left: 270px; padding: 20px; }
+        .theme-selector { margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <h3>Archivos</h3>
+        <ul id="fileList"></ul>
+        <h3>Tema</h3>
+        <select id="themeSelector" class="theme-selector">
+            <option value="white">Blanco</option>
+            <option value="lightgray">Gris Claro</option>
+            <option value="black">Negro</option>
+        </select>
+    </div>
+    <div id="content">
+        <h2>Generador de Página HTML</h2>
+        <input type="file" id="fileInput" accept=".html">
+        <input type="text" id="description" placeholder="Descripción">
+        <button onclick="addFile()">Añadir Archivo</button>
+        <button onclick="downloadMergedFile()">Descargar Página</button>
+        <hr>
+        <div id="displayArea"></div>
+    </div>
+    <script>
+        let files = [];
+        function addFile() {
+            let fileInput = document.getElementById('fileInput');
+            let description = document.getElementById('description').value;
+            if (fileInput.files.length === 0) return;
+            let file = fileInput.files[0];
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                files.push({ name: file.name, content: e.target.result, description: description });
+                updateFileList();
+            };
+            reader.readAsText(file);
+        }
+        function updateFileList() {
+            let fileList = document.getElementById('fileList');
+            fileList.innerHTML = '';
+            files.forEach((file, index) => {
+                let li = document.createElement('li');
+                li.innerHTML = `<a href="#" onclick="showFile(${index})">${file.description}</a>`;
+                fileList.appendChild(li);
+            });
+        }
+        function showFile(index) {
+            let displayArea = document.getElementById('displayArea');
+            displayArea.innerHTML = `<h3>${files[index].description}</h3>` + files[index].content;
+        }
+        function downloadMergedFile() {
+            let mergedContent = `<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página Unida</title>
+    <style>
+        body { font-family: Arial, sans-serif; transition: background 0.3s ease; }
+        #sidebar { width: 250px; position: fixed; left: 0; top: 0; bottom: 0; background: #333; color: white; padding: 10px; overflow-y: auto; }
+        #content { margin-left: 270px; padding: 20px; }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <h3>Archivos</h3>
+        <ul id="fileList">`;
+            files.forEach((file, index) => {
+                mergedContent += `<li><a href="#file${index}" target="_blank">${file.description}</a></li>`;
+            });
+            mergedContent += `</ul>
+    </div>
+    <div id="content">`;
+            files.forEach((file, index) => {
+                mergedContent += `<div id="file${index}"><h2>${file.description}</h2>${file.content}</div><hr>`;
+            });
+            mergedContent += `</div>
+</body>
+</html>`;
+            let blob = new Blob([mergedContent], { type: 'text/html' });
+            let a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'pagina_unida.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+        document.getElementById('themeSelector').addEventListener('change', function() {
+            document.body.style.background = this.value;
+        });
+    </script>
+</body>
+</html>
