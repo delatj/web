@@ -22,6 +22,16 @@
             padding-bottom: 10px;
             border-bottom: 1px solid rgba(255,255,255,0.2);
         }
+        .creator-title {
+            color: red;
+            font-size: 2em;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .blank-lines {
+            height: 60em; /* CAMBIO REALIZADO: de 20em a 60em */
+            margin: 20px 0;
+        }
         
         /* Estilos base para los temas */
         .theme-white {
@@ -202,9 +212,51 @@
                     typeLabel = '<span class="file-type">(HTML)</span>';
                 }
                 
-                li.innerHTML = `<a href="#" onclick="showFile(${index})">${file.description}</a> ${typeLabel}`;
+                li.innerHTML = `<a href="#" onclick="showFileInNewTab(${index})">${file.description}</a> ${typeLabel}`;
                 fileList.appendChild(li);
             });
+        }
+        
+        function showFileInNewTab(index) {
+            // Crear una nueva ventana
+            let newWindow = window.open('', '_blank');
+            
+            // Construir el contenido HTML para la nueva pestaña
+            let content = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>${files[index].description}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; }
+                        .content-container { max-width: 800px; margin: 0 auto; }
+                        img { max-width: 100%; height: auto; }
+                        audio { width: 100%; margin: 20px 0; }
+                        .blank-space {
+                            height: 100vh;
+                            background: white;
+                            margin-top: 20px;
+                        }
+                        .close-link {
+                            text-align: right;
+                            margin-bottom: 20px;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="content-container">
+                        <div class="close-link"><a href="#" onclick="window.close()">Cerrar ventana</a></div>
+                        <h1>${files[index].description}</h1>
+                        ${files[index].content}
+                        <div class="blank-space"></div>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            // Escribir el contenido en la nueva ventana
+            newWindow.document.write(content);
+            newWindow.document.close();
         }
         
         function showFile(index) {
@@ -278,6 +330,10 @@
         }
         #sidebar a {
             color: ${currentTheme.link};
+            text-decoration: none;
+        }
+        #sidebar a:hover {
+            text-decoration: underline;
         }
         .sidebar-title {
             font-size: 1.5em;
@@ -288,6 +344,16 @@
         #content { 
             margin-left: 270px; 
             padding: 20px; 
+        }
+        .creator-title {
+            color: red;
+            font-size: 2em;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .blank-lines {
+            height: 60em; /* CAMBIO REALIZADO: de 20em a 60em */
+            margin: 20px 0;
         }
         .image-container { 
             margin: 20px 0; 
@@ -314,6 +380,10 @@
             border: 0; 
             border-top: 1px solid #eee; 
         }
+        .close-link {
+            text-align: right;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
@@ -333,7 +403,7 @@
                     typeLabel = '<span class="file-type">(HTML)</span>';
                 }
                 
-                mergedContent += `<li><a href="#file${index}">${file.description}</a> ${typeLabel}</li>`;
+                mergedContent += `<li><a href="#file${index}" target="_blank">${file.description}</a> ${typeLabel}</li>`;
             });
             
             mergedContent += `</ul>
@@ -341,6 +411,8 @@
         <p>${document.getElementById('themeSelector').options[document.getElementById('themeSelector').selectedIndex].text}</p>
     </div>
     <div id="content">
+        <h1 class="creator-title">Creador Web 2025</h1>
+        <div class="blank-lines"></div>
         <h1>${pageTitle}</h1>`;
             
             files.forEach((file, index) => {
@@ -375,6 +447,50 @@
                     }
                 });
             });
+        });
+        
+        // Configurar enlaces para abrir en pestaña nueva con espacio en blanco
+        document.querySelectorAll('#sidebar a').forEach(link => {
+            if(link.getAttribute('href').startsWith('#file')) {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const index = this.getAttribute('href').replace('#file', '');
+                    const fileContent = document.getElementById('file'+index).outerHTML;
+                    
+                    const newWindow = window.open('', '_blank');
+                    newWindow.document.write(\`
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <title>\${document.getElementById('file'+index).querySelector('h2').textContent}</title>
+                            <style>
+                                body { font-family: Arial, sans-serif; padding: 20px; }
+                                .content-container { max-width: 800px; margin: 0 auto; }
+                                img { max-width: 100%; height: auto; }
+                                audio { width: 100%; margin: 20px 0; }
+                                .blank-space {
+                                    height: 100vh;
+                                    background: white;
+                                    margin-top: 20px;
+                                }
+                                .close-link {
+                                    text-align: right;
+                                    margin-bottom: 20px;
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="content-container">
+                                <div class="close-link"><a href="#" onclick="window.close()">Cerrar ventana</a></div>
+                                \${fileContent}
+                                <div class="blank-space"></div>
+                            </div>
+                        </body>
+                        </html>
+                    \`);
+                    newWindow.document.close();
+                });
+            }
         });
     <\/script>
 </body>
