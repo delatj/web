@@ -5,41 +5,75 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generador de Proyecto</title>
     <style>
-        body { background-color: #ADD8E6; font-family: Arial, sans-serif; }
-        table { background-color: #FFFF99; width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid black; padding: 8px; text-align: left; }
+        body { background-color: #E6F0FA; font-family: Arial, sans-serif; padding: 20px; }
+        h1 { text-align: center; color: #003366; }
+        table { background-color: #FFFFCC; width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #333; padding: 10px; text-align: left; vertical-align: top; }
+        ul { padding-left: 20px; margin: 0; }
+        li { margin-bottom: 4px; }
+        button { background-color: #003366; color: white; padding: 10px 20px; border: none; cursor: pointer; margin-top: 10px; }
+        button:hover { background-color: #0059b3; }
+        input, textarea { width: 100%; padding: 8px; margin-top: 4px; margin-bottom: 12px; box-sizing: border-box; }
+        textarea { resize: vertical; min-height: 80px; }
+        .entry-group { display: flex; gap: 10px; margin-bottom: 10px; }
+        .entry-group input[type="text"], .entry-group input[type="number"] { flex: 1; }
+        .data-table { width: 100%; border-collapse: collapse; margin: 5px 0; }
+        .data-table th, .data-table td { border: 1px solid #666; padding: 8px; }
+        .data-table th { background-color: #555; color: white; }
+        .data-table tr:nth-child(even) { background-color: #e0e0e0; }
+        .data-table tr:nth-child(odd) { background-color: #f0f0f0; }
     </style>
 </head>
 <body>
     <h1>Generador de Informe de Proyecto</h1>
-    
+
     <label for="title">Título del Proyecto:</label>
-    <input type="text" id="title"><br><br>
-    
+    <textarea id="title"></textarea>
+
     <label for="responsables">Personas Responsables:</label>
-    <input type="text" id="responsables"><br><br>
-    
-    <label for="materiales">Materiales y herramientas (Nombre y precio// ejemplo tijeras...1 euro, regla...1 euro,etc.):</label>
-    <textarea id="materiales"></textarea><br><br>
-    
-    <label for="planos">Responsable de Planos y horas invertidas (ejemplo: Juan García...1 hora):</label>
-    <input type="text" id="planos"><br><br>
-    
-    <label for="construccion">Construcción (Responsables y horas invertidas// ejemplo: Juan García...1 hora):</label>
-    <input type="text" id="construccion"><br><br>
-    
-    <label for="comprobacion">Comprobación (Responsables y horas invertidas// ejemplo: Juan García...0.5 horas):</label>
-    <input type="text" id="comprobacion"><br><br>
-    
-    <label for="problemas">Problemas encontrados si ha habido y como se han resuelto:</label>
-    <textarea id="problemas"></textarea><br><br>
-    
+    <textarea id="responsables"></textarea>
+
+    <label>Materiales y herramientas:</label>
+    <div id="materialesContainer"></div>
+    <div class="entry-group">
+        <input type="text" id="nuevoMaterial" placeholder="Nombre del material o herramienta">
+        <input type="number" id="precioMaterial" placeholder="Precio (€)">
+        <button onclick="agregarMaterial()">Añadir</button>
+    </div>
+
+    <label>Responsable de Planos y horas invertidas:</label>
+    <div id="planosContainer"></div>
+    <div class="entry-group">
+        <input type="text" id="nuevoPlano" placeholder="Nombre del responsable">
+        <input type="number" id="horasPlano" placeholder="Horas">
+        <button onclick="agregarEntrada('planosContainer', 'nuevoPlano', 'horasPlano')">Añadir</button>
+    </div>
+
+    <label>Construcción (Responsables y horas invertidas):</label>
+    <div id="construccionContainer"></div>
+    <div class="entry-group">
+        <input type="text" id="nuevoConstruccion" placeholder="Nombre del responsable">
+        <input type="number" id="horasConstruccion" placeholder="Horas">
+        <button onclick="agregarEntrada('construccionContainer', 'nuevoConstruccion', 'horasConstruccion')">Añadir</button>
+    </div>
+
+    <label>Comprobación (Responsables y horas invertidas):</label>
+    <div id="comprobacionContainer"></div>
+    <div class="entry-group">
+        <input type="text" id="nuevoComprobacion" placeholder="Nombre del responsable">
+        <input type="number" id="horasComprobacion" placeholder="Horas">
+        <button onclick="agregarEntrada('comprobacionContainer', 'nuevoComprobacion', 'horasComprobacion')">Añadir</button>
+    </div>
+
+    <label for="problemas">Problemas encontrados si ha habido y cómo se han resuelto:</label>
+    <textarea id="problemas"></textarea>
+
     <label for="audioInput">Sube un audio:</label>
     <input type="file" id="audioInput" accept="audio/*">
-    <p>En el audio se ha de explicar cómo se ha realizado el proyecto y durar al menos 1 minuto (herramientas y materiales usados, cómo de ha diseñado, cómo se ha construido, cómo de ha comprobado,etc).</p>
-    
+    <p>En el audio se ha de explicar cómo se ha realizado el proyecto y durar al menos 1 minuto (herramientas y materiales usados, cómo se ha diseñado, cómo se ha construido, cómo se ha comprobado, etc.).</p>
+
     <button onclick="generateHtml()">Generar HTML y Descargar</button>
-    
+
     <script>
         let audioDataUrl = '';
         document.getElementById('audioInput').addEventListener('change', function(event) {
@@ -53,49 +87,208 @@
             }
         });
 
+        function agregarMaterial() {
+            const nombre = document.getElementById('nuevoMaterial').value.trim();
+            const precio = document.getElementById('precioMaterial').value.trim();
+            if (nombre && precio) {
+                const contenedor = document.getElementById('materialesContainer');
+                const div = document.createElement('div');
+                div.textContent = `${nombre} - ${precio} €`;
+                contenedor.appendChild(div);
+                document.getElementById('nuevoMaterial').value = '';
+                document.getElementById('precioMaterial').value = '';
+            }
+        }
+
+        function agregarEntrada(containerId, inputId, horasId) {
+            const nombre = document.getElementById(inputId).value.trim();
+            const horas = document.getElementById(horasId).value.trim();
+            if (nombre && horas) {
+                const contenedor = document.getElementById(containerId);
+                const div = document.createElement('div');
+                div.textContent = `${nombre} - ${horas} hora(s)`;
+                contenedor.appendChild(div);
+                document.getElementById(inputId).value = '';
+                document.getElementById(horasId).value = '';
+            }
+        }
+
         function generateHtml() {
             const title = document.getElementById('title').value;
-            const responsables = document.getElementById('responsables').value;
-            const materiales = document.getElementById('materiales').value;
-            const planos = document.getElementById('planos').value;
-            const construccion = document.getElementById('construccion').value;
-            const comprobacion = document.getElementById('comprobacion').value;
-            const problemas = document.getElementById('problemas').value;
+            const responsables = document.getElementById('responsables').value.split('\n').filter(r => r.trim() !== '').map(r => `<li>${r.trim()}</li>`).join('');
+            
+            // Materiales como tabla
+            const materialesRows = Array.from(document.getElementById('materialesContainer').children)
+                .map(div => {
+                    const [nombre, precio] = div.textContent.split(' - ');
+                    return `<tr><td>${nombre}</td><td>${precio}</td></tr>`;
+                }).join('');
+            const materialesTable = materialesRows ? 
+                `<table class="data-table">
+                    <thead><tr><th>Material/Herramienta</th><th>Precio</th></tr></thead>
+                    <tbody>${materialesRows}</tbody>
+                </table>` : 'No se añadieron materiales';
+            
+            // Planos como tabla
+            const planosRows = Array.from(document.getElementById('planosContainer').children)
+                .map(div => {
+                    const [nombre, horas] = div.textContent.split(' - ');
+                    return `<tr><td>${nombre}</td><td>${horas}</td></tr>`;
+                }).join('');
+            const planosTable = planosRows ? 
+                `<table class="data-table">
+                    <thead><tr><th>Responsable</th><th>Horas</th></tr></thead>
+                    <tbody>${planosRows}</tbody>
+                </table>` : 'No se añadieron responsables';
+            
+            // Construcción como tabla
+            const construccionRows = Array.from(document.getElementById('construccionContainer').children)
+                .map(div => {
+                    const [nombre, horas] = div.textContent.split(' - ');
+                    return `<tr><td>${nombre}</td><td>${horas}</td></tr>`;
+                }).join('');
+            const construccionTable = construccionRows ? 
+                `<table class="data-table">
+                    <thead><tr><th>Responsable</th><th>Horas</th></tr></thead>
+                    <tbody>${construccionRows}</tbody>
+                </table>` : 'No se añadieron responsables';
+            
+            // Comprobación como tabla
+            const comprobacionRows = Array.from(document.getElementById('comprobacionContainer').children)
+                .map(div => {
+                    const [nombre, horas] = div.textContent.split(' - ');
+                    return `<tr><td>${nombre}</td><td>${horas}</td></tr>`;
+                }).join('');
+            const comprobacionTable = comprobacionRows ? 
+                `<table class="data-table">
+                    <thead><tr><th>Responsable</th><th>Horas</th></tr></thead>
+                    <tbody>${comprobacionRows}</tbody>
+                </table>` : 'No se añadieron responsables';
+            
+            const problemasFormatted = document.getElementById('problemas').value.replace(/\n/g, '<br>');
 
-            const htmlContent = `
-<!DOCTYPE html>
+            const htmlContent = `<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${title}</title>
     <style>
-        body { background-color: #ADD8E6; font-family: Arial, sans-serif; }
-        table { background-color: #FFFF99; width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid black; padding: 8px; text-align: left; }
+        body { 
+            background-color: #E6F0FA; 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 { 
+            text-align: center; 
+            color: #003366; 
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #003366;
+        }
+        .main-table { 
+            background-color: #FFFFCC; 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border: 2px solid black;
+        }
+        .main-table th, .main-table td { 
+            border: 2px solid black; 
+            padding: 12px; 
+            text-align: left; 
+            vertical-align: top; 
+        }
+        .main-table th { 
+            background-color: #003366; 
+            color: white;
+            width: 20%;
+        }
+        .data-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 5px 0; 
+            border: 2px solid black;
+        }
+        .data-table th, .data-table td { 
+            border: 2px solid black; 
+            padding: 8px; 
+        }
+        .data-table th { 
+            background-color: #555; 
+            color: white;
+        }
+        .data-table tr:nth-child(even) {
+            background-color: #e0e0e0;
+        }
+        .data-table tr:nth-child(odd) {
+            background-color: #f0f0f0;
+        }
+        .audio-section {
+            margin-top: 30px;
+            text-align: center;
+        }
+        .audio-section button {
+            background-color: #003366;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+        .audio-section button:hover {
+            background-color: #0059b3;
+        }
+        audio {
+            margin-top: 15px;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
     <h1>${title}</h1>
-    <table>
-        <tr><th>Personas Responsables</th><td>${responsables}</td></tr>
-        <tr><th>Materiales</th><td>${materiales}</td></tr>
-        <tr><th>Responsable de Planos y Horas</th><td>${planos}</td></tr>
-        <tr><th>Construcción</th><td>${construccion}</td></tr>
-        <tr><th>Comprobación</th><td>${comprobacion}</td></tr>
-        <tr><th>Problemas y Soluciones</th><td>${problemas}</td></tr>
+    <table class="main-table">
+        <tr>
+            <th>Personas Responsables</th>
+            <td>${responsables ? `<ul>${responsables}</ul>` : 'No se especificaron responsables'}</td>
+        </tr>
+        <tr>
+            <th>Materiales y Herramientas</th>
+            <td>${materialesTable}</td>
+        </tr>
+        <tr>
+            <th>Responsables de Planos</th>
+            <td>${planosTable}</td>
+        </tr>
+        <tr>
+            <th>Construcción</th>
+            <td>${construccionTable}</td>
+        </tr>
+        <tr>
+            <th>Comprobación</th>
+            <td>${comprobacionTable}</td>
+        </tr>
+        <tr>
+            <th>Problemas y Soluciones</th>
+            <td>${problemasFormatted || 'No se reportaron problemas'}</td>
+        </tr>
     </table>
-    <br>
-    <button onclick="document.getElementById('audio').play()">Reproducir Explicación</button>
-    <audio id="audio" src="${audioDataUrl}"></audio>
+    
+    <div class="audio-section">
+        <button onclick="document.getElementById('audio').play()">▶ Reproducir Explicación del Proyecto</button>
+        <audio id="audio" src="${audioDataUrl}" controls></audio>
+    </div>
 </body>
-</html>
-            `;
+</html>`;
 
             const blob = new Blob([htmlContent], { type: 'text/html' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = `${title.replace(/\s+/g, '_')}.html`;
+            link.download = `${title.replace(/\s+/g, '_') || 'proyecto_sin_titulo'}.html`;
             link.click();
         }
     </script>
