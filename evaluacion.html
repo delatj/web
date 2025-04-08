@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizador de Notas de Alumnos</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .upload-section {
+            text-align: center;
+            padding: 30px;
+            border: 2px dashed #bdc3c7;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            background-color: #f8f9fa;
+            transition: all 0.3s;
+        }
+        .upload-section.collapsed {
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .upload-section:hover {
+            border-color: #3498db;
+            background-color: #eaf2f8;
+        }
+        .load-options {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .load-btn {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            min-width: 250px;
+        }
+        .load-btn:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+        .load-btn.load1 {
+            background-color: #3498db;
+        }
+        .load-btn.load2 {
+            background-color: #2ecc71;
+        }
+        .load-btn.load3 {
+            background-color: #9b59b6;
+        }
+        .file-input-container {
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .file-input-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .file-input-label {
+            font-weight: bold;
+            min-width: 150px;
+            text-align: right;
+        }
+        .file-input {
+            display: none;
+        }
+        .file-input-btn {
+            background-color: #f39c12;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .file-input-btn:hover {
+            background-color: #e67e22;
+        }
+        .file-status {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        .student-view {
+            display: none;
+            margin-top: 30px;
+        }
+        .student-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f0f2f5;
+            border-radius: 8px;
+        }
+        .student-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .student-stats {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .stat-badge {
+            display: flex;
+            align-items: center;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .suspensos-badge {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .trim1-badge {
+            background-color: #3498db;
+            color: white;
+        }
+        .trim2-badge {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .trim3-badge {
+            background-color: #9b59b6;
+            color: white;
+        }
+        .average-badge {
+            background-color: #f39c12;
+            color: white;
+        }
+        .subjects-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .subject {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+            position: relative;
+        }
+        .subject:hover {
+            transform: translateY(-5px);
+        }
+        .subject-name {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
+            height: 40px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        .subject-grade {
+            font-size: 28px;
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            position: relative;
+        }
+        .trend-arrow {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 16px;
+            background: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .trend-up {
+            color: #2ecc71;
+        }
+        .trend-down {
+            color: #e74c3c;
+        }
+        .previous-grades {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            display: flex;
+            gap: 5px;
+        }
+        .previous-grade {
+            font-size: 12px;
+            background-color: rgba(0,0,0,0.1);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .previous-grade-label {
+            font-size: 8px;
+            font-weight: bold;
+        }
+        .approved {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .failed {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .neutral {
+            background-color: #bdc3c7;
+            color: white;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .nav-btn {
+            padding: 10px 25px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        .nav-btn:hover {
+            background-color: #2980b9;
+        }
+        .nav-btn:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        .position-indicator {
+            margin: 15px 0;
+            font-style: italic;
+            color: #7f8c8d;
+            text-align: center;
+        }
+        .toggle-upload-section {
+            background: none;
+            border: none;
+            color: #3498db;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+            text-decoration: underline;
+        }
+        .toggle-upload-section:hover {
+            color: #2980b9;
+        }
+        .filter-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            padding: 10px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .filter-btn:hover {
+            background-color: #2980b9;
+        }
+        .filter-btn.zero {
+            background-color: #2ecc71;
+        }
+        .filter-btn.one-two {
+            background-color: #f39c12;
+        }
+        .filter-btn.three-four {
+            background-color: #e67e22;
+        }
+        .filter-btn.five-plus {
+            background-color: #e74c3c;
+        }
+        .filter-btn.all {
+            background-color: #3498db;
+        }
+        .filter-btn.stats {
+            background-color: #9b59b6;
+        }
+        .stats-container {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .stats-group {
+            margin-bottom: 20px;
+        }
+        .stats-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        .stats-count {
+            font-weight: bold;
+            color: #3498db;
+        }
+        .students-list {
+            margin-top: 10px;
+            padding-left: 20px;
+            color: #7f8c8d;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .low-pass-rate {
+            background-color: #fff3cd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Visualizador de Notas de Alumnos</h1>
+        
+        <div class="upload-section" id="uploadSection">
+            <div class="load-options" id="loadOptions">
+                <button class="load-btn load1" id="load1Btn">Cargar solo 1er trimestre</button>
+                <button class="load-btn load2" id="load2Btn">Cargar 1er y 2do trimestre</button>
+                <button class="load-btn load3" id="load3Btn">Cargar 1er, 2do y 3er trimestre</button>
+            </div>
+            
+            <div class="file-input-container" id="fileInputContainer">
+                <!-- Los inputs de archivo se agregarán dinámicamente -->
+            </div>
+            
+            <div class="file-status" id="fileStatus">No hay archivos cargados</div>
+            
+            <button class="toggle-upload-section" id="toggleUploadBtn" style="display: none;">Mostrar opciones de carga</button>
+        </div>
+        
+        <div id="studentView" class="student-view">
+            <div class="student-header">
+                <div class="student-name" id="currentStudentName"></div>
+                <div class="student-stats" id="studentStats"></div>
+            </div>
+            
+            <div class="position-indicator" id="positionIndicator"></div>
+            
+            <div class="subjects-container" id="subjectsContainer"></div>
+            
+            <div class="navigation">
+                <button id="prevBtn" class="nav-btn" disabled>Anterior</button>
+                <button id="nextBtn" class="nav-btn" disabled>Siguiente</button>
+            </div>
+            
+            <div class="filter-buttons">
+                <button class="filter-btn zero" id="filterZeroBtn">0 suspensos</button>
+                <button class="filter-btn one-two" id="filterOneTwoBtn">1-2 suspensos</button>
+                <button class="filter-btn three-four" id="filterThreeFourBtn">3-4 suspensos</button>
+                <button class="filter-btn five-plus" id="filterFivePlusBtn">5+ suspensos</button>
+                <button class="filter-btn all" id="filterAllBtn">Todos los alumnos</button>
+                <button class="filter-btn stats" id="filterStatsBtn">Estadísticas</button>
+            </div>
+            
+            <div id="statsContainer" class="stats-container">
+                <h2>Estadísticas del Curso</h2>
+                <div id="statsContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let studentsData = [];
+        let currentStudentIndex = 0;
+        let allStudentsData = [];
+        let trimestresData = [
+            { name: "1º Trim", students: [], loaded: false, file: null },
+            { name: "2º Trim", students: [], loaded: false, file: null },
+            { name: "3º Trim", students: [], loaded: false, file: null }
+        ];
+        let filesToLoad = 0;
+        let filesLoaded = 0;
+        
+        // Configurar event listeners para los botones de carga
+        document.getElementById('load1Btn').addEventListener('click', function() {
+            setupFileInputs(1);
+        });
+        
+        document.getElementById('load2Btn').addEventListener('click', function() {
+            setupFileInputs(2);
+        });
+        
+        document.getElementById('load3Btn').addEventListener('click', function() {
+            setupFileInputs(3);
+        });
+        
+        // Configurar el botón para mostrar/ocultar la sección de carga
+        document.getElementById('toggleUploadBtn').addEventListener('click', function() {
+            const uploadSection = document.getElementById('uploadSection');
+            uploadSection.classList.toggle('collapsed');
+            
+            if (uploadSection.classList.contains('collapsed')) {
+                document.getElementById('loadOptions').style.display = 'none';
+                document.getElementById('fileInputContainer').style.display = 'none';
+                this.textContent = 'Mostrar opciones de carga';
+            } else {
+                document.getElementById('loadOptions').style.display = 'flex';
+                if (filesToLoad > 0) {
+                    document.getElementById('fileInputContainer').style.display = 'flex';
+                }
+                this.textContent = 'Ocultar opciones de carga';
+            }
+        });
+        
+        // Configurar botones de filtro
+        document.getElementById('filterZeroBtn').addEventListener('click', function() {
+            filterStudents(0, 0);
+        });
+        
+        document.getElementById('filterOneTwoBtn').addEventListener('click', function() {
+            filterStudents(1, 2);
+        });
+        
+        document.getElementById('filterThreeFourBtn').addEventListener('click', function() {
+            filterStudents(3, 4);
+        });
+        
+        document.getElementById('filterFivePlusBtn').addEventListener('click', function() {
+            filterStudents(5, Infinity);
+        });
+        
+        document.getElementById('filterAllBtn').addEventListener('click', function() {
+            showAllStudents();
+        });
+        
+        document.getElementById('filterStatsBtn').addEventListener('click', function() {
+            toggleStats();
+        });
+        
+        function setupFileInputs(numFiles) {
+            const container = document.getElementById('fileInputContainer');
+            container.innerHTML = '';
+            container.style.display = 'flex';
+            
+            filesToLoad = numFiles;
+            filesLoaded = 0;
+            
+            // Resetear estado de trimestres
+            trimestresData.forEach(trimestre => {
+                trimestre.loaded = false;
+                trimestre.file = null;
+                trimestre.students = [];
+            });
+            
+            // Crear inputs para los archivos necesarios
+            for (let i = 0; i < numFiles; i++) {
+                const group = document.createElement('div');
+                group.className = 'file-input-group';
+                
+                const label = document.createElement('span');
+                label.className = 'file-input-label';
+                label.textContent = trimestresData[i].name + ':';
+                
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.className = 'file-input';
+                input.accept = '.xlsx, .xls';
+                input.dataset.trimestre = i;
+                
+                const btn = document.createElement('button');
+                btn.className = 'file-input-btn';
+                btn.textContent = 'Seleccionar archivo';
+                btn.onclick = function() {
+                    input.click();
+                };
+                
+                const status = document.createElement('span');
+                status.className = 'file-status';
+                status.textContent = 'No seleccionado';
+                status.id = `fileStatus${i}`;
+                
+                input.addEventListener('change', function(e) {
+                    handleFileUpload(e, i);
+                    status.textContent = e.target.files[0] ? e.target.files[0].name : 'No seleccionado';
+                });
+                
+                group.appendChild(label);
+                group.appendChild(btn);
+                group.appendChild(input);
+                group.appendChild(status);
+                container.appendChild(group);
+            }
+            
+            document.getElementById('fileStatus').textContent = `Seleccione ${numFiles} archivo(s)`;
+        }
+        
+        function handleFileUpload(e, trimestreIndex) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            trimestresData[trimestreIndex].file = file;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                processExcelData(data, trimestreIndex);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+        
+        function processExcelData(data, trimestreIndex) {
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+            
+            if (jsonData.length < 1) {
+                alert('El archivo está vacío o no tiene el formato correcto');
+                return;
+            }
+            
+            // Buscar la fila que contiene los encabezados (asignaturas)
+            let headerRowIndex = 0;
+            for (let i = 0; i < jsonData.length; i++) {
+                if (jsonData[i] && jsonData[i][0] && jsonData[i][0].toString().toLowerCase().includes('alumno')) {
+                    headerRowIndex = i;
+                    break;
+                }
+            }
+            
+            const headers = jsonData[headerRowIndex].map(h => h.toString().trim());
+            const students = [];
+            
+            // Procesar datos a partir de la fila siguiente a los encabezados
+            for (let i = headerRowIndex + 1; i < jsonData.length; i++) {
+                const row = jsonData[i];
+                if (!row || row.length === 0) continue;
+                
+                const student = {
+                    name: row[0]?.toString().trim() || `Alumno ${i}`,
+                    subjects: {},
+                    failedCount: 0,
+                    average: 0,
+                    totalGrades: 0
+                };
+                
+                let sumGrades = 0;
+                let countGrades = 0;
+                
+                for (let j = 1; j < headers.length; j++) {
+                    if (headers[j] && row[j] !== undefined && row[j] !== null && row[j] !== '') {
+                        const gradeValue = row[j];
+                        let grade;
+                        
+                        // Manejar diferentes formatos de nota (número o texto)
+                        if (typeof gradeValue === 'number') {
+                            grade = gradeValue;
+                        } else if (typeof gradeValue === 'string') {
+                            // Intentar convertir texto a número
+                            const parsedGrade = parseFloat(gradeValue.replace(',', '.'));
+                            grade = isNaN(parsedGrade) ? 0 : parsedGrade;
+                        } else {
+                            continue; // Saltar si no es un valor válido
+                        }
+                        
+                        const passed = grade >= 5;
+                        if (!passed) student.failedCount++;
+                        
+                        sumGrades += grade;
+                        countGrades++;
+                        
+                        student.subjects[headers[j]] = {
+                            grade: grade,
+                            passed: passed,
+                            hasGrade: true
+                        };
+                    } else {
+                        // Marcar asignaturas sin nota (optativas no cursadas)
+                        student.subjects[headers[j]] = {
+                            hasGrade: false
+                        };
+                    }
+                }
+                
+                student.average = countGrades > 0 ? (sumGrades / countGrades) : 0;
+                student.totalGrades = countGrades;
+                
+                students.push(student);
+            }
+            
+            // Actualizar datos del trimestre
+            trimestresData[trimestreIndex].students = students;
+            trimestresData[trimestreIndex].loaded = true;
+            filesLoaded++;
+            
+            // Actualizar estado de archivos
+            updateFileStatus();
+            
+            // Si se han cargado todos los archivos esperados
+            if (filesLoaded === filesToLoad) {
+                // Mostrar datos del último trimestre cargado por defecto
+                let lastLoadedIndex = 0;
+                for (let i = trimestresData.length - 1; i >= 0; i--) {
+                    if (trimestresData[i].loaded) {
+                        lastLoadedIndex = i;
+                        break;
+                    }
+                }
+                
+                allStudentsData = trimestresData[lastLoadedIndex].students;
+                studentsData = [...allStudentsData].sort((a, b) => a.name.localeCompare(b.name));
+                
+                if (studentsData.length > 0) {
+                    currentStudentIndex = 0;
+                    updateStudentDisplay();
+                    document.getElementById('studentView').style.display = 'block';
+                    
+                    // Ocultar la sección de carga (pero mostrar el botón para mostrarla)
+                    document.getElementById('uploadSection').classList.add('collapsed');
+                    document.getElementById('loadOptions').style.display = 'none';
+                    document.getElementById('fileInputContainer').style.display = 'none';
+                    document.getElementById('toggleUploadBtn').style.display = 'block';
+                }
+            }
+        }
+        
+        function updateFileStatus() {
+            let loadedCount = 0;
+            let statusText = '';
+            
+            trimestresData.forEach((trimestre, index) => {
+                if (trimestre.loaded) {
+                    loadedCount++;
+                    statusText += `${trimestre.name}: ${trimestre.file.name} | `;
+                }
+            });
+            
+            if (loadedCount === filesToLoad) {
+                statusText = `Carga completada (${loadedCount}/${filesToLoad} archivos): ` + statusText;
+            } else {
+                statusText = `Cargando (${loadedCount}/${filesToLoad} archivos): ` + statusText;
+            }
+            
+            document.getElementById('fileStatus').textContent = statusText || 'No hay archivos cargados';
+        }
+        
+        function updateStudentDisplay() {
+            const currentStudent = studentsData[currentStudentIndex];
+            const studentNameElement = document.getElementById('currentStudentName');
+            const studentStatsElement = document.getElementById('studentStats');
+            
+            // Mostrar nombre del alumno
+            studentNameElement.textContent = currentStudent.name;
+            
+            // Mostrar estadísticas (suspensos y promedio)
+            studentStatsElement.innerHTML = '';
+            
+            // Badge de suspensos actual
+            const suspensosBadge = document.createElement('div');
+            suspensosBadge.className = 'stat-badge suspensos-badge';
+            suspensosBadge.innerHTML = `Susp: ${currentStudent.failedCount}`;
+            studentStatsElement.appendChild(suspensosBadge);
+            
+            // Badges de suspensos por trimestre
+            for (let i = 0; i < trimestresData.length; i++) {
+                if (trimestresData[i].loaded) {
+                    const trimStudent = trimestresData[i].students.find(s => s.name === currentStudent.name);
+                    if (trimStudent) {
+                        const trimBadge = document.createElement('div');
+                        trimBadge.className = `stat-badge trim${i+1}-badge`;
+                        trimBadge.innerHTML = `Susp ${i+1}º: ${trimStudent.failedCount}`;
+                        studentStatsElement.appendChild(trimBadge);
+                    }
+                }
+            }
+            
+            // Badge de promedio
+            const averageBadge = document.createElement('div');
+            averageBadge.className = 'stat-badge average-badge';
+            averageBadge.innerHTML = `Media: ${currentStudent.average.toFixed(2)}`;
+            studentStatsElement.appendChild(averageBadge);
+            
+            document.getElementById('positionIndicator').textContent = `Alumno ${currentStudentIndex + 1} de ${studentsData.length}`;
+            
+            const subjectsContainer = document.getElementById('subjectsContainer');
+            subjectsContainer.innerHTML = '';
+            
+            // Encontrar el último trimestre cargado
+            let lastLoadedIndex = 0;
+            for (let i = trimestresData.length - 1; i >= 0; i--) {
+                if (trimestresData[i].loaded) {
+                    lastLoadedIndex = i;
+                    break;
+                }
+            }
+            
+            // Obtener el alumno en el último trimestre cargado
+            const lastTrimStudent = trimestresData[lastLoadedIndex].students.find(s => s.name === currentStudent.name);
+            
+            if (!lastTrimStudent) return;
+            
+            for (const [subject, data] of Object.entries(lastTrimStudent.subjects)) {
+                // Solo mostrar asignaturas con nota
+                if (!data.hasGrade) continue;
+                
+                const subjectElement = document.createElement('div');
+                subjectElement.className = 'subject';
+                
+                const gradeElement = document.createElement('div');
+                const gradeClass = data.passed ? 'approved' : 'failed';
+                gradeElement.className = `subject-grade ${gradeClass}`;
+                gradeElement.textContent = data.grade.toFixed(1);
+                
+                // Buscar la nota del trimestre anterior para calcular la tendencia
+                if (lastLoadedIndex > 0) {
+                    let previousTrimIndex = lastLoadedIndex - 1;
+                    while (previousTrimIndex >= 0 && !trimestresData[previousTrimIndex].loaded) {
+                        previousTrimIndex--;
+                    }
+                    
+                    if (previousTrimIndex >= 0) {
+                        const prevStudent = trimestresData[previousTrimIndex].students.find(s => s.name === currentStudent.name);
+                        if (prevStudent && prevStudent.subjects[subject] && prevStudent.subjects[subject].hasGrade) {
+                            const prevGrade = prevStudent.subjects[subject].grade;
+                            const currentGrade = data.grade;
+                            
+                            // Agregar flecha de tendencia
+                            const trendArrow = document.createElement('div');
+                            trendArrow.className = 'trend-arrow';
+                            
+                            if (currentGrade > prevGrade) {
+                                trendArrow.classList.add('trend-up');
+                                trendArrow.innerHTML = '↑';
+                                trendArrow.title = `Subió ${(currentGrade - prevGrade).toFixed(1)} puntos`;
+                            } else if (currentGrade < prevGrade) {
+                                trendArrow.classList.add('trend-down');
+                                trendArrow.innerHTML = '↓';
+                                trendArrow.title = `Bajó ${(prevGrade - currentGrade).toFixed(1)} puntos`;
+                            } else {
+                                trendArrow.innerHTML = '→';
+                                trendArrow.title = 'Misma nota que el trimestre anterior';
+                            }
+                            
+                            gradeElement.appendChild(trendArrow);
+                        }
+                    }
+                }
+                
+                // Agregar notas de trimestres anteriores si existen
+                const previousGrades = document.createElement('div');
+                previousGrades.className = 'previous-grades';
+                
+                // Buscar notas en trimestres anteriores
+                for (let i = 0; i < lastLoadedIndex; i++) {
+                    if (!trimestresData[i].loaded) continue;
+                    
+                    const prevStudent = trimestresData[i].students.find(s => s.name === currentStudent.name);
+                    if (prevStudent && prevStudent.subjects[subject] && prevStudent.subjects[subject].hasGrade) {
+                        const prevGrade = prevStudent.subjects[subject];
+                        
+                        const prevGradeElement = document.createElement('div');
+                        prevGradeElement.className = 'previous-grade';
+                        prevGradeElement.title = `${trimestresData[i].name}: ${prevGrade.grade.toFixed(1)}`;
+                        
+                        const label = document.createElement('span');
+                        label.className = 'previous-grade-label';
+                        label.textContent = `${i+1}º`;
+                        
+                        prevGradeElement.appendChild(label);
+                        previousGrades.appendChild(prevGradeElement);
+                    }
+                }
+                
+                subjectElement.innerHTML = `
+                    <div class="subject-name">${subject}</div>
+                `;
+                subjectElement.appendChild(gradeElement);
+                
+                if (previousGrades.children.length > 0) {
+                    gradeElement.appendChild(previousGrades);
+                }
+                
+                subjectsContainer.appendChild(subjectElement);
+            }
+            
+            // Actualizar botones de navegación
+            updateNavigationButtons();
+        }
+        
+        function filterStudents(minSuspensos, maxSuspensos) {
+            const lastLoadedIndex = getLastLoadedTrimestreIndex();
+            if (lastLoadedIndex === -1) return;
+            
+            const lastTrimStudents = trimestresData[lastLoadedIndex].students;
+            
+            if (maxSuspensos === Infinity) {
+                studentsData = lastTrimStudents.filter(student => student.failedCount >= minSuspensos);
+            } else {
+                studentsData = lastTrimStudents.filter(student => 
+                    student.failedCount >= minSuspensos && student.failedCount <= maxSuspensos
+                );
+            }
+            
+            // Ordenar alfabéticamente
+            studentsData.sort((a, b) => a.name.localeCompare(b.name));
+            
+            if (studentsData.length > 0) {
+                currentStudentIndex = 0;
+                updateStudentDisplay();
+            } else {
+                alert(`No hay alumnos con ${minSuspensos}-${maxSuspensos === Infinity ? '∞' : maxSuspensos} suspensos`);
+                showAllStudents();
+            }
+        }
+        
+        function showAllStudents() {
+            const lastLoadedIndex = getLastLoadedTrimestreIndex();
+            if (lastLoadedIndex === -1) return;
+            
+            studentsData = [...trimestresData[lastLoadedIndex].students].sort((a, b) => a.name.localeCompare(b.name));
+            
+            if (studentsData.length > 0) {
+                currentStudentIndex = 0;
+                updateStudentDisplay();
+            }
+        }
+        
+        function toggleStats() {
+            const statsContainer = document.getElementById('statsContainer');
+            if (statsContainer.style.display === 'block') {
+                statsContainer.style.display = 'none';
+            } else {
+                updateStats();
+                statsContainer.style.display = 'block';
+            }
+        }
+        
+        function updateStats() {
+            const lastLoadedIndex = getLastLoadedTrimestreIndex();
+            if (lastLoadedIndex === -1) return;
+            
+            const lastTrimStudents = trimestresData[lastLoadedIndex].students;
+            const totalStudents = lastTrimStudents.length;
+            
+            const group0 = lastTrimStudents.filter(s => s.failedCount === 0);
+            const group1_2 = lastTrimStudents.filter(s => s.failedCount >= 1 && s.failedCount <= 2);
+            const group3_4 = lastTrimStudents.filter(s => s.failedCount >= 3 && s.failedCount <= 4);
+            const group5plus = lastTrimStudents.filter(s => s.failedCount >= 5);
+            
+            // Calcular promedios de todos los trimestres cargados
+            let trimestreStats = '';
+            let totalAverage = 0;
+            let trimestresCount = 0;
+            
+            for (let i = 0; i < trimestresData.length; i++) {
+                if (trimestresData[i].loaded) {
+                    const trimestre = trimestresData[i];
+                    const total = trimestre.students.reduce((sum, student) => sum + student.average, 0);
+                    const average = total / trimestre.students.length;
+                    totalAverage += average;
+                    trimestresCount++;
+                    
+                    // Alumnos con 2 o menos suspensos y más de 2 suspensos
+                    const alumnosMenos2Suspensos = trimestre.students.filter(s => s.failedCount <= 2).length;
+                    const alumnosMas2Suspensos = trimestre.students.filter(s => s.failedCount > 2).length;
+                    
+                    trimestreStats += `
+                        <tr>
+                            <td>${trimestre.name}</td>
+                            <td>${average.toFixed(2)}</td>
+                            <td>${alumnosMenos2Suspensos}</td>
+                            <td>${alumnosMas2Suspensos}</td>
+                        </tr>
+                    `;
+                }
+            }
+            
+            const overallAverage = totalAverage / trimestresCount;
+            
+            // Calcular estadísticas por asignatura para el último trimestre
+            let subjectStats = '';
+            const subjectData = {};
+            
+            // Obtener todas las asignaturas del último trimestre
+            const subjects = new Set();
+            lastTrimStudents.forEach(student => {
+                Object.keys(student.subjects).forEach(subject => {
+                    if (student.subjects[subject].hasGrade) {
+                        subjects.add(subject);
+                    }
+                });
+            });
+            
+            // Procesar cada asignatura
+            subjects.forEach(subject => {
+                let totalStudents = 0;
+                let passedStudents = 0;
+                let sumGrades = 0;
+                
+                lastTrimStudents.forEach(student => {
+                    if (student.subjects[subject] && student.subjects[subject].hasGrade) {
+                        totalStudents++;
+                        sumGrades += student.subjects[subject].grade;
+                        if (student.subjects[subject].passed) {
+                            passedStudents++;
+                        }
+                    }
+                });
+                
+                const passRate = (passedStudents / totalStudents) * 100;
+                const averageGrade = sumGrades / totalStudents;
+                
+                subjectData[subject] = {
+                    passRate: passRate,
+                    averageGrade: averageGrade,
+                    passedStudents: passedStudents,
+                    totalStudents: totalStudents
+                };
+            });
+            
+            // Ordenar asignaturas por tasa de aprobados (de menor a mayor)
+            const sortedSubjects = Object.entries(subjectData).sort((a, b) => a[1].passRate - b[1].passRate);
+            
+            // Generar tabla de estadísticas por asignatura
+            let subjectStatsTable = '';
+            sortedSubjects.forEach(([subject, data]) => {
+                const passRate = data.passRate.toFixed(1);
+                const averageGrade = data.averageGrade.toFixed(2);
+                const rowClass = data.passRate < 50 ? 'class="low-pass-rate"' : '';
+                
+                subjectStatsTable += `
+                    <tr ${rowClass}>
+                        <td>${subject}</td>
+                        <td>${averageGrade}</td>
+                        <td>${passRate}% (${data.passedStudents}/${data.totalStudents})</td>
+                        <td>${(100 - data.passRate).toFixed(1)}%</td>
+                    </tr>
+                `;
+            });
+            
+            const statsContent = document.getElementById('statsContent');
+            statsContent.innerHTML = `
+                <div class="stats-group">
+                    <div class="stats-title">Alumnos con 0 suspensos: <span class="stats-count">${group0.length} (${Math.round((group0.length / totalStudents) * 100)}%)</span></div>
+                    <div class="students-list">${group0.map(s => s.name).join(', ') || 'No hay alumnos'}</div>
+                </div>
+                
+                <div class="stats-group">
+                    <div class="stats-title">Alumnos con 1-2 suspensos: <span class="stats-count">${group1_2.length} (${Math.round((group1_2.length / totalStudents) * 100)}%)</span></div>
+                    <div class="students-list">${group1_2.map(s => s.name).join(', ') || 'No hay alumnos'}</div>
+                </div>
+                
+                <div class="stats-group">
+                    <div class="stats-title">Alumnos con 3-4 suspensos: <span class="stats-count">${group3_4.length} (${Math.round((group3_4.length / totalStudents) * 100)}%)</span></div>
+                    <div class="students-list">${group3_4.map(s => s.name).join(', ') || 'No hay alumnos'}</div>
+                </div>
+                
+                <div class="stats-group">
+                    <div class="stats-title">Alumnos con 5+ suspensos: <span class="stats-count">${group5plus.length} (${Math.round((group5plus.length / totalStudents) * 100)}%)</span></div>
+                    <div class="students-list">${group5plus.map(s => s.name).join(', ') || 'No hay alumnos'}</div>
+                </div>
+                
+                <h3>Estadísticas por trimestre</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Trimestre</th>
+                            <th>Nota media</th>
+                            <th>Alumnos con ≤2 suspensos</th>
+                            <th>Alumnos con >2 suspensos</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${trimestreStats}
+                        <tr>
+                            <td><strong>Promedio general</strong></td>
+                            <td><strong>${overallAverage.toFixed(2)}</strong></td>
+                            <td colspan="2"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>Estadísticas por asignatura (${trimestresData[lastLoadedIndex].name})</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Asignatura</th>
+                            <th>Nota media</th>
+                            <th>% Aprobados</th>
+                            <th>% Suspensos</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${subjectStatsTable}
+                    </tbody>
+                </table>
+            `;
+        }
+        
+        function getLastLoadedTrimestreIndex() {
+            for (let i = trimestresData.length - 1; i >= 0; i--) {
+                if (trimestresData[i].loaded) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+        
+        function updateNavigationButtons() {
+            document.getElementById('prevBtn').disabled = currentStudentIndex <= 0;
+            document.getElementById('nextBtn').disabled = currentStudentIndex >= studentsData.length - 1;
+        }
+        
+        // Event listeners para navegación
+        document.getElementById('prevBtn').addEventListener('click', function() {
+            if (currentStudentIndex > 0) {
+                currentStudentIndex--;
+                updateStudentDisplay();
+            }
+        });
+        
+        document.getElementById('nextBtn').addEventListener('click', function() {
+            if (currentStudentIndex < studentsData.length - 1) {
+                currentStudentIndex++;
+                updateStudentDisplay();
+            }
+        });
+    </script>
+</body>
+</html>
