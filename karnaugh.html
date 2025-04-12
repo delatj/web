@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Lógica Avanzada</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        h1 {
+            text-align: center;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h4 {
+            text-align: center;
+            border-bottom: 1px solid #3498db;
+            padding-bottom: 20px;
+        }
+        .container {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+        }
+        input[type="number"], input[type="text"], select {
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            width: 100%;
+            max-width: 250px;
+            transition: border 0.3s;
+        }
+        input:focus, select:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            margin: 10px 5px 10px 0;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            font-size: 0.95em;
+        }
+        button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        button.secondary {
+            background: #95a5a6;
+        }
+        button.secondary:hover {
+            background: #7f8c8d;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 25px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+        th {
+            background: #3498db;
+            color: white;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .karnaugh {
+            display: grid;
+            gap: 2px;
+            margin: 25px 0;
+            background: #ecf0f1;
+            padding: 3px;
+            border-radius: 5px;
+        }
+        .k-header {
+            background: #2c3e50;
+            color: white;
+            font-weight: bold;
+            padding: 15px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .k-cell {
+            border: 1px solid #ddd;
+            padding: 20px;
+            text-align: center;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            font-weight: bold;
+        }
+        .k-cell:hover {
+            transform: scale(1.05);
+            z-index: 1;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .group-1 { background: rgba(255, 99, 132, 0.3); }
+        .group-2 { background: rgba(54, 162, 235, 0.3); }
+        .group-3 { background: rgba(255, 206, 86, 0.3); }
+        .group-4 { background: rgba(75, 192, 192, 0.3); }
+        .group-5 { background: rgba(153, 102, 255, 0.3); }
+        .group-border {
+            box-shadow: inset 0 0 0 2px currentColor;
+        }
+        .result-box {
+            background: #e8f4f8;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 5px solid #3498db;
+        }
+        .funcion-simplificada {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 1.3em;
+            color: #e74c3c;
+            background: #f9f9f9;
+            padding: 10px 15px;
+            border-radius: 5px;
+            display: inline-block;
+            margin: 10px 0;
+        }
+        .tab-options {
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .tab-options button {
+            margin-right: 10px;
+            border-radius: 6px 6px 0 0;
+        }
+        .tab-options button.active {
+            background: #3498db;
+            position: relative;
+        }
+        .tab-options button.active:after {
+            content: '';
+            position: absolute;
+            bottom: -11px;
+            left: 0;
+            width: 100%;
+            height: 10px;
+            background: white;
+        }
+        .x-option {
+            color: #e67e22;
+            font-weight: bold;
+        }
+        .decimal-value {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            font-size: 0.7em;
+            color: #7f8c8d;
+            font-weight: normal;
+        }
+        .group-info {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .group-item {
+            display: inline-block;
+            margin-right: 15px;
+            margin-bottom: 10px;
+        }
+        .group-color {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+        .export-buttons {
+            margin-top: 25px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            .k-cell {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>🧮 Calculadora Lógica Avanzada</h1>
+    <h4>por Pedro Antonio Vega Polo</h4>    
+    <div class="container">
+        <h2>1. Definir Variables</h2>
+        <label>Número de variables (2-4):</label>
+        <input type="number" id="numVariables" min="2" max="4" value="2">
+        <button id="generarCamposBtn">Generar Campos</button>
+        <div id="variablesContainer"></div>
+    </div>
+    
+    <div class="container" id="tablaSection" style="display: none;">
+        <h2>2. Tabla de Verdad</h2>
+        <div class="tab-options">
+            <button class="active" id="modoBinario">0/1</button>
+            <button id="modoDonCare">0/1/X</button>
+        </div>
+        <button id="generarTablaBtn">Generar Tabla</button>
+        <button id="llenarAleatorioBtn" class="secondary">Llenar Aleatorio</button>
+        <div id="tablaVerdadContainer"></div>
+    </div>
+    
+    <div class="container" id="resultsSection" style="display: none;">
+        <h2>3. Resultados</h2>
+        <div id="mintermsMaxterms" class="result-box"></div>
+        <div id="funcionesCanonicas" class="result-box"></div>
+        <div id="karnaughContainer"></div>
+        <div id="funcionSimplificada" class="result-box"></div>
+        
+        <div class="export-buttons">
+            <button id="copiarFuncionBtn">Copiar Función</button>
+            <button id="exportarTablaBtn" class="secondary">Exportar Tabla CSV</button>
+            <button id="imprimirBtn" class="secondary">Imprimir Resultados</button>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let variables = [];
+        let numVariables = 0;
+        let modoTabla = 0; // 0: binario, 1: don't care
+        let minterms = [];
+        let dontCares = [];
+        let maxterms = [];
+        let gruposKarnaugh = [];
+        let coloresGrupos = [
+            { class: 'group-1', color: 'rgba(255, 99, 132)' },
+            { class: 'group-2', color: 'rgba(54, 162, 235)' },
+            { class: 'group-3', color: 'rgba(255, 206, 86)' },
+            { class: 'group-4', color: 'rgba(75, 192, 192)' },
+            { class: 'group-5', color: 'rgba(153, 102, 255)' }
+        ];
+
+        // Inicialización al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            // Configurar eventos
+            document.getElementById('generarCamposBtn').addEventListener('click', crearCamposVariables);
+            document.getElementById('modoBinario').addEventListener('click', () => cambiarModoTabla(0));
+            document.getElementById('modoDonCare').addEventListener('click', () => cambiarModoTabla(1));
+            document.getElementById('generarTablaBtn').addEventListener('click', generarTablaVerdad);
+            document.getElementById('llenarAleatorioBtn').addEventListener('click', llenarTablaAleatoria);
+            document.getElementById('copiarFuncionBtn').addEventListener('click', copiarFuncionSimplificada);
+            document.getElementById('exportarTablaBtn').addEventListener('click', exportarTablaCSV);
+            document.getElementById('imprimirBtn').addEventListener('click', imprimirResultados);
+        });
+
+        // Función para crear campos de variables
+        function crearCamposVariables() {
+            numVariables = parseInt(document.getElementById("numVariables").value);
+            
+            // Validación de entrada
+            if (isNaN(numVariables)) {
+                alert("Debes ingresar un número válido");
+                return;
+            }
+            if (numVariables < 2 || numVariables > 4) {
+                alert("Solo se permiten entre 2 y 4 variables");
+                return;
+            }
+
+            const container = document.getElementById("variablesContainer");
+            container.innerHTML = "";
+            variables = [];
+            
+            for (let i = 0; i < numVariables; i++) {
+                const div = document.createElement("div");
+                div.style.marginBottom = "10px";
+                
+                const label = document.createElement("label");
+                label.textContent = `Variable ${i + 1}: `;
+                label.style.display = "inline-block";
+                label.style.width = "100px";
+                
+                const input = document.createElement("input");
+                input.type = "text";
+                input.placeholder = `Letra (ej: A, B)`;
+                input.id = `var${i}`;
+                input.value = String.fromCharCode(65 + i);
+                input.style.width = "150px";
+                
+                div.appendChild(label);
+                div.appendChild(input);
+                container.appendChild(div);
+                
+                variables.push(input.value);
+            }
+            
+            document.getElementById("tablaSection").style.display = "block";
+            document.getElementById("resultsSection").style.display = "none";
+        }
+
+        // Función para cambiar el modo de la tabla
+        function cambiarModoTabla(modo) {
+            modoTabla = modo;
+            document.getElementById("modoBinario").classList.toggle("active", modo === 0);
+            document.getElementById("modoDonCare").classList.toggle("active", modo === 1);
+            
+            // Si ya hay una tabla generada, actualizarla
+            if (document.getElementById("tablaVerdadContainer").innerHTML !== "") {
+                generarTablaVerdad();
+            }
+        }
+
+        // Función para llenar la tabla de verdad aleatoriamente
+        function llenarTablaAleatoria() {
+            const selects = document.querySelectorAll(".funcion");
+            selects.forEach(select => {
+                const random = Math.random();
+                if (modoTabla === 0) {
+                    select.value = random < 0.5 ? "0" : "1";
+                } else {
+                    if (random < 0.33) select.value = "0";
+                    else if (random < 0.66) select.value = "1";
+                    else select.value = "X";
+                }
+            });
+        }
+
+        // Función para generar la tabla de verdad
+        function generarTablaVerdad() {
+            // Actualizar nombres de variables
+            variables = [];
+            for (let i = 0; i < numVariables; i++) {
+                const input = document.getElementById(`var${i}`);
+                variables.push(input.value.trim() || `V${i+1}`);
+            }
+
+            const container = document.getElementById("tablaVerdadContainer");
+            container.innerHTML = "";
+            
+            const table = document.createElement("table");
+            const headerRow = document.createElement("tr");
+            
+            // Encabezados
+            variables.forEach(v => {
+                const th = document.createElement("th");
+                th.textContent = v;
+                headerRow.appendChild(th);
+            });
+            
+            const thFunc = document.createElement("th");
+            thFunc.textContent = "F";
+            headerRow.appendChild(thFunc);
+            table.appendChild(headerRow);
+
+            // Generar filas
+            const totalFilas = Math.pow(2, numVariables);
+            for (let i = 0; i < totalFilas; i++) {
+                const row = document.createElement("tr");
+                const binario = i.toString(2).padStart(numVariables, "0").split("");
+                
+                // Valores binarios
+                binario.forEach(bit => {
+                    const td = document.createElement("td");
+                    td.textContent = bit;
+                    row.appendChild(td);
+                });
+                
+                // Selector de función
+                const tdFunc = document.createElement("td");
+                const select = document.createElement("select");
+                select.className = "funcion";
+                select.dataset.row = i;
+                
+                // Opciones
+                const option0 = document.createElement("option");
+                option0.value = "0";
+                option0.textContent = "0";
+                select.appendChild(option0);
+                
+                const option1 = document.createElement("option");
+                option1.value = "1";
+                option1.textContent = "1";
+                select.appendChild(option1);
+                
+                if (modoTabla === 1) {
+                    const optionX = document.createElement("option");
+                    optionX.value = "X";
+                    optionX.textContent = "X";
+                    optionX.className = "x-option";
+                    select.appendChild(optionX);
+                }
+                
+                // Establecer valor aleatorio inicial
+                if (Math.random() < 0.5) select.value = "1";
+                
+                tdFunc.appendChild(select);
+                row.appendChild(tdFunc);
+                table.appendChild(row);
+            }
+            
+            container.appendChild(table);
+            
+            // Botón para calcular
+            const calcularBtn = document.createElement("button");
+            calcularBtn.textContent = "Calcular Resultados";
+            calcularBtn.addEventListener('click', calcularResultados);
+            container.appendChild(calcularBtn);
+        }
+
+        // Función principal para calcular resultados
+        function calcularResultados() {
+            const selects = document.querySelectorAll(".funcion");
+            minterms = [];
+            dontCares = [];
+            maxterms = [];
+            
+            // Recopilar minterms y don't cares
+            selects.forEach(select => {
+                const row = parseInt(select.dataset.row);
+                const value = select.value;
+                
+                if (value === "1") {
+                    minterms.push(row);
+                } else if (value === "X") {
+                    dontCares.push(row);
+                }
+            });
+            
+            // Calcular maxterms (filas con 0 que no son don't care)
+            const totalFilas = Math.pow(2, numVariables);
+            for (let i = 0; i < totalFilas; i++) {
+                if (!minterms.includes(i) && !dontCares.includes(i)) {
+                    maxterms.push(i);
+                }
+            }
+            
+            // Mostrar resultados
+            mostrarMintermsMaxterms();
+            mostrarFuncionesCanonicas();
+            generarKarnaugh();
+            simplificarKarnaugh();
+            
+            document.getElementById("resultsSection").style.display = "block";
+        }
+
+        // Mostrar minterms y maxterms
+        function mostrarMintermsMaxterms() {
+            document.getElementById("mintermsMaxterms").innerHTML = `
+                <h3>Minterms y Maxterms</h3>
+                <p><strong>Minterms (Σ):</strong> ${minterms.length > 0 ? minterms.join(", ") : "Ninguno"}</p>
+                <p><strong>Don't Cares (X):</strong> ${dontCares.length > 0 ? dontCares.join(", ") : "Ninguno"}</p>
+                <p><strong>Maxterms (Π):</strong> ${maxterms.length > 0 ? maxterms.join(", ") : "Ninguno"}</p>
+            `;
+        }
+
+        // Mostrar funciones canónicas
+        function mostrarFuncionesCanonicas() {
+            document.getElementById("funcionesCanonicas").innerHTML = `
+                <h3>Funciones Canónicas</h3>
+                <div><strong>SOP (Suma de Productos):</strong> F = Σ(${minterms.join(",") || "∅"})</div>
+                <div class="funcion-simplificada">${obtenerFuncionCanonicaSOP()}</div>
+                
+                <div style="margin-top: 15px;"><strong>POS (Producto de Sumas):</strong> F = Π(${maxterms.join(",") || "∅"})</div>
+                <div class="funcion-simplificada">${obtenerFuncionCanonicaPOS()}</div>
+            `;
+        }
+
+        // Obtener función canónica SOP
+        function obtenerFuncionCanonicaSOP() {
+            if (minterms.length === 0) return "0";
+            
+            return minterms.map(m => {
+                const binario = m.toString(2).padStart(numVariables, "0");
+                return Array.from(binario).map((bit, i) => 
+                    bit === "1" ? variables[i] : "¬" + variables[i]).join("·");
+            }).join(" + ");
+        }
+
+        // Obtener función canónica POS
+        function obtenerFuncionCanonicaPOS() {
+            if (maxterms.length === 0) return "1";
+            
+            return maxterms.map(m => {
+                const binario = m.toString(2).padStart(numVariables, "0");
+                return "(" + Array.from(binario).map((bit, i) => 
+                    bit === "0" ? variables[i] : "¬" + variables[i]).join(" + ") + ")";
+            }).join(" · ");
+        }
+
+        // Generar el mapa de Karnaugh
+        function generarKarnaugh() {
+            let html = "<h3>Mapa de Karnaugh</h3>";
+            
+            if (numVariables === 2) {
+                html += generarKarnaugh2Variables();
+            } else if (numVariables === 3) {
+                html += generarKarnaugh3Variables();
+            } else if (numVariables === 4) {
+                html += generarKarnaugh4Variables();
+            }
+            
+            document.getElementById("karnaughContainer").innerHTML = html;
+            configurarInteractividadKarnaugh();
+        }
+
+        // Mapa para 2 variables
+        function generarKarnaugh2Variables() {
+            const headerAB = ["0", "1"];
+            const headerC = ["0", "1"];
+            
+            let html = `
+                <div class="karnaugh" style="grid-template-columns: repeat(3, 80px);">
+                    <div class="k-header">${variables[0]}\\${variables[1]}</div>
+                    <div class="k-header">0</div>
+                    <div class="k-header">1</div>
+            `;
+            
+            for (let a of headerAB) {
+                html += `<div class="k-header">${a}</div>`;
+                
+                for (let b of headerC) {
+                    const decimal = parseInt(a) * 2 + parseInt(b);
+                    let valor = obtenerValorKarnaugh(decimal);
+                    html += crearCeldaKarnaugh(decimal, valor, {a: a, b: b});
+                }
+            }
+            
+            html += "</div>";
+            return html;
+        }
+
+        // Mapa para 3 variables
+        function generarKarnaugh3Variables() {
+            const headerAB = ["00", "01", "11", "10"];
+            const headerC = ["0", "1"];
+            
+            let html = `
+                <div class="karnaugh" style="grid-template-columns: repeat(3, 80px);">
+                    <div class="k-header">${variables[0]}${variables[1]}\\${variables[2]}</div>
+                    <div class="k-header">0</div>
+                    <div class="k-header">1</div>
+            `;
+            
+            for (let ab of headerAB) {
+                const a = parseInt(ab[0]);
+                const b = parseInt(ab[1]);
+                html += `<div class="k-header">${ab}</div>`;
+                
+                for (let c of headerC) {
+                    const decimal = a * 4 + b * 2 + parseInt(c);
+                    let valor = obtenerValorKarnaugh(decimal);
+                    html += crearCeldaKarnaugh(decimal, valor, {a: a, b: b, c: c});
+                }
+            }
+            
+            html += "</div>";
+            return html;
+        }
+
+        // Mapa para 4 variables
+        function generarKarnaugh4Variables() {
+            const headerAB = ["00", "01", "11", "10"];
+            const headerCD = ["00", "01", "11", "10"];
+            
+            let html = `
+                <div class="karnaugh" style="grid-template-columns: repeat(5, 80px);">
+                    <div class="k-header">${variables[0]}${variables[1]}\\${variables[2]}${variables[3]}</div>
+            `;
+            
+            // Encabezados CD
+            for (let cd of headerCD) {
+                html += `<div class="k-header">${cd}</div>`;
+            }
+            
+            // Filas AB
+            for (let ab of headerAB) {
+                const a = parseInt(ab[0]);
+                const b = parseInt(ab[1]);
+                html += `<div class="k-header">${ab}</div>`;
+                
+                // Columnas CD
+                for (let cd of headerCD) {
+                    const c = parseInt(cd[0]);
+                    const d = parseInt(cd[1]);
+                    const decimal = a * 8 + b * 4 + c * 2 + d;
+                    let valor = obtenerValorKarnaugh(decimal);
+                    html += crearCeldaKarnaugh(decimal, valor, {a: a, b: b, c: c, d: d});
+                }
+            }
+            
+            html += "</div>";
+            return html;
+        }
+
+        // Función auxiliar para obtener el valor de una celda Karnaugh
+        function obtenerValorKarnaugh(decimal) {
+            if (minterms.includes(decimal)) return "1";
+            if (dontCares.includes(decimal)) return "X";
+            return "0";
+        }
+
+        // Función auxiliar para crear una celda Karnaugh
+        function crearCeldaKarnaugh(decimal, valor, vars) {
+            let dataAttrs = "";
+            for (const [key, value] of Object.entries(vars)) {
+                dataAttrs += ` data-${key}="${value}"`;
+            }
+            
+            return `
+                <div class="k-cell" data-value="${valor}" data-decimal="${decimal}"${dataAttrs}>
+                    <span class="decimal-value">${decimal}</span>
+                    ${valor}
+                </div>
+            `;
+        }
+
+        // Configurar interactividad en el mapa de Karnaugh
+        function configurarInteractividadKarnaugh() {
+            document.querySelectorAll('.k-cell').forEach(celda => {
+                celda.addEventListener('click', function() {
+                    const current = this.dataset.value;
+                    let newValue;
+                    
+                    if (modoTabla === 0) { // Modo binario
+                        newValue = current === "0" ? "1" : "0";
+                    } else { // Modo con don't cares
+                        if (current === "0") newValue = "1";
+                        else if (current === "1") newValue = "X";
+                        else newValue = "0";
+                    }
+                    
+                    this.dataset.value = newValue;
+                    this.innerHTML = `<span class="decimal-value">${this.dataset.decimal}</span>${newValue}`;
+                    
+                    // Actualizar minterms y dontcares
+                    const decimal = parseInt(this.dataset.decimal);
+                    if (newValue === "1") {
+                        if (!minterms.includes(decimal)) minterms.push(decimal);
+                        dontCares = dontCares.filter(d => d !== decimal);
+                    } else if (newValue === "X") {
+                        if (!dontCares.includes(decimal)) dontCares.push(decimal);
+                        minterms = minterms.filter(m => m !== decimal);
+                    } else {
+                        minterms = minterms.filter(m => m !== decimal);
+                        dontCares = dontCares.filter(d => d !== decimal);
+                    }
+                    
+                    // Recalcular maxterms
+                    maxterms = [];
+                    const totalFilas = Math.pow(2, numVariables);
+                    for (let i = 0; i < totalFilas; i++) {
+                        if (!minterms.includes(i) && !dontCares.includes(i)) {
+                            maxterms.push(i);
+                        }
+                    }
+                    
+                    // Actualizar resultados
+                    mostrarMintermsMaxterms();
+                    mostrarFuncionesCanonicas();
+                    simplificarKarnaugh();
+                });
+            });
+        }
+
+        // Simplificar el mapa de Karnaugh
+        function simplificarKarnaugh() {
+            // Limpiar grupos anteriores
+            resetGrupos();
+            gruposKarnaugh = [];
+            
+            // Obtener todas las celdas con 1 o X
+            const celdas = Array.from(document.querySelectorAll('.k-cell[data-value="1"], .k-cell[data-value="X"]'));
+            const valores = celdas.map(c => parseInt(c.dataset.decimal));
+            
+            if (numVariables === 2) {
+                buscarGrupos2Variables(valores);
+            } else if (numVariables === 3) {
+                buscarGrupos3Variables(valores);
+            } else if (numVariables === 4) {
+                buscarGrupos4Variables(valores);
+            }
+            
+            // Aplicar estilos a los grupos encontrados
+            aplicarEstilosGrupos();
+            
+            // Mostrar función simplificada
+            mostrarFuncionSimplificada();
+        }
+
+// Función para buscar grupos en 2 variables (completamente optimizada)
+function buscarGrupos2Variables(valores) {
+    gruposKarnaugh = [];
+    const celdasCubiertas = new Set();
+
+    // Caso especial: todas las celdas son 1/X
+    if (valores.length === 4) return [[0, 1, 2, 3]];
+
+    // Todas las agrupaciones posibles en 2 variables
+    const todosGrupos = [
+        [0, 1], [2, 3], // Horizontales
+        [0, 2], [1, 3]  // Verticales
+    ];
+
+    // Buscar grupos de mayor tamaño primero
+    todosGrupos.forEach(grupo => {
+        if (grupo.every(v => valores.includes(v))) {
+            const celdasNuevas = grupo.filter(v => !celdasCubiertas.has(v));
+            if (celdasNuevas.length > 0) {
+                gruposKarnaugh.push(grupo);
+                grupo.forEach(v => celdasCubiertas.add(v));
+            }
+        }
+    });
+
+    // Añadir celdas individuales no agrupadas
+    valores.forEach(v => {
+        if (!celdasCubiertas.has(v)) gruposKarnaugh.push([v]);
+    });
+}
+
+// Función para 3 variables (con todas las agrupaciones circulares)
+function buscarGrupos3Variables(valores) {
+    gruposKarnaugh = [];
+    const celdasCubiertas = new Set();
+
+    // Caso especial: todas las celdas son 1/X
+    if (valores.length === 8) return [[0, 1, 2, 3, 4, 5, 6, 7]];
+
+    // Orden de prioridad: octetos > cuartetos > pares
+    const todosGrupos = [
+        // Grupos de 4 celdas
+        [0,1,2,3], [4,5,6,7],         // Filas completas
+        [0,2,4,6], [1,3,5,7],         // Columnas pares/impares
+        [0,1,4,5], [2,3,6,7],         // Cuadrados
+        [0,2,5,7], [1,3,4,6],         // Diagonales circulares
+        
+        // Grupos de 2 celdas
+        [0,1], [1,3], [3,2], [2,0],   // Horizontales
+        [4,5], [5,7], [7,6], [6,4],
+        [0,4], [1,5], [2,6], [3,7],   // Verticales
+        [0,5], [1,4], [2,7], [3,6]    // Diagonales
+    ];
+
+    // Evaluar grupos de mayor a menor tamaño
+    todosGrupos.forEach(grupo => {
+        const celdasValidas = grupo.every(v => valores.includes(v));
+        const celdasNuevas = grupo.some(v => !celdasCubiertas.has(v));
+        
+        if (celdasValidas && celdasNuevas) {
+            gruposKarnaugh.push(grupo);
+            grupo.forEach(v => celdasCubiertas.add(v));
+        }
+    });
+
+    // Celdas individuales restantes
+    valores.forEach(v => {
+        if (!celdasCubiertas.has(v)) gruposKarnaugh.push([v]);
+    });
+}
+
+// Función para 4 variables (con agrupaciones circulares y optimizada)
+function buscarGrupos4Variables(valores) {
+    gruposKarnaugh = [];
+    const celdasCubiertas = new Set();
+
+    // Caso especial: todas las celdas son 1/X
+    if (valores.length === 16) return [Array.from({length: 16}, (_, i) => i)];
+
+    // Lista completa de agrupaciones ordenadas por tamaño
+    const todosGrupos = [
+        // Octetos (8 celdas)
+        [0,1,2,3,4,5,6,7], [8,9,10,11,12,13,14,15],  // Filas
+        [0,4,8,12,1,5,9,13], [2,6,10,14,3,7,11,15],  // Columnas
+        [0,1,2,3,8,9,10,11], [4,5,6,7,12,13,14,15],  // Mitades
+        [0,2,4,6,8,10,12,14], [1,3,5,7,9,11,13,15],  // Columnas alternas
+        [0,1,3,2,12,13,15,14], [4,5,7,6,8,9,11,10],  // Bordes circulares
+        
+        // Cuartetos (4 celdas)
+        [0,1,2,3], [4,5,6,7], [8,9,10,11], [12,13,14,15],  // Filas
+        [0,4,8,12], [1,5,9,13], [2,6,10,14], [3,7,11,15],  // Columnas
+        [0,3,12,15], [1,2,13,14], [4,7,8,11], [5,6,9,10],  // Esquinas
+        [0,1,4,5], [1,3,5,7], [2,3,6,7], [0,2,4,6],        // Cuadrados
+        [8,9,12,13], [9,11,13,15], [10,11,14,15], [8,10,12,14],
+        [0,2,8,10], [1,3,9,11], [4,6,12,14], [5,7,13,15],  // Columnas alternas
+        
+        // Pares (2 celdas)
+        [0,1], [1,3], [3,2], [2,0], [4,5], [5,7], [7,6], [6,4],  // Horizontales
+        [8,9], [9,11], [11,10], [10,8], [12,13], [13,15], [15,14], [14,12],
+        [0,4], [4,8], [8,12], [1,5], [5,9], [9,13], [2,6], [6,10], [10,14], [3,7], [7,11], [11,15],  // Verticales
+        [0,5], [1,4], [2,7], [3,6], [8,13], [9,12], [10,15], [11,14],  // Diagonales
+        [0,8], [1,9], [2,10], [3,11], [4,12], [5,13], [6,14], [7,15]   // Bordes opuestos
+    ];
+
+    // Evaluar todos los grupos posibles
+    todosGrupos.forEach(grupo => {
+        const celdasValidas = grupo.every(v => valores.includes(v));
+        const celdasNuevas = grupo.some(v => !celdasCubiertas.has(v));
+        
+        if (celdasValidas && celdasNuevas) {
+            // Verificar que no sea subconjunto de un grupo existente
+            const esSubconjunto = gruposKarnaugh.some(g => 
+                grupo.every(v => g.includes(v))
+            );
+            
+            if (!esSubconjunto) {
+                gruposKarnaugh.push(grupo);
+                grupo.forEach(v => celdasCubiertas.add(v));
+            }
+        }
+    });
+
+    // Celdas individuales no agrupadas
+    valores.forEach(v => {
+        if (!celdasCubiertas.has(v)) gruposKarnaugh.push([v]);
+    });
+}
+
+// Función para mostrar la función simplificada (completamente optimizada)
+function mostrarFuncionSimplificada() {
+    let terminos = [];
+    const totalCeldas = Math.pow(2, numVariables);
+    
+    // Casos especiales
+    if (minterms.length === totalCeldas) {
+        return mostrarResultado("F = 1 (Siempre verdadera)");
+    }
+    if (minterms.length === 0 && dontCares.length === 0) {
+        return mostrarResultado("F = 0 (Nunca verdadera)");
+    }
+
+    // Procesar cada grupo
+    gruposKarnaugh.forEach(grupo => {
+        if (grupo.length === 0) return;
+        
+        const primerCelda = document.querySelector(`.k-cell[data-decimal="${grupo[0]}"]`);
+        if (!primerCelda) return;
+
+        const termino = variables.map((varName, i) => {
+            const varKey = ['a', 'b', 'c', 'd'][i];
+            const valorBase = primerCelda.dataset[varKey];
+            
+            // Verificar si la variable es constante en todo el grupo
+            const esConstante = grupo.every(dec => {
+                const celda = document.querySelector(`.k-cell[data-decimal="${dec}"]`);
+                return celda.dataset[varKey] === valorBase;
+            });
+            
+            return esConstante ? (valorBase === "0" ? "¬" + varName : varName) : null;
+        }).filter(Boolean).join("·");
+        
+        if (termino) terminos.push(termino);
+    });
+
+    // Construir el resultado final
+    let resultado;
+    if (terminos.length > 0) {
+        resultado = `F = ${terminos.join(" + ")}`;
+    } else if (minterms.length > 0) {
+        // Mostrar forma canónica si no hay agrupaciones
+        resultado = `F = Σ(${minterms.join(",")}) = ${obtenerFuncionCanonicaSOP()}`;
+    } else {
+        resultado = "F = 0";
+    }
+    
+    mostrarResultado(resultado);
+}
+
+// Función auxiliar para mostrar resultados
+function mostrarResultado(funcion) {
+    let gruposHTML = gruposKarnaugh.map((grupo, index) => {
+        const color = coloresGrupos[index % coloresGrupos.length].color;
+        return `
+            <div class="group-item">
+                <span class="group-color" style="background: ${color};"></span>
+                Grupo ${index+1}: ${grupo.join(", ")}
+            </div>
+        `;
+    }).join("");
+
+    document.getElementById("funcionSimplificada").innerHTML = `
+        <h3>Función Simplificada</h3>
+        <div class="funcion-simplificada">${funcion}</div>
+        <div class="group-info">
+            <h4>Agrupaciones:</h4>
+            ${gruposHTML}
+        </div>
+    `;
+}
+
+// Función para aplicar estilos a los grupos (optimizada)
+function aplicarEstilosGrupos() {
+    resetGrupos(); // Limpiar estilos anteriores
+    
+    gruposKarnaugh.forEach((grupo, index) => {
+        const colorClass = coloresGrupos[index % coloresGrupos.length].class;
+        grupo.forEach(decimal => {
+            const celda = document.querySelector(`.k-cell[data-decimal="${decimal}"]`);
+            if (celda && !celda.classList.contains(colorClass)) {
+                celda.classList.add(colorClass, 'group-border');
+            }
+        });
+    });
+}
+
+// Función para resetear grupos (mejorada)
+function resetGrupos() {
+    document.querySelectorAll('.k-cell').forEach(celda => {
+        coloresGrupos.forEach(g => celda.classList.remove(g.class));
+        celda.classList.remove('group-border');
+    });
+}
+
+        // Función para copiar la función simplificada
+        function copiarFuncionSimplificada() {
+            const funcionElement = document.querySelector("#funcionSimplificada .funcion-simplificada");
+            if (!funcionElement) return;
+            
+            const funcion = funcionElement.textContent;
+            navigator.clipboard.writeText(funcion).then(() => {
+                alert("Función copiada al portapapeles!");
+            });
+        }
+
+        // Función para exportar la tabla de verdad a CSV
+        function exportarTablaCSV() {
+            const tabla = document.querySelector("#tablaVerdadContainer table");
+            if (!tabla) return;
+            
+            let csv = [];
+            const filas = tabla.querySelectorAll("tr");
+            
+            // Encabezados
+            const encabezados = Array.from(filas[0].querySelectorAll("th")).map(th => th.textContent);
+            csv.push(encabezados.join(","));
+            
+            // Filas de datos
+            for (let i = 1; i < filas.length; i++) {
+                const celdas = Array.from(filas[i].querySelectorAll("td"));
+                const valores = celdas.map((td, j) => {
+                    if (j === celdas.length - 1) { // Última celda es el select
+                        return td.querySelector("select").value;
+                    }
+                    return td.textContent;
+                });
+                csv.push(valores.join(","));
+            }
+            
+            const csvContent = csv.join("\n");
+            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", "tabla_verdad.csv");
+            link.style.visibility = "hidden";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Función para imprimir resultados
+        function imprimirResultados() {
+            const contenidoOriginal = document.body.innerHTML;
+            const contenidoImpresion = document.getElementById("resultsSection").innerHTML;
+            
+            document.body.innerHTML = `
+                <h1>Resultados - Calculadora Lógica</h1>
+                <h4>por Pedro Antonio Vega Polo</h4>
+                ${contenidoImpresion}
+                <button onclick="window.print()" style="margin: 20px; padding: 10px 20px;">Imprimir</button>
+                <button onclick="document.body.innerHTML = contenidoOriginal" style="margin: 20px; padding: 10px 20px;">Volver</button>
+            `;
+            
+            window.print();
+            document.body.innerHTML = contenidoOriginal;
+        }
+    </script>
+</body>
+</html>
