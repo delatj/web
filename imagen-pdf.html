@@ -3,42 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Imagen a PDF</title>
+    <title>Varias Imágenes a PDF</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
-    <h2>Convertir Imagen a PDF</h2>
-    <input type="file" id="imageInput" accept="image/*" capture="environment">
+    <h2>Convertir Varias Imágenes a un PDF</h2>
+
+    <input type="file" id="imageInput" accept="image/*">
+    <button onclick="addImage()">Añadir siguiente imagen</button>
     <br><br>
+
     <label for="pdfName">Nombre del PDF:</label>
     <input type="text" id="pdfName" placeholder="Nombre del archivo">
     <br><br>
-    <button onclick="convertToPDF()">Descargar PDF</button>
+
+    <button onclick="downloadPDF()">Descargar PDF</button>
+
+    <h3>Imágenes añadidas:</h3>
+    <ul id="imageList"></ul>
 
     <script>
-        function convertToPDF() {
-            const { jsPDF } = window.jspdf;
-            let input = document.getElementById("imageInput").files[0];
-            let pdfName = document.getElementById("pdfName").value || "archivo";
-            
-            if (!input) {
-                alert("Por favor, selecciona una imagen");
+        const { jsPDF } = window.jspdf;
+        const images = [];
+
+        function addImage() {
+            const input = document.getElementById("imageInput");
+            if (!input.files.length) {
+                alert("Por favor, selecciona una imagen.");
                 return;
             }
-            
-            let reader = new FileReader();
-            reader.onload = function(event) {
-                let img = new Image();
-                img.src = event.target.result;
-                img.onload = function() {
-                    let pdf = new jsPDF();
-                    let width = pdf.internal.pageSize.getWidth();
-                    let height = (img.height / img.width) * width;
-                    pdf.addImage(img, 'JPEG', 0, 0, width, height);
-                    pdf.save(pdfName + ".pdf");
-                };
+
+            const file = input.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function (event) {
+                images.push(event.target.result);
+
+                // Mostrar en la lista
+                const li = document.createElement("li");
+                li.textContent = `Imagen ${images.length}`;
+                document.getElementById("imageList").appendChild(li);
+
+                // Limpiar el input para permitir subir la misma imagen otra vez si se desea
+                input.value = "";
             };
-            reader.readAsDataURL(input);
+
+            reader.readAsDataURL(file);
+        }
+
+        function downloadPDF() {
+            if (images.length === 0) {
+                alert("No se han añadido imágenes.");
+                return;
+            }
+
+            const pdfName = document.getElementById("pdfName").value || "archivo";
+            const pdf = new jsPDF();
+
+            images.forEach((imgData, index) => {
+                const img = new Image();
+                img.src = imgData;
+
+                img.onload = function () {
+                    const width = pdf.internal.pageSize.getWidth();
+                    const height = (img.height / img.width) * width;
+                    pdf.addImage(img, 'JPEG', 0, 0, width, height);
+
+                    if (index < images.length - 1) {
+                        pdf.addPage();
+                    }
+
+                    // Guardar solo al final
+                    if (index === images.length - 1) {
+                        pdf.save(pdfName + ".pdf");
+                    }
+                };
+            });
         }
     </script>
 </body>
