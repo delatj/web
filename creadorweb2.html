@@ -1,31 +1,44 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
+<!-- saved from url=(0045)https://delatj.github.io/web/creadorweb2.html -->
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generador de Páginas HTML</title>
     <style>
         body { font-family: Arial, sans-serif; transition: all 0.3s ease; }
-        #sidebar { width: 250px; position: fixed; left: 0; top: 0; bottom: 0; padding: 10px; overflow-y: auto; }
-        #content { margin-left: 270px; padding: 20px; }
-        .theme-selector { margin: 10px 0; }
-        .input-group { margin: 10px 0; }
-        .input-group label { display: block; margin-bottom: 5px; }
-        .input-group input { width: 100%; padding: 8px; }
+        #sidebar { 
+            width: 333px; /* Aumentado de 250px a 333px (33.33% más) */
+            position: fixed; 
+            left: 0; 
+            top: 0; 
+            bottom: 0; 
+            padding: 15px; /* Aumentado padding */
+            overflow-y: auto; 
+            font-size: 1.1em; /* Aumentar tamaño de fuente */
+        }
+        #content { 
+            margin-left: 370px; /* Aumentado de 270px a 370px */
+            padding: 20px; 
+            font-size: 0.9em; /* Reducir tamaño de fuente */
+        }
+        .theme-selector { margin: 15px 0; }
+        .input-group { margin: 15px 0; }
+        .input-group label { display: block; margin-bottom: 8px; font-size: 1.1em; }
+        .input-group input { width: 100%; padding: 10px; font-size: 1em; }
         .image-preview { 
             max-width: 100%; 
             max-height: 300px; 
-            margin: 10px 0; 
+            margin: 15px 0; 
             border: 1px solid #ddd;
             box-shadow: 0 0 5px rgba(0,0,0,0.1);
         }
-        .audio-preview { width: 100%; margin: 10px 0; }
-        .file-type { font-size: 0.8em; margin-left: 5px; color: #777; }
-        .file-controls { margin-top: 5px; }
+        .audio-preview { width: 100%; margin: 15px 0; }
+        .file-type { font-size: 0.9em; margin-left: 5px; color: #777; }
+        .file-controls { margin-top: 8px; }
         .sidebar-title { 
-            font-size: 1.5em; 
-            margin-bottom: 20px;
-            padding-bottom: 10px;
+            font-size: 1.8em; /* Aumentado de 1.5em */
+            margin-bottom: 25px;
+            padding-bottom: 15px;
             border-bottom: 1px solid rgba(255,255,255,0.2);
         }
         .creator-title {
@@ -43,7 +56,7 @@
             max-height: 300px;
             border: 1px solid #ddd;
             box-shadow: 0 0 5px rgba(0,0,0,0.1);
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
         
         /* Estilos base para los temas */
@@ -132,7 +145,7 @@
     </div>
 
     <!-- PDF.js para procesar PDFs -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.min.js"></script>
+    <script src="./Generador de Páginas HTML_files/pdf.min.js"></script>
     <script>
         // Configurar PDF.js
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.worker.min.js';
@@ -446,33 +459,36 @@
             padding: 0; 
             background-color: ${currentTheme.body};
             transition: all 0.3s ease;
+            font-size: 0.9em; /* Reducir tamaño de fuente general */
         }
         #sidebar { 
-            width: 250px; 
+            width: 333px; /* Aumentado de 250px */
             position: fixed; 
             left: 0; 
             top: 0; 
             bottom: 0; 
             background-color: ${currentTheme.sidebar}; 
             color: ${currentTheme.text}; 
-            padding: 10px; 
+            padding: 15px; 
             overflow-y: auto; 
+            font-size: 1.1em; /* Aumentar tamaño de fuente */
         }
         #sidebar a {
             color: ${currentTheme.link};
             text-decoration: none;
+            font-size: 1.5em; /* Aumentar tamaño de enlaces */
         }
         #sidebar a:hover {
             text-decoration: underline;
         }
         .sidebar-title {
-            font-size: 1.5em;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
+            font-size: 1.8em; /* Aumentado de 1.5em */
+            margin-bottom: 25px;
+            padding-bottom: 15px;
             border-bottom: 1px solid ${currentTheme.titleBorder};
         }
         #content { 
-            margin-left: 270px; 
+            margin-left: 370px; /* Aumentado de 270px */
             padding: 20px; 
         }
         .creator-title {
@@ -543,7 +559,7 @@
         <p>${document.getElementById('themeSelector').options[document.getElementById('themeSelector').selectedIndex].text}</p>
     </div>
     <div id="content">
-        <h1 class="creator-title">Creador Web 2025</h1>
+        <h1 class="creator-title"> Web</h1>
         <div class="blank-lines"></div>
         <h1>${pageTitle}</h1>`;
             
@@ -657,5 +673,6 @@
         // Actualizar el título de la barra lateral al cargar la página
         updateSidebarTitle();
     </script>
-</body>
-</html>
+
+
+</body></html>
