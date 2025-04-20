@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adaptador de Texto</title>
+    <style>
+        body {
+            font-family: Verdana, sans-serif;
+            background-color: #FFFFE0;
+            margin: 0;
+            padding: 20px;
+            font-size: 100%;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .dept-name {
+            color: #00008B;
+            font-weight: bold;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        
+        .content-area {
+            margin-bottom: 40px;
+        }
+        
+        .paragraph-table {
+            width: 100%;
+            border: 1px solid black;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        
+        .paragraph-title {
+            background-color: #FFFF99;
+            color: black;
+            font-size: 14px;
+            font-weight: bold;
+            padding: 8px;
+            border-bottom: 1px solid black;
+        }
+        
+        .paragraph-content {
+            background-color: #CCFFCC;
+            color: black;
+            font-size: 12px;
+            padding: 8px;
+        }
+        
+        .button-container {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        button {
+            padding: 10px 15px;
+            font-family: Verdana, sans-serif;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            font-size: 100%;
+        }
+        
+        #downloadHtml {
+            background-color: #FFFF99;
+        }
+        
+        #downloadDoc {
+            background-color: #CCCCFF;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 300px;
+            margin-bottom: 20px;
+            font-family: Verdana, sans-serif;
+            padding: 10px;
+            box-sizing: border-box;
+            font-size: 100%;
+            resize: vertical;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="dept-name">Departamento de Tecnología</div>
+        <div class="dept-name">ETJ</div>
+    </div>
+    
+    <h2>Adaptador de Texto</h2>
+    
+    <textarea id="inputText" placeholder="Pega tu texto aquí... Cada párrafo debe estar separado por una línea en blanco."></textarea>
+    
+    <button onclick="formatText()">Formatear Texto</button>
+    
+    <div id="contentArea" class="content-area"></div>
+    
+    <div class="button-container">
+        <button id="downloadHtml" onclick="downloadHTML()">Descargar HTML</button>
+        <button id="downloadDoc" onclick="downloadDOC()">Descargar DOC</button>
+    </div>
+    
+    <script>
+        function formatText() {
+            const inputText = document.getElementById('inputText').value;
+            const contentArea = document.getElementById('contentArea');
+            contentArea.innerHTML = '';
+            
+            const paragraphs = inputText.split(/\n\s*\n/);
+            
+            paragraphs.forEach((para) => {
+                if (para.trim() === '') return;
+                
+                const lines = para.split('\n');
+                const title = lines[0].trim();
+                const content = lines.slice(1).join('<br>').trim();
+                
+                const table = document.createElement('table');
+                table.className = 'paragraph-table';
+                
+                const titleRow = document.createElement('tr');
+                const titleCell = document.createElement('td');
+                titleCell.className = 'paragraph-title';
+                titleCell.textContent = title;
+                titleRow.appendChild(titleCell);
+                
+                const contentRow = document.createElement('tr');
+                const contentCell = document.createElement('td');
+                contentCell.className = 'paragraph-content';
+                contentCell.innerHTML = content || '&nbsp;';
+                contentRow.appendChild(contentCell);
+                
+                table.appendChild(titleRow);
+                table.appendChild(contentRow);
+                
+                contentArea.appendChild(table);
+            });
+        }
+        
+        function downloadHTML() {
+            try {
+                const header = `
+                    <div class="header">
+                        <div class="dept-name">DEPARTAMENTO DE TECNOLOGÍA</div>
+                        <div class="dept-name">ETJ</div>
+                    </div>
+                `;
+                
+                const content = document.getElementById('contentArea').innerHTML;
+                
+                const htmlContent = `
+                    <!DOCTYPE html>
+                    <html lang="es">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>Documento Formateado</title>
+                        <style>
+                            body {
+                                font-family: Verdana, sans-serif;
+                                background-color: #FFFFE0;
+                                margin: 0;
+                                padding: 20px;
+                                font-size: 18px;
+                            }
+                            .header {
+                                display: flex;
+                                justify-content: space-between;
+                                margin-bottom: 20px;
+                            }
+                            .dept-name {
+                                color: #00008B;
+                                font-weight: bold;
+                                font-size: 18px;
+                                text-transform: uppercase;
+                            }
+                            .paragraph-table {
+                                width: 100%;
+                                border: 1px solid black;
+                                border-collapse: collapse;
+                                margin-bottom: 15px;
+                            }
+                            .paragraph-title {
+                                background-color: #FFFF99;
+                                color: black;
+                                font-size: 18px;
+                                font-weight: bold;
+                                padding: 8px;
+                                border-bottom: 1px solid black;
+                            }
+                            .paragraph-content {
+                                background-color: #CCFFCC;
+                                color: black;
+                                font-size: 18px;
+                                padding: 8px;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        ${header}
+                        ${content}
+                    </body>
+                    </html>
+                `;
+                
+                const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'documento_formateado.html';
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
+            } catch (error) {
+                alert('Error al descargar HTML: ' + error.message);
+            }
+        }
+        
+        function downloadDOC() {
+            const content = document.getElementById('contentArea').innerHTML;
+            const header = `
+                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                    <div style="color: #00008B; font-weight: bold; font-size: 16px; text-transform: uppercase;">DEPARTAMENTO DE TECNOLOGÍA</div>
+                    <div style="color: #00008B; font-weight: bold; font-size: 16px; text-transform: uppercase;">ETJ</div>
+                </div>
+            `;
+            
+            const htmlContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body {
+                            font-family: Verdana, sans-serif;
+                            background-color: #F0F0F0;
+                            margin: 0;
+                            padding: 20px;
+                            font-size: 18px;
+                        }
+                        .paragraph-table {
+                            width: 100%;
+                            border: 1px solid black;
+                            border-collapse: collapse;
+                            margin-bottom: 15px;
+                        }
+                        .paragraph-title {
+                            background-color: #FFFF99;
+                            color: black;
+                            font-size: 18px;
+                            font-weight: bold;
+                            padding: 8px;
+                            border-bottom: 1px solid black;
+                        }
+                        .paragraph-content {
+                            background-color: #CCFFCC;
+                            color: black;
+                            font-size: 18px;
+                            padding: 8px;
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${header}
+                    ${content}
+                </body>
+                </html>
+            `;
+            
+            const blob = new Blob([htmlContent], { type: 'application/msword;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'documento_formateado.doc';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
