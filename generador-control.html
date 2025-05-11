@@ -211,7 +211,7 @@ Copiar en la prueba conlleva la retirada de la misma, la calificación de 0 punt
                 
                 // Extraer el tema del examen del primer h2
                 const titleElement = tempDiv.querySelector('h2');
-                examTopic = titleElement ? titleElement.textContent.replace('TEMA:', '').trim() : 'Tema del examen';
+                examTopic = titleElement ? titleElement.textContent.replace('TEMA:', '').trim() : '';
                 
                 // Extraer preguntas (antes de la clave)
                 const allParagraphs = Array.from(tempDiv.querySelectorAll('p'));
