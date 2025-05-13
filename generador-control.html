@@ -131,6 +131,21 @@
             background-color: #f2f2f2;
             font-weight: bold;
         }
+        .test-options {
+            margin-left: 20px;
+            margin-top: 5px;
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .test-options li {
+            margin-bottom: 5px;
+            word-wrap: break-word;
+        }
+        .question-text {
+            word-wrap: break-word;
+            white-space: normal;
+            text-align: justify;
+        }
     </style>
 </head>
 <body>
@@ -139,7 +154,7 @@
         
         <div class="upload-section">
             <h2>Cargar Examen</h2>
-            <p>Selecciona un archivo HTML con las preguntas del examen:de hotpotatoes a imprimir..portapapeles   pegar en write y uardar como html</p>
+            <p>Selecciona un archivo HTML con las preguntas del examen:</p>
             <input type="file" id="examFile" accept=".html,.htm">
             <button class="btn" id="loadBtn">Cargar Examen</button>
             
@@ -164,8 +179,8 @@ Copiar en la prueba conlleva la retirada de la misma, la calificación de 0 punt
         </div>
         
         <div>
-            <button class="btn btn-download" id="downloadAB">Descargar Exámenes A y B</button>
-            <button class="btn btn-answer" id="downloadAnswers">Descargar Exámenes con Respuestas</button>
+            <button class="btn btn-download" id="downloadAB" disabled>Descargar Exámenes A y B</button>
+            <button class="btn btn-answer" id="downloadAnswers" disabled>Descargar Exámenes con Respuestas</button>
         </div>
     </div>
 
@@ -200,7 +215,7 @@ Copiar en la prueba conlleva la retirada de la misma, la calificación de 0 punt
                 reader.readAsText(file);
             });
             
-            // Parsear el archivo HTML del examen
+            // Parsear el archivo HTML del examen con formato mejorado
             function parseExamFile(content) {
                 questions = [];
                 answers = [];
@@ -209,52 +224,81 @@ Copiar en la prueba conlleva la retirada de la misma, la calificación de 0 punt
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = content;
                 
-                // Extraer el tema del examen del primer h2
-                const titleElement = tempDiv.querySelector('h2');
-                examTopic = titleElement ? titleElement.textContent.replace('TEMA:', '').trim() : '';
+                // Extraer el tema del examen del primer elemento que contenga "TEMA:"
+                const paragraphs = tempDiv.querySelectorAll('p');
+                for (let p of paragraphs) {
+                    const text = p.textContent.trim();
+                    if (text.includes('TEMA:')) {
+                        examTopic = text.replace('TEMA:', '').trim();
+                        break;
+                    }
+                }
                 
                 // Extraer preguntas (antes de la clave)
-                const allParagraphs = Array.from(tempDiv.querySelectorAll('p'));
                 let foundKey = false;
+                let currentQuestion = null;
                 
-                allParagraphs.forEach(p => {
-                    const text = p.textContent.trim();
+                for (let p of paragraphs) {
+                    let text = p.textContent.trim();
                     
                     if (text.includes('----------Clave----------')) {
                         foundKey = true;
-                        return;
+                        continue;
                     }
                     
-                    if (!foundKey && text.match(/^\d+\./)) {
-                        // Es una pregunta
-                        questions.push({
-                            text: text,
-                            answer: ''
-                        });
-                    }
-                });
-                
-                // Extraer respuestas (después de la clave)
-                let answerIndex = 0;
-                foundKey = false;
-                
-                allParagraphs.forEach(p => {
-                    const text = p.textContent.trim();
-                    
-                    if (text.includes('----------Clave----------')) {
-                        foundKey = true;
-                        return;
-                    }
-                    
-                    if (foundKey && text.match(/^\d+\.?/)) {
-                        // Es una respuesta (sin el número)
-                        const answerText = text.replace(/^\d+\.?\s*/, '');
-                        if (questions[answerIndex]) {
-                            questions[answerIndex].answer = answerText;
+                    if (!foundKey) {
+                        // Es una pregunta si empieza con número seguido de punto
+                        if (text.match(/^\d+\./)) {
+                            // Nueva pregunta
+                            if (currentQuestion) {
+                                questions.push(currentQuestion);
+                            }
+                            // Limpiar el texto de la pregunta
+                            let questionText = text.replace(/^\d+\.\s*/, '');
+                            // Eliminar saltos de línea innecesarios y unir líneas
+                            questionText = questionText.replace(/\s+/g, ' ').trim();
+                            
+                            currentQuestion = {
+                                text: questionText,
+                                options: [],
+                                answer: ''
+                            };
+                        } else if (currentQuestion && text.match(/^[a-d]\)/i)) {
+                            // Es una opción de respuesta para la pregunta actual
+                            const optionText = text.replace(/^[a-d]\)\s*/i, '');
+                            const optionLetter = text.match(/^([a-d])/i)[1].toUpperCase();
+                            currentQuestion.options.push(`${optionLetter}. ${optionText.replace(/\s+/g, ' ').trim()}`);
+                        } else if (currentQuestion && text !== '') {
+                            // Continuación del texto de la pregunta - unir líneas
+                            if (currentQuestion.text.slice(-1) !== ' ') {
+                                currentQuestion.text += ' ';
+                            }
+                            currentQuestion.text += text.replace(/\s+/g, ' ').trim();
                         }
-                        answerIndex++;
+                    } else {
+                        // Procesar respuestas (después de la clave)
+                        if (text.match(/^\d+\.?/)) {
+                            // Es una respuesta (sin el número)
+                            const answerText = text.replace(/^\d+\.?\s*/, '').trim();
+                            const questionIndex = parseInt(text.match(/^\d+/)[0]) - 1;
+                            
+                            if (questions[questionIndex]) {
+                                // Para respuestas tipo test, guardar solo la letra (A, B, C, D)
+                                const match = answerText.match(/^\(?([a-d])\)?/i);
+                                if (match) {
+                                    questions[questionIndex].answer = match[1].toUpperCase();
+                                } else {
+                                    questions[questionIndex].answer = answerText.replace(/\s+/g, ' ').trim();
+                                }
+                            }
+                        }
                     }
-                });
+                }
+                
+                // Añadir la última pregunta si existe
+                if (currentQuestion && !foundKey) {
+                    questions.push(currentQuestion);
+                }
             }
             
             // Mezclar array aleatoriamente (Fisher-Yates)
@@ -296,9 +340,9 @@ Copiar en la prueba conlleva la retirada de la misma, la calificación de 0 punt
                 let html = `
                     <div class="header-info">
                         ${examInstructionsInput.value
-    .replace('Departamento de tecnología', '<strong>Departamento de Tecnología</strong><br>')
-    .replace('Control tema:', `<br><strong>Control o tema:</strong> ${examTopic}<br><br>`)
-    .replace(/\n/g, '<br>')}
+                            .replace('Departamento de tecnología', '<strong>Departamento de Tecnología</strong><br>')
+                            .replace('Control tema:', `<br><strong>Control o tema:</strong> ${examTopic}<br><br>`)
+                            .replace(/\n/g, '<br>')}
                     </div>
                     <table>
                         <thead>
@@ -318,10 +362,20 @@ Copiar en la prueba conlleva la retirada de la misma, la calificación de 0 punt
                 `;
                 
                 examQuestions.forEach((q, index) => {
+                    let questionText = q.text;
+                    let answerText = showAnswers ? q.answer : '-';
+                    
+                    // Si hay opciones, las añadimos al texto de la pregunta
+                    if (q.options && q.options.length > 0) {
+                        questionText += `<ul class="test-options">${q.options.map(opt => `<li>${opt}</li>`).join('')}</ul>`;
+                    }
+                    
                     html += `
                         <tr>
-                            <td>${q.text}</td>
-                            <td>${showAnswers ? q.answer : '-'}</td>
+                            <td class="question-text">
+                                ${questionText}
+                            </td>
+                            <td>${answerText}</td>
                         </tr>
                     `;
                 });
@@ -369,6 +423,13 @@ Copiar en la prueba conlleva la retirada de la misma, la calificación de 0 punt
                             .warning { background-color: #f8d7da; padding: 10px; margin-bottom: 15px; }
                             .exam-type { background-color: #3498db; color: white; font-weight: bold; text-align: center; }
                             .student-row { background-color: #f2f2f2; font-weight: bold; }
+                            .test-options { margin-left: 20px; margin-top: 5px; list-style-type: none; padding-left: 0; }
+                            .test-options li { margin-bottom: 5px; word-wrap: break-word; }
+                            .question-text { 
+                                word-wrap: break-word; 
+                                white-space: normal;
+                                text-align: justify;
+                            }
                         </style>
                     </head>
                     <body>
@@ -420,6 +481,13 @@ Copiar en la prueba conlleva la retirada de la misma, la calificación de 0 punt
                             .warning { background-color: #f8d7da; padding: 10px; margin-bottom: 15px; }
                             .exam-type { background-color: #3498db; color: white; font-weight: bold; text-align: center; }
                             .student-row { background-color: #f2f2f2; font-weight: bold; }
+                            .test-options { margin-left: 20px; margin-top: 5px; list-style-type: none; padding-left: 0; }
+                            .test-options li { margin-bottom: 5px; word-wrap: break-word; }
+                            .question-text { 
+                                word-wrap: break-word; 
+                                white-space: normal;
+                                text-align: justify;
+                            }
                         </style>
                     </head>
                     <body>
