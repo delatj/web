@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generador de Exámenes Mejorado</title>
+    <script src="https://unpkg.com/docx@7.8.2/build/index.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -180,6 +182,7 @@ Copiar en la prueba conlleva la retirada de la misma, la calificación de 0 punt
         
         <div>
             <button class="btn btn-download" id="downloadAB" disabled>Descargar Exámenes A y B</button>
+            <button class="btn btn-download" id="downloadWord" disabled>Descargar en Word</button>
             <button class="btn btn-answer" id="downloadAnswers" disabled>Descargar Exámenes con Respuestas</button>
         </div>
     </div>
@@ -196,6 +199,7 @@ Copiar en la prueba conlleva la retirada de la misma, la calificación de 0 punt
             const previewA = document.getElementById('previewA');
             const previewB = document.getElementById('previewB');
             const downloadABBtn = document.getElementById('downloadAB');
+            const downloadWordBtn = document.getElementById('downloadWord');
             const downloadAnswersBtn = document.getElementById('downloadAnswers');
             const examInstructionsInput = document.getElementById('examInstructions');
             
@@ -327,6 +331,7 @@ Copiar en la prueba conlleva la retirada de la misma, la calificación de 0 punt
                 
                 // Habilitar botones de descarga
                 downloadABBtn.disabled = false;
+                downloadWordBtn.disabled = false;
                 downloadAnswersBtn.disabled = false;
             }
             
@@ -440,6 +445,235 @@ Copiar en la prueba conlleva la retirada de la misma, la calificación de 0 punt
                 
                 downloadFile(`Examenes_${examTopic.replace(/\s+/g, '_')}.html`, combinedHtml);
             });
+            
+            // Descargar exámenes en formato Word (versión mejorada)
+            downloadWordBtn.addEventListener('click', function() {
+                if (questions.length === 0) {
+                    alert('No hay preguntas cargadas.');
+                    return;
+                }
+
+                // Mezclar preguntas aleatoriamente
+                const shuffledQuestions = shuffleArray([...questions]);
+                
+                // Dividir preguntas en A y B
+                const half = Math.floor(shuffledQuestions.length / 2);
+                const examAQuestions = shuffledQuestions.slice(0, half);
+                const examBQuestions = shuffledQuestions.slice(half, half * 2);
+
+                // Crear documento Word con formato mejorado
+                const { Document, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, AlignmentType, WidthType } = docx;
+
+                const doc = new Document({
+                    styles: {
+                        paragraphStyles: [
+                            {
+                                id: "normal",
+                                name: "Normal",
+                                run: {
+                                    size: 22, // 11pt (22 half points)
+                                    font: "Arial"
+                                },
+                                paragraph: {
+                                    spacing: { line: 276 } // 1.15 line spacing
+                                }
+                            },
+                            {
+                                id: "header",
+                                name: "Header",
+                                basedOn: "normal",
+                                run: {
+                                    size: 28, // 14pt
+                                    bold: true,
+                                    color: "FFFFFF"
+                                },
+                                paragraph: {
+                                    alignment: AlignmentType.CENTER,
+                                    spacing: { before: 200, after: 200 },
+                                    shading: {
+                                        fill: "3498DB"
+                                    }
+                                }
+                            },
+                            {
+                                id: "question",
+                                name: "Question",
+                                basedOn: "normal",
+                                run: {
+                                    bold: true
+                                }
+                            },
+                            {
+                                id: "option",
+                                name: "Option",
+                                basedOn: "normal",
+                                paragraph: {
+                                    indent: { left: 720 }, // 0.5 inch
+                                    spacing: { before: 100, after: 100 }
+                                }
+                            }
+                        ]
+                    },
+                    sections: [
+                        {
+                            properties: {
+                                page: {
+                                    margin: {
+                                        top: 1440,    // 1 inch
+                                        right: 1440,  // 1 inch
+                                        bottom: 1440, // 1 inch
+                                        left: 1440    // 1 inch
+                                    }
+                                }
+                            },
+                            children: [
+                                // Examen A
+                                new Paragraph({
+                                    text: "EXAMEN TIPO A",
+                                    heading: HeadingLevel.HEADING_1,
+                                    style: "header"
+                                }),
+                                ...generateExamWordContent(examAQuestions, 'A'),
+                                
+                                // Salto de página
+                                new Paragraph({
+                                    children: [new TextRun({ text: "", break: 1 })]
+                                }),
+                                
+                                // Examen B
+                                new Paragraph({
+                                    text: "EXAMEN TIPO B",
+                                    heading: HeadingLevel.HEADING_1,
+                                    style: "header"
+                                }),
+                                ...generateExamWordContent(examBQuestions, 'B')
+                            ]
+                        }
+                    ]
+                });
+
+                // Generar y descargar el documento
+                docx.Packer.toBlob(doc).then(blob => {
+                    saveAs(blob, `Examenes_${examTopic.replace(/\s+/g, '_')}.docx`);
+                });
+            });
+
+            // Función mejorada para generar contenido del examen en formato Word
+            function generateExamWordContent(questions, examType) {
+                const { Paragraph, TextRun, Table, TableRow, TableCell, AlignmentType, WidthType } = docx;
+                const content = [];
+                
+                // Instrucciones
+                const instructions = examInstructionsInput.value.split('\n');
+                content.push(new Paragraph({
+                    text: "Departamento de Tecnología",
+                    bold: true,
+                    spacing: { after: 100 }
+                }));
+                
+                content.push(new Paragraph({
+                    text: `Control o tema: ${examTopic}`,
+                    bold: true,
+                    spacing: { after: 200 }
+                }));
+                
+                instructions.filter(line => line.trim() && !line.includes("Departamento") && !line.includes("Control tema"))
+                           .forEach(line => {
+                    content.push(new Paragraph({
+                        text: line.trim(),
+                        spacing: { after: 100 }
+                    }));
+                });
+                
+                // Información del estudiante
+                const studentTable = new Table({
+                    rows: [
+                        new TableRow({
+                            children: [
+                                new TableCell({
+                                    children: [new Paragraph({
+                                        text: "Nombre: ___________________________",
+                                        bold: true
+                                    })],
+                                    width: { size: 50, type: WidthType.PERCENTAGE }
+                                }),
+                                new TableCell({
+                                    children: [new Paragraph({
+                                        text: "Fecha: ___________________________",
+                                        bold: true
+                                    })],
+                                    width: { size: 50, type: WidthType.PERCENTAGE }
+                                })
+                            ]
+                        })
+                    ],
+                    width: { size: 100, type: WidthType.PERCENTAGE }
+                });
+                content.push(studentTable);
+                
+                // Tabla de preguntas
+                const questionTable = new Table({
+                    columnWidths: [70, 30],
+                    rows: [
+                        new TableRow({
+                            children: [
+                                new TableCell({
+                                    children: [new Paragraph({
+                                        text: "Pregunta",
+                                        bold: true
+                                    })],
+                                    shading: { fill: "F2F2F2" }
+                                }),
+                                new TableCell({
+                                    children: [new Paragraph({
+                                        text: "Respuesta",
+                                        bold: true
+                                    })],
+                                    shading: { fill: "F2F2F2" }
+                                })
+                            ]
+                        }),
+                        ...questions.map((q, index) => {
+                            const questionContent = [];
+                            questionContent.push(new Paragraph({
+                                text: `${index + 1}. ${q.text}`,
+                                style: "question",
+                                spacing: { after: 100 }
+                            }));
+                            
+                            // Añadir opciones si es pregunta test
+                            if (q.options && q.options.length > 0) {
+                                q.options.forEach(opt => {
+                                    questionContent.push(new Paragraph({
+                                        text: opt,
+                                        style: "option"
+                                    }));
+                                });
+                            }
+                            
+                            return new TableRow({
+                                children: [
+                                    new TableCell({
+                                        children: questionContent,
+                                        margins: { top: 100, bottom: 100, left: 100, right: 100 }
+                                    }),
+                                    new TableCell({
+                                        children: [new Paragraph({
+                                            text: "___________________________",
+                                            spacing: { after: 100 }
+                                        })],
+                                        margins: { top: 100, bottom: 100, left: 100, right: 100 }
+                                    })
+                                ]
+                            });
+                        })
+                    ],
+                    width: { size: 100, type: WidthType.PERCENTAGE }
+                });
+                content.push(questionTable);
+                
+                return content;
+            }
             
             // Descargar exámenes con respuestas
             downloadAnswersBtn.addEventListener('click', function() {
