@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donkey Kong - Modo Tablet</title>
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.6.0/lib/p5.js"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: white;
+        }
+        #scoreboard {
+            display: flex;
+            justify-content: space-around;
+            width: 700px;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 700px;
+        }
+        #game-area {
+            width: 700px;
+            height: 450px;
+            background-color: #ddd;
+            position: relative;
+        }
+        #key-display {
+            margin-top: 10px;
+            text-align: center;
+        }
+        #controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+            width: 700px;
+        }
+        #controls button {
+            padding: 15px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #controls button:active {
+            background-color: #45a049;
+        }
+        #execute-btn {
+            grid-column: span 3;
+            background-color: #f39c12 !important;
+        }
+        #instructions {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #333;
+            text-align: center;
+        }
+        #player-zone {
+            width: 100%;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            background-color: white;
+            transition: background-color 0.5s;
+        }
+        #send-results {
+            margin: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #send-results:hover {
+            background-color: #45a049;
+        }
+        #status-message {
+            margin-top: 10px;
+            color: #333;
+            font-weight: bold;
+        }
+        #player-name-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        #player-name-form {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        #player-name-form h2 {
+            margin-top: 0;
+        }
+        #player-name-form input {
+            margin: 10px;
+            padding: 8px;
+            width: 200px;
+        }
+        #player-name-form button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="player-name-modal">
+        <div id="player-name-form">
+            <h2>Ingresa tu nombre</h2>
+            <input type="text" id="player-name" placeholder="Tu nombre" required>
+            <button id="start-game">Comenzar Juego</button>
+        </div>
+    </div>
+
+    <div id="player-zone"></div>
+    <h1>Donkey Kong - Modo Tablet</h1>
+    <div id="scoreboard">
+        <div>Monk-tablet: <span id="score1">0</span> puntos</div>
+        <div id="player2-score">Jugador: <span id="score2">0</span> puntos</div>
+    </div>
+    <div id="game-container">
+        <div id="game-area"></div>
+        <div id="key-display">
+            <div id="keys2">Secuencia: </div>
+        </div>
+        <div id="controls">
+            <button id="left-btn">← Izquierda</button>
+            <button id="up-btn">↑ Subir</button>
+            <button id="right-btn">→ Derecha</button>
+            <button id="down-btn">↓ Bajar</button>
+            <button id="pick-btn">Recoger</button>
+            <button id="reset-btn">Reiniciar</button>
+            <button id="execute-btn" class="execute">Ejecutar (X)</button>
+        </div>
+    </div>
+    <div id="instructions">
+        <h3>Instrucciones</h3>
+        <p>Presiona los botones para crear una secuencia de movimientos y luego pulsa Ejecutar</p>
+    </div>
+    <button id="send-results">Enviar resultados a Google Sheets</button>
+    <div id="status-message"></div>
+    <script>
+        let mono2 = { x: 350, y: 400, visualX: 350, visualY: 400, puntos: 0, path: [], initialPos: { x: 350, y: 400 } };
+        let tonel2 = { x: 400, y: 400 };
+        let ladders2 = [];
+        let sequence2 = [];
+        let playerName = "";
+        const player1Name = "Monk-tablet";
+
+        const colorMap = {
+            20: "blue",
+            30: "green",
+            40: "yellow",
+            50: "orange",
+            60: "red",
+            70: "lightgray",
+            100: "violet"
+        };
+
+        function setup() {
+            let canvas = createCanvas(700, 450);
+            canvas.parent('game-area');
+            
+            // Mostrar el modal para ingresar nombre
+            document.getElementById('player-name-modal').style.display = 'flex';
+            
+            // Configurar el botón de comenzar juego
+            document.getElementById('start-game').addEventListener('click', startGame);
+            
+            // Configurar los botones de control
+            document.getElementById('left-btn').addEventListener('click', () => addToSequence('ArrowLeft'));
+            document.getElementById('right-btn').addEventListener('click', () => addToSequence('ArrowRight'));
+            document.getElementById('up-btn').addEventListener('click', () => addToSequence('ArrowUp'));
+            document.getElementById('down-btn').addEventListener('click', () => addToSequence('ArrowDown'));
+            document.getElementById('pick-btn').addEventListener('click', () => addToSequence('p'));
+            document.getElementById('reset-btn').addEventListener('click', () => resetPosition());
+            document.getElementById('execute-btn').addEventListener('click', () => executeSequenceBtn());
+            
+            // Configurar el botón de enviar resultados
+            document.getElementById('send-results').addEventListener('click', sendResultsToGoogleSheets);
+        }
+
+        function startGame() {
+            playerName = document.getElementById('player-name').value.trim();
+            
+            if (!playerName) {
+                alert("Por favor ingresa tu nombre");
+                return;
+            }
+            
+            // Actualizar el nombre en el marcador
+            document.getElementById('player2-score').innerHTML = `${playerName}: <span id="score2">0</span> puntos`;
+            
+            // Ocultar el modal
+            document.getElementById('player-name-modal').style.display = 'none';
+            
+            // Generar las escaleras aleatorias
+            generateRandomLadders();
+        }
+
+        function addToSequence(key) {
+            sequence2.push(key);
+            updateSequenceDisplay();
+        }
+
+        function updateSequenceDisplay() {
+            const displayMap = {
+                'ArrowLeft': '←',
+                'ArrowRight': '→',
+                'ArrowUp': '↑',
+                'ArrowDown': '↓',
+                'p': 'Recoger'
+            };
+            
+            const displaySequence = sequence2.map(key => displayMap[key] || key);
+            document.getElementById('keys2').innerText = "Secuencia: " + displaySequence.join(" ");
+        }
+
+        function executeSequenceBtn() {
+            executeSequence(mono2, sequence2, 0, width, tonel2, 'score2', ladders2);
+            sequence2 = [];
+            document.getElementById('keys2').innerText = "Secuencia: ";
+        }
+
+        function resetPosition() {
+            mono2.x = mono2.initialPos.x;
+            mono2.y = mono2.initialPos.y;
+            mono2.visualX = mono2.initialPos.x;
+            mono2.visualY = mono2.initialPos.y;
+            mono2.path = [];
+        }
+
+        function draw() {
+            background(220);
+            drawGame(mono2, tonel2, ladders2, 0, width);
+        }
+
+        function drawGame(mono, tonel, ladders, xStart, xEnd) {
+            fill(200);
+            for (let i = 0; i < 4; i++) {
+                rect(xStart, i * 112.5, xEnd - xStart, 112.5);
+            }
+            fill(150);
+            for (let ladder of ladders) {
+                rect(ladder.x, ladder.y, 40, 112.5);
+            }
+            fill(255, 204, 0);
+            ellipse(tonel.x, tonel.y + 15, 30, 30);
+
+            if (mono.path.length > 0) {
+                noFill();
+                stroke(255, 0, 0);
+                beginShape();
+                for (let pos of mono.path) {
+                    vertex(pos.x, pos.y);
+                }
+                endShape();
+            }
+
+            fill(100, 100, 255);
+            ellipse(mono.visualX, mono.visualY + 15, 30, 30);
+        }
+
+        function generateRandomLadders() {
+            ladders2 = [];
+            for (let i = 1; i < 4; i++) {
+                const x = random([150, 300, 450]);
+                ladders2.push({ x: x, y: 450 - i * 112.5 });
+            }
+        }
+
+        function keyPressed() {
+            // Solo permitir la tecla X para ejecutar mientras el modal no está visible
+            if (document.getElementById('player-name-modal').style.display !== 'flex' && key === 'x') {
+                executeSequenceBtn();
+            }
+        }
+
+        function executeSequence(mono, sequence, xStart, xEnd, tonel, scoreId, ladders) {
+            let delay = 500;
+            let index = 0;
+
+            function nextStep() {
+                if (index < sequence.length) {
+                    let key = sequence[index];
+                    if (key === 'ArrowLeft') {
+                        mono.x = constrain(mono.x - 40, xStart, xEnd - 40);
+                    } else if (key === 'ArrowRight') {
+                        mono.x = constrain(mono.x + 40, xStart, xEnd - 40);
+                    } else if (key === 'ArrowUp') {
+                        if (isOnLadder(mono, ladders)) {
+                            mono.y = constrain(mono.y - 40, 0, height - 40);
+                        }
+                    } else if (key === 'ArrowDown') {
+                        if (isOnLadder(mono, ladders)) {
+                            mono.y = constrain(mono.y + 40, 0, height - 40);
+                        }
+                    } else if (key === 'p') {
+                        if (dist(mono.x, mono.y, tonel.x, tonel.y) < 30) {
+                            mono.puntos++;
+                            document.getElementById(scoreId).innerText = mono.puntos;
+                            tonel.x = random(xStart + 50, xEnd - 50);
+                            tonel.y = random(100, 400);
+                            updateZoneColor(mono.puntos);
+                        } else {
+                            mono.x = mono.initialPos.x;
+                            mono.y = mono.initialPos.y;
+                        }
+                    }
+                    mono.path.push({ x: mono.x, y: mono.y });
+                    mono.visualX = mono.x;
+                    mono.visualY = mono.y;
+                    index++;
+                    setTimeout(nextStep, delay);
+                }
+            }
+
+            nextStep();
+        }
+
+        function updateZoneColor(puntos) {
+            let color = "white";
+            for (let threshold in colorMap) {
+                if (puntos >= threshold) {
+                    color = colorMap[threshold];
+                }
+            }
+            document.getElementById('player-zone').style.backgroundColor = color;
+        }
+
+        function isOnLadder(mono, ladders) {
+            for (let ladder of ladders) {
+                if (mono.x >= ladder.x && mono.x <= ladder.x + 40 && mono.y >= ladder.y && mono.y <= ladder.y + 112.5) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function sendResultsToGoogleSheets() {
+            if (!playerName) {
+                document.getElementById('status-message').textContent = "Error: No se ha definido el nombre del jugador";
+                document.getElementById('status-message').style.color = "red";
+                return;
+            }
+
+            const score1 = 0; // Monk-tablet siempre tiene 0 puntos
+            const score2 = mono2.puntos;
+            const timestamp = new Date().toLocaleString();
+
+            const data = {
+                player1: player1Name,
+                score1: score1,
+                player2: playerName,
+                score2: score2,
+                timestamp: timestamp
+            };
+
+            document.getElementById('status-message').textContent = "Enviando datos...";
+            document.getElementById('status-message').style.color = "blue";
+
+            // URL del Web App de Google Apps Script
+            const scriptUrl = "https://script.google.com/macros/s/AKfycbwVPttSZrhwfWwSZpFo7KWjJ39vldQm3MPGykMWEPWOoF4UsZ24mC8YhgiaE-0xm_7G/exec";
+
+            fetch(scriptUrl, {
+                method: "POST",
+                mode: "no-cors",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data)
+            })
+            .then(() => {
+                document.getElementById('status-message').textContent = "Resultados enviados correctamente!";
+                document.getElementById('status-message').style.color = "green";
+            })
+            .catch(error => {
+                document.getElementById('status-message').textContent = "Error al enviar resultados: " + error.message;
+                document.getElementById('status-message').style.color = "red";
+                console.error("Error:", error);
+            });
+        }
+    </script>
+</body>
+</html>
