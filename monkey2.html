@@ -13,7 +13,7 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: white; /* Color de fondo inicial */
+            background-color: white;
         }
         #scoreboard {
             display: flex;
@@ -26,7 +26,7 @@
         #game-container {
             display: flex;
             justify-content: space-between;
-            width: 900px; /* Aumentamos el ancho para incluir las ventanas de teclas */
+            width: 900px;
         }
         #game-area {
             width: 700px;
@@ -71,22 +71,84 @@
             position: absolute;
             top: 0;
             left: 0;
-            z-index: -1; /* Colocar detrás del contenido */
+            z-index: -1;
         }
         #player1-zone, #player2-zone {
             width: 50%;
             height: 100%;
-            transition: background-color 0.5s; /* Transición suave para el cambio de color */
+            transition: background-color 0.5s;
         }
         #player1-zone {
-            background-color: white; /* Color inicial de la zona del Jugador 1 */
+            background-color: white;
         }
         #player2-zone {
-            background-color: white; /* Color inicial de la zona del Jugador 2 */
+            background-color: white;
+        }
+        #send-results {
+            margin: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #send-results:hover {
+            background-color: #45a049;
+        }
+        #status-message {
+            margin-top: 10px;
+            color: #333;
+            font-weight: bold;
+        }
+        #player-names-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        #player-names-form {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        #player-names-form h2 {
+            margin-top: 0;
+        }
+        #player-names-form input {
+            margin: 10px;
+            padding: 8px;
+            width: 200px;
+        }
+        #player-names-form button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
+    <div id="player-names-modal">
+        <div id="player-names-form">
+            <h2>Ingresa los nombres de los jugadores</h2>
+            <input type="text" id="player1-name" placeholder="Nombre del Jugador 1" required>
+            <input type="text" id="player2-name" placeholder="Nombre del Jugador 2" required>
+            <button id="start-game">Comenzar Juego</button>
+        </div>
+    </div>
+
     <div id="player-zones">
         <div id="player1-zone"></div>
         <div id="player2-zone"></div>
@@ -114,6 +176,8 @@
         <p>Para coger la bola amarilla a dos pasos a la derecha:</p>
         <p><strong>d (derecha) d (derecha) q (coger) x (ejecutar)</strong></p>
     </div>
+    <button id="send-results">Enviar resultados a Google Sheets</button>
+    <div id="status-message"></div>
     <script>
         let mono1 = { x: 150, y: 400, visualX: 150, visualY: 400, puntos: 0, path: [], initialPos: { x: 150, y: 400 } };
         let mono2 = { x: 550, y: 400, visualX: 550, visualY: 400, puntos: 0, path: [], initialPos: { x: 550, y: 400 } };
@@ -121,10 +185,11 @@
         let tonel2 = { x: 500, y: 400 };
         let ladders1 = [];
         let ladders2 = [];
-        let sequence1 = []; // Almacena la secuencia del Jugador 1
-        let sequence2 = []; // Almacena la secuencia del Jugador 2
+        let sequence1 = [];
+        let sequence2 = [];
+        let player1Name = "";
+        let player2Name = "";
 
-        // Mapeo de puntos a colores
         const colorMap = {
             20: "blue",
             30: "green",
@@ -138,6 +203,34 @@
         function setup() {
             let canvas = createCanvas(700, 450);
             canvas.parent('game-area');
+            
+            // Mostrar el modal para ingresar nombres
+            document.getElementById('player-names-modal').style.display = 'flex';
+            
+            // Configurar el botón de comenzar juego
+            document.getElementById('start-game').addEventListener('click', startGame);
+            
+            // Configurar el botón de enviar resultados
+            document.getElementById('send-results').addEventListener('click', sendResultsToGoogleSheets);
+        }
+
+        function startGame() {
+            player1Name = document.getElementById('player1-name').value.trim();
+            player2Name = document.getElementById('player2-name').value.trim();
+            
+            if (!player1Name || !player2Name) {
+                alert("Por favor ingresa nombres para ambos jugadores");
+                return;
+            }
+            
+            // Actualizar los nombres en el marcador
+            document.querySelector('#scoreboard div:first-child').innerHTML = `${player1Name}: <span id="score1">0</span> puntos`;
+            document.querySelector('#scoreboard div:last-child').innerHTML = `${player2Name}: <span id="score2">0</span> puntos`;
+            
+            // Ocultar el modal
+            document.getElementById('player-names-modal').style.display = 'none';
+            
+            // Generar las escaleras aleatorias
             generateRandomLadders();
         }
 
@@ -161,7 +254,6 @@
             fill(255, 204, 0);
             ellipse(tonel.x, tonel.y + 15, 30, 30);
 
-            // Dibujar la trayectoria si existe
             if (mono.path.length > 0) {
                 noFill();
                 stroke(255, 0, 0);
@@ -172,7 +264,6 @@
                 endShape();
             }
 
-            // Dibujar al mono en su posición visual
             fill(100, 100, 255);
             ellipse(mono.visualX, mono.visualY + 15, 30, 30);
         }
@@ -189,7 +280,11 @@
         }
 
         function keyPressed() {
-            // Almacenar la secuencia de teclas
+            // No permitir entrada de teclas mientras el modal está visible
+            if (document.getElementById('player-names-modal').style.display === 'flex') {
+                return;
+            }
+
             if (key === 'a' || key === 'd' || key === 'w' || key === 's' || key === 'q') {
                 sequence1.push(key);
                 document.getElementById('keys1').innerText = "Secuencia: " + sequence1.join(" ");
@@ -199,41 +294,37 @@
                 document.getElementById('keys2').innerText = "Secuencia: " + sequence2.join(" ");
             }
 
-            // Ejecutar la secuencia del Jugador 1 al pulsar 'x'
             if (key === 'x') {
                 executeSequence(mono1, sequence1, 0, width / 2, tonel1, 'score1', ladders1);
-                sequence1 = []; // Reiniciar la secuencia
+                sequence1 = [];
                 document.getElementById('keys1').innerText = "Secuencia: ";
             }
 
-            // Ejecutar la secuencia del Jugador 2 al pulsar 'm'
             if (key === 'm') {
                 executeSequence(mono2, sequence2, width / 2, width, tonel2, 'score2', ladders2);
-                sequence2 = []; // Reiniciar la secuencia
+                sequence2 = [];
                 document.getElementById('keys2').innerText = "Secuencia: ";
             }
 
-            // Volver a la casilla de salida para el Jugador 1 al pulsar 'e'
             if (key === 'e') {
                 mono1.x = mono1.initialPos.x;
                 mono1.y = mono1.initialPos.y;
                 mono1.visualX = mono1.initialPos.x;
                 mono1.visualY = mono1.initialPos.y;
-                mono1.path = []; // Reiniciar la trayectoria
+                mono1.path = [];
             }
 
-            // Volver a la casilla de salida para el Jugador 2 al pulsar 'i'
             if (key === 'i') {
                 mono2.x = mono2.initialPos.x;
                 mono2.y = mono2.initialPos.y;
                 mono2.visualX = mono2.initialPos.x;
                 mono2.visualY = mono2.initialPos.y;
-                mono2.path = []; // Reiniciar la trayectoria
+                mono2.path = [];
             }
         }
 
         function executeSequence(mono, sequence, xStart, xEnd, tonel, scoreId, ladders) {
-            let delay = 500; // Retardo entre movimientos (500 ms)
+            let delay = 500;
             let index = 0;
 
             function nextStep() {
@@ -257,11 +348,8 @@
                             document.getElementById(scoreId).innerText = mono.puntos;
                             tonel.x = random(xStart + 50, xEnd - 50);
                             tonel.y = random(100, 400);
-
-                            // Cambiar el color de fondo de la zona correspondiente según los puntos
                             updateZoneColor(mono.puntos, scoreId);
                         } else {
-                            // Si no se recoge el tonel, volver a la posición inicial
                             mono.x = mono.initialPos.x;
                             mono.y = mono.initialPos.y;
                         }
@@ -270,15 +358,15 @@
                     mono.visualX = mono.x;
                     mono.visualY = mono.y;
                     index++;
-                    setTimeout(nextStep, delay); // Llamar a la siguiente acción con retardo
+                    setTimeout(nextStep, delay);
                 }
             }
 
-            nextStep(); // Iniciar la ejecución de la secuencia
+            nextStep();
         }
 
         function updateZoneColor(puntos, scoreId) {
-            let color = "white"; // Color por defecto
+            let color = "white";
             for (let threshold in colorMap) {
                 if (puntos >= threshold) {
                     color = colorMap[threshold];
@@ -298,6 +386,51 @@
                 }
             }
             return false;
+        }
+
+        // Función para enviar resultados a Google Sheets
+        function sendResultsToGoogleSheets() {
+            if (!player1Name || !player2Name) {
+                document.getElementById('status-message').textContent = "Error: No se han definido los nombres de los jugadores";
+                document.getElementById('status-message').style.color = "red";
+                return;
+            }
+
+            const score1 = mono1.puntos;
+            const score2 = mono2.puntos;
+            const timestamp = new Date().toLocaleString();
+
+            const data = {
+                player1: player1Name,
+                score1: score1,
+                player2: player2Name,
+                score2: score2,
+                timestamp: timestamp
+            };
+
+            document.getElementById('status-message').textContent = "Enviando datos...";
+            document.getElementById('status-message').style.color = "blue";
+
+            // URL del Web App de Google Apps Script
+            const scriptUrl = "https://script.google.com/macros/s/AKfycbwVPttSZrhwfWwSZpFo7KWjJ39vldQm3MPGykMWEPWOoF4UsZ24mC8YhgiaE-0xm_7G/exec";
+
+            fetch(scriptUrl, {
+                method: "POST",
+                mode: "no-cors",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data)
+            })
+            .then(() => {
+                document.getElementById('status-message').textContent = "Resultados enviados correctamente!";
+                document.getElementById('status-message').style.color = "green";
+            })
+            .catch(error => {
+                document.getElementById('status-message').textContent = "Error al enviar resultados: " + error.message;
+                document.getElementById('status-message').style.color = "red";
+                console.error("Error:", error);
+            });
         }
     </script>
 </body>
