@@ -1,13 +1,17 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Movimiento de Tortuga: Dos Jugadores</title>
     <style>
         body {
             transition: background-color 0.5s;
             display: flex;
             justify-content: space-around;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
         }
 
         .game-area {
@@ -17,6 +21,8 @@
             gap: 10px;
             width: 50%;
             transition: background-color 0.5s;
+            padding: 10px;
+            box-sizing: border-box;
         }
 
         .grid-container {
@@ -73,43 +79,123 @@
         }
 
         .divider {
-            height: 100%;
+            height: 100vh;
             width: 2px;
             background-color: black;
-            position: absolute;
+            position: fixed;
             left: 50%;
+            transform: translateX(-50%);
+        }
+
+        #send-results {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 100;
+        }
+
+        #status-message {
+            position: fixed;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #333;
+            font-weight: bold;
+            z-index: 100;
+            background-color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+
+        #player-names-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #player-names-form {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            width: 300px;
+        }
+
+        #player-names-form h2 {
+            margin-top: 0;
+        }
+
+        #player-names-form input {
+            margin: 10px;
+            padding: 8px;
+            width: 80%;
+        }
+
+        #player-names-form button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
+    <div id="player-names-modal">
+        <div id="player-names-form">
+            <h2>Ingresa los nombres</h2>
+            <input type="text" id="player1-name" placeholder="Jugador Izquierdo" required>
+            <input type="text" id="player2-name" placeholder="Jugador Derecho" required>
+            <button id="start-game">Comenzar Juego</button>
+        </div>
+    </div>
 
     <div class="game-area" id="leftArea">
-        <h2>Jugador Izquierdo</h2>
+        <h2 id="player1-title">Jugador Izquierdo</h2>
         <div class="grid-container" id="gridLeft"></div>
         <div class="score" id="scoreLeft">Punt: 0</div>
         <div class="instructions">
             Controles:<br>
             W - Avanzar<br>
             S - Retroceder<br>
-            A - Girar a la izquierda 90&deg;<br>
-            D - Girar a la derecha 90&deg;
+            A - Girar izquierda<br>
+            D - Girar derecha
         </div>
     </div>
 
     <div class="divider"></div>
 
     <div class="game-area" id="rightArea">
-        <h2>Jugador Derecho</h2>
+        <h2 id="player2-title">Jugador Derecho</h2>
         <div class="grid-container" id="gridRight"></div>
         <div class="score" id="scoreRight">Punt: 0</div>
         <div class="instructions">
             Controles:<br>
-            Flecha Arriba - Avanzar<br>
-            Flecha Abajo - Retroceder<br>
-            Flecha Izquierda - Girar a la izquierda 90&deg;<br>
-            Flecha Derecha - Girar a la derecha 90&deg;
+            ↑ - Avanzar<br>
+            ↓ - Retroceder<br>
+            ← - Girar izquierda<br>
+            → - Girar derecha
         </div>
     </div>
+
+    <button id="send-results">Enviar resultados</button>
+    <div id="status-message"></div>
 
     <script>
         const gridSize = 6;
@@ -120,7 +206,8 @@
                 score: 0,
                 rewards: [],
                 obstacles: [],
-                currentRewardIndex: 0
+                currentRewardIndex: 0,
+                name: ""
             },
             right: {
                 position: { x: 0, y: 0 },
@@ -128,7 +215,8 @@
                 score: 0,
                 rewards: [],
                 obstacles: [],
-                currentRewardIndex: 0
+                currentRewardIndex: 0,
+                name: ""
             }
         };
 
@@ -137,28 +225,58 @@
             player.obstacles = [];
 
             const usedPositions = new Set();
+            const rewardPositions = [];
 
             function positionKey(pos) {
                 return `${pos.x},${pos.y}`;
             }
 
+            function isPositionValid(pos, positions) {
+                // Verifica que la posición no esté adyacente a ninguna recompensa existente
+                for (const rewardPos of positions) {
+                    const dx = Math.abs(pos.x - rewardPos.x);
+                    const dy = Math.abs(pos.y - rewardPos.y);
+                    if (dx <= 1 && dy <= 1) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
             function uniqueRandomPosition() {
-                let pos;
+                let pos, attempts = 0;
                 do {
                     pos = randomPosition();
-                } while (usedPositions.has(positionKey(pos)));
+                    attempts++;
+                    if (attempts > 100) {
+                        console.error("No se pudo encontrar posición válida");
+                        return null;
+                    }
+                } while (
+                    usedPositions.has(positionKey(pos)) || 
+                    !isPositionValid(pos, rewardPositions)
+                );
+                
                 usedPositions.add(positionKey(pos));
                 return pos;
             }
 
+            // Generar recompensas (1-4) que no se toquen
             for (let i = 0; i < 4; i++) {
                 const rewardPos = uniqueRandomPosition();
+                if (!rewardPos) break;
+                
+                rewardPositions.push(rewardPos);
                 player.rewards.push({ ...rewardPos, order: i + 1 });
             }
 
+            // Generar obstáculos
             for (let i = 0; i < 3; i++) {
-                const obstaclePos = uniqueRandomPosition();
-                player.obstacles.push(obstaclePos);
+                const obstaclePos = randomPosition();
+                if (!usedPositions.has(positionKey(obstaclePos))) {
+                    player.obstacles.push(obstaclePos);
+                    usedPositions.add(positionKey(obstaclePos));
+                }
             }
         }
 
@@ -215,15 +333,11 @@
                 if (player.direction === 270) newPosition.y++;
             }
 
-            if (
-                newPosition.x < 0 ||
-                newPosition.x >= gridSize ||
-                newPosition.y < 0 ||
-                newPosition.y >= gridSize
-            ) {
+            if (newPosition.x < 0 || newPosition.x >= gridSize || 
+                newPosition.y < 0 || newPosition.y >= gridSize) {
                 player.score--;
                 updateScore(player, gridId);
-                return; // Salir si choca con el borde
+                return;
             }
 
             checkPosition(player, newPosition, gridId);
@@ -249,7 +363,7 @@
                         generateRewardsAndObstacles(player);
                     }
                 } else {
-                    return; // No avanzar si no es el orden correcto
+                    return;
                 }
             }
 
@@ -277,45 +391,89 @@
             renderGrid(player, gridId);
         }
 
-        window.addEventListener("keydown", (event) => {
-            switch (event.key) {
-                // Controles del jugador izquierdo
-                case "w":
-                    movePlayer(players.left, "forward", "gridLeft");
-                    break;
-                case "s":
-                    movePlayer(players.left, "backward", "gridLeft");
-                    break;
-                case "a":
-                    rotatePlayer(players.left, -90, "gridLeft");
-                    break;
-                case "d":
-                    rotatePlayer(players.left, 90, "gridLeft");
-                    break;
-
-                // Controles del jugador derecho
-                case "ArrowUp":
-                    movePlayer(players.right, "forward", "gridRight");
-                    break;
-                case "ArrowDown":
-                    movePlayer(players.right, "backward", "gridRight");
-                    break;
-                case "ArrowLeft":
-                    rotatePlayer(players.right, -90, "gridRight");
-                    break;
-                case "ArrowRight":
-                    rotatePlayer(players.right, 90, "gridRight");
-                    break;
+        function sendResultsToGoogleSheets() {
+            if (!players.left.name || !players.right.name) {
+                document.getElementById('status-message').textContent = "Error: Ingresa nombres primero";
+                document.getElementById('status-message').style.color = "red";
+                return;
             }
+
+            const timestamp = new Date().toLocaleString();
+
+            const data = {
+                player1: "Milogo2 " + players.left.name,
+                score1: players.left.score,
+                player2: "Milogo2 " + players.right.name,
+                score2: players.right.score,
+                timestamp: timestamp
+            };
+
+            document.getElementById('status-message').textContent = "Enviando datos...";
+            document.getElementById('status-message').style.color = "blue";
+
+            const scriptUrl = "https://script.google.com/macros/s/AKfycbwVPttSZrhwfWwSZpFo7KWjJ39vldQm3MPGykMWEPWOoF4UsZ24mC8YhgiaE-0xm_7G/exec";
+
+            fetch(scriptUrl, {
+                method: "POST",
+                mode: "no-cors",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data)
+            })
+            .then(() => {
+                document.getElementById('status-message').textContent = "Resultados enviados!";
+                document.getElementById('status-message').style.color = "green";
+            })
+            .catch(error => {
+                document.getElementById('status-message').textContent = "Error al enviar";
+                document.getElementById('status-message').style.color = "red";
+                console.error("Error:", error);
+            });
+        }
+
+        // Event listeners
+        document.getElementById('start-game').addEventListener('click', () => {
+            const player1Name = document.getElementById('player1-name').value.trim();
+            const player2Name = document.getElementById('player2-name').value.trim();
+            
+            if (!player1Name || !player2Name) {
+                alert("Ingresa nombres para ambos jugadores");
+                return;
+            }
+            
+            players.left.name = player1Name;
+            players.right.name = player2Name;
+            
+            document.getElementById('player1-title').textContent = player1Name;
+            document.getElementById('player2-title').textContent = player2Name;
+            
+            document.getElementById('player-names-modal').style.display = 'none';
+            
+            generateRewardsAndObstacles(players.left);
+            generateRewardsAndObstacles(players.right);
+            renderGrid(players.left, "gridLeft");
+            renderGrid(players.right, "gridRight");
         });
 
-        // Inicializar los jugadores
-        generateRewardsAndObstacles(players.left);
-        generateRewardsAndObstacles(players.right);
-        renderGrid(players.left, "gridLeft");
-        renderGrid(players.right, "gridRight");
-    </script>
+        document.getElementById('send-results').addEventListener('click', sendResultsToGoogleSheets);
 
+        window.addEventListener("keydown", (event) => {
+            if (document.getElementById('player-names-modal').style.display === 'flex') {
+                return;
+            }
+
+            switch (event.key) {
+                case "w": movePlayer(players.left, "forward", "gridLeft"); break;
+                case "s": movePlayer(players.left, "backward", "gridLeft"); break;
+                case "a": rotatePlayer(players.left, -90, "gridLeft"); break;
+                case "d": rotatePlayer(players.left, 90, "gridLeft"); break;
+                case "ArrowUp": movePlayer(players.right, "forward", "gridRight"); break;
+                case "ArrowDown": movePlayer(players.right, "backward", "gridRight"); break;
+                case "ArrowLeft": rotatePlayer(players.right, -90, "gridRight"); break;
+                case "ArrowRight": rotatePlayer(players.right, 90, "gridRight"); break;
+            }
+        });
+    </script>
 </body>
 </html>
-
