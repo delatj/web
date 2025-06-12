@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Generador de Informes Individualizados</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    body { 
+      font-family: 'Segoe UI', Arial, sans-serif; 
+      font-size: 12px; 
+      padding: 20px; 
+      background-color: #f5f5f5;
+    }
+    h1 { 
+      color: #2c3e50; 
+      margin-bottom: 20px; 
+      font-size: 18px;
+      text-align: center;
+    }
+    .informe { 
+      background: white;
+      border: 1px solid #e0e0e0; 
+      padding: 20px; 
+      margin: 20px 0; 
+      page-break-after: always; 
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      margin-top: 12px; 
+      font-size: 11px; 
+      border: 1px solid #000000;
+    }
+    th, td { 
+      border: 1px solid #000000; 
+      padding: 6px; 
+      text-align: left; 
+      vertical-align: top;
+    }
+    th { 
+      background-color: #3498db;
+      color: #000000;
+      font-weight: bold;
+    }
+    tr:nth-child(even) {
+      background-color: #f8f9fa;
+    }
+    tr:nth-child(odd) {
+      background-color: #ffffff;
+    }
+    tr:hover {
+      background-color: #e8f4fc;
+    }
+    .boton { 
+      margin-top: 12px; 
+      padding: 8px 16px; 
+      font-size: 12px; 
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .boton:hover { 
+      background-color: #2980b9; 
+    }
+    .boton-secundario {
+      background-color: #6c757d;
+    }
+    .boton-secundario:hover {
+      background-color: #5a6268;
+    }
+    .boton-peligro {
+      background-color: #dc3545;
+    }
+    .boton-peligro:hover {
+      background-color: #c82333;
+    }
+    label { 
+      display: block; 
+      margin-top: 12px; 
+      font-weight: 600;
+      color: #34495e;
+    }
+    input, select, textarea {
+      padding: 8px;
+      margin-top: 4px;
+      width: 100%;
+      max-width: 300px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    textarea {
+      min-height: 80px;
+      max-width: 500px;
+    }
+    .no-print { 
+      margin-bottom: 30px; 
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .botones-informe {
+      margin-top: 18px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .competencia, .criterio {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      line-height: 1.4;
+    }
+    .propuestas-actividades {
+      font-size: 11px;
+      margin: 10px 0;
+      font-style: italic;
+      color: #555;
+      padding: 8px;
+      background-color: #f8f9fa;
+      border-left: 3px solid #3498db;
+    }
+    .departamento {
+      font-size: 12px;
+      font-weight: 600;
+      margin: 5px 0 10px 0;
+      color: #3498db;
+    }
+    .cabecera-informe {
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+      margin-bottom: 15px;
+    }
+    .grupo-campos {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 15px;
+    }
+    .campo-formulario {
+      flex: 1;
+      min-width: 200px;
+    }
+    .loading {
+      display: none;
+      margin: 10px 0;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 4px;
+      text-align: center;
+    }
+    .error-message {
+      color: #dc3545;
+      margin-top: 5px;
+      font-size: 11px;
+      display: none;
+    }
+    .resumen-alumnos {
+      margin-top: 20px;
+      padding: 10px;
+      background: #e8f4fc;
+      border-radius: 4px;
+      font-size: 11px;
+    }
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 5mm;
+      }
+      body { 
+        padding: 0 !important;
+        background: white !important;
+        font-size: 9px !important;
+      }
+      .no-print { 
+        display: none !important; 
+      }
+      .informe { 
+        margin: 0 !important;
+        padding: 5px !important;
+        border: none !important;
+        box-shadow: none !important;
+        page-break-after: always !important;
+      }
+      table { 
+        font-size: 8px !important;
+        width: 98% !important;
+        margin: 2px auto !important;
+        border: 1px solid #000 !important;
+      }
+      th, td {
+        border: 1px solid #000 !important;
+        padding: 3px 2px !important;
+      }
+      th {
+        background-color: #3498db !important;
+        color: #000 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      tr:nth-child(even) {
+        background-color: #f8f9fa !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      tr:nth-child(odd) {
+        background-color: #ffffff !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      h2 {
+        font-size: 12px !important;
+        margin: 2px 0 !important;
+      }
+      h3 {
+        font-size: 10px !important;
+        margin: 6px 0 2px 0 !important;
+      }
+      .propuestas-actividades {
+        font-size: 8px !important;
+        margin: 4px 0 !important;
+        border-left: 3px solid #000 !important;
+        background-color: transparent !important;
+        padding: 4px !important;
+      }
+      .cabecera-informe {
+        padding-bottom: 2px !important;
+        margin-bottom: 5px !important;
+      }
+      .competencia, .criterio {
+        line-height: 1.2 !important;
+      }
+      .departamento {
+        font-size: 10px !important;
+        margin: 2px 0 4px 0 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<h1>Generador de Informes Individualizados</h1>
+
+<div class="no-print">
+  <div class="grupo-campos">
+    <div class="campo-formulario">
+      <label>Fecha: <input type="date" id="fecha" required></label>
+      <div class="error-message" id="error-fecha">Por favor, ingrese una fecha válida</div>
+    </div>
+    <div class="campo-formulario">
+      <label>Curso: <input type="text" id="curso" placeholder="Ej: 1º ESO" required></label>
+      <div class="error-message" id="error-curso">Por favor, ingrese un curso</div>
+    </div>
+    <div class="campo-formulario">
+      <label>Año del informe: <input type="number" id="anio" value="2024" min="2000" max="2100" required></label>
+      <div class="error-message" id="error-anio">Ingrese un año entre 2000 y 2100</div>
+    </div>
+  </div>
+
+  <div class="grupo-campos">
+    <div class="campo-formulario">
+      <label>Nombre del Centro: <input type="text" id="centro" value="IES Almudeyne" required></label>
+      <div class="error-message" id="error-centro">Ingrese el nombre del centro</div>
+    </div>
+    <div class="campo-formulario">
+      <label>Departamento: <input type="text" id="departamento" value="Departamento de Tecnología" required></label>
+      <div class="error-message" id="error-departamento">Ingrese el nombre del departamento</div>
+    </div>
+    <div class="campo-formulario">
+      <label>Profesor/a: <input type="text" id="profesor" placeholder="Nombre del profesor" required></label>
+      <div class="error-message" id="error-profesor">Ingrese el nombre del profesor</div>
+    </div>
+  </div>
+
+  <div class="campo-formulario">
+    <label>Propuestas de actividades (aparecerá en todos los informes):</label>
+    <textarea id="propuestas-actividades">Repasar los contenidos de la materia y los ejercicios prácticos realizados durante el curso, usar para ello las plataformas digitales empleadas como Classroom o Moodle.</textarea>
+  </div>
+
+  <div class="campo-formulario">
+    <label>Archivo Excel: <input type="file" id="fileInput" accept=".xlsx, .xls" required></label>
+    <div class="error-message" id="error-archivo">Seleccione un archivo Excel válido</div>
+    <small>Formato requerido: Primera fila competencias, segunda fila criterios, filas siguientes alumnos</small>
+  </div>
+
+  <div class="loading" id="loading">
+    <p>Procesando archivo, por favor espere...</p>
+  </div>
+
+  <button class="boton" onclick="validarYProcesar()">Generar Informes</button>
+  <button class="boton boton-secundario" onclick="limpiarFormulario()">Limpiar Formulario</button>
+  
+  <div class="resumen-alumnos" id="resumen-alumnos" style="display: none;">
+    <strong>Resumen:</strong> Se generarán informes para <span id="cantidad-alumnos">0</span> alumnos
+  </div>
+</div>
+
+<div id="informesContainer"></div>
+
+<script>
+// Configuración de jsPDF
+const { jsPDF } = window.jspdf;
+
+function validarYProcesar() {
+  // Validar campos obligatorios
+  const fecha = document.getElementById('fecha').value;
+  const curso = document.getElementById('curso').value;
+  const anio = document.getElementById('anio').value;
+  const centro = document.getElementById('centro').value;
+  const departamento = document.getElementById('departamento').value;
+  const profesor = document.getElementById('profesor').value;
+  const fileInput = document.getElementById('fileInput').files[0];
+  
+  let valido = true;
+  
+  // Validar fecha
+  if (!fecha) {
+    document.getElementById('error-fecha').style.display = 'block';
+    valido = false;
+  } else {
+    document.getElementById('error-fecha').style.display = 'none';
+  }
+  
+  // Validar curso
+  if (!curso.trim()) {
+    document.getElementById('error-curso').style.display = 'block';
+    valido = false;
+  } else {
+    document.getElementById('error-curso').style.display = 'none';
+  }
+  
+  // Validar año
+  if (!anio || anio < 2000 || anio > 2100) {
+    document.getElementById('error-anio').style.display = 'block';
+    valido = false;
+  } else {
+    document.getElementById('error-anio').style.display = 'none';
+  }
+  
+  // Validar centro
+  if (!centro.trim()) {
+    document.getElementById('error-centro').style.display = 'block';
+    valido = false;
+  } else {
+    document.getElementById('error-centro').style.display = 'none';
+  }
+  
+  // Validar departamento
+  if (!departamento.trim()) {
+    document.getElementById('error-departamento').style.display = 'block';
+    valido = false;
+  } else {
+    document.getElementById('error-departamento').style.display = 'none';
+  }
+  
+  // Validar profesor
+  if (!profesor.trim()) {
+    document.getElementById('error-profesor').style.display = 'block';
+    valido = false;
+  } else {
+    document.getElementById('error-profesor').style.display = 'none';
+  }
+  
+  // Validar archivo
+  if (!fileInput) {
+    document.getElementById('error-archivo').style.display = 'block';
+    valido = false;
+  } else {
+    document.getElementById('error-archivo').style.display = 'none';
+  }
+  
+  if (valido) {
+    procesarExcel();
+  }
+}
+
+function limpiarFormulario() {
+  document.getElementById('fecha').value = '';
+  document.getElementById('curso').value = '';
+  document.getElementById('anio').value = '2024';
+  document.getElementById('centro').value = 'IES Almudeyne';
+  document.getElementById('departamento').value = 'Departamento de Tecnología';
+  document.getElementById('profesor').value = '';
+  document.getElementById('propuestas-actividades').value = 'Repasar los contenidos de la materia y los ejercicios prácticos realizados durante el curso, usar para ello las plataformas digitales empleadas como Classroom o Moodle.';
+  document.getElementById('fileInput').value = '';
+  document.getElementById('informesContainer').innerHTML = '';
+  document.getElementById('resumen-alumnos').style.display = 'none';
+  
+  // Ocultar todos los mensajes de error
+  document.querySelectorAll('.error-message').forEach(el => {
+    el.style.display = 'none';
+  });
+}
+
+function procesarExcel() {
+  const fileInput = document.getElementById('fileInput');
+  const file = fileInput.files[0];
+  
+  // Mostrar loading
+  document.getElementById('loading').style.display = 'block';
+  
+  const reader = new FileReader();
+
+  reader.onload = function(e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      const excelData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: "" });
+      
+      generarInformes(excelData);
+      
+      // Ocultar loading
+      document.getElementById('loading').style.display = 'none';
+    } catch (error) {
+      alert("Error al procesar el archivo: " + error.message);
+      console.error("Error detallado:", error);
+      document.getElementById('loading').style.display = 'none';
+    }
+  };
+
+  reader.onerror = function() {
+    alert("Error al leer el archivo. Por favor, inténtalo de nuevo.");
+    document.getElementById('loading').style.display = 'none';
+  };
+
+  reader.readAsArrayBuffer(file);
+}
+
+function generarInformes(data) {
+  const fechaInput = document.getElementById('fecha').value;
+  const curso = document.getElementById('curso').value;
+  const anio = document.getElementById('anio').value;
+  const centro = document.getElementById('centro').value;
+  const departamento = document.getElementById('departamento').value;
+  const profesor = document.getElementById('profesor').value;
+  const propuestas = document.getElementById('propuestas-actividades').value;
+  const fechaFormateada = formatearFecha(fechaInput);
+
+  const contenedor = document.getElementById('informesContainer');
+  contenedor.innerHTML = "";
+
+  if (!data || data.length < 3) {
+    alert("El archivo no contiene datos suficientes.");
+    return;
+  }
+
+  // Procesar estructura del Excel
+  const filaCompetencias = data[0];
+  const filaCriterios = data[1];
+  const filaAlumnos = 2;
+
+  // Crear mapa de columnas a competencias y criterios
+  const mapaColumnas = {};
+  for (let col = 1; col < filaCompetencias.length; col++) {
+    const competencia = filaCompetencias[col] || "";
+    const criterio = filaCriterios[col] || "";
+    
+    if (competencia || criterio) {
+      mapaColumnas[col] = {
+        competencia: competencia,
+        criterio: criterio
+      };
+    }
+  }
+
+  // Contador de alumnos
+  let totalAlumnos = 0;
+
+  // Procesar alumnos
+  for (let fila = filaAlumnos; fila < data.length; fila++) {
+    const filaAlumno = data[fila];
+    if (filaAlumno.length === 0) continue;
+
+    const nombre = filaAlumno[0];
+    if (!nombre || nombre.trim() === "") continue;
+
+    const superados = [];
+    const noSuperados = [];
+
+    for (let col = 1; col < filaAlumno.length; col++) {
+      const notaStr = String(filaAlumno[col]).replace(",", ".").trim();
+      const nota = parseFloat(notaStr);
+      if (isNaN(nota)) continue;
+
+      const columnaInfo = mapaColumnas[col] || {
+        competencia: "Competencia no definida",
+        criterio: "Criterio no definido"
+      };
+
+      const item = {
+        competencia: columnaInfo.competencia,
+        criterio: columnaInfo.criterio
+      };
+
+      if (nota >= 5) {
+        superados.push(item);
+      } else {
+        noSuperados.push(item);
+      }
+    }
+
+    // Generar informe para el alumno
+    const div = document.createElement('div');
+    div.className = "informe";
+    div.innerHTML = `
+      <div class="cabecera-informe">
+        <h2 style="margin:0;">INFORME INDIVIDUALIZADO ${anio}</h2>
+        <div class="departamento">${departamento} - ${centro}</div>
+        <p style="margin:8px 0;">
+          <strong>Nombre del alumno/a:</strong> ${nombre}<br>
+          <strong>Profesor/a:</strong> ${profesor}<br>
+          <strong>Fecha:</strong> ${fechaFormateada}<br>
+          <strong>Curso:</strong> ${curso}
+        </p>
+        <div class="propuestas-actividades">
+          ${propuestas}
+        </div>
+      </div>
+      
+      <h3>Criterios no superados (nota < 5)</h3>
+      ${crearTabla(noSuperados)}
+      
+      <h3>Criterios superados (nota ≥ 5)</h3>
+      ${crearTabla(superados)}
+      
+      <div class="botones-informe no-print">
+        <button class="boton" onclick="imprimirInformeIndividual(this.parentNode.parentNode)">Imprimir Informe</button>
+      </div>
+    `;
+    contenedor.appendChild(div);
+    totalAlumnos++;
+  }
+
+  // Actualizar resumen
+  if (totalAlumnos > 0) {
+    document.getElementById('cantidad-alumnos').textContent = totalAlumnos;
+    document.getElementById('resumen-alumnos').style.display = 'block';
+  } else {
+    alert("No se encontraron alumnos en el archivo.");
+  }
+}
+
+function crearTabla(items) {
+  if (items.length === 0) return "<p style='color:#555; font-style:italic;'>Ninguno</p>";
+  
+  let html = `
+    <table>
+      <tr>
+        <th width="40%">Competencia específica</th>
+        <th width="60%">Criterio de evaluación</th>
+      </tr>
+  `;
+  
+  for (const item of items) {
+    html += `
+      <tr>
+        <td class="competencia">${item.competencia}</td>
+        <td class="criterio">${item.criterio}</td>
+      </tr>
+    `;
+  }
+  
+  html += "</table>";
+  return html;
+}
+
+function formatearFecha(fechaStr) {
+  if (!fechaStr) return "";
+  const [anio, mes, dia] = fechaStr.split("-");
+  return `${dia}/${mes}/${anio}`;
+}
+
+function imprimirInformeIndividual(elemento) {
+  const ventana = window.open('', 'PRINT', 'height=600,width=800');
+  ventana.document.write('<html><head><title>Informe Individualizado</title>');
+  ventana.document.write('<style>body { font-family: Arial; font-size: 9px; margin: 0; padding: 5mm; }');
+  ventana.document.write('table { width: 98%; border-collapse: collapse; font-size: 8px; border: 1px solid #000 !important; margin: 2px auto; }');
+  ventana.document.write('th, td { border: 1px solid #000 !important; padding: 3px 2px !important; }');
+  ventana.document.write('th { background-color: #3498db !important; color: #000 !important; font-weight: bold; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }');
+  ventana.document.write('tr:nth-child(even) { background-color: #f8f9fa !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }');
+  ventana.document.write('tr:nth-child(odd) { background-color: #ffffff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }');
+  ventana.document.write('h2 { font-size: 12px !important; margin: 2px 0 !important; }');
+  ventana.document.write('.departamento { font-size: 10px !important; font-weight: 600; margin: 2px 0 4px 0 !important; color: #3498db; }');
+  ventana.document.write('.propuestas-actividades { font-size: 8px !important; margin: 4px 0 !important; font-style: italic; border-left: 3px solid #000 !important; padding-left: 4px !important; }');
+  ventana.document.write('h3 { font-size: 10px !important; margin: 6px 0 2px 0 !important; }');
+  ventana.document.write('.competencia, .criterio { white-space: pre-wrap !important; line-height: 1.2 !important; }');
+  ventana.document.write('</style></head><body>');
+  
+  // Clonar el elemento para modificar estilos de impresión
+  const clone = elemento.cloneNode(true);
+  const botones = clone.querySelector('.botones-informe');
+  if (botones) botones.style.display = 'none';
+  
+  ventana.document.write(clone.innerHTML);
+  ventana.document.write('</body></html>');
+  ventana.document.close();
+  ventana.focus();
+  
+  setTimeout(() => {
+    ventana.print();
+    ventana.close();
+  }, 500);
+}
+
+async function descargarInformePDF(elemento, nombreAlumno) {
+  try {
+    // Mostrar mensaje de carga
+    const originalBoton = elemento.querySelector(`button[onclick*="${nombreAlumno.replace(/'/g, "\\'")}"]`);
+    if (originalBoton) {
+      originalBoton.disabled = true;
+      originalBoton.textContent = 'Generando PDF...';
+    }
+    
+    // Crear un clon del elemento para modificar estilos temporalmente
+    const clone = elemento.cloneNode(true);
+    
+    // Ocultar botones en el PDF
+    const botones = clone.querySelector('.botones-informe');
+    if (botones) botones.style.display = 'none';
+    
+    // Aplicar estilos de impresión al clon
+    clone.style.width = '210mm';
+    clone.style.margin = '0 auto';
+    clone.style.padding = '10mm';
+    clone.style.boxShadow = 'none';
+    clone.style.border = 'none';
+    clone.style.background = 'white';
+    
+    // Asegurar que las tablas tengan el ancho correcto
+    const tables = clone.querySelectorAll('table');
+    tables.forEach(table => {
+      table.style.width = '100%';
+    });
+    
+    // Crear PDF
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    
+    // Usar html2canvas para convertir el HTML a imagen
+    await html2canvas(clone, {
+      scale: 2,
+      logging: false,
+      useCORS: true,
+      allowTaint: true,
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: clone.scrollWidth,
+      windowHeight: clone.scrollHeight
+    }).then(canvas => {
+      const imgData = canvas.toDataURL('image/png');
+      const imgWidth = 190; // Ancho máximo en mm (A4 con márgenes)
+      const pageHeight = 277; // Altura máxima en mm (A4 con márgenes)
+      const imgHeight = canvas.height * imgWidth / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+      
+      // Descargar el PDF
+      pdf.save(`Informe_${nombreAlumno}.pdf`);
+    });
+    
+  } catch (error) {
+    console.error("Error al generar PDF:", error);
+    alert("Error al generar el PDF. Por favor, inténtelo de nuevo.");
+  } finally {
+    // Restaurar el botón original
+    if (originalBoton) {
+      originalBoton.disabled = false;
+      originalBoton.textContent = 'Descargar PDF';
+    }
+  }
+}
+
+async function descargarTodosPDF() {
+  const informes = document.querySelectorAll('.informe');
+  if (informes.length === 0) {
+    alert("No hay informes para descargar.");
+    return;
+  }
+  
+  const confirmacion = confirm(`¿Desea descargar ${informes.length} informes como archivos PDF individuales?`);
+  if (!confirmacion) return;
+  
+  // Deshabilitar el botón durante el proceso
+  const botonDescargarTodos = document.querySelector('button[onclick="descargarTodosPDF()"]');
+  const textoOriginal = botonDescargarTodos.textContent;
+  botonDescargarTodos.disabled = true;
+  botonDescargarTodos.textContent = 'Generando PDFs...';
+  
+  try {
+    // Descargar cada informe uno por uno con un retraso
+    for (let i = 0; i < informes.length; i++) {
+      const informe = informes[i];
+      const nombreAlumno = informe.querySelector('p strong:first-child')?.nextSibling?.textContent?.trim() || `alumno_${i+1}`;
+      const nombreSeguro = nombreAlumno.replace(/[/\\?%*:|"<>]/g, '_');
+      
+      // Esperar antes de cada descarga para evitar bloqueos del navegador
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Descargar el informe actual
+      await descargarInformePDF(informe, nombreSeguro);
+    }
+    
+    alert(`Se han descargado ${informes.length} informes correctamente.`);
+  } catch (error) {
+    console.error("Error al descargar todos los PDFs:", error);
+    alert("Ocurrió un error al descargar algunos informes.");
+  } finally {
+    // Restaurar el botón
+    botonDescargarTodos.disabled = false;
+    botonDescargarTodos.textContent = textoOriginal;
+  }
+}
+</script>
+
+<div class="no-print" style="margin-top: 20px; text-align: center;">
+  <button class="boton" onclick="descargarTodosPDF()">Descargar Todos los Informes (PDF)</button>
+  <button class="boton boton-peligro" onclick="limpiarFormulario()">Limpiar Todo</button>
+</div>
+
+</body>
+</html>
