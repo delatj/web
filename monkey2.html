@@ -400,10 +400,11 @@
             const score2 = mono2.puntos;
             const timestamp = new Date().toLocaleString();
 
+            // Modificación: Añadir "Tetris" delante de los nombres de los jugadores
             const data = {
-                player1: player1Name,
+                player1: "Monkey2 " + player1Name,
                 score1: score1,
-                player2: player2Name,
+                player2: "Monkey2 " + player2Name,
                 score2: score2,
                 timestamp: timestamp
             };
