@@ -169,6 +169,39 @@
       border-radius: 4px;
       font-size: 11px;
     }
+    /* Estilos para el índice de alumnos */
+    .indice-alumnos {
+      background: white;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .indice-alumnos h2 {
+      margin-top: 0;
+      color: #2c3e50;
+      font-size: 16px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 8px;
+    }
+    .lista-alumnos {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .alumno-link {
+      padding: 6px 12px;
+      background-color: #e8f4fc;
+      border-radius: 4px;
+      color: #2c3e50;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .alumno-link:hover {
+      background-color: #3498db;
+      color: white;
+    }
     @media print {
       @page {
         size: A4 portrait;
@@ -241,6 +274,9 @@
         font-size: 10px !important;
         margin: 2px 0 4px 0 !important;
       }
+      .indice-alumnos {
+        display: none !important;
+      }
     }
   </style>
 </head>
@@ -302,6 +338,10 @@
   </div>
 </div>
 
+<!-- Contenedor para el índice de alumnos -->
+<div id="indiceContainer" class="indice-alumnos no-print" style="display: none;"></div>
+
+<!-- Contenedor para los informes individuales -->
 <div id="informesContainer"></div>
 
 <script>
@@ -391,6 +431,7 @@ function limpiarFormulario() {
   document.getElementById('propuestas-actividades').value = 'Repasar los contenidos de la materia y los ejercicios prácticos realizados durante el curso, usar para ello las plataformas digitales empleadas como Classroom o Moodle.';
   document.getElementById('fileInput').value = '';
   document.getElementById('informesContainer').innerHTML = '';
+  document.getElementById('indiceContainer').style.display = 'none';
   document.getElementById('resumen-alumnos').style.display = 'none';
   
   // Ocultar todos los mensajes de error
@@ -434,6 +475,27 @@ function procesarExcel() {
   reader.readAsArrayBuffer(file);
 }
 
+function generarIndiceAlumnos(alumnos) {
+  const indiceContainer = document.getElementById('indiceContainer');
+  indiceContainer.innerHTML = '';
+  
+  if (alumnos.length === 0) {
+    indiceContainer.style.display = 'none';
+    return;
+  }
+  
+  let html = '<h2>Índice de Alumnos</h2><div class="lista-alumnos">';
+  
+  alumnos.forEach(alumno => {
+    const idAlumno = alumno.replace(/\s+/g, '-').toLowerCase();
+    html += `<a href="#${idAlumno}" class="alumno-link">${alumno}</a>`;
+  });
+  
+  html += '</div>';
+  indiceContainer.innerHTML = html;
+  indiceContainer.style.display = 'block';
+}
+
 function generarInformes(data) {
   const fechaInput = document.getElementById('fecha').value;
   const curso = document.getElementById('curso').value;
@@ -471,8 +533,9 @@ function generarInformes(data) {
     }
   }
 
-  // Contador de alumnos
+  // Contador de alumnos y lista para el índice
   let totalAlumnos = 0;
+  const listaAlumnos = [];
 
   // Procesar alumnos
   for (let fila = filaAlumnos; fila < data.length; fila++) {
@@ -484,6 +547,7 @@ function generarInformes(data) {
 
     const superados = [];
     const noSuperados = [];
+    const idAlumno = nombre.replace(/\s+/g, '-').toLowerCase();
 
     for (let col = 1; col < filaAlumno.length; col++) {
       const notaStr = String(filaAlumno[col]).replace(",", ".").trim();
@@ -510,6 +574,7 @@ function generarInformes(data) {
     // Generar informe para el alumno
     const div = document.createElement('div');
     div.className = "informe";
+    div.id = idAlumno;
     div.innerHTML = `
       <div class="cabecera-informe">
         <h2 style="margin:0;">INFORME INDIVIDUALIZADO ${anio}</h2>
@@ -533,11 +598,16 @@ function generarInformes(data) {
       
       <div class="botones-informe no-print">
         <button class="boton" onclick="imprimirInformeIndividual(this.parentNode.parentNode)">Imprimir Informe</button>
+        <button class="boton boton-secundario" onclick="descargarInformePDF(this.parentNode.parentNode, '${nombre.replace(/'/g, "\\'")}')">Descargar PDF</button>
       </div>
     `;
     contenedor.appendChild(div);
+    listaAlumnos.push(nombre);
     totalAlumnos++;
   }
+
+  // Generar índice de alumnos
+  generarIndiceAlumnos(listaAlumnos);
 
   // Actualizar resumen
   if (totalAlumnos > 0) {
