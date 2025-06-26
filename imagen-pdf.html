@@ -3,82 +3,392 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Varias Imágenes a PDF</title>
+    <title>Conversor a PDF</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .image-container {
+            position: relative;
+            display: inline-block;
+            margin: 10px;
+            text-align: center;
+        }
+        .image-preview {
+            max-height: 150px;
+            max-width: 200px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+        }
+        .image-controls {
+            margin-top: 5px;
+        }
+        .thumbnail {
+            border: 1px solid #ddd;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+        }
+        #thumbnails {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 20px;
+            justify-content: center;
+        }
+        button {
+            margin: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        .delete-btn {
+            background-color: #ff4444;
+            color: white;
+            border: none;
+        }
+        .rotate-btn {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+        }
+        .file-info {
+            font-size: 12px;
+            margin-top: 5px;
+            word-break: break-all;
+            max-width: 200px;
+        }
+        #main-controls {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        input[type="file"] {
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
-    <h2>Convertir Varias Imágenes a un PDF</h2>
+    <h2>Conversor de Imágenes/PDFs a PDF</h2>
+    
+    <div id="main-controls">
+        <input type="file" id="fileInput" accept="image/*,.pdf" multiple>
+        <button onclick="addFiles()">Añadir archivos</button>
+        <br><br>
+        
+        <label for="pdfName">Nombre del PDF:</label>
+        <input type="text" id="pdfName" placeholder="Nombre del archivo" value="documento">
+        <br><br>
+        
+        <button onclick="downloadPDF()">Generar PDF</button>
+        <button onclick="clearAll()">Eliminar todos</button>
+    </div>
 
-    <input type="file" id="imageInput" accept="image/*">
-    <button onclick="addImage()">Añadir siguiente imagen</button>
-    <br><br>
-
-    <label for="pdfName">Nombre del PDF:</label>
-    <input type="text" id="pdfName" placeholder="Nombre del archivo">
-    <br><br>
-
-    <button onclick="downloadPDF()">Descargar PDF</button>
-
-    <h3>Imágenes añadidas:</h3>
-    <ul id="imageList"></ul>
+    <h3>Vista previa (igual al PDF final):</h3>
+    <div id="thumbnails"></div>
 
     <script>
+        // Configurar PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js';
         const { jsPDF } = window.jspdf;
-        const images = [];
+        
+        let files = [];
 
-        function addImage() {
-            const input = document.getElementById("imageInput");
+        function addFiles() {
+            const input = document.getElementById("fileInput");
             if (!input.files.length) {
-                alert("Por favor, selecciona una imagen.");
+                alert("Por favor, selecciona al menos un archivo.");
                 return;
             }
 
-            const file = input.files[0];
-            const reader = new FileReader();
+            Array.from(input.files).forEach(file => {
+                const reader = new FileReader();
 
-            reader.onload = function (event) {
-                images.push(event.target.result);
-
-                // Mostrar en la lista
-                const li = document.createElement("li");
-                li.textContent = `Imagen ${images.length}`;
-                document.getElementById("imageList").appendChild(li);
-
-                // Limpiar el input para permitir subir la misma imagen otra vez si se desea
-                input.value = "";
-            };
-
-            reader.readAsDataURL(file);
-        }
-
-        function downloadPDF() {
-            if (images.length === 0) {
-                alert("No se han añadido imágenes.");
-                return;
-            }
-
-            const pdfName = document.getElementById("pdfName").value || "archivo";
-            const pdf = new jsPDF();
-
-            images.forEach((imgData, index) => {
-                const img = new Image();
-                img.src = imgData;
-
-                img.onload = function () {
-                    const width = pdf.internal.pageSize.getWidth();
-                    const height = (img.height / img.width) * width;
-                    pdf.addImage(img, 'JPEG', 0, 0, width, height);
-
-                    if (index < images.length - 1) {
-                        pdf.addPage();
-                    }
-
-                    // Guardar solo al final
-                    if (index === images.length - 1) {
-                        pdf.save(pdfName + ".pdf");
+                reader.onload = function(event) {
+                    if (file.type.startsWith('image/')) {
+                        // Procesar imagen con EXIF
+                        EXIF.getData(file, function() {
+                            const exifOrientation = EXIF.getTag(this, 'Orientation') || 1;
+                            processImageFile(file, event.target.result, exifOrientation);
+                        });
+                    } else {
+                        // Procesar PDF u otros archivos
+                        processNonImageFile(file, event.target.result);
                     }
                 };
+
+                reader.readAsArrayBuffer(file);
             });
+
+            input.value = "";
+        }
+
+        function processImageFile(file, arrayBuffer, exifOrientation) {
+            const img = new Image();
+            const url = URL.createObjectURL(new Blob([arrayBuffer]));
+            
+            img.onload = function() {
+                // Corregir orientación según EXIF
+                const canvas = correctOrientation(img, exifOrientation);
+                const correctedDataUrl = canvas.toDataURL('image/jpeg');
+                
+                const fileData = {
+                    id: Date.now() + Math.random().toString(36).substr(2, 9),
+                    data: correctedDataUrl,
+                    type: file.type,
+                    name: file.name,
+                    rotation: 0,
+                    naturalWidth: canvas.width,
+                    naturalHeight: canvas.height
+                };
+
+                files.push(fileData);
+                createThumbnail(fileData);
+                URL.revokeObjectURL(url);
+            };
+            
+            img.src = url;
+        }
+
+        function correctOrientation(img, orientation) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Establecer dimensiones según orientación
+            if (orientation > 4 && orientation < 9) {
+                canvas.width = img.height;
+                canvas.height = img.width;
+            } else {
+                canvas.width = img.width;
+                canvas.height = img.height;
+            }
+            
+            // Transformar según orientación EXIF
+            switch (orientation) {
+                case 2: ctx.transform(-1, 0, 0, 1, canvas.width, 0); break;
+                case 3: ctx.transform(-1, 0, 0, -1, canvas.width, canvas.height); break;
+                case 4: ctx.transform(1, 0, 0, -1, 0, canvas.height); break;
+                case 5: ctx.transform(0, 1, 1, 0, 0, 0); break;
+                case 6: ctx.transform(0, 1, -1, 0, canvas.height, 0); break;
+                case 7: ctx.transform(0, -1, -1, 0, canvas.height, canvas.width); break;
+                case 8: ctx.transform(0, -1, 1, 0, 0, canvas.width); break;
+                default: break;
+            }
+            
+            ctx.drawImage(img, 0, 0);
+            return canvas;
+        }
+
+        function processNonImageFile(file, data) {
+            const fileData = {
+                id: Date.now() + Math.random().toString(36).substr(2, 9),
+                data: URL.createObjectURL(new Blob([data])),
+                type: file.type,
+                name: file.name,
+                rotation: 0
+            };
+
+            files.push(fileData);
+            createThumbnail(fileData);
+        }
+
+        function createThumbnail(fileData) {
+            const thumbnailsContainer = document.getElementById("thumbnails");
+            const container = document.createElement("div");
+            container.className = "image-container thumbnail";
+            container.id = fileData.id;
+
+            const img = document.createElement("img");
+            img.className = "image-preview";
+
+            const controls = document.createElement("div");
+            controls.className = "image-controls";
+
+            const rotateBtn = document.createElement("button");
+            rotateBtn.className = "rotate-btn";
+            rotateBtn.innerHTML = "↻ Rotar";
+            rotateBtn.onclick = () => rotateImage(fileData.id, 90);
+
+            const deleteBtn = document.createElement("button");
+            deleteBtn.className = "delete-btn";
+            deleteBtn.innerHTML = "× Eliminar";
+            deleteBtn.onclick = () => removeImage(fileData.id);
+
+            controls.appendChild(rotateBtn);
+            controls.appendChild(deleteBtn);
+
+            if (fileData.type === "application/pdf") {
+                img.src = "https://cdn-icons-png.flaticon.com/512/337/337946.png";
+                img.alt = "PDF Icon";
+            } else {
+                img.src = fileData.data;
+                
+                // Mostrar exactamente como aparecerá en el PDF
+                const aspectRatio = fileData.naturalWidth / fileData.naturalHeight;
+                const containerWidth = 200;
+                const containerHeight = 150;
+                
+                if (aspectRatio > 1) {
+                    // Horizontal
+                    img.style.width = `${containerWidth}px`;
+                    img.style.height = `${containerWidth / aspectRatio}px`;
+                } else {
+                    // Vertical
+                    img.style.height = `${containerHeight}px`;
+                    img.style.width = `${containerHeight * aspectRatio}px`;
+                }
+            }
+
+            container.appendChild(img);
+            
+            const fileInfo = document.createElement("div");
+            fileInfo.className = "file-info";
+            fileInfo.textContent = fileData.name;
+            container.appendChild(fileInfo);
+            
+            container.appendChild(controls);
+            thumbnailsContainer.appendChild(container);
+        }
+
+        function rotateImage(id, degrees) {
+            const fileIndex = files.findIndex(f => f.id === id);
+            if (fileIndex !== -1) {
+                files[fileIndex].rotation = (files[fileIndex].rotation + degrees) % 360;
+                
+                const container = document.getElementById(id);
+                const img = container.querySelector('img');
+                img.style.transform = `rotate(${files[fileIndex].rotation}deg)`;
+                
+                // Actualizar dimensiones naturales para rotaciones de 90/270 grados
+                if (degrees % 180 !== 0) {
+                    const temp = files[fileIndex].naturalWidth;
+                    files[fileIndex].naturalWidth = files[fileIndex].naturalHeight;
+                    files[fileIndex].naturalHeight = temp;
+                }
+            }
+        }
+
+        function removeImage(id) {
+            files = files.filter(f => f.id !== id);
+            const element = document.getElementById(id);
+            if (element) element.remove();
+        }
+
+        function clearAll() {
+            files.forEach(file => {
+                if (file.type !== "application/pdf") {
+                    URL.revokeObjectURL(file.data);
+                }
+            });
+            files = [];
+            document.getElementById("thumbnails").innerHTML = "";
+        }
+
+        async function downloadPDF() {
+            if (files.length === 0) {
+                alert("No se han añadido archivos.");
+                return;
+            }
+
+            const pdfName = document.getElementById("pdfName").value || "documento";
+            const pdf = new jsPDF();
+            let isFirstPage = true;
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+
+                if (file.type === "application/pdf") {
+                    try {
+                        const loadingTask = pdfjsLib.getDocument(file.data);
+                        const pdfDoc = await loadingTask.promise;
+                        
+                        for (let j = 1; j <= pdfDoc.numPages; j++) {
+                            const page = await pdfDoc.getPage(j);
+                            const viewport = page.getViewport({ scale: 1.0 });
+                            
+                            const canvas = document.createElement('canvas');
+                            const context = canvas.getContext('2d');
+                            canvas.height = viewport.height;
+                            canvas.width = viewport.width;
+                            
+                            await page.render({
+                                canvasContext: context,
+                                viewport: viewport
+                            }).promise;
+                            
+                            const imgData = canvas.toDataURL('image/jpeg');
+                            
+                            if (!isFirstPage) {
+                                pdf.addPage();
+                            } else {
+                                isFirstPage = false;
+                            }
+                            
+                            pdf.addImage(imgData, 'JPEG', 0, 0, pdf.internal.pageSize.getWidth(), pdf.internal.pageSize.getHeight());
+                        }
+                    } catch (error) {
+                        console.error("Error al procesar PDF:", error);
+                        alert(`Error al procesar el PDF ${file.name}. Se omitirá.`);
+                        continue;
+                    }
+                } else {
+                    await new Promise((resolve) => {
+                        const img = new Image();
+                        img.onload = function() {
+                            if (!isFirstPage) {
+                                pdf.addPage();
+                            } else {
+                                isFirstPage = false;
+                            }
+
+                            const pageWidth = pdf.internal.pageSize.getWidth();
+                            const pageHeight = pdf.internal.pageSize.getHeight();
+                            
+                            // Calcular dimensiones manteniendo relación de aspecto
+                            let width, height;
+                            const aspectRatio = file.naturalWidth / file.naturalHeight;
+                            
+                            if (file.rotation % 180 === 90) {
+                                // Imagen rotada
+                                const rotatedAspectRatio = file.naturalHeight / file.naturalWidth;
+                                width = pageHeight * rotatedAspectRatio;
+                                height = pageHeight;
+                                
+                                if (width > pageWidth) {
+                                    width = pageWidth;
+                                    height = pageWidth / rotatedAspectRatio;
+                                }
+                            } else {
+                                // Imagen normal
+                                width = pageWidth;
+                                height = pageWidth / aspectRatio;
+                                
+                                if (height > pageHeight) {
+                                    height = pageHeight;
+                                    width = pageHeight * aspectRatio;
+                                }
+                            }
+                            
+                            // Centrar la imagen
+                            const x = (pageWidth - width) / 2;
+                            const y = (pageHeight - height) / 2;
+                            
+                            pdf.addImage(img, 'JPEG', x, y, width, height, null, file.rotation);
+                            resolve();
+                        };
+                        img.src = file.data;
+                    });
+                }
+            }
+
+            pdf.save(pdfName + ".pdf");
         }
     </script>
 </body>
