@@ -43,7 +43,7 @@
       margin-top: 10px;
       background: #fff;
     }
-    .pdf-container {
+    .pdf-container, .image-container, .audio-block {
       border: 1px solid #ccc;
       margin: 10px 0;
       padding: 5px;
@@ -52,22 +52,22 @@
       box-shadow: 2px 2px 6px rgba(0,0,0,0.15);
       border-radius: 6px;
     }
-    .pdf-controls {
-      text-align: right;
-      margin-bottom: 5px;
+    .pdf-controls, .image-controls {
+      text-align: center;
+      margin-top: 5px;
     }
-    .pdf-controls button {
-      margin-left: 5px;
+    .pdf-controls button, .image-controls button, .audio-block button {
+      margin: 0 5px;
       padding: 2px 6px;
       font-size: 12px;
       border-radius: 4px;
       box-shadow: 1px 1px 4px rgba(0,0,0,0.2);
     }
-    .pdf-controls button:hover {
+    .pdf-controls button:hover, .image-controls button:hover, .audio-block button:hover {
       transform: translateY(-1px);
       box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
     }
-    .pdf-container img {
+    .pdf-container img, .image-container img {
       display: block;
       margin: 10px auto;
       border: 1px solid #aaa;
@@ -129,6 +129,7 @@
     <button onclick="insertTable()">Insertar Tabla</button>
     <button onclick="insertImage()">Insertar Imagen</button>
     <button onclick="insertAudio()">Insertar Audio</button>
+    <button onclick="recordAudio()">Grabar Audio</button>
     <button onclick="insertPDF()">Insertar PDF</button>
     Fondo HTML: 
     <select id="bgColor">
@@ -178,8 +179,10 @@
     // --- Índice automático ---
     let pdfCount = 0;
     let imgCount = 0;
+    let audioCount = 0;
     let indexItems = [];
 
+    // --- Insertar imágenes con controles ---
     function insertImage() {
       const input = document.createElement('input');
       input.type = 'file';
@@ -190,10 +193,46 @@
         reader.onload = evt => {
           imgCount++;
           const id = `img-${imgCount}`;
+
+          const container = document.createElement("div");
+          container.className = "image-container";
+          container.id = id;
+
           const img = document.createElement("img");
           img.src = evt.target.result;
-          img.id = id;
-          document.getElementById("editor").appendChild(img);
+          img.style.maxWidth = "40%"; // Escala inicial
+          container.appendChild(img);
+
+          // Controles
+          const controls = document.createElement("div");
+          controls.className = "image-controls";
+          let scale = 0.4;
+
+          const zoomIn = document.createElement("button");
+          zoomIn.textContent = "+";
+          zoomIn.onclick = () => {
+            scale = Math.min(2.0, scale + 0.2);
+            img.style.maxWidth = (scale * 100) + "%";
+          };
+
+          const zoomOut = document.createElement("button");
+          zoomOut.textContent = "–";
+          zoomOut.onclick = () => {
+            scale = Math.max(0.1, scale - 0.2);
+            img.style.maxWidth = (scale * 100) + "%";
+          };
+
+          const del = document.createElement("button");
+          del.textContent = "Eliminar";
+          del.onclick = () => container.remove();
+
+          controls.appendChild(zoomIn);
+          controls.appendChild(zoomOut);
+          controls.appendChild(del);
+          container.appendChild(controls);
+
+          document.getElementById("editor").appendChild(container);
+
           indexItems.push({ id: id, name: file.name });
         };
         reader.readAsDataURL(file);
@@ -201,6 +240,7 @@
       input.click();
     }
 
+    // --- Insertar audio desde archivo ---
     function insertAudio() {
       const input = document.createElement('input');
       input.type = 'file';
@@ -209,15 +249,49 @@
         const file = e.target.files[0];
         const reader = new FileReader();
         reader.onload = evt => {
-          const audio = `<audio controls src="${evt.target.result}"></audio>`;
-          document.execCommand('insertHTML', false, audio);
+          audioCount++;
+          const id = `audio-${audioCount}`;
+          const block = document.createElement("div");
+          block.className = "audio-block";
+          block.id = id;
+          block.innerHTML = `<audio controls src="${evt.target.result}"></audio> 
+                             <button onclick="this.parentElement.remove()">Eliminar</button>`;
+          document.getElementById("editor").appendChild(block);
         };
         reader.readAsDataURL(file);
       };
       input.click();
     }
 
-    // --- Insertar PDF como imágenes ---
+    // --- Grabador de audio ---
+    function recordAudio() {
+      if (!navigator.mediaDevices) {
+        alert("Grabación no soportada en este navegador");
+        return;
+      }
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+        const mediaRecorder = new MediaRecorder(stream);
+        const chunks = [];
+        mediaRecorder.ondataavailable = e => chunks.push(e.data);
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(chunks, { type: 'audio/ogg; codecs=opus' });
+          const url = URL.createObjectURL(blob);
+          audioCount++;
+          const id = `rec-${audioCount}`;
+          const block = document.createElement("div");
+          block.className = "audio-block";
+          block.id = id;
+          block.innerHTML = `<audio controls src="${url}"></audio> 
+                             <button onclick="this.parentElement.remove()">Eliminar</button>`;
+          document.getElementById("editor").appendChild(block);
+        };
+        mediaRecorder.start();
+        setTimeout(() => mediaRecorder.stop(), 5000); // 5s por defecto
+        alert("Grabando 5 segundos...");
+      });
+    }
+
+    // --- Insertar PDF ---
     function insertPDF() {
       const input = document.createElement('input');
       input.type = 'file';
@@ -296,6 +370,7 @@
       input.click();
     }
 
+    // --- Guardar y cargar ---
     function saveFile() {
       const content = document.getElementById('editor').innerHTML;
       const blob = new Blob([content], { type: 'text/plain' });
@@ -319,6 +394,7 @@
       input.click();
     }
 
+    // --- Descargar HTML con índice ---
     function downloadHTML() {
       const content = document.getElementById('editor').innerHTML;
       const bgColor = document.getElementById('bgColor').value;
@@ -332,7 +408,6 @@
         errorSpan.textContent = "";
       }
 
-      // Índice
       let indexHTML = "<h2>Índice</h2><ul>";
       indexItems.forEach(item => {
         indexHTML += `<li><a href="#${item.id}">${item.name}</a></li>`;
