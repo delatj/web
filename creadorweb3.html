@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Creador de Páginas Web</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    #toolbar {
+      margin-bottom: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: white;
+      padding: 10px;
+      border-bottom: 2px solid #ccc;
+    }
+    #toolbar button, #toolbar select, #toolbar input {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      background-color: #fdfdfd;
+      cursor: pointer;
+      font-size: 14px;
+      box-shadow: 2px 2px 5px rgba(0,0,0,0.15);
+      transition: all 0.2s ease-in-out;
+    }
+    #toolbar button:hover, #toolbar select:hover, #toolbar input:hover {
+      background-color: #f0f0f0;
+      transform: translateY(-1px);
+      box-shadow: 3px 3px 7px rgba(0,0,0,0.25);
+    }
+    #editor {
+      border: 1px solid #ccc;
+      padding: 10px;
+      min-height: 300px;
+      margin-top: 10px;
+      background: #fff;
+    }
+    .pdf-container {
+      border: 1px solid #ccc;
+      margin: 10px 0;
+      padding: 5px;
+      background: #fafafa;
+      position: relative;
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.15);
+      border-radius: 6px;
+    }
+    .pdf-controls {
+      text-align: right;
+      margin-bottom: 5px;
+    }
+    .pdf-controls button {
+      margin-left: 5px;
+      padding: 2px 6px;
+      font-size: 12px;
+      border-radius: 4px;
+      box-shadow: 1px 1px 4px rgba(0,0,0,0.2);
+    }
+    .pdf-controls button:hover {
+      transform: translateY(-1px);
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+    }
+    .pdf-container img {
+      display: block;
+      margin: 10px auto;
+      border: 1px solid #aaa;
+      max-width: 100%;
+      transition: transform 0.2s;
+    }
+    .page-number {
+      text-align: center;
+      font-size: 12px;
+      color: #555;
+      margin-bottom: 10px;
+    }
+  </style>
+
+  <!-- PDF.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+</head>
+<body>
+  <h2>Editor de Páginas Web HTML</h2>
+  <div id="toolbar">
+    <button onclick="execCmd('bold')">Negrita</button>
+    <button onclick="execCmd('italic')">Cursiva</button>
+    <button onclick="execCmd('underline')">Subrayado</button>
+    <select onchange="execCmdArg('fontName', this.value)">
+      <option value="Arial">Arial</option>
+      <option value="Times New Roman">Times New Roman</option>
+      <option value="Georgia">Georgia</option>
+      <option value="Courier New">Courier New</option>
+      <option value="Verdana">Verdana</option>
+    </select>
+    <select onchange="execCmdArg('fontSize', this.value)">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6">6</option>
+      <option value="7">7</option>
+    </select>
+    Color de letra: 
+    <select onchange="execCmdArg('foreColor', this.value)">
+      <option value="black">Negro</option>
+      <option value="gray">Gris</option>
+      <option value="blue">Azul</option>
+      <option value="green">Verde</option>
+      <option value="brown">Marrón</option>
+      <option value="purple">Púrpura</option>
+      <option value="red">Rojo</option>
+    </select>
+    <button onclick="execCmd('justifyLeft')">Izquierda</button>
+    <button onclick="execCmd('justifyCenter')">Centrar</button>
+    <button onclick="execCmd('justifyRight')">Derecha</button>
+    <button onclick="execCmd('justifyFull')">Justificar</button>
+    <button onclick="execCmd('undo')">Deshacer</button>
+    <button onclick="execCmd('redo')">Rehacer</button>
+    <button onclick="execCmd('insertOrderedList')">Lista Numerada</button>
+    <button onclick="execCmd('insertUnorderedList')">Lista Viñetas</button>
+    <button onclick="insertLink()">Insertar Enlace</button>
+    <button onclick="insertTable()">Insertar Tabla</button>
+    <button onclick="insertImage()">Insertar Imagen</button>
+    <button onclick="insertAudio()">Insertar Audio</button>
+    <button onclick="insertPDF()">Insertar PDF</button>
+    Fondo HTML: 
+    <select id="bgColor">
+      <option value="white">Blanco</option>
+      <option value="#f5f5f5">Gris claro</option>
+      <option value="#e6f7ff">Celeste</option>
+      <option value="#e6ffe6">Verde claro</option>
+      <option value="#ffffe6">Amarillo claro</option>
+      <option value="#f9e6ff">Lavanda</option>
+      <option value="#ffe6f2">Rosa claro</option>
+    </select>
+    Título: <input type="text" id="pageTitle" placeholder="Mi página web">
+    <span id="titleError"></span>
+    <button onclick="saveFile()">Guardar</button>
+    <button onclick="loadFile()">Cargar</button>
+    <button onclick="downloadHTML()">Descargar HTML</button>
+  </div>
+
+  <div id="editor" contenteditable="true"></div>
+
+  <script>
+    function execCmd(command) {
+      document.execCommand(command, false, null);
+    }
+    function execCmdArg(command, arg) {
+      document.execCommand(command, false, arg);
+    }
+    function insertLink() {
+      const url = prompt("Introduce la URL:", "http://");
+      if (url) document.execCommand('createLink', false, url);
+    }
+    function insertTable() {
+      const rows = prompt("Número de filas:", 2);
+      const cols = prompt("Número de columnas:", 2);
+      let table = '<table border="1" style="border-collapse:collapse; width:100%;">';
+      for (let r = 0; r < rows; r++) {
+        table += '<tr>';
+        for (let c = 0; c < cols; c++) {
+          table += '<td>&nbsp;</td>';
+        }
+        table += '</tr>';
+      }
+      table += '</table>';
+      document.execCommand('insertHTML', false, table);
+    }
+    function insertImage() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = e => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = evt => {
+          document.execCommand('insertImage', false, evt.target.result);
+        };
+        reader.readAsDataURL(file);
+      };
+      input.click();
+    }
+    function insertAudio() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'audio/*';
+      input.onchange = e => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = evt => {
+          const audio = `<audio controls src="${evt.target.result}"></audio>`;
+          document.execCommand('insertHTML', false, audio);
+        };
+        reader.readAsDataURL(file);
+      };
+      input.click();
+    }
+
+    // 🔹 PDF multipágina → imágenes con zoom y eliminar
+    function insertPDF() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'application/pdf';
+      input.onchange = e => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = evt => {
+          const arrayBuffer = evt.target.result;
+          pdfjsLib.getDocument({ data: arrayBuffer }).promise.then(pdf => {
+            const pdfContainer = document.createElement("div");
+            pdfContainer.className = "pdf-container";
+
+            // Controles de zoom y eliminar
+            const controls = document.createElement("div");
+            controls.className = "pdf-controls";
+            const zoomInBtn = document.createElement("button");
+            zoomInBtn.textContent = "+";
+            const zoomOutBtn = document.createElement("button");
+            zoomOutBtn.textContent = "–";
+            const deleteBtn = document.createElement("button");
+            deleteBtn.textContent = "Eliminar PDF";
+
+            controls.appendChild(zoomInBtn);
+            controls.appendChild(zoomOutBtn);
+            controls.appendChild(deleteBtn);
+            pdfContainer.appendChild(controls);
+
+            let zoom = 1.0;
+
+            zoomInBtn.onclick = () => {
+              zoom += 0.2;
+              pdfContainer.querySelectorAll("img").forEach(img => {
+                img.style.transform = `scale(${zoom})`;
+              });
+            };
+            zoomOutBtn.onclick = () => {
+              zoom = Math.max(0.4, zoom - 0.2);
+              pdfContainer.querySelectorAll("img").forEach(img => {
+                img.style.transform = `scale(${zoom})`;
+              });
+            };
+            deleteBtn.onclick = () => {
+              pdfContainer.remove();
+            };
+
+            // Insertar en el editor
+            const range = window.getSelection().getRangeAt(0);
+            range.insertNode(pdfContainer);
+
+            // Renderizar todas las páginas (doble calidad: scale=3)
+            for (let i = 1; i <= pdf.numPages; i++) {
+              pdf.getPage(i).then(page => {
+                const viewport = page.getViewport({ scale: 3 }); // calidad x2
+                const canvas = document.createElement("canvas");
+                const context = canvas.getContext("2d");
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                page.render({ canvasContext: context, viewport: viewport }).promise.then(() => {
+                  const img = document.createElement("img");
+                  img.src = canvas.toDataURL("image/png");
+                  pdfContainer.appendChild(img);
+
+                  const pageNum = document.createElement("div");
+                  pageNum.className = "page-number";
+                  pageNum.textContent = `Página ${i}`;
+                  pdfContainer.appendChild(pageNum);
+                });
+              });
+            }
+          });
+        };
+        reader.readAsArrayBuffer(file);
+      };
+      input.click();
+    }
+
+    function saveFile() {
+      const content = document.getElementById('editor').innerHTML;
+      const blob = new Blob([content], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'proyecto.wpage';
+      a.click();
+    }
+    function loadFile() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.wpage';
+      input.onchange = e => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = evt => {
+          document.getElementById('editor').innerHTML = evt.target.result;
+        };
+        reader.readAsText(file);
+      };
+      input.click();
+    }
+    function downloadHTML() {
+      const content = document.getElementById('editor').innerHTML;
+      const bgColor = document.getElementById('bgColor').value;
+      const pageTitle = document.getElementById('pageTitle').value.trim();
+      const errorSpan = document.getElementById('titleError');
+      if (!pageTitle) {
+        errorSpan.textContent = "⚠️ Debes escribir un título antes de descargar.";
+        document.getElementById('pageTitle').focus();
+        return;
+      } else {
+        errorSpan.textContent = "";
+      }
+      const html = `<!DOCTYPE html><html><head><meta charset='UTF-8'><title>${pageTitle}</title>
+      <style>body{background-color:${bgColor}; font-family: Arial, sans-serif;}</style>
+      </head><body>${content}</body></html>`;
+      const blob = new Blob([html], { type: 'text/html' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = pageTitle.replace(/\s+/g, "_").toLowerCase() + '.html';
+      a.click();
+    }
+  </script>
+</body>
+</html>
