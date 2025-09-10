@@ -51,6 +51,7 @@
       position: relative;
       box-shadow: 2px 2px 6px rgba(0,0,0,0.15);
       border-radius: 6px;
+      text-align: left;
     }
     .pdf-controls, .image-controls {
       text-align: center;
@@ -69,7 +70,7 @@
     }
     .pdf-container img, .image-container img {
       display: block;
-      margin: 10px auto;
+      margin: 10px 0;
       border: 1px solid #aaa;
       max-width: 100%;
       transition: transform 0.2s;
@@ -82,8 +83,11 @@
     }
   </style>
 
-  <!-- PDF.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <!-- PDF.js desde CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.worker.min.js";
+  </script>
 </head>
 <body>
   <h2>Editor de Páginas Web HTML</h2>
@@ -176,13 +180,12 @@
       document.execCommand('insertHTML', false, table);
     }
 
-    // --- Índice automático ---
     let pdfCount = 0;
     let imgCount = 0;
     let audioCount = 0;
     let indexItems = [];
 
-    // --- Insertar imágenes con controles ---
+    // --- Insertar imagen ---
     function insertImage() {
       const input = document.createElement('input');
       input.type = 'file';
@@ -200,10 +203,9 @@
 
           const img = document.createElement("img");
           img.src = evt.target.result;
-          img.style.maxWidth = "40%"; // Escala inicial
+          img.style.maxWidth = "40%";
           container.appendChild(img);
 
-          // Controles
           const controls = document.createElement("div");
           controls.className = "image-controls";
           let scale = 0.4;
@@ -240,7 +242,7 @@
       input.click();
     }
 
-    // --- Insertar audio desde archivo ---
+    // --- Insertar audio ---
     function insertAudio() {
       const input = document.createElement('input');
       input.type = 'file';
@@ -263,7 +265,7 @@
       input.click();
     }
 
-    // --- Grabador de audio ---
+    // --- Grabar audio ---
     function recordAudio() {
       if (!navigator.mediaDevices) {
         alert("Grabación no soportada en este navegador");
@@ -286,91 +288,102 @@
           document.getElementById("editor").appendChild(block);
         };
         mediaRecorder.start();
-        setTimeout(() => mediaRecorder.stop(), 5000); // 5s por defecto
+        setTimeout(() => mediaRecorder.stop(), 5000);
         alert("Grabando 5 segundos...");
       });
     }
 
-    // --- Insertar PDF ---
+    // --- Insertar PDF corregido ---
     function insertPDF() {
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = 'application/pdf';
+      input.multiple = true;
       input.onchange = e => {
-        const file = e.target.files[0];
-        const reader = new FileReader();
-        reader.onload = async evt => {
-          const arrayBuffer = evt.target.result;
-          const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        Array.from(e.target.files).forEach(file => {
+          const reader = new FileReader();
+          reader.onload = async evt => {
+            try {
+              const arrayBuffer = evt.target.result;
+              const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
 
-          pdfCount++;
-          const id = `pdf-${pdfCount}`;
-          const pdfContainer = document.createElement("div");
-          pdfContainer.className = "pdf-container";
-          pdfContainer.id = id;
+              pdfCount++;
+              const id = `pdf-${pdfCount}`;
+              const pdfContainer = document.createElement("div");
+              pdfContainer.className = "pdf-container";
+              pdfContainer.id = id;
+              pdfContainer.style.textAlign = "left";
 
-          // Controles
-          const controls = document.createElement("div");
-          controls.className = "pdf-controls";
-          const zoomInBtn = document.createElement("button");
-          zoomInBtn.textContent = "+";
-          const zoomOutBtn = document.createElement("button");
-          zoomOutBtn.textContent = "–";
-          const deleteBtn = document.createElement("button");
-          deleteBtn.textContent = "Eliminar PDF";
-          controls.appendChild(zoomInBtn);
-          controls.appendChild(zoomOutBtn);
-          controls.appendChild(deleteBtn);
-          pdfContainer.appendChild(controls);
+              const controls = document.createElement("div");
+              controls.className = "pdf-controls";
+              const zoomInBtn = document.createElement("button");
+              zoomInBtn.textContent = "+";
+              const zoomOutBtn = document.createElement("button");
+              zoomOutBtn.textContent = "–";
+              const deleteBtn = document.createElement("button");
+              deleteBtn.textContent = "Eliminar PDF";
+              controls.appendChild(zoomInBtn);
+              controls.appendChild(zoomOutBtn);
+              controls.appendChild(deleteBtn);
+              pdfContainer.appendChild(controls);
 
-          let zoom = 1.0;
-          zoomInBtn.onclick = () => {
-            zoom += 0.2;
-            pdfContainer.querySelectorAll("img").forEach(img => {
-              img.style.transform = `scale(${zoom})`;
-            });
+              let zoom = 0.33 * 1.8; // escala inicial aumentada un 30%
+
+              zoomInBtn.onclick = () => {
+                zoom += 0.2;
+                pdfContainer.querySelectorAll("img").forEach(img => {
+                  img.style.transform = `scale(${zoom})`;
+                });
+              };
+              zoomOutBtn.onclick = () => {
+                zoom = Math.max(0.1, zoom - 0.2);
+                pdfContainer.querySelectorAll("img").forEach(img => {
+                  img.style.transform = `scale(${zoom})`;
+                });
+              };
+              deleteBtn.onclick = () => {
+                pdfContainer.remove();
+              };
+
+              // insertar siempre al final
+              document.getElementById("editor").appendChild(pdfContainer);
+
+              indexItems.push({ id: id, name: file.name });
+
+              for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const viewport = page.getViewport({ scale: 3 });
+                const canvas = document.createElement("canvas");
+                const context = canvas.getContext("2d");
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+
+                await page.render({ canvasContext: context, viewport: viewport }).promise;
+
+                const img = document.createElement("img");
+                img.src = canvas.toDataURL("image/png");
+                img.style.transform = `scale(${zoom})`;
+                img.style.transformOrigin = "left top";
+                img.style.display = "block";
+                img.style.margin = "10px 0";
+                pdfContainer.appendChild(img);
+
+                const pageNum = document.createElement("div");
+                pageNum.className = "page-number";
+                pageNum.textContent = `Página ${i}`;
+                pdfContainer.appendChild(pageNum);
+              }
+            } catch (err) {
+              alert("Error al cargar el PDF: " + err.message);
+            }
           };
-          zoomOutBtn.onclick = () => {
-            zoom = Math.max(0.4, zoom - 0.2);
-            pdfContainer.querySelectorAll("img").forEach(img => {
-              img.style.transform = `scale(${zoom})`;
-            });
-          };
-          deleteBtn.onclick = () => {
-            pdfContainer.remove();
-          };
-
-          const range = window.getSelection().getRangeAt(0);
-          range.insertNode(pdfContainer);
-
-          indexItems.push({ id: id, name: file.name });
-
-          for (let i = 1; i <= pdf.numPages; i++) {
-            const page = await pdf.getPage(i);
-            const viewport = page.getViewport({ scale: 3 });
-            const canvas = document.createElement("canvas");
-            const context = canvas.getContext("2d");
-            canvas.width = viewport.width;
-            canvas.height = viewport.height;
-
-            await page.render({ canvasContext: context, viewport: viewport }).promise;
-
-            const img = document.createElement("img");
-            img.src = canvas.toDataURL("image/png");
-            pdfContainer.appendChild(img);
-
-            const pageNum = document.createElement("div");
-            pageNum.className = "page-number";
-            pageNum.textContent = `Página ${i}`;
-            pdfContainer.appendChild(pageNum);
-          }
-        };
-        reader.readAsArrayBuffer(file);
+          reader.readAsArrayBuffer(file);
+        });
       };
       input.click();
     }
 
-    // --- Guardar y cargar ---
+    // --- Guardar / cargar ---
     function saveFile() {
       const content = document.getElementById('editor').innerHTML;
       const blob = new Blob([content], { type: 'text/plain' });
@@ -394,7 +407,7 @@
       input.click();
     }
 
-    // --- Descargar HTML con índice ---
+    // --- Descargar HTML ---
     function downloadHTML() {
       const content = document.getElementById('editor').innerHTML;
       const bgColor = document.getElementById('bgColor').value;
