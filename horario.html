@@ -1,148 +1,507 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planificador de Estudio</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-    <style>
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid black; padding: 10px; text-align: center; cursor: pointer; }
-        th { background-color: #f4f4f4; }
-        .selected { background-color: #90EE90; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
-        tr:nth-child(odd) { background-color: #e6e6e6; }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Planificador de Estudio — PDF arreglado</title>
+
+<!-- Librerías: jspdf (se mantiene por compatibilidad) y html2pdf (captura fiel del HTML) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+
+<style>
+  body{font-family:Arial, Helvetica, sans-serif; padding:16px;}
+  h2{margin:0 0 12px 0;}
+  .controls{margin-bottom:12px; display:flex; gap:8px; flex-wrap:wrap;}
+  button{padding:8px 10px; cursor:pointer;}
+  table{width:100%; border-collapse:collapse; table-layout:fixed;}
+  th, td{border:1px solid #333; padding:8px; text-align:center; vertical-align:middle; overflow:hidden;}
+  th{background:#f2f2f2;}
+  td.time{background:#fafafa; font-weight:600; cursor:default; width:120px}
+  td .subject{display:block; font-weight:700;}
+  td .ubicacion{display:block; font-size:0.85em; margin-top:4px; color:#111;}
+  /* Overlay y modales */
+  #overlay{display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:20;}
+  .modal{display:none; position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); background:#fff; padding:14px; border-radius:6px; z-index:21; box-shadow:0 6px 20px rgba(0,0,0,0.25); width:320px; max-width:95%;}
+  .modal h3{margin:0 0 8px 0;}
+  .row{margin:8px 0; display:flex; gap:8px; align-items:center;}
+  label{font-size:0.9em;}
+  input[type="text"], select{width:100%; padding:6px;}
+  .palette{display:flex; gap:8px; flex-wrap:wrap;}
+  .colorDot{width:28px; height:28px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 1px #333 inset; cursor:pointer;}
+  .small{font-size:0.85em; color:#444;}
+  .danger{background:#ffdddd; border:1px solid #cc8888;}
+  .actions{display:flex; gap:8px; justify-content:flex-end; margin-top:8px;}
+  .infoLine{font-size:0.85em; color:#666; margin-top:6px;}
+
+  /* Ajustes para impresión/PDF: asegurar que la tabla quepa en la página */
+  @media print{
+    body{padding:8px}
+    th, td{font-size:10px;}
+  }
+</style>
 </head>
 <body>
-    <h2>Planificador de Estudio</h2>
-    <button onclick="nuevaAsignatura()">Asignatura Nueva</button>
-    <button onclick="finalizarHorario()">Finalizar</button>
-    <button onclick="generarPDF()">Descargar PDF</button>
-    <br><br>
-    <table id="tablaHorario">
-        <thead>
-            <tr>
-                <th>Hora</th>
-                <th>Lunes</th>
-                <th>Martes</th>
-                <th>Miércoles</th>
-                <th>Jueves</th>
-                <th>Viernes</th>
-            </tr>
-        </thead>
-        <tbody id="horario">        
-            <script>
-    let horas = ["8:00-9:00", "9:00-10:00", "10:00-11:00", "11:00-11:30", "11:30-12:30", "12:30-13:30", "13:30-14:30"];
-    for (let i = 0; i < horas.length; i++) {
-        document.write(`<tr>
-            <td>${horas[i]}</td>
-            <td onclick="seleccionarCelda(this)"></td>
-            <td onclick="seleccionarCelda(this)"></td>
-            <td onclick="seleccionarCelda(this)"></td>
-            <td onclick="seleccionarCelda(this)"></td>
-            <td onclick="seleccionarCelda(this)"></td>
-        </tr>`);
-    }
-</script>
-        </tbody>
-    </table>
-    
-    <div id="vistaPrevia" style="display:none; margin-top:20px;">
-        <h3>Vista Previa del Horario</h3>
-        <table id="tablaVistaPrevia" border="1"></table>
+
+<h2>Planificador de Estudio</h2>
+<div class="controls">
+  <button id="btnNewSubject">Asignatura nueva (paleta)</button>
+  <button id="btnSave">Guardar proyecto (localStorage)</button>
+  <button id="btnLoad">Cargar proyecto</button>
+  <button id="btnExport">Exportar JSON</button>
+  <button id="btnImport">Importar JSON</button>
+  <button id="btnPDF">Descargar PDF (mejorado)</button>
+</div>
+
+<!-- Contenedor de la tabla: lo capturaremos con html2pdf -->
+<div id="captureArea">
+  <table id="tablaHorario" aria-label="Horario">
+    <thead>
+      <tr>
+        <th>Hora</th>
+        <th>Lunes</th>
+        <th>Martes</th>
+        <th>Miércoles</th>
+        <th>Jueves</th>
+        <th>Viernes</th>
+      </tr>
+    </thead>
+    <tbody id="cuerpoHorario"></tbody>
+  </table>
+</div>
+
+<!-- Overlay -->
+<div id="overlay"></div>
+
+<!-- Modal: Crear Asignatura -->
+<div id="modalSubject" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
+  <h3>Nueva asignatura</h3>
+  <div class="row">
+    <label>Nombre:
+      <input id="subjectName" type="text" placeholder="Ej: Matemáticas">
+    </label>
+  </div>
+  <div class="row">
+    <div style="flex:1">
+      <div class="small">Elige color (paleta)</div>
+      <div id="palette" class="palette" style="margin-top:6px;"></div>
     </div>
-    
-    <script>
-        let asignaturaActual = "";
-        let colores = {};
-        let colorIndex = 0;
-        const paleta = ["#FF5733", "#33FF57", "#337BFF", "#FFC300", "#DA33FF", "#33FFF5"];
+  </div>
+  <div class="row">
+    <label>Color personalizado:
+      <input id="subjectCustom" type="color" value="#2E8B57">
+    </label>
+  </div>
+  <div class="actions">
+    <button id="subjectCancel">Cancelar</button>
+    <button id="subjectSave">Guardar</button>
+  </div>
+  <div class="infoLine">Nota: las asignaturas creadas aparecerán en la lista al editar una celda.</div>
+</div>
 
-        function nuevaAsignatura() {
-            let nombre = prompt("Ingrese el nombre de la asignatura:");
-            if (nombre) {
-                asignaturaActual = nombre;
-                if (!colores[nombre]) {
-                    colores[nombre] = paleta[colorIndex % paleta.length];
-                    colorIndex++;
-                }
-            }
-        }
+<!-- Modal: Editar Celda -->
+<div id="modalCell" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
+  <h3>Editar celda</h3>
+  <div class="row">
+    <label style="width:100%">Asignatura:
+      <select id="cellSubjectSelect">
+        <option value="">-- Seleccionar asignatura --</option>
+      </select>
+    </label>
+  </div>
+  <div class="row">
+    <label style="width:100%">Ubicación (grupo/aula):
+      <input id="cellUbicacion" type="text" placeholder="Ej: Aula 12 / 2ºA">
+    </label>
+  </div>
+  <div style="display:flex; gap:8px; margin-top:6px;">
+    <button id="openNewSubjectFromCell" style="flex:1">Crear asignatura</button>
+    <button id="viewSubjects" style="flex:1">Ver paleta</button>
+  </div>
+  <div class="actions">
+    <button id="cellCancel">Cancelar</button>
+    <button id="cellClear" class="danger">Borrar celda</button>
+    <button id="cellSave">Guardar</button>
+  </div>
+</div>
 
-        function seleccionarCelda(celda) {
-            if (asignaturaActual) {
-                celda.textContent = asignaturaActual;
-                celda.style.backgroundColor = colores[asignaturaActual];
-            } else {
-                alert("Primero ingrese una asignatura.");
-            }
-        }
+<!-- Input file oculto para importar JSON -->
+<input type="file" id="fileImport" accept="application/json" style="display:none" />
 
-        function previsualizarHorario() {
-            let tablaOriginal = document.getElementById("tablaHorario").cloneNode(true);
-            let vistaPrevia = document.getElementById("tablaVistaPrevia");
-            vistaPrevia.innerHTML = tablaOriginal.innerHTML;
-            document.getElementById("vistaPrevia").style.display = "block";
-        }
+<script>
+/* ---------- Configuración inicial ---------- */
+const horas = ["8:00-9:00","9:00-10:00","10:00-11:00","11:00-11:30","11:30-12:30","12:30-13:30","13:30-14:30"];
+const dias = 5; // L-V
+const cuerpo = document.getElementById('cuerpoHorario');
 
-        function generarPDF() {
-            const { jsPDF } = window.jspdf;
-            let doc = new jsPDF();
-            doc.text("Horario de Estudio", 10, 10);
-            let filas = [];
-            let coloresPDF = [];
-            document.querySelectorAll("tbody tr").forEach(tr => {
-                let fila = [];
-                let coloresFila = [];
-                tr.querySelectorAll("td").forEach(td => {
-                    fila.push(td.textContent.trim());
-                    coloresFila.push(td.style.backgroundColor || "#FFFFFF");
-                });
-                filas.push(fila);
-                coloresPDF.push(coloresFila);
-            });
-            
-           doc.autoTable({
-    head: [["Hora", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]],
-    body: filas,
-    styles: { 
-        cellPadding: 3, 
-        lineWidth: 0.5, 
-        halign: 'center', 
-        valign: 'middle', 
-        lineColor: [0, 0, 0]  // Color negro para los bordes
-    },
-    headStyles: { 
-        fillColor: [100, 100, 100], 
-        textColor: [255, 255, 255], 
-        lineColor: [0, 0, 0]  // Borde negro en la cabecera
-    },
-    alternateRowStyles: { 
-        fillColor: [240, 240, 240],
-        lineColor: [0, 0, 0]  // Borde negro en filas alternas
-    },
-    rowStyles: { 
-        fillColor: [255, 255, 255], 
-        lineColor: [0, 0, 0]  // Borde negro en filas normales
-    },
-    didDrawCell: function(data) {
-        if (data.section === 'body' && data.column.index > 0) {
-            let color = coloresPDF[data.row.index][data.column.index];
-            if (color !== "#FFFFFF") {
-                doc.setFillColor(color);
-                doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
-            }
-            doc.setTextColor(0, 0, 0);
-            doc.text(filas[data.row.index][data.column.index], data.cell.x + 2, data.cell.y + 6);
-        }
+let subjects = {}; // { nombre: color }
+const defaultPalette = ["#FF5733","#33FF57","#337BFF","#FFC300","#DA33FF","#33FFF5","#FF8C00","#8B4513","#2E8B57","#800000"];
+
+let currentCell = null; // referencia a la td que se edita
+
+/* ---------- Construir tabla ---------- */
+function crearTabla(){
+  cuerpo.innerHTML = "";
+  for(let r=0;r<horas.length;r++){
+    const tr = document.createElement('tr');
+    const tdTime = document.createElement('td');
+    tdTime.className = 'time';
+    tdTime.textContent = horas[r];
+    tr.appendChild(tdTime);
+    for(let c=0;c<dias;c++){
+      const td = document.createElement('td');
+      td.setAttribute('data-row', r);
+      td.setAttribute('data-col', c);
+      td.addEventListener('click', ()=> openCellModal(td));
+      tr.appendChild(td);
     }
+    cuerpo.appendChild(tr);
+  }
+}
+crearTabla();
+
+/* ---------- Modal overlay helpers ---------- */
+const overlay = document.getElementById('overlay');
+function showOverlay(){ overlay.style.display = 'block'; }
+function hideOverlay(){ overlay.style.display = 'none'; }
+
+/* ---------- Modal Subject (crear asignatura) ---------- */
+const modalSubject = document.getElementById('modalSubject');
+const paletteDiv = document.getElementById('palette');
+const subjectNameInput = document.getElementById('subjectName');
+const subjectCustom = document.getElementById('subjectCustom');
+let selectedColorForSubject = null;
+
+function openSubjectModal(prefillName=''){
+  subjectNameInput.value = prefillName;
+  selectedColorForSubject = null;
+  buildPalette();
+  showOverlay();
+  modalSubject.style.display = 'block';
+}
+function closeSubjectModal(){
+  modalSubject.style.display = 'none';
+  hideOverlay();
+  subjectNameInput.value = '';
+  selectedColorForSubject = null;
+}
+function buildPalette(){
+  paletteDiv.innerHTML = '';
+  defaultPalette.forEach(color=>{
+    const d = document.createElement('div');
+    d.className = 'colorDot';
+    d.style.background = color;
+    d.title = color;
+    d.addEventListener('click', ()=> {
+      selectedColorForSubject = color;
+      // visual feedback: outline selected
+      Array.from(paletteDiv.children).forEach(ch => ch.style.outline = '');
+      d.style.outline = '3px solid #222';
+      subjectCustom.value = color;
+    });
+    paletteDiv.appendChild(d);
+  });
+}
+
+/* Guardar asignatura */
+document.getElementById('subjectSave').addEventListener('click', ()=>{
+  const name = subjectNameInput.value.trim();
+  if(!name){ alert('Escribe un nombre para la asignatura.'); return; }
+  const color = subjectCustom.value || selectedColorForSubject || '#cccccc';
+  subjects[name] = color;
+  updateSubjectSelects();
+  closeSubjectModal();
+  alert(`Asignatura "${name}" guardada con color ${color}.`);
 });
 
-           
-            doc.save("horario_estudio.pdf");
+/* Cancelar crear asignatura */
+document.getElementById('subjectCancel').addEventListener('click', closeSubjectModal);
+
+/* ---------- Modal Cell (editar una celda) ---------- */
+const modalCell = document.getElementById('modalCell');
+const cellSubjectSelect = document.getElementById('cellSubjectSelect');
+const cellUbicacionInput = document.getElementById('cellUbicacion');
+document.getElementById('cellSave').addEventListener('click', saveCellModal);
+document.getElementById('cellCancel').addEventListener('click', closeCellModal);
+document.getElementById('cellClear').addEventListener('click', clearCellFromModal);
+document.getElementById('openNewSubjectFromCell').addEventListener('click', ()=> openSubjectModal());
+document.getElementById('viewSubjects').addEventListener('click', ()=> openSubjectModal());
+
+function openCellModal(td){
+  currentCell = td;
+  // llenar select con asignaturas existentes
+  updateSubjectSelects();
+  // set valores actuales
+  const asign = td.dataset.asignatura || '';
+  const ubic = td.dataset.ubicacion || '';
+  cellSubjectSelect.value = asign;
+  cellUbicacionInput.value = ubic;
+  showOverlay();
+  modalCell.style.display = 'block';
+}
+function closeCellModal(){
+  modalCell.style.display = 'none';
+  hideOverlay();
+  currentCell = null;
+}
+function saveCellModal(){
+  if(!currentCell) return closeCellModal();
+  const asignatura = cellSubjectSelect.value;
+  const ubic = cellUbicacionInput.value.trim();
+  if(!asignatura){
+    alert('Selecciona una asignatura (o créala).');
+    return;
+  }
+  // guardar datos en dataset
+  currentCell.dataset.asignatura = asignatura;
+  currentCell.dataset.ubicacion = ubic;
+  // mostrar en la celda: Asignatura \n Ubicación
+  currentCell.innerHTML = `<span class="subject">${escapeHtml(asignatura)}</span><span class="ubicacion">${escapeHtml(ubic)}</span>`;
+  currentCell.style.backgroundColor = subjects[asignatura] || '';
+  closeCellModal();
+}
+function clearCellFromModal(){
+  if(!currentCell) return closeCellModal();
+  if(!confirm('¿Borrar contenido de esta celda?')) return;
+  delete currentCell.dataset.asignatura;
+  delete currentCell.dataset.ubicacion;
+  currentCell.style.backgroundColor = '';
+  currentCell.innerHTML = '';
+  closeCellModal();
+}
+
+/* ---------- Actualizar selects con asignaturas ---------- */
+function updateSubjectSelects(){
+  // actualiza el select del modalCell
+  const sel = cellSubjectSelect;
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">-- Seleccionar asignatura --</option>';
+  Object.keys(subjects).forEach(name=>{
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    sel.appendChild(opt);
+  });
+  if(Object.keys(subjects).length === 0){
+    // si no hay asignaturas, opción informativa
+    const infoOpt = document.createElement('option');
+    infoOpt.value = '';
+    infoOpt.textContent = '-- Crea una asignatura primero --';
+    sel.prepend(infoOpt);
+  }
+  // restaurar valor si existe
+  if(prev && subjects[prev]) sel.value = prev;
+}
+
+/* ---------- Guardar/Cargar proyecto (localStorage) ---------- */
+const STORAGE_KEY = 'horarioEstudio_v1';
+
+function guardarProyecto(){
+  const data = { subjects: subjects, cells: [] };
+  // recorrer filas
+  const trs = Array.from(cuerpo.querySelectorAll('tr'));
+  trs.forEach(tr=>{
+    const row = [];
+    // saltamos la primera TD (hora)
+    const tds = Array.from(tr.querySelectorAll('td'));
+    for(let i=1;i<tds.length;i++){
+      const td = tds[i];
+      row.push({
+        asignatura: td.dataset.asignatura || '',
+        ubicacion: td.dataset.ubicacion || '',
+        color: td.style.backgroundColor || ''
+      });
+    }
+    data.cells.push(row);
+  });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  alert('Proyecto guardado en localStorage.');
+}
+function cargarProyecto(){
+  const s = localStorage.getItem(STORAGE_KEY);
+  if(!s){ alert('No hay proyecto guardado en localStorage.'); return; }
+  try{
+    const data = JSON.parse(s);
+    subjects = data.subjects || {};
+    updateSubjectSelects();
+    // rellenar celdas
+    const trs = Array.from(cuerpo.querySelectorAll('tr'));
+    trs.forEach((tr, r)=>{
+      const tds = Array.from(tr.querySelectorAll('td'));
+      for(let c=1;c<tds.length;c++){
+        const info = (data.cells[r] && data.cells[r][c-1]) ? data.cells[r][c-1] : {asignatura:'',ubicacion:'',color:''};
+        const td = tds[c];
+        if(info.asignatura){
+          td.dataset.asignatura = info.asignatura;
+          td.dataset.ubicacion = info.ubicacion || '';
+          td.innerHTML = `<span class="subject">${escapeHtml(info.asignatura)}</span><span class="ubicacion">${escapeHtml(info.ubicacion || '')}</span>`;
+          td.style.backgroundColor = info.color || (subjects[info.asignatura] || '');
+        } else {
+          delete td.dataset.asignatura;
+          delete td.dataset.ubicacion;
+          td.innerHTML = '';
+          td.style.backgroundColor = '';
         }
-    </script>
+      }
+    });
+    alert('Proyecto cargado desde localStorage.');
+  }catch(e){
+    console.error(e);
+    alert('Error al cargar el proyecto (JSON inválido).');
+  }
+}
+
+/* ---------- Export / Import JSON (archivo) ---------- */
+function exportJSON(){
+  const data = { subjects: subjects, cells: [] };
+  const trs = Array.from(cuerpo.querySelectorAll('tr'));
+  trs.forEach(tr=>{
+    const row = [];
+    const tds = Array.from(tr.querySelectorAll('td'));
+    for(let i=1;i<tds.length;i++){
+      const td = tds[i];
+      row.push({
+        asignatura: td.dataset.asignatura || '',
+        ubicacion: td.dataset.ubicacion || '',
+        color: td.style.backgroundColor || ''
+      });
+    }
+    data.cells.push(row);
+  });
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'horario_estudio.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById('fileImport').addEventListener('change', (ev)=>{
+  const f = ev.target.files[0];
+  if(!f) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const data = JSON.parse(reader.result);
+      // simple validación mínima
+      if(!data || !Array.isArray(data.cells) || typeof data.subjects !== 'object'){ throw 'Formato incorrecto'; }
+      subjects = data.subjects || {};
+      updateSubjectSelects();
+      // rellenar celdas
+      const trs = Array.from(cuerpo.querySelectorAll('tr'));
+      trs.forEach((tr, r)=>{
+        const tds = Array.from(tr.querySelectorAll('td'));
+        for(let c=1;c<tds.length;c++){
+          const info = (data.cells[r] && data.cells[r][c-1]) ? data.cells[r][c-1] : {asignatura:'',ubicacion:'',color:''};
+          const td = tds[c];
+          if(info.asignatura){
+            td.dataset.asignatura = info.asignatura;
+            td.dataset.ubicacion = info.ubicacion || '';
+            td.innerHTML = `<span class="subject">${escapeHtml(info.asignatura)}</span><span class="ubicacion">${escapeHtml(info.ubicacion || '')}</span>`;
+            td.style.backgroundColor = info.color || (subjects[info.asignatura] || '');
+          } else {
+            delete td.dataset.asignatura;
+            delete td.dataset.ubicacion;
+            td.innerHTML = '';
+            td.style.backgroundColor = '';
+          }
+        }
+      });
+      alert('Proyecto importado desde archivo JSON.');
+    }catch(err){
+      console.error(err);
+      alert('Error al importar JSON. Asegúrate del formato.');
+    }
+  };
+  reader.readAsText(f);
+});
+
+/* ---------- PDF (mejorado) ---------- */
+async function exportPDF(){
+  // Usamos html2pdf para capturar la tabla tal y como aparece en pantalla (colores, tamaño, saltos de línea)
+  const capture = document.getElementById('captureArea');
+  // ocultar modales/overlay en caso de que estén abiertos
+  const prevOverlay = overlay.style.display;
+  const prevModalSubject = modalSubject.style.display;
+  const prevModalCell = modalCell.style.display;
+  overlay.style.display = 'none';
+  modalSubject.style.display = 'none';
+  modalCell.style.display = 'none';
+
+  try{
+    const opt = {
+      margin: 10,
+      filename: 'horario_estudio.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { unit: 'pt', format: 'a4', orientation: 'landscape' }
+    };
+    // La promesa devuelve el PDF generado
+    await html2pdf().set(opt).from(capture).save();
+  }catch(err){
+    console.error('html2pdf fallo, intentando fallback con jsPDF/autotable', err);
+    // Fallback: intentamos generar con autoTable (menos fiel pero suele funcionar)
+    try{
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('landscape','pt','a4');
+      const head = [["Hora","Lunes","Martes","Miércoles","Jueves","Viernes"]];
+      const body = [];
+      const trs = Array.from(cuerpo.querySelectorAll('tr'));
+      trs.forEach(tr=>{
+        const tds = Array.from(tr.querySelectorAll('td'));
+        const row = tds.map(td=>td.innerText || td.textContent || '');
+        body.push(row);
+      });
+      doc.autoTable({ head, body, startY: 20, theme: 'grid', styles:{cellPadding:6, halign:'center', valign:'middle', fontSize:9} });
+      doc.save('horario_estudio.pdf');
+    }catch(e){
+      console.error('Fallback jsPDF/autotable tambien fallo', e);
+      alert('No ha sido posible generar el PDF. Abre la consola para más detalles.');
+    }
+  }finally{
+    // restaurar visibilidad modales
+    overlay.style.display = prevOverlay;
+    modalSubject.style.display = prevModalSubject;
+    modalCell.style.display = prevModalCell;
+  }
+}
+
+/* ---------- Utilidades ---------- */
+function escapeHtml(str=''){
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+/* ---------- Botones y eventos ---------- */
+document.getElementById('btnNewSubject').addEventListener('click', ()=> openSubjectModal());
+document.getElementById('btnSave').addEventListener('click', guardarProyecto);
+document.getElementById('btnLoad').addEventListener('click', cargarProyecto);
+document.getElementById('btnExport').addEventListener('click', exportJSON);
+document.getElementById('btnImport').addEventListener('click', ()=> document.getElementById('fileImport').click());
+document.getElementById('btnPDF').addEventListener('click', exportPDF);
+
+/* Cerrar modales si se pulsa fuera */
+overlay.addEventListener('click', ()=>{
+  // cerrar cualesquiera abiertos
+  modalSubject.style.display = 'none';
+  modalCell.style.display = 'none';
+  hideOverlay();
+  currentCell = null;
+});
+
+/* ---------- Inicialización: cargar si hay en localStorage automáticamente ---------- */
+(function init(){
+  const s = localStorage.getItem(STORAGE_KEY);
+  if(s){
+    try{
+      const data = JSON.parse(s);
+      if(data && data.subjects){ subjects = data.subjects; updateSubjectSelects(); }
+    }catch(e){}
+  }
+})();
+</script>
 </body>
 </html>
