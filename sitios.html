@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>Diseñador de sitios de alumnos — 9x6 (A4 horizontal)</title>
+<style>
+  :root{
+    --cell-w: 100px;
+    --cell-h: 80px;
+    --gap: 6px;
+  }
+  body { font-family: Arial, Helvetica, sans-serif; margin: 18px; color: #222; }
+  h2 { margin: 0 0 10px 0; }
+  #controls { display:flex; gap:8px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
+  button { padding:6px 10px; border-radius:6px; border:1px solid #777; background:#fff; cursor:pointer; }
+  #palette {
+    min-height: 100px; border: 1px dashed #bbb; padding:8px;
+    display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; background:#fafafa;
+  }
+  #grid {
+    display: grid;
+    grid-template-columns: repeat(9, var(--cell-w));
+    grid-auto-rows: var(--cell-h);
+    gap: var(--gap);
+    border: 3px solid #333;
+    padding: var(--gap);
+    background: #f7f7f7;
+  }
+  .cell {
+    border: 1px dashed #aaa;
+    background: #fff;
+    display:flex; align-items:center; justify-content:center;
+    font-size: 12px; position: relative;
+  }
+  .student {
+    padding:4px 6px;
+    background: linear-gradient(180deg,#CFEFFF,#87CEFA);
+    border-radius:6px;
+    cursor:grab;
+    user-select:none;
+    text-align:center;
+    line-height:1.1;
+    font-size: 13px;
+    min-width: 60px;
+  }
+  .student span { display:block; }
+  .student .name { font-weight:bold; }
+  .student .pc { font-size:11px; color:#222; margin-top:2px; }
+  @page { size: A4 landscape; margin: 10mm; }
+  @media print {
+    #controls, #palette { display:none !important; }
+    body { margin: 0; }
+    :root {
+      --gap: 4mm;
+      --cell-w: calc((277mm - (8 * var(--gap))) / 9 );
+      --cell-h: calc((197mm - (5 * var(--gap))) / 6 );
+    }
+    .student { font-size: 9pt; padding: 2mm; border-radius:2mm; }
+    .student .pc { font-size:8pt; }
+    .cell { border: 1px solid #999; }
+  }
+</style>
+</head>
+<body>
+
+<h2>Diseñador de sitios de alumnos — Cuadrícula 9 × 6</h2>
+<div id="controls">
+  <label>
+    Cargar Excel:
+    <input id="fileInput" type="file" accept=".xls,.xlsx" style="margin-left:6px;">
+  </label>
+  <label>
+    Cargar layout (.json):
+    <input id="loadLayout" type="file" accept=".json" style="margin-left:6px;">
+  </label>
+  <button id="saveBtn">Guardar distribución</button>
+  <button id="printBtn">Imprimir / PDF</button>
+</div>
+
+<div id="palette"><div style="color:#666;font-size:13px;">Paleta de alumnos</div></div>
+<div id="grid"></div>
+
+<!-- Librería SheetJS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const grid = document.getElementById('grid');
+const fileInput = document.getElementById('fileInput');
+const saveBtn = document.getElementById('saveBtn');
+const loadLayout = document.getElementById('loadLayout');
+const printBtn = document.getElementById('printBtn');
+const palette = document.getElementById('palette');
+
+let students = [];
+let nextId = 1;
+
+// Crear 9x6 celdas
+for (let i=0; i<54; i++){
+  const cell=document.createElement('div');
+  cell.className="cell";
+  cell.dataset.index=i;
+  cell.addEventListener('dragover', e=>e.preventDefault());
+  cell.addEventListener('drop', dropStudent);
+  grid.appendChild(cell);
+}
+
+fileInput.addEventListener('change', handleFile);
+saveBtn.addEventListener('click', saveLayout);
+loadLayout.addEventListener('change', loadSavedLayout);
+printBtn.addEventListener('click', ()=>window.print());
+
+// === Función para interpretar nombres ===
+function parseName(raw) {
+  if (!raw) return { first: '', surnameInitial: '' };
+  let s = String(raw).trim();
+  s = s.replace(/^[,.\s]+|[,.\s]+$/g, '').trim();
+
+  // Caso "Apellido, Nombre"
+  if (s.includes(',')) {
+    const [apellido, nombre] = s.split(',').map(p=>p.trim());
+    const first = nombre.split(/\s+/)[0] || '';
+    const surnameInitial = apellido ? apellido.charAt(0).toUpperCase() + '.' : '';
+    return { first, surnameInitial };
+  }
+
+  const tokens = s.split(/\s+/).filter(Boolean);
+  if (tokens.length === 1) {
+    return { first: tokens[0], surnameInitial: '' };
+  }
+
+  // Caso "Apellido Inicial"
+  const second = tokens[1];
+  if (/^[A-Za-zÀ-ÖØ-öø-ÿ]\.?$/.test(second)) {
+    const first = second.charAt(0).toUpperCase() + '.';
+    const surnameInitial = tokens[0].charAt(0).toUpperCase() + '.';
+    return { first, surnameInitial };
+  }
+
+  // Caso normal "Nombre Apellido"
+  const first = tokens[0];
+  const surnameInitial = tokens[1].charAt(0).toUpperCase() + '.';
+  return { first, surnameInitial };
+}
+
+function updateStudentDisplay(el,s){
+  const parsed=parseName(s.nombre||'');
+  const firstPart=parsed.first||'';
+  const surnamePart=parsed.surnameInitial ? (' '+parsed.surnameInitial) : '';
+  el.innerHTML=`<span class="name">${firstPart}${surnamePart}</span><span class="pc">PC ${s.ordenador||''}</span>`;
+}
+
+// Procesar Excel
+function handleFile(e){
+  const file=e.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=(ev)=>{
+    const data=new Uint8Array(ev.target.result);
+    const workbook=XLSX.read(data,{type:'array'});
+    const sheet=workbook.Sheets[workbook.SheetNames[0]];
+    const rows=XLSX.utils.sheet_to_json(sheet,{header:1});
+
+    students=[];
+    nextId=1;
+    clearPalette();
+
+    for(let i=1;i<rows.length;i++){ // saltar cabecera
+      const nombre=rows[i][0]||"";
+      const ordenador=rows[i][1]||"";
+      if(nombre){
+        const id=String(nextId++);
+        const s={id,nombre,ordenador};
+        students.push(s);
+        addStudentToPalette(s);
+      }
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function clearPalette(){
+  while(palette.children.length>1) palette.removeChild(palette.lastChild);
+}
+
+function addStudentToPalette(s){
+  const div=document.createElement('div');
+  div.className="student";
+  div.dataset.id=s.id;
+  updateStudentDisplay(div,s);
+  div.draggable=true;
+  div.addEventListener('dragstart', e=>{
+    e.dataTransfer.setData('text/plain', s.id);
+  });
+  div.addEventListener('dblclick',()=>{
+    const nuevoNombre=prompt("Editar nombre:",s.nombre);
+    if(nuevoNombre===null) return;
+    const nuevoPC=prompt("Editar número de ordenador:",s.ordenador);
+    if(nuevoPC===null) return;
+    s.nombre=nuevoNombre;
+    s.ordenador=nuevoPC;
+    document.querySelectorAll(`.student[data-id='${s.id}']`).forEach(el=>updateStudentDisplay(el,s));
+  });
+  palette.appendChild(div);
+}
+
+function dropStudent(e){
+  e.preventDefault();
+  const id=e.dataTransfer.getData('text/plain');
+  const studentEl=document.querySelector(`.student[data-id='${id}']`);
+  if(studentEl) e.currentTarget.appendChild(studentEl);
+}
+
+// Guardar JSON
+function saveLayout(){
+  const layout=[];
+  document.querySelectorAll('.cell').forEach(cell=>{
+    const s=cell.querySelector('.student');
+    if(s){
+      const stu=students.find(x=>x.id===s.dataset.id);
+      layout.push({pos:cell.dataset.index,...stu});
+    }
+  });
+  const out={layout,students};
+  const blob=new Blob([JSON.stringify(out,null,2)],{type:"application/json"});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download="layout.json";
+  a.click();
+}
+
+// Cargar JSON
+function loadSavedLayout(e){
+  const file=e.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=(ev)=>{
+    const data=JSON.parse(ev.target.result);
+    students=data.students||[];
+    clearPalette();
+    students.forEach(addStudentToPalette);
+    data.layout.forEach(item=>{
+      const cell=document.querySelector(`.cell[data-index='${item.pos}']`);
+      const el=document.querySelector(`.student[data-id='${item.id}']`);
+      if(cell&&el) cell.appendChild(el);
+    });
+  };
+  reader.readAsText(file);
+}
+</script>
+</body>
+</html>
