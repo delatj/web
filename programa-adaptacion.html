@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Infografía — seleccionar por inicio y fin</title>
+
+<!-- Dependencias -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+<style>
+  body{font-family:Inter, Arial, sans-serif;margin:0;background:#f7f9fb;color:#222;}
+  .container{max-width:1320px;margin:18px auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+  header{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  h1{margin:0;font-size:20px}
+  .controls{display:flex;gap:8px;align-items:center}
+  input[type=file]{display:inline-block}
+  button{background:#1565c0;color:white;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}
+  button.secondary{background:#444}
+  button.success{background:#2e7d32}
+  button.danger{background:#c62828}
+  .status{color:#555;font-size:13px;margin-left:8px}
+  .mainGrid{display:grid;grid-template-columns: 1fr 1fr 1fr;gap:12px;margin-top:6px}
+  .panel{background:#fff;border-radius:10px;padding:10px;box-shadow:0 6px 18px rgba(11,22,39,0.07);overflow:auto;min-height:520px}
+  .viewer{display:flex;flex-direction:column;gap:8px;align-items:center;padding:12px}
+  .pageCanvas{border-radius:6px;box-shadow:0 6px 18px rgba(3,10,20,0.06);max-width:100%}
+  .pagesList{display:flex;flex-direction:column;gap:6px}
+  .textPanel{font-size:14px;padding:12px}
+  .pageTitle{font-weight:600;margin-bottom:6px;color:#1e88e5}
+  .token{display:inline-block; padding:2px 4px; margin:1px; border-radius:4px; cursor:pointer; user-select:none}
+  .token:hover{background:rgba(21,101,192,0.06)}
+  .token.start{outline:2px dashed #1565c0; background:rgba(21,101,192,0.06)}
+  .token.highlight{background:linear-gradient(90deg,#ffd54f,#ffca28); box-shadow:inset 0 -2px 0 rgba(0,0,0,0.04);}
+  .token.sopa-selected{background:linear-gradient(90deg,#a5d6a7,#81c784); box-shadow:inset 0 -2px 0 rgba(0,0,0,0.04);}
+  .infBoard{padding:20px;background:#f0f7ff;border-radius:8px;min-height:420px}
+  .word-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .word-item{padding:6px 12px;background:#e3f2fd;border-radius:16px;cursor:pointer;user-select:none;display:flex;align-items:center;gap:6px}
+  .word-item.selected{background:#bbdefb;font-weight:bold;outline:2px solid #1565c0}
+  .word-item:hover{background:#bbdefb}
+  .sopa-controls{margin-top:15px;padding-top:15px;border-top:1px solid #ddd}
+  .section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .remove-word{color:#c62828;cursor:pointer;font-weight:bold;padding:0 4px;}
+  .instructions{font-size:13px;color:#666;margin-top:8px;padding:8px;background:#f5f5f5;border-radius:6px;}
+  .counter{font-size:13px;color:#555;margin-bottom:8px;}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1 id="pageTitle">Infografía — marcar inicio y fin</h1>
+    <div class="controls">
+      <input id="pdfFile" type="file" accept="application/pdf">
+      <button id="loadBtn">Cargar PDF</button>
+      <button id="clearBtn">Limpiar</button>
+      <button id="downloadBtn" class="secondary">Descargar PDF (con sopa de letras)</button>
+      <span id="status" class="status"></span>
+    </div>
+  </header>
+
+  <div class="mainGrid">
+    <div class="panel viewer" id="viewerPanel">
+      <div><strong>Visualizador PDF</strong></div>
+      <div id="viewerMeta" style="font-size:13px;color:#555"></div>
+      <div id="pagesContainer" class="pagesList" style="width:100%;align-items:center; padding-top:6px"></div>
+    </div>
+
+    <div class="panel textPanel" id="textPanel">
+      <div class="section-title">
+        <strong>Texto (clic: inicio → clic: fin)</strong>
+        <div class="counter" id="textCounter">Palabras: 0 | Seleccionadas: 0</div>
+      </div>
+      <div class="instructions">
+        🔹 <strong>Selección de frases:</strong> Haz clic en una palabra para marcar inicio y en otra para marcar fin<br>
+        🔹 <strong>Selección para sopa:</strong> Ctrl+clic en cualquier palabra para añadirla/quitarla
+      </div>
+      <div id="textPages" style="margin-top:8px"></div>
+    </div>
+
+    <div class="panel" id="infPanel">
+      <div class="section-title">
+        <strong>Infografía — frases seleccionadas</strong>
+      </div>
+      <div id="infBoard" class="infBoard" aria-live="polite"></div>
+      
+      <div class="sopa-controls">
+        <div class="section-title">
+          <strong>Palabras para la sopa de letras</strong>
+          <div>
+            <button id="autoSelectBtn" class="success">Seleccionar automáticamente</button>
+            <button id="clearWordsBtn" class="danger">Limpiar palabras</button>
+          </div>
+        </div>
+        <div id="selectedWordsInfo" class="counter">
+          Seleccionadas: <span id="wordsCount">0</span>/15 palabras
+        </div>
+        <div id="wordsContainer" class="word-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const PDFJS = window['pdfjsLib'];
+PDFJS.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+const MAX_PAGES = 40;
+let loadedPdf = null, pagesTokens = [], selections = [], activeStart = null;
+let currentFileName = "Infografía";
+let selectedWords = [];
+let allWordsCount = 0;
+
+function setStatus(msg, timeout=3000){
+  const s=document.getElementById('status');
+  s.textContent=msg;
+  if(timeout) setTimeout(()=>{if(s.textContent===msg) s.textContent='';},timeout);
+}
+
+/* --- carga PDF y tokenización --- */
+async function loadPdfFile(file){
+  currentFileName = file.name.replace(/\.pdf$/i,"");
+  document.getElementById("pageTitle").textContent = "Infografía — " + currentFileName;
+
+  const arrayBuffer=await file.arrayBuffer();
+  const loading=PDFJS.getDocument({data:arrayBuffer});
+  loadedPdf=await loading.promise;
+  const total=Math.min(loadedPdf.numPages,MAX_PAGES);
+  document.getElementById('viewerMeta').textContent=`Páginas: ${loadedPdf.numPages}`;
+  const pagesContainer=document.getElementById('pagesContainer');
+  const textPages=document.getElementById('textPages');
+  pagesContainer.innerHTML=''; textPages.innerHTML='';
+  pagesTokens=[]; selections=[]; activeStart=null;
+  document.getElementById('infBoard').innerHTML='';
+  selectedWords = [];
+  allWordsCount = 0;
+  updateWordsContainer();
+
+  for(let p=1;p<=total;p++){
+    const page=await loadedPdf.getPage(p);
+    const viewport=page.getViewport({scale:1.2});
+    const canvas=document.createElement('canvas');
+    canvas.className='pageCanvas';
+    canvas.width=Math.floor(viewport.width);
+    canvas.height=Math.floor(viewport.height);
+    const ctx=canvas.getContext('2d',{alpha:false});
+    await page.render({canvasContext:ctx,viewport}).promise;
+    const pageWrapper=document.createElement('div');
+    pageWrapper.appendChild(canvas);
+    pagesContainer.appendChild(pageWrapper);
+
+    const textContent=await page.getTextContent();
+    const tokens=[]; const spanNodes=[];
+    textContent.items.forEach(item=>{
+      const parts=item.str.split(/\s+/).filter(Boolean);
+      parts.forEach(part=>{
+        tokens.push(part);
+        allWordsCount++;
+      });
+    });
+    
+    const pageTextDiv=document.createElement('div');
+    const pageTitle=document.createElement('div');
+    pageTitle.className='pageTitle';
+    pageTitle.textContent=`Página ${p}`;
+    pageTextDiv.appendChild(pageTitle);
+    
+    const tokensContainer=document.createElement('div');
+    tokensContainer.setAttribute('data-page',p-1);
+    tokens.forEach((t,idx)=>{
+      const sp=document.createElement('span');
+      sp.className='token'; 
+      sp.textContent=t+' ';
+      sp.dataset.page=(p-1); 
+      sp.dataset.index=idx;
+      sp.dataset.word=t.toUpperCase();
+      
+      // Evento para selección de frases (clic normal)
+      sp.addEventListener('click',(e)=>{
+        if(e.ctrlKey || e.metaKey){
+          // Ctrl+Clic para seleccionar palabra para sopa
+          e.preventDefault();
+          toggleWordForSopa(t, p-1, idx, sp);
+        } else {
+          // Clic normal para selección de frases
+          handleTokenClick(p-1,idx);
+        }
+      });
+      
+      tokensContainer.appendChild(sp); 
+      spanNodes.push(sp);
+    });
+    
+    pageTextDiv.appendChild(tokensContainer);
+    textPages.appendChild(pageTextDiv);
+    pagesTokens.push({tokens,spanNodes});
+  }
+  
+  // Actualizar contador de palabras
+  document.getElementById('textCounter').textContent = `Palabras: ${allWordsCount} | Seleccionadas: ${selectedWords.length}`;
+}
+
+/* --- Gestión de palabras para sopa de letras --- */
+function toggleWordForSopa(word, pageIndex, tokenIndex, element) {
+  const cleanWord = word.toUpperCase().replace(/[^A-ZÁÉÍÓÚÜÑ]/gi, '');
+  
+  if (!cleanWord || cleanWord.length < 3) {
+    setStatus('Palabra demasiado corta (mínimo 3 letras)', 2000);
+    return;
+  }
+  
+  // Verificar si la palabra ya está seleccionada
+  const wordIndex = selectedWords.findIndex(w => w.word === cleanWord);
+  
+  if (wordIndex !== -1) {
+    // Quitar la palabra de la selección
+    selectedWords.splice(wordIndex, 1);
+    element.classList.remove('sopa-selected');
+    setStatus(`Palabra "${cleanWord}" eliminada de la sopa`, 2000);
+  } else {
+    // Añadir la palabra a la selección (si no hemos alcanzado el límite)
+    if (selectedWords.length >= 15) {
+      setStatus('Límite alcanzado (15 palabras máximo)', 2000);
+      return;
+    }
+    
+    selectedWords.push({
+      word: cleanWord,
+      original: word,
+      page: pageIndex,
+      token: tokenIndex
+    });
+    
+    element.classList.add('sopa-selected');
+    setStatus(`Palabra "${cleanWord}" añadida a la sopa`, 2000);
+  }
+  
+  updateWordsContainer();
+}
+
+function updateWordsContainer() {
+  const container = document.getElementById('wordsContainer');
+  const info = document.getElementById('wordsCount');
+  container.innerHTML = '';
+  
+  info.textContent = selectedWords.length;
+  
+  // Actualizar también el contador general
+  document.getElementById('textCounter').textContent = `Palabras: ${allWordsCount} | Seleccionadas: ${selectedWords.length}`;
+  
+  selectedWords.forEach((wordObj, index) => {
+    const wordElement = document.createElement('div');
+    wordElement.className = 'word-item selected';
+    wordElement.innerHTML = `
+      ${wordObj.word} 
+      <span class="remove-word" title="Quitar palabra">×</span>
+    `;
+    
+    wordElement.querySelector('.remove-word').addEventListener('click', (e) => {
+      e.stopPropagation();
+      // Quitar la clase de la palabra en el texto
+      const pageTokens = pagesTokens[wordObj.page];
+      if (pageTokens && pageTokens.spanNodes[wordObj.token]) {
+        pageTokens.spanNodes[wordObj.token].classList.remove('sopa-selected');
+      }
+      
+      selectedWords.splice(index, 1);
+      updateWordsContainer();
+      setStatus(`Palabra "${wordObj.word}" eliminada`, 2000);
+    });
+    
+    container.appendChild(wordElement);
+  });
+  
+  // Si no hay palabras seleccionadas, mostrar mensaje
+  if (selectedWords.length === 0) {
+    const emptyMsg = document.createElement('div');
+    emptyMsg.textContent = 'No hay palabras seleccionadas. Usa Ctrl+Clic en cualquier palabra del texto para añadirla.';
+    emptyMsg.style.color = '#999';
+    emptyMsg.style.fontStyle = 'italic';
+    container.appendChild(emptyMsg);
+  }
+}
+
+function clearAllWords() {
+  // Quitar todas las marcas de las palabras en el texto
+  pagesTokens.forEach(page => {
+    page.spanNodes.forEach(span => {
+      span.classList.remove('sopa-selected');
+    });
+  });
+  
+  selectedWords = [];
+  updateWordsContainer();
+  setStatus('Todas las palabras eliminadas', 2000);
+}
+
+/* --- selección --- */
+function findSelectionContaining(pi,ti){return selections.find(s=>s.pageIndex===pi&&ti>=s.start&&ti<=s.end);}
+function markStartToken(pi,idx){ if(activeStart){pagesTokens[activeStart.pageIndex].spanNodes[activeStart.index].classList.remove('start');} activeStart={pageIndex:pi,index:idx}; pagesTokens[pi].spanNodes[idx].classList.add('start');}
+function clearStartMark(){ if(activeStart){pagesTokens[activeStart.pageIndex].spanNodes[activeStart.index].classList.remove('start');} activeStart=null;}
+function highlightRange(pi,s,e){for(let i=s;i<=e;i++){pagesTokens[pi].spanNodes[i].classList.add('highlight');}}
+function unhighlightRange(pi,s,e){for(let i=s;i<=e;i++){pagesTokens[pi].spanNodes[i].classList.remove('highlight');}}
+function handleTokenClick(pi,ti){
+  const containing=findSelectionContaining(pi,ti);
+  if(containing){removeSelection(containing);clearStartMark();return;}
+  if(!activeStart){markStartToken(pi,ti);return;}
+  if(pi!==activeStart.pageIndex){markStartToken(pi,ti);return;}
+  const s=Math.min(activeStart.index,ti), e=Math.max(activeStart.index,ti);
+  const page=pagesTokens[pi]; const text=page.tokens.slice(s,e+1).join(' ');
+  if(!text){clearStartMark();return;}
+  const selObj={pageIndex:pi,start:s,end:e,text};
+  selections.push(selObj); highlightRange(pi,s,e);
+  const preview=document.createElement('div');
+  preview.textContent=text; preview.style.background="#e3f2fd"; preview.style.margin="4px 0"; preview.style.padding="4px"; preview.style.borderRadius="4px";
+  document.getElementById('infBoard').appendChild(preview);
+  clearStartMark();
+}
+function removeSelection(sel){
+  unhighlightRange(sel.pageIndex,sel.start,sel.end); 
+  selections=selections.filter(s=>s!==sel);
+}
+
+function autoSelectWords() {
+  // Primero limpiar selección actual
+  clearAllWords();
+  
+  // Buscar palabras relevantes en todo el texto (sustantivos, adjetivos, verbos)
+  // Esta es una implementación simple que selecciona palabras largas
+  const wordCounts = {};
+  
+  pagesTokens.forEach((page, pageIndex) => {
+    page.tokens.forEach((token, tokenIndex) => {
+      const cleanWord = token.toUpperCase().replace(/[^A-ZÁÉÍÓÚÜÑ]/gi, '');
+      if (cleanWord.length >= 6) { // Palabras de 6+ caracteres
+        if (!wordCounts[cleanWord]) {
+          wordCounts[cleanWord] = {count: 0, page: pageIndex, token: tokenIndex, original: token};
+        }
+        wordCounts[cleanWord].count++;
+      }
+    });
+  });
+  
+  // Ordenar por frecuencia y seleccionar las más comunes
+  const sortedWords = Object.entries(wordCounts)
+    .sort((a, b) => b[1].count - a[1].count)
+    .slice(0, 15);
+  
+  // Añadir las palabras seleccionadas
+  sortedWords.forEach(([word, info]) => {
+    if (selectedWords.length < 15) {
+      selectedWords.push({
+        word: word,
+        original: info.original,
+        page: info.page,
+        token: info.token
+      });
+      
+      // Marcar visualmente la palabra en el texto
+      pagesTokens[info.page].spanNodes[info.token].classList.add('sopa-selected');
+    }
+  });
+  
+  updateWordsContainer();
+  setStatus('Palabras seleccionadas automáticamente', 2000);
+}
+
+/* --- generar sopa de letras --- */
+function generateWordSearch(words, size=15){
+  const grid=Array.from({length:size},()=>Array(size).fill(''));
+  const dirs=[[1,0],[0,1],[1,1],[1,-1],[-1,0],[0,-1],[-1,-1],[-1,1]];
+  
+  // Ordenar palabras de más larga a más corta para mejor colocación
+  const sortedWords = [...words].sort((a, b) => b.length - a.length);
+  
+  for(const w of sortedWords){
+    let placed=false, tries=0;
+    while(!placed && tries<100){
+      tries++;
+      const dir=dirs[Math.floor(Math.random()*dirs.length)];
+      const row=Math.floor(Math.random()*size);
+      const col=Math.floor(Math.random()*size);
+      let r=row,c=col,i=0,ok=true;
+      while(i<w.length && r>=0&&c>=0&&r<size&&c<size){
+        if(grid[r][c]!==''&&grid[r][c]!==w[i]){ok=false;break;}
+        r+=dir[0]; c+=dir[1]; i++;
+      }
+      if(i===w.length && ok){
+        r=row; c=col;
+        for(const ch of w){grid[r][c]=ch; r+=dir[0]; c+=dir[1];}
+        placed=true;
+      }
+    }
+    if (!placed) {
+      console.log(`No se pudo colocar la palabra: ${w}`);
+    }
+  }
+  const alphabet="ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
+  for(let r=0;r<size;r++) for(let c=0;c<size;c++) if(grid[r][c]==='') grid[r][c]=alphabet[Math.floor(Math.random()*alphabet.length)];
+  return grid;
+}
+
+/* --- Botones --- */
+document.getElementById('loadBtn').addEventListener('click', async ()=>{
+  const fi=document.getElementById('pdfFile');
+  if(!fi.files.length){setStatus('Selecciona un PDF.');return;}
+  setStatus('Cargando...'); await loadPdfFile(fi.files[0]); setStatus('PDF cargado.');
+});
+
+document.getElementById('clearBtn').addEventListener('click',()=>{
+  selections.forEach(s=>unhighlightRange(s.pageIndex,s.start,s.end));
+  selections=[]; clearStartMark(); 
+  document.getElementById('infBoard').innerHTML='';
+  clearAllWords();
+});
+
+document.getElementById('autoSelectBtn').addEventListener('click', autoSelectWords);
+document.getElementById('clearWordsBtn').addEventListener('click', clearAllWords);
+
+/* --- Exportar PDF con tabla y sopa --- */
+document.getElementById('downloadBtn').addEventListener('click',()=>{
+  if(selectedWords.length === 0){
+    setStatus('No hay palabras seleccionadas para la sopa de letras.');
+    return;
+  }
+  
+  const {jsPDF}=window.jspdf;
+  const pdf=new jsPDF({unit:'pt',format:'a4',orientation:'landscape'});
+  const pageW=pdf.internal.pageSize.getWidth();
+
+  // Usar palabras seleccionadas para la sopa
+  const chosen = selectedWords.map(w => w.word);
+  
+  // Tabla página 1 - Frases seleccionadas (si hay)
+  pdf.setFontSize(18); 
+  pdf.text(currentFileName, pageW/2, 40, {align:"center"});
+  
+  if (selections.length > 0) {
+    const data=selections.map((s,i)=>{
+      let txt=s.text.split(/\s+/).map(t=>{
+        if(chosen.includes(t.toUpperCase())) return "**"+t+"**"; // negrita
+        return t;
+      }).join(" ");
+      return [i+1, {content: txt, styles: {fontStyle: 'normal'}}];
+    });
+    
+    pdf.autoTable({
+      startY:60,
+      head:[['#','Frase']],
+      body:data,
+      styles:{font:"helvetica",fontSize:12,cellPadding:6,valign:"middle",overflow:"linebreak",halign:"left",lineColor:[0,0,0],lineWidth:0.5},
+      headStyles:{fillColor:[21,101,192],textColor:[255,255,255],fontStyle:"bold"},
+      alternateRowStyles:{fillColor:[230,247,255]},
+      columnStyles:{0:{fillColor:[255,235,238]}},
+      margin:{left:40,right:40},
+      didParseCell: function(data) {
+        if (data.section === 'body' && data.column.index === 1) {
+          let text = data.cell.raw;
+          if (typeof text === 'string') {
+            const parts = text.split(/(\*\*.+?\*\*)/g);
+            data.cell.text = [];
+            data.cell.styles = {};
+            
+            for (let part of parts) {
+              if (part.startsWith('**') && part.endsWith('**')) {
+                data.cell.text.push({text: part.replace(/\*\*/g, ''), styles: {fontStyle: 'bold'}});
+              } else if (part) {
+                data.cell.text.push({text: part, styles: {fontStyle: 'normal'}});
+              }
+            }
+          }
+        }
+      }
+    });
+  } else {
+    pdf.setFontSize(14);
+    pdf.text("No hay frases seleccionadas", 40, 80);
+  }
+
+  // Página 2 con sopa de letras
+  pdf.addPage("a4","landscape");
+  pdf.setFontSize(16); 
+  pdf.text("Sopa de letras — Palabras a buscar", 40, 40);
+  pdf.setFontSize(12); 
+  pdf.text(chosen.join(", "), 40, 60, {maxWidth:700});
+  
+  const grid=generateWordSearch(chosen, 20); // Usar tamaño 20 para mejor visualización
+  pdf.setFont("courier", "normal");
+  pdf.setFontSize(10);
+  let y=100; 
+  for(let r=0; r<grid.length; r++){ 
+    pdf.text(grid[r].join(" "), 40, y); 
+    y+=10; 
+  }
+
+  pdf.save(currentFileName+".pdf");
+  setStatus('PDF descargado con sopa de letras.');
+});
+</script>
+</body>
+</html>
