@@ -1,21 +1,24 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Dibuja planos con cotas</title>
 <style>
-:root{--bg:#f6f7fb;--accent:#0b5fff;--muted:#666;--cota:#000000}
+:root{--bg:#f6f7fb;--accent:#0b5fff;--muted:#666;--cota:#000000;--danger:#dc3545;--success:#28a745}
 html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial}
 .app{display:flex;flex-direction:column;height:100vh;padding:12px;gap:12px;background:var(--bg)}
 .top{display:flex;gap:12px;align-items:center}
 .controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 label{font-size:14px;color:var(--muted)}
 input[type=range]{width:140px}
+input[type=number]{width:60px;padding:4px;border:1px solid #ddd;border-radius:4px}
 select{padding:4px}
 button{background:var(--accent);color:white;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}
 button.ghost{background:transparent;color:var(--muted);border:1px solid #ddd}
 button.secondary{background:#444}
+button.danger{background:var(--danger)}
+button.success{background:var(--success)}
 .canvas-wrap{flex:1;display:flex;align-items:center;justify-content:center;position:relative}
 canvas{background:white;border-radius:8px;box-shadow:0 6px 18px rgba(10,10,20,0.08);max-width:100%;height:auto}
 .help{font-size:13px;color:var(--muted)}
@@ -23,6 +26,7 @@ canvas{background:white;border-radius:8px;box-shadow:0 6px 18px rgba(10,10,20,0.
 .footer{display:flex;justify-content:space-between;align-items:center}
 .menuCota{position:absolute;background:white;border:1px solid #ccc;padding:6px;border-radius:6px;display:none;}
 .menuCota button{margin:2px;padding:4px 8px;font-size:12px;}
+.file-input{display:none;}
 </style>
 </head>
 <body>
@@ -33,26 +37,33 @@ canvas{background:white;border-radius:8px;box-shadow:0 6px 18px rgba(10,10,20,0.
 <div class="controls">
 <label>Columnas: <span id="colsLabel">20</span></label>
 <input id="cols" type="range" min="8" max="48" value="20">
+<input id="colsInput" type="number" min="8" max="48" value="20">
 <label>Filas: <span id="rowsLabel">20</span></label>
 <input id="rows" type="range" min="8" max="48" value="20">
+<input id="rowsInput" type="number" min="8" max="48" value="20">
 <label>Tamaño punto: <span id="dotLabel">6</span>px</label>
 <input id="dotSize" type="range" min="3" max="12" value="6">
 
 <label>Escala:</label>
 <select id="scaleSelect">
   <option value="0.5">0.5 cm</option>
-  <option value="1" selected>1 cm</option>
+  <option value="1" selected="">1 cm</option>
   <option value="2">2 cm</option>
 </select>
 
 <button id="undo" class="ghost">Deshacer</button>
+<button id="redo" class="ghost">Rehacer</button>
 <button id="clear" class="ghost">Borrar todo</button>
 <button id="toggleCota" class="secondary">Modo cota: OFF</button>
+<button id="toggleEraser" class="danger">Modo borrado: OFF</button>
+<button id="saveProject" class="success">Guardar proyecto</button>
+<button id="loadProject">Cargar proyecto</button>
+<input type="file" id="fileInput" class="file-input" accept=".json">
 <button id="download">Descargar PDF</button>
 </div>
 </div>
 <div class="canvas-wrap">
-<canvas id="board" width="900" height="900" aria-label="Tablero de dibujo por puntos"></canvas>
+<canvas id="board" width="900" height="900" aria-label="Tablero de dibujo por puntos" style="width: 900px; height: 900px;"></canvas>
 <div id="menuCota" class="menuCota">
 <button data-pos="arriba">Arriba</button>
 <button data-pos="abajo">Abajo</button>
@@ -71,14 +82,21 @@ canvas{background:white;border-radius:8px;box-shadow:0 6px 18px rgba(10,10,20,0.
 const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
 const menuCota = document.getElementById('menuCota');
+const fileInput = document.getElementById('fileInput');
 let cols=20, rows=20, dotSize=6;
 let points=[], lines=[], cotas=[];
 let cotaMode=false, cotaFirst=null;
+let eraseMode=false;
 let lastIdx=null;
 let unitCM;              
-let scaleCM = 1;         // cm que mide cada cuadrito
+let scaleCM = 1;
 const cotaOffset=50;     
 const flechaSize=3;      
+
+// Nuevo: Historial para deshacer/rehacer
+let history = [];
+let historyIndex = -1;
+let redoStack = [];
 
 function fixDPI(){
   const ratio=window.devicePixelRatio||1;
@@ -95,7 +113,6 @@ function rebuildPoints(){
   const cellW=width/(cols-1);
   const cellH=height/(rows-1);
 
-  // recalcular pixeles por cm (cada cuadrito = scaleCM cm)
   unitCM = cellW / scaleCM;
 
   for(let r=0;r<rows;r++){
@@ -128,7 +145,8 @@ function drawGrid(){
   }
 
   // dibujar líneas de usuario
-  ctx.strokeStyle='#111'; ctx.lineWidth=2;
+  ctx.strokeStyle='#006400';
+  ctx.lineWidth=4;
   lines.forEach(ln=>{
     const A=points[ln.a], B=points[ln.b];
     ctx.beginPath(); ctx.moveTo(A.x,A.y); ctx.lineTo(B.x,B.y); ctx.stroke();
@@ -157,9 +175,51 @@ function nearestPoint(x,y){
   return bestDist<=threshold**2?best:null;
 }
 
+// Nueva función para guardar el estado actual en el historial
+function saveState() {
+  // Limpiar redo stack cuando se realiza una nueva acción
+  redoStack = [];
+  document.getElementById('redo').disabled = true;
+  
+  // Guardar solo el estado actual, no todo el historial
+  historyIndex++;
+  history[historyIndex] = {
+    lines: JSON.parse(JSON.stringify(lines)),
+    cotas: JSON.parse(JSON.stringify(cotas))
+  };
+  
+  // Limitar el historial a 100 estados para evitar uso excesivo de memoria
+  if (history.length > 100) {
+    history.shift();
+    historyIndex--;
+  }
+}
+
+function eraseElementAt(x, y) {
+  const idx = nearestPoint(x, y);
+  if (idx === null) return;
+  
+  // Guardar estado antes de borrar
+  saveState();
+  
+  const linesToRemove = lines.filter(line => line.a === idx || line.b === idx);
+  lines = lines.filter(line => !linesToRemove.includes(line));
+  
+  const cotasToRemove = cotas.filter(cota => cota.a === idx || cota.b === idx);
+  cotas = cotas.filter(cota => !cotasToRemove.includes(cota));
+  
+  drawGrid();
+}
+
 canvas.addEventListener('click',ev=>{
   const rect=canvas.getBoundingClientRect();
   const pos={x:ev.clientX-rect.left,y:ev.clientY-rect.top};
+  
+  if (eraseMode) {
+    eraseElementAt(pos.x, pos.y);
+    return;
+  }
+  
   const idx=nearestPoint(pos.x,pos.y);
   if(idx===null) return;
   if(cotaMode){
@@ -175,12 +235,20 @@ canvas.addEventListener('click',ev=>{
     }
   } else {
     if(lastIdx===null) lastIdx=idx;
-    else if(idx!==lastIdx){ lines.push({a:lastIdx,b:idx}); lastIdx=idx; drawGrid(); }
+    else if(idx!==lastIdx){ 
+      // Guardar estado antes de añadir línea
+      saveState();
+      lines.push({a:lastIdx,b:idx}); 
+      lastIdx=idx; 
+      drawGrid(); 
+    }
   }
 });
 
 menuCota.querySelectorAll('button').forEach(b=>{
   b.addEventListener('click',()=>{
+    // Guardar estado antes de añadir cota
+    saveState();
     const a=parseInt(menuCota.dataset.a), bIdx=parseInt(menuCota.dataset.b);
     cotas.push({a:a,b:bIdx,pos:b.dataset.pos});
     cotaFirst=null; menuCota.style.display='none'; drawGrid();
@@ -190,46 +258,260 @@ menuCota.querySelectorAll('button').forEach(b=>{
 function drawCota(ctx,ct){
   const A=points[ct.a], B=points[ct.b];
   ctx.strokeStyle='#000'; ctx.fillStyle='#000'; ctx.lineWidth=1.5; ctx.font='12px sans-serif';
-  if(A.y===B.y){ // horizontal
+  if(A.y===B.y){
     const y=ct.pos==='arriba'? A.y-cotaOffset : A.y+cotaOffset;
     ctx.beginPath(); ctx.moveTo(A.x,A.y); ctx.lineTo(A.x,y); ctx.moveTo(B.x,B.y); ctx.lineTo(B.x,y); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(A.x,y); ctx.lineTo(B.x,y); ctx.stroke();
     drawFlecha(ctx,A.x,y,'H',false); drawFlecha(ctx,B.x,y,'H',true);
     const dist=Math.abs(B.x-A.x)/unitCM;
     ctx.fillText((dist*scaleCM).toFixed(1)+' cm',(A.x+B.x)/2,y-2);
-  } else { // vertical
+  } else {
     const x=ct.pos==='izquierda'? A.x-cotaOffset : A.x+cotaOffset;
     ctx.beginPath(); ctx.moveTo(A.x,A.y); ctx.lineTo(x,A.y); ctx.moveTo(B.x,B.y); ctx.lineTo(x,B.y); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(x,A.y); ctx.lineTo(x,B.y); ctx.stroke();
-    drawFlecha(ctx,x,A.y,'V',false); drawFlecha(ctx,x,B.y,'V',true);
+    
+    const isAAbove = A.y < B.y;
+    const topPoint = isAAbove ? A : B;
+    const bottomPoint = isAAbove ? B : A;
+    
+    drawFlecha(ctx,x,topPoint.y,'V','top');
+    drawFlecha(ctx,x,bottomPoint.y,'V','bottom');
+    
     const dist=Math.abs(B.y-A.y)/unitCM;
     ctx.save(); ctx.translate(x-7,(A.y+B.y)/2); ctx.rotate(-Math.PI/2); ctx.fillText((dist*scaleCM).toFixed(1)+' cm',0,0); ctx.restore();
   }
 }
 
-function drawFlecha(ctx,x,y,dir,start){
-  ctx.beginPath(); const size=flechaSize;
-  if(dir==='H'){ if(start){ ctx.moveTo(x+size,y-size); ctx.lineTo(x,y); ctx.lineTo(x+size,y+size); } else { ctx.moveTo(x-size,y-size); ctx.lineTo(x,y); ctx.lineTo(x-size,y+size); } }
-  else { if(start){ ctx.moveTo(x-size,y+size); ctx.lineTo(x,y); ctx.lineTo(x+size,y+size); } else { ctx.moveTo(x-size,y-size); ctx.lineTo(x,y); ctx.lineTo(x+size,y-size); } }
+function drawFlecha(ctx,x,y,dir,position){
+  ctx.beginPath(); 
+  const size=flechaSize;
+  
+  if(dir==='H'){ 
+    if(position === true){
+      ctx.moveTo(x-size,y-size);
+      ctx.lineTo(x,y);
+      ctx.lineTo(x-size,y+size);
+    } else {
+      ctx.moveTo(x+size,y-size);
+      ctx.lineTo(x,y);
+      ctx.lineTo(x+size,y+size);
+    }
+  } else { 
+    if(position === 'top'){
+      ctx.moveTo(x-size,y+size);
+      ctx.lineTo(x,y);
+      ctx.lineTo(x+size,y+size);
+    } else {
+      ctx.moveTo(x-size,y-size);
+      ctx.lineTo(x,y);
+      ctx.lineTo(x+size,y-size);
+    }
+  }
   ctx.stroke();
 }
 
+// Función para deshacer
+function undo() {
+  if (historyIndex <= 0) return;
+  
+  // Guardar estado actual en redo stack
+  redoStack.push({
+    lines: JSON.parse(JSON.stringify(lines)),
+    cotas: JSON.parse(JSON.stringify(cotas))
+  });
+  document.getElementById('redo').disabled = false;
+  
+  // Restaurar estado anterior
+  historyIndex--;
+  const previousState = history[historyIndex];
+  lines = JSON.parse(JSON.stringify(previousState.lines));
+  cotas = JSON.parse(JSON.stringify(previousState.cotas));
+  
+  drawGrid();
+}
+
+// Función para rehacer
+function redo() {
+  if (redoStack.length === 0) return;
+  
+  // Guardar estado actual en historial
+  historyIndex++;
+  history[historyIndex] = {
+    lines: JSON.parse(JSON.stringify(lines)),
+    cotas: JSON.parse(JSON.stringify(cotas))
+  };
+  
+  // Restaurar estado desde redo stack
+  const nextState = redoStack.pop();
+  lines = JSON.parse(JSON.stringify(nextState.lines));
+  cotas = JSON.parse(JSON.stringify(nextState.cotas));
+  
+  if (redoStack.length === 0) {
+    document.getElementById('redo').disabled = true;
+  }
+  
+  drawGrid();
+}
+
+// Función para guardar proyecto
+function saveProject() {
+  const projectData = {
+    lines: lines,
+    cotas: cotas,
+    cols: cols,
+    rows: rows,
+    dotSize: dotSize,
+    scaleCM: scaleCM
+  };
+  
+  const dataStr = JSON.stringify(projectData);
+  const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+  
+  const exportFileDefaultName = 'proyecto-planos.json';
+  
+  const linkElement = document.createElement('a');
+  linkElement.setAttribute('href', dataUri);
+  linkElement.setAttribute('download', exportFileDefaultName);
+  linkElement.click();
+}
+
+// Función para cargar proyecto
+function loadProject() {
+  fileInput.click();
+}
+
+function handleProjectFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const projectData = JSON.parse(e.target.result);
+      
+      // Validar datos básicos
+      if (!projectData.lines || !projectData.cotas || !projectData.cols || !projectData.rows) {
+        throw new Error("Formato de archivo inválido");
+      }
+      
+      // Guardar estado actual antes de cargar
+      saveState();
+      
+      // Aplicar datos del proyecto
+      lines = projectData.lines;
+      cotas = projectData.cotas;
+      cols = projectData.cols;
+      rows = projectData.rows;
+      dotSize = projectData.dotSize || 6;
+      scaleCM = projectData.scaleCM || 1;
+      
+      // Actualizar controles
+      document.getElementById('cols').value = cols;
+      document.getElementById('colsInput').value = cols;
+      document.getElementById('colsLabel').textContent = cols;
+      
+      document.getElementById('rows').value = rows;
+      document.getElementById('rowsInput').value = rows;
+      document.getElementById('rowsLabel').textContent = rows;
+      
+      document.getElementById('dotSize').value = dotSize;
+      document.getElementById('dotLabel').textContent = dotSize;
+      
+      document.getElementById('scaleSelect').value = scaleCM;
+      
+      // Reconstruir y dibujar
+      rebuildPoints();
+      drawGrid();
+      
+      alert('Proyecto cargado correctamente');
+    } catch (error) {
+      console.error(error);
+      alert('Error al cargar el proyecto: ' + error.message);
+    }
+  };
+  reader.readAsText(file);
+  
+  // Limpiar input para permitir cargar el mismo archivo otra vez
+  e.target.value = '';
+}
+
 // controles
-document.getElementById('cols').addEventListener('input',e=>{ cols=parseInt(e.target.value); document.getElementById('colsLabel').textContent=cols; rebuildPoints(); drawGrid(); });
-document.getElementById('rows').addEventListener('input',e=>{ rows=parseInt(e.target.value); document.getElementById('rowsLabel').textContent=rows; rebuildPoints(); drawGrid(); });
+document.getElementById('cols').addEventListener('input',e=>{ 
+  cols=parseInt(e.target.value); 
+  document.getElementById('colsLabel').textContent=cols; 
+  document.getElementById('colsInput').value=cols;
+  rebuildPoints(); drawGrid(); 
+});
+
+document.getElementById('colsInput').addEventListener('input',e=>{ 
+  let newCols = parseInt(e.target.value);
+  if (newCols >= 8 && newCols <= 48) {
+    cols = newCols;
+    document.getElementById('cols').value = cols;
+    document.getElementById('colsLabel').textContent=cols; 
+    rebuildPoints(); drawGrid();
+  }
+});
+
+document.getElementById('rows').addEventListener('input',e=>{ 
+  rows=parseInt(e.target.value); 
+  document.getElementById('rowsLabel').textContent=rows; 
+  document.getElementById('rowsInput').value=rows;
+  rebuildPoints(); drawGrid(); 
+});
+
+document.getElementById('rowsInput').addEventListener('input',e=>{ 
+  let newRows = parseInt(e.target.value);
+  if (newRows >= 8 && newRows <= 48) {
+    rows = newRows;
+    document.getElementById('rows').value = rows;
+    document.getElementById('rowsLabel').textContent=rows; 
+    rebuildPoints(); drawGrid();
+  }
+});
+
 document.getElementById('dotSize').addEventListener('input',e=>{ dotSize=parseInt(e.target.value); document.getElementById('dotLabel').textContent=dotSize; drawGrid(); });
-document.getElementById('toggleCota').addEventListener('click',()=>{ cotaMode=!cotaMode; document.getElementById('toggleCota').textContent='Modo cota: '+(cotaMode?'ON':'OFF'); });
-document.getElementById('undo').addEventListener('click',()=>{ if(cotaMode){ if(cotas.length) cotas.pop(); } else { if(lines.length) lines.pop(); } drawGrid(); });
-document.getElementById('clear').addEventListener('click',()=>{ if(confirm('Borrar todo?')){ lines=[];cotas=[];drawGrid(); } });
+document.getElementById('toggleCota').addEventListener('click',()=>{ 
+  cotaMode=!cotaMode; 
+  eraseMode = false;
+  document.getElementById('toggleCota').textContent='Modo cota: '+(cotaMode?'ON':'OFF'); 
+  document.getElementById('toggleEraser').textContent='Modo borrado: OFF';
+  canvas.style.cursor = 'default';
+});
+
+document.getElementById('toggleEraser').addEventListener('click',()=>{ 
+  eraseMode=!eraseMode; 
+  cotaMode = false;
+  document.getElementById('toggleEraser').textContent='Modo borrado: '+(eraseMode?'ON':'OFF'); 
+  document.getElementById('toggleCota').textContent='Modo cota: OFF';
+  canvas.style.cursor = eraseMode ? 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\'><circle cx=\'12\' cy=\'12\' r=\'10\' fill=\'%23dc3545\' opacity=\'0.7\'/><path d=\'M7 7l10 10M7 17L17 7\' stroke=\'white\' stroke-width=\'2\'/></svg>") 12 12, auto' : 'default';
+});
+
+document.getElementById('undo').addEventListener('click', undo);
+document.getElementById('redo').addEventListener('click', redo);
+document.getElementById('clear').addEventListener('click',()=>{ 
+  if(confirm('¿Borrar todo?')){ 
+    saveState();
+    lines=[];
+    cotas=[];
+    drawGrid(); 
+  } 
+});
+
 document.getElementById('scaleSelect').addEventListener('change',e=>{
   scaleCM=parseFloat(e.target.value);
   rebuildPoints(); drawGrid();
 });
 
+// Nuevos controles para guardar/cargar proyecto
+document.getElementById('saveProject').addEventListener('click', saveProject);
+document.getElementById('loadProject').addEventListener('click', loadProject);
+fileInput.addEventListener('change', handleProjectFile);
+
 document.getElementById('download').addEventListener('click',()=>{
   const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF({unit:'mm',format:'a4'});
-  const startX=20, startY=20, step=10*scaleCM; // cada cuadrito mide scaleCM cm
+  const pdf = new jsPDF({unit:'mm',format:'a4',orientation:'landscape'});
+  const startX=20, startY=20, step=10*scaleCM;
 
   // puntos
   for(let r=0;r<rows;r++){
@@ -242,7 +524,8 @@ document.getElementById('download').addEventListener('click',()=>{
   lines.forEach(ln=>{
     const A={x:startX+(ln.a%cols)*step, y:startY+Math.floor(ln.a/cols)*step};
     const B={x:startX+(ln.b%cols)*step, y:startY+Math.floor(ln.b/cols)*step};
-    pdf.setDrawColor(0,0,0);
+    pdf.setDrawColor(0,100,0);
+    pdf.setLineWidth(1.6);
     pdf.line(A.x,A.y,B.x,B.y);
   });
 
@@ -253,17 +536,26 @@ document.getElementById('download').addEventListener('click',()=>{
     pdf.setDrawColor(0,0,0); pdf.setTextColor(0,0,0); pdf.setLineWidth(0.8); pdf.setFontSize(10);
     const arrowSize=flechaSize*0.5;
 
-    if(A.y===B.y){ // horizontal
+    if(A.y===B.y){
       const y=ct.pos==='arriba'? A.y-step*0.85 : A.y+step*0.85;
       pdf.line(A.x,A.y,B.x,B.y); pdf.line(A.x,y,A.x,A.y); pdf.line(B.x,y,B.x,B.y); pdf.line(A.x,y,B.x,y);
       pdf.line(A.x+arrowSize,y-arrowSize,A.x,y); pdf.line(A.x+arrowSize,y+arrowSize,A.x,y);
       pdf.line(B.x-arrowSize,y-arrowSize,B.x,y); pdf.line(B.x-arrowSize,y+arrowSize,B.x,y);
       pdf.text((Math.abs(B.x-A.x)/step*scaleCM).toFixed(1)+' cm',(A.x+B.x)/2,y-2,'center');
-    } else { // vertical
+    } else {
       const x=ct.pos==='izquierda'? A.x-step*0.85 : A.x+step*0.85;
       pdf.line(A.x,A.y,B.x,B.y); pdf.line(A.x,A.y,x,A.y); pdf.line(B.x,B.y,x,B.y); pdf.line(x,A.y,x,B.y);
-      pdf.line(x-arrowSize,A.y-arrowSize,x,A.y); pdf.line(x+arrowSize,A.y-arrowSize,x,A.y);
-      pdf.line(x-arrowSize,B.y+arrowSize,x,B.y); pdf.line(x+arrowSize,B.y+arrowSize,x,B.y);
+      
+      const isAAbove = A.y < B.y;
+      const topPoint = isAAbove ? A : B;
+      const bottomPoint = isAAbove ? B : A;
+      
+      pdf.line(x-arrowSize,topPoint.y+arrowSize,x,topPoint.y);
+      pdf.line(x+arrowSize,topPoint.y+arrowSize,x,topPoint.y);
+      
+      pdf.line(x-arrowSize,bottomPoint.y-arrowSize,x,bottomPoint.y);
+      pdf.line(x+arrowSize,bottomPoint.y-arrowSize,x,bottomPoint.y);
+      
       pdf.saveGraphicsState();
       pdf.text((Math.abs(B.y-A.y)/step*scaleCM).toFixed(1)+' cm',x-2,(A.y+B.y)/2,'left',90);
       pdf.restoreGraphicsState();
@@ -273,7 +565,15 @@ document.getElementById('download').addEventListener('click',()=>{
   pdf.save('dibujo-planos.pdf');
 });
 
-function init(){ fixDPI(); rebuildPoints(); drawGrid(); }
+function init(){ 
+  fixDPI(); 
+  rebuildPoints(); 
+  drawGrid(); 
+  // Guardar estado inicial
+  saveState();
+  // Deshabilitar botón rehacer inicialmente
+  document.getElementById('redo').disabled = true;
+}
 window.addEventListener('resize',init);
 init();
 </script>
