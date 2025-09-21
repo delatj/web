@@ -45,6 +45,10 @@
   .remove-word{color:#c62828;cursor:pointer;font-weight:bold;padding:0 4px;}
   .instructions{font-size:13px;color:#666;margin-top:8px;padding:8px;background:#f5f5f5;border-radius:6px;}
   .counter{font-size:13px;color:#555;margin-bottom:8px;}
+  .selection-mode{background:#ffecb3;padding:4px 8px;border-radius:4px;font-size:12px;margin-left:10px;}
+  .size-controls {display: flex; align-items: center; gap: 8px; margin-top: 10px;}
+  .size-controls label {font-size: 13px;}
+  .size-controls input {width: 50px; padding: 4px; border: 1px solid #ccc; border-radius: 4px;}
 </style>
 </head>
 <body>
@@ -57,6 +61,7 @@
       <button id="clearBtn">Limpiar</button>
       <button id="downloadBtn" class="secondary">Descargar PDF (con sopa de letras)</button>
       <span id="status" class="status"></span>
+      <span id="selectionMode" class="selection-mode">Modo: Selección de frases</span>
     </div>
   </header>
 
@@ -69,12 +74,18 @@
 
     <div class="panel textPanel" id="textPanel">
       <div class="section-title">
-        <strong>Texto (clic: inicio → clic: fin)</strong>
+        <strong>Texto</strong>
         <div class="counter" id="textCounter">Palabras: 0 | Seleccionadas: 0</div>
       </div>
       <div class="instructions">
-        🔹 <strong>Selección de frases:</strong> Haz clic en una palabra para marcar inicio y en otra para marcar fin<br>
-        🔹 <strong>Selección para sopa:</strong> Ctrl+clic en cualquier palabra para añadirla/quitarla
+        <div>
+          <input type="radio" id="modePhrase" name="selectionMode" checked>
+          <label for="modePhrase">Selección de frases (clic: inicio → clic: fin)</label>
+        </div>
+        <div>
+          <input type="radio" id="modeWord" name="selectionMode">
+          <label for="modeWord">Selección para sopa de letras (clic en palabras)</label>
+        </div>
       </div>
       <div id="textPages" style="margin-top:8px"></div>
     </div>
@@ -94,7 +105,11 @@
           </div>
         </div>
         <div id="selectedWordsInfo" class="counter">
-          Seleccionadas: <span id="wordsCount">0</span>/15 palabras
+          Seleccionadas: <span id="wordsCount">0</span>/<span id="maxWords">15</span> palabras
+        </div>
+        <div class="size-controls">
+          <label for="fontSize">Tamaño de letra:</label>
+          <input type="number" id="fontSize" value="14" min="8" max="20">
         </div>
         <div id="wordsContainer" class="word-list"></div>
       </div>
@@ -111,11 +126,22 @@ let loadedPdf = null, pagesTokens = [], selections = [], activeStart = null;
 let currentFileName = "Infografía";
 let selectedWords = [];
 let allWordsCount = 0;
+let currentMode = 'phrase'; // 'phrase' o 'word'
+let fontSize = 14; // Tamaño de fuente para la sopa de letras
 
 function setStatus(msg, timeout=3000){
   const s=document.getElementById('status');
   s.textContent=msg;
   if(timeout) setTimeout(()=>{if(s.textContent===msg) s.textContent='';},timeout);
+}
+
+function updateSelectionMode() {
+  const modeElement = document.getElementById('selectionMode');
+  if (currentMode === 'phrase') {
+    modeElement.textContent = 'Modo: Selección de frases';
+  } else {
+    modeElement.textContent = 'Modo: Selección para sopa de letras';
+  }
 }
 
 /* --- carga PDF y tokenización --- */
@@ -176,14 +202,13 @@ async function loadPdfFile(file){
       sp.dataset.index=idx;
       sp.dataset.word=t.toUpperCase();
       
-      // Evento para selección de frases (clic normal)
+      // Evento para selección
       sp.addEventListener('click',(e)=>{
-        if(e.ctrlKey || e.metaKey){
-          // Ctrl+Clic para seleccionar palabra para sopa
-          e.preventDefault();
+        if (currentMode === 'word') {
+          // Modo selección de palabras para sopa
           toggleWordForSopa(t, p-1, idx, sp);
         } else {
-          // Clic normal para selección de frases
+          // Modo selección de frases
           handleTokenClick(p-1,idx);
         }
       });
@@ -220,8 +245,9 @@ function toggleWordForSopa(word, pageIndex, tokenIndex, element) {
     setStatus(`Palabra "${cleanWord}" eliminada de la sopa`, 2000);
   } else {
     // Añadir la palabra a la selección (si no hemos alcanzado el límite)
-    if (selectedWords.length >= 15) {
-      setStatus('Límite alcanzado (15 palabras máximo)', 2000);
+    const maxWords = parseInt(document.getElementById('maxWords').textContent);
+    if (selectedWords.length >= maxWords) {
+      setStatus(`Límite alcanzado (${maxWords} palabras máximo)`, 2000);
       return;
     }
     
@@ -276,7 +302,7 @@ function updateWordsContainer() {
   // Si no hay palabras seleccionadas, mostrar mensaje
   if (selectedWords.length === 0) {
     const emptyMsg = document.createElement('div');
-    emptyMsg.textContent = 'No hay palabras seleccionadas. Usa Ctrl+Clic en cualquier palabra del texto para añadirla.';
+    emptyMsg.textContent = 'No hay palabras seleccionadas. Cambia al modo de selección de palabras y haz clic en las palabras.';
     emptyMsg.style.color = '#999';
     emptyMsg.style.fontStyle = 'italic';
     container.appendChild(emptyMsg);
@@ -296,27 +322,110 @@ function clearAllWords() {
   setStatus('Todas las palabras eliminadas', 2000);
 }
 
-/* --- selección --- */
-function findSelectionContaining(pi,ti){return selections.find(s=>s.pageIndex===pi&&ti>=s.start&&ti<=s.end);}
-function markStartToken(pi,idx){ if(activeStart){pagesTokens[activeStart.pageIndex].spanNodes[activeStart.index].classList.remove('start');} activeStart={pageIndex:pi,index:idx}; pagesTokens[pi].spanNodes[idx].classList.add('start');}
-function clearStartMark(){ if(activeStart){pagesTokens[activeStart.pageIndex].spanNodes[activeStart.index].classList.remove('start');} activeStart=null;}
-function highlightRange(pi,s,e){for(let i=s;i<=e;i++){pagesTokens[pi].spanNodes[i].classList.add('highlight');}}
-function unhighlightRange(pi,s,e){for(let i=s;i<=e;i++){pagesTokens[pi].spanNodes[i].classList.remove('highlight');}}
-function handleTokenClick(pi,ti){
-  const containing=findSelectionContaining(pi,ti);
-  if(containing){removeSelection(containing);clearStartMark();return;}
-  if(!activeStart){markStartToken(pi,ti);return;}
-  if(pi!==activeStart.pageIndex){markStartToken(pi,ti);return;}
-  const s=Math.min(activeStart.index,ti), e=Math.max(activeStart.index,ti);
-  const page=pagesTokens[pi]; const text=page.tokens.slice(s,e+1).join(' ');
-  if(!text){clearStartMark();return;}
-  const selObj={pageIndex:pi,start:s,end:e,text};
-  selections.push(selObj); highlightRange(pi,s,e);
-  const preview=document.createElement('div');
-  preview.textContent=text; preview.style.background="#e3f2fd"; preview.style.margin="4px 0"; preview.style.padding="4px"; preview.style.borderRadius="4px";
-  document.getElementById('infBoard').appendChild(preview);
-  clearStartMark();
+/* --- selección de frases --- */
+function findSelectionContaining(pi,ti){
+  return selections.find(s=>s.pageIndex===pi&&ti>=s.start&&ti<=s.end);
 }
+
+function markStartToken(pi,idx){ 
+  if(activeStart){
+    pagesTokens[activeStart.pageIndex].spanNodes[activeStart.index].classList.remove('start');
+  } 
+  activeStart={pageIndex:pi,index:idx}; 
+  pagesTokens[pi].spanNodes[idx].classList.add('start');
+}
+
+function clearStartMark(){ 
+  if(activeStart){
+    pagesTokens[activeStart.pageIndex].spanNodes[activeStart.index].classList.remove('start');
+  } 
+  activeStart=null;
+}
+
+function highlightRange(pi,s,e){
+  for(let i=s;i<=e;i++){
+    pagesTokens[pi].spanNodes[i].classList.add('highlight');
+  }
+}
+
+function unhighlightRange(pi,s,e){
+  for(let i=s;i<=e;i++){
+    pagesTokens[pi].spanNodes[i].classList.remove('highlight');
+  }
+}
+
+function handleTokenClick(pi,ti){
+  // Si ya hay una selección en este token, eliminarla
+  const containing=findSelectionContaining(pi,ti);
+  if(containing){
+    removeSelection(containing);
+    clearStartMark();
+    return;
+  }
+  
+  // Si no hay inicio de selección, marcar inicio
+  if(!activeStart){
+    markStartToken(pi,ti);
+    setStatus('Inicio de selección marcado. Haz clic en la última palabra.', 2000);
+    return;
+  }
+  
+  // Si el inicio está en una página diferente, reiniciar selección
+  if(pi!==activeStart.pageIndex){
+    clearStartMark();
+    markStartToken(pi,ti);
+    setStatus('Selección reiniciada en nueva página. Haz clic en la última palabra.', 2000);
+    return;
+  }
+  
+  // Crear la selección
+  const s=Math.min(activeStart.index,ti), e=Math.max(activeStart.index,ti);
+  const page=pagesTokens[pi]; 
+  const text=page.tokens.slice(s,e+1).join(' ');
+  
+  if(!text){
+    clearStartMark();
+    return;
+  }
+  
+  const selObj={pageIndex:pi,start:s,end:e,text};
+  selections.push(selObj); 
+  highlightRange(pi,s,e);
+  
+  const preview=document.createElement('div');
+  preview.textContent=text; 
+  preview.style.background="#e3f2fd"; 
+  preview.style.margin="4px 0"; 
+  preview.style.padding="8px"; 
+  preview.style.borderRadius="4px";
+  preview.style.position = "relative";
+  
+  const removeBtn = document.createElement('button');
+  removeBtn.textContent = "X";
+  removeBtn.style.position = "absolute";
+  removeBtn.style.top = "4px";
+  removeBtn.style.right = "4px";
+  removeBtn.style.background = "#f44336";
+  removeBtn.style.color = "white";
+  removeBtn.style.border = "none";
+  removeBtn.style.borderRadius = "50%";
+  removeBtn.style.width = "20px";
+  removeBtn.style.height = "20px";
+  removeBtn.style.fontSize = "12px";
+  removeBtn.style.cursor = "pointer";
+  removeBtn.style.padding = "0";
+  removeBtn.addEventListener('click', () => {
+    removeSelection(selObj);
+    preview.remove();
+  });
+  
+  preview.appendChild(removeBtn);
+  document.getElementById('infBoard').appendChild(preview);
+  
+  clearStartMark();
+  setStatus('Frase seleccionada: ' + text, 3000);
+}
+
 function removeSelection(sel){
   unhighlightRange(sel.pageIndex,sel.start,sel.end); 
   selections=selections.filter(s=>s!==sel);
@@ -326,44 +435,56 @@ function autoSelectWords() {
   // Primero limpiar selección actual
   clearAllWords();
   
-  // Buscar palabras relevantes en todo el texto (sustantivos, adjetivos, verbos)
-  // Esta es una implementación simple que selecciona palabras largas
+  // Buscar palabras relevantes en todas las selecciones de frases
   const wordCounts = {};
   
-  pagesTokens.forEach((page, pageIndex) => {
-    page.tokens.forEach((token, tokenIndex) => {
-      const cleanWord = token.toUpperCase().replace(/[^A-ZÁÉÍÓÚÜÑ]/gi, '');
-      if (cleanWord.length >= 6) { // Palabras de 6+ caracteres
+  selections.forEach(sel => {
+    const words = sel.text.split(/\s+/);
+    words.forEach(word => {
+      const cleanWord = word.toUpperCase().replace(/[^A-ZÁÉÍÓÚÜÑ]/gi, '');
+      if (cleanWord.length >= 4) { // Palabras de 4+ caracteres
         if (!wordCounts[cleanWord]) {
-          wordCounts[cleanWord] = {count: 0, page: pageIndex, token: tokenIndex, original: token};
+          wordCounts[cleanWord] = 0;
         }
-        wordCounts[cleanWord].count++;
+        wordCounts[cleanWord]++;
       }
     });
   });
   
   // Ordenar por frecuencia y seleccionar las más comunes
+  const maxWords = parseInt(document.getElementById('maxWords').textContent);
   const sortedWords = Object.entries(wordCounts)
-    .sort((a, b) => b[1].count - a[1].count)
-    .slice(0, 15);
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, maxWords);
   
   // Añadir las palabras seleccionadas
-  sortedWords.forEach(([word, info]) => {
-    if (selectedWords.length < 15) {
-      selectedWords.push({
-        word: word,
-        original: info.original,
-        page: info.page,
-        token: info.token
-      });
-      
-      // Marcar visualmente la palabra en el texto
-      pagesTokens[info.page].spanNodes[info.token].classList.add('sopa-selected');
+  sortedWords.forEach(([word]) => {
+    if (selectedWords.length < maxWords) {
+      // Buscar la palabra en el texto para marcarla visualmente
+      let found = false;
+      for (let pageIndex = 0; pageIndex < pagesTokens.length && !found; pageIndex++) {
+        const page = pagesTokens[pageIndex];
+        for (let tokenIndex = 0; tokenIndex < page.tokens.length && !found; tokenIndex++) {
+          const token = page.tokens[tokenIndex];
+          if (token.toUpperCase().replace(/[^A-ZÁÉÍÓÚÜÑ]/gi, '') === word) {
+            selectedWords.push({
+              word: word,
+              original: token,
+              page: pageIndex,
+              token: tokenIndex
+            });
+            
+            // Marcar visualmente la palabra en el texto
+            page.spanNodes[tokenIndex].classList.add('sopa-selected');
+            found = true;
+          }
+        }
+      }
     }
   });
   
   updateWordsContainer();
-  setStatus('Palabras seleccionadas automáticamente', 2000);
+  setStatus('Palabras seleccionadas automáticamente desde las frases', 2000);
 }
 
 /* --- generar sopa de letras --- */
@@ -376,7 +497,7 @@ function generateWordSearch(words, size=15){
   
   for(const w of sortedWords){
     let placed=false, tries=0;
-    while(!placed && tries<100){
+    while(!placed && tries<200){
       tries++;
       const dir=dirs[Math.floor(Math.random()*dirs.length)];
       const row=Math.floor(Math.random()*size);
@@ -401,7 +522,7 @@ function generateWordSearch(words, size=15){
   return grid;
 }
 
-/* --- Botones --- */
+/* --- Botones y eventos --- */
 document.getElementById('loadBtn').addEventListener('click', async ()=>{
   const fi=document.getElementById('pdfFile');
   if(!fi.files.length){setStatus('Selecciona un PDF.');return;}
@@ -413,10 +534,43 @@ document.getElementById('clearBtn').addEventListener('click',()=>{
   selections=[]; clearStartMark(); 
   document.getElementById('infBoard').innerHTML='';
   clearAllWords();
+  setStatus('Selecciones limpiadas');
 });
 
 document.getElementById('autoSelectBtn').addEventListener('click', autoSelectWords);
 document.getElementById('clearWordsBtn').addEventListener('click', clearAllWords);
+
+// Cambio de modo de selección
+document.getElementById('modePhrase').addEventListener('change', function() {
+  if (this.checked) {
+    currentMode = 'phrase';
+    updateSelectionMode();
+    setStatus('Modo: Selección de frases. Haz clic en la primera y última palabra de una frase.');
+  }
+});
+
+document.getElementById('modeWord').addEventListener('change', function() {
+  if (this.checked) {
+    currentMode = 'word';
+    updateSelectionMode();
+    setStatus('Modo: Selección para sopa de letras. Haz clic en palabras para añadirlas o quitarlas.');
+  }
+});
+
+// Control de tamaño de fuente para sopa de letras
+document.getElementById('fontSize').addEventListener('change', function() {
+  const newSize = parseInt(this.value);
+  if (newSize >= 8 && newSize <= 20) {
+    fontSize = newSize;
+    setStatus(`Tamaño de letra cambiado a ${fontSize}pt.`);
+  } else {
+    this.value = fontSize;
+    setStatus('El tamaño de letra debe estar entre 8 y 20.');
+  }
+});
+
+// Inicializar modo de selección
+updateSelectionMode();
 
 /* --- Exportar PDF con tabla y sopa --- */
 document.getElementById('downloadBtn').addEventListener('click',()=>{
@@ -426,17 +580,20 @@ document.getElementById('downloadBtn').addEventListener('click',()=>{
   }
   
   const {jsPDF}=window.jspdf;
-  const pdf=new jsPDF({unit:'pt',format:'a4',orientation:'landscape'});
+  // Cambiar a formato vertical (portrait) para A4
+  const pdf=new jsPDF({unit:'pt',format:'a4',orientation:'portrait'});
   const pageW=pdf.internal.pageSize.getWidth();
+  const margin = 40; // Márgenes laterales
 
   // Usar palabras seleccionadas para la sopa
   const chosen = selectedWords.map(w => w.word);
   
-  // Tabla página 1 - Frases seleccionadas (si hay)
-  pdf.setFontSize(18); 
-  pdf.text(currentFileName, pageW/2, 40, {align:"center"});
+  // Página 1 - Infografía con frases seleccionadas
+  pdf.setFontSize(16); 
+  pdf.text(currentFileName, pageW/2, 30, {align:"center"});
   
   if (selections.length > 0) {
+    // Configurar la tabla para formato vertical
     const data=selections.map((s,i)=>{
       let txt=s.text.split(/\s+/).map(t=>{
         if(chosen.includes(t.toUpperCase())) return "**"+t+"**"; // negrita
@@ -446,14 +603,26 @@ document.getElementById('downloadBtn').addEventListener('click',()=>{
     });
     
     pdf.autoTable({
-      startY:60,
+      startY:45,
       head:[['#','Frase']],
       body:data,
-      styles:{font:"helvetica",fontSize:12,cellPadding:6,valign:"middle",overflow:"linebreak",halign:"left",lineColor:[0,0,0],lineWidth:0.5},
+      styles:{
+        font:"helvetica",
+        fontSize:10,
+        cellPadding:4,
+        valign:"middle",
+        overflow:"linebreak",
+        halign:"left",
+        lineColor:[0,0,0],
+        lineWidth:0.3
+      },
       headStyles:{fillColor:[21,101,192],textColor:[255,255,255],fontStyle:"bold"},
       alternateRowStyles:{fillColor:[230,247,255]},
-      columnStyles:{0:{fillColor:[255,235,238]}},
-      margin:{left:40,right:40},
+      columnStyles:{
+        0:{cellWidth:30, fillColor:[255,235,238], halign: 'center'},
+        1:{cellWidth:pageW - margin*2 - 40} // Ancho ajustado para vertical
+      },
+      margin:{left:margin, right:margin},
       didParseCell: function(data) {
         if (data.section === 'body' && data.column.index === 1) {
           let text = data.cell.raw;
@@ -471,31 +640,60 @@ document.getElementById('downloadBtn').addEventListener('click',()=>{
             }
           }
         }
+      },
+      // Ajustar altura de las filas automáticamente
+      didDrawPage: function(data) {
+        // Añadir número de página
+        pdf.setFontSize(10);
+        pdf.text('Página 1 - Infografía', pageW/2, pdf.internal.pageSize.getHeight() - 20, {align: 'center'});
       }
     });
   } else {
-    pdf.setFontSize(14);
-    pdf.text("No hay frases seleccionadas", 40, 80);
+    pdf.setFontSize(12);
+    pdf.text("No hay frases seleccionadas", margin, 60);
+    pdf.setFontSize(10);
+    pdf.text('Página 1 - Infografía', pageW/2, pdf.internal.pageSize.getHeight() - 20, {align: 'center'});
   }
 
   // Página 2 con sopa de letras
-  pdf.addPage("a4","landscape");
+  pdf.addPage("a4","portrait");
   pdf.setFontSize(16); 
-  pdf.text("Sopa de letras — Palabras a buscar", 40, 40);
+  pdf.text("Sopa de letras", pageW/2, 30, {align:"center"});
   pdf.setFontSize(12); 
-  pdf.text(chosen.join(", "), 40, 60, {maxWidth:700});
-  
-  const grid=generateWordSearch(chosen, 20); // Usar tamaño 20 para mejor visualización
-  pdf.setFont("courier", "normal");
+  pdf.text("Palabras a buscar:", margin, 50);
   pdf.setFontSize(10);
-  let y=100; 
-  for(let r=0; r<grid.length; r++){ 
-    pdf.text(grid[r].join(" "), 40, y); 
-    y+=10; 
+  
+  // Mostrar palabras en varias líneas si es necesario
+  const wordsPerLine = 4;
+  let y = 70;
+  for (let i = 0; i < chosen.length; i += wordsPerLine) {
+    const lineWords = chosen.slice(i, i + wordsPerLine);
+    pdf.text(lineWords.join(", "), margin, y);
+    y += 15;
   }
+  
+  // Generar y mostrar la sopa de letras
+  const grid = generateWordSearch(chosen, 15);
+  pdf.setFont("courier", "normal");
+  pdf.setFontSize(fontSize); // Usar el tamaño de fuente configurado
+  
+  // Calcular tamaño y posición de la sopa de letras
+  const cellSize = fontSize * 0.8; // Tamaño aproximado de cada celda
+  const gridWidth = 15 * cellSize;
+  const gridX = (pageW - gridWidth) / 2;
+  y = 130; // Posición vertical inicial
+  
+  for(let r = 0; r < grid.length; r++){ 
+    pdf.text(grid[r].join(" "), gridX, y); 
+    y += fontSize * 0.9; // Espaciado proporcional al tamaño de fuente
+  }
+  
+  // Añadir número de página
+  pdf.setFontSize(10);
+  pdf.text('Página 2 - Sopa de letras', pageW/2, pdf.internal.pageSize.getHeight() - 20, {align: 'center'});
 
-  pdf.save(currentFileName+".pdf");
-  setStatus('PDF descargado con sopa de letras.');
+  pdf.save(currentFileName + ".pdf");
+  setStatus(`PDF descargado con infografía y sopa de letras con letras de ${fontSize}pt.`);
 });
 </script>
 </body>
