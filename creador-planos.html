@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Dibuja planos con cotas</title>
 <style>
-:root{--bg:#f6f7fb;--accent:#0b5fff;--muted:#666;--cota:#000000;--danger:#dc3545;--success:#28a745}
+:root{--bg:#f6f7fb;--accent:#0b5fff;--muted:#666;--cota:#000000;--danger:#dc3545;--success:#28a745;--warning:#ffc107}
 html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial}
 .app{display:flex;flex-direction:column;height:100vh;padding:12px;gap:12px;background:var(--bg)}
 .top{display:flex;gap:12px;align-items:center}
@@ -19,6 +19,7 @@ button.ghost{background:transparent;color:var(--muted);border:1px solid #ddd}
 button.secondary{background:#444}
 button.danger{background:var(--danger)}
 button.success{background:var(--success)}
+button.warning{background:var(--warning)}
 .canvas-wrap{flex:1;display:flex;align-items:center;justify-content:center;position:relative}
 canvas{background:white;border-radius:8px;box-shadow:0 6px 18px rgba(10,10,20,0.08);max-width:100%;height:auto}
 .help{font-size:13px;color:var(--muted)}
@@ -27,6 +28,9 @@ canvas{background:white;border-radius:8px;box-shadow:0 6px 18px rgba(10,10,20,0.
 .menuCota{position:absolute;background:white;border:1px solid #ccc;padding:6px;border-radius:6px;display:none;}
 .menuCota button{margin:2px;padding:4px 8px;font-size:12px;}
 .file-input{display:none;}
+.text-dialog{position:absolute;background:white;border:1px solid #ccc;padding:12px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.1);display:none;z-index:100;}
+.text-dialog input{width:200px;padding:8px;border:1px solid #ddd;border-radius:4px;margin-bottom:8px;}
+.text-dialog button{margin-right:4px;}
 </style>
 </head>
 <body>
@@ -51,11 +55,24 @@ canvas{background:white;border-radius:8px;box-shadow:0 6px 18px rgba(10,10,20,0.
   <option value="2">2 cm</option>
 </select>
 
+<label>Tamaño texto: </label>
+<select id="fontSize">
+  <option value="12">12px</option>
+  <option value="14">14px</option>
+  <option value="16" selected>16px</option>
+  <option value="18">18px</option>
+  <option value="20">20px</option>
+  <option value="24">24px</option>
+  <option value="28">28px</option>
+  <option value="32">32px</option>
+</select>
+
 <button id="undo" class="ghost">Deshacer</button>
 <button id="redo" class="ghost">Rehacer</button>
 <button id="clear" class="ghost">Borrar todo</button>
 <button id="toggleCota" class="secondary">Modo cota: OFF</button>
 <button id="toggleEraser" class="danger">Modo borrado: OFF</button>
+<button id="toggleText" class="warning">Modo texto: OFF</button>
 <button id="saveProject" class="success">Guardar proyecto</button>
 <button id="loadProject">Cargar proyecto</button>
 <input type="file" id="fileInput" class="file-input" accept=".json">
@@ -70,6 +87,13 @@ canvas{background:white;border-radius:8px;box-shadow:0 6px 18px rgba(10,10,20,0.
 <button data-pos="izquierda">Izquierda</button>
 <button data-pos="derecha">Derecha</button>
 </div>
+<div id="textDialog" class="text-dialog">
+  <input type="text" id="textInput" placeholder="Escribe tu texto aquí">
+  <div>
+    <button id="confirmText">Aceptar</button>
+    <button id="cancelText" class="ghost">Cancelar</button>
+  </div>
+</div>
 </div>
 <div class="footer">
 <div class="help">Modo cota: elige dos puntos alineados horizontal o vertical y selecciona la posición de la cota.</div>
@@ -83,20 +107,29 @@ const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
 const menuCota = document.getElementById('menuCota');
 const fileInput = document.getElementById('fileInput');
+const textDialog = document.getElementById('textDialog');
+const textInput = document.getElementById('textInput');
+const confirmText = document.getElementById('confirmText');
+const cancelText = document.getElementById('cancelText');
 let cols=20, rows=20, dotSize=6;
-let points=[], lines=[], cotas=[];
+let points=[], lines=[], cotas=[], textos=[];
 let cotaMode=false, cotaFirst=null;
 let eraseMode=false;
+let textMode=false;
 let lastIdx=null;
 let unitCM;              
 let scaleCM = 1;
 const cotaOffset=50;     
 const flechaSize=3;      
 
-// Nuevo: Historial para deshacer/rehacer
+// Historial para deshacer/rehacer
 let history = [];
 let historyIndex = -1;
 let redoStack = [];
+
+// Para el modo texto
+let textPosition = null;
+let currentFontSize = 16;
 
 function fixDPI(){
   const ratio=window.devicePixelRatio||1;
@@ -155,6 +188,13 @@ function drawGrid(){
   // dibujar cotas
   cotas.forEach(ct=>drawCota(ctx,ct));
 
+  // dibujar textos
+  textos.forEach(txt=>{
+    ctx.font = `${txt.fontSize}px sans-serif`;
+    ctx.fillStyle = '#000';
+    ctx.fillText(txt.texto, txt.x, txt.y);
+  });
+
   // dibujar puntos
   points.forEach(p=>{
     ctx.beginPath();
@@ -175,7 +215,7 @@ function nearestPoint(x,y){
   return bestDist<=threshold**2?best:null;
 }
 
-// Nueva función para guardar el estado actual en el historial
+// Función para guardar el estado actual en el historial
 function saveState() {
   // Limpiar redo stack cuando se realiza una nueva acción
   redoStack = [];
@@ -185,7 +225,8 @@ function saveState() {
   historyIndex++;
   history[historyIndex] = {
     lines: JSON.parse(JSON.stringify(lines)),
-    cotas: JSON.parse(JSON.stringify(cotas))
+    cotas: JSON.parse(JSON.stringify(cotas)),
+    textos: JSON.parse(JSON.stringify(textos))
   };
   
   // Limitar el historial a 100 estados para evitar uso excesivo de memoria
@@ -208,6 +249,15 @@ function eraseElementAt(x, y) {
   const cotasToRemove = cotas.filter(cota => cota.a === idx || cota.b === idx);
   cotas = cotas.filter(cota => !cotasToRemove.includes(cota));
   
+  // Buscar y eliminar textos cercanos al punto de clic
+  const textosToRemove = textos.filter(txt => {
+    // Calcular distancia entre el texto y el punto de clic
+    const dx = txt.x - x;
+    const dy = txt.y - y;
+    return Math.sqrt(dx*dx + dy*dy) < 30; // 30px de radio de detección
+  });
+  textos = textos.filter(txt => !textosToRemove.includes(txt));
+  
   drawGrid();
 }
 
@@ -217,6 +267,18 @@ canvas.addEventListener('click',ev=>{
   
   if (eraseMode) {
     eraseElementAt(pos.x, pos.y);
+    return;
+  }
+  
+  if (textMode) {
+    // Guardar estado antes de añadir texto
+    saveState();
+    textPosition = pos;
+    textDialog.style.display = 'block';
+    textDialog.style.left = ev.clientX + 'px';
+    textDialog.style.top = ev.clientY + 'px';
+    textInput.value = '';
+    textInput.focus();
     return;
   }
   
@@ -243,6 +305,26 @@ canvas.addEventListener('click',ev=>{
       drawGrid(); 
     }
   }
+});
+
+// Manejar la adición de texto
+confirmText.addEventListener('click', () => {
+  if (textInput.value.trim() !== '' && textPosition) {
+    textos.push({
+      texto: textInput.value,
+      x: textPosition.x,
+      y: textPosition.y,
+      fontSize: currentFontSize
+    });
+    textDialog.style.display = 'none';
+    drawGrid();
+  }
+});
+
+cancelText.addEventListener('click', () => {
+  textDialog.style.display = 'none';
+  // Si cancelamos, revertimos el estado guardado
+  undo();
 });
 
 menuCota.querySelectorAll('button').forEach(b=>{
@@ -317,7 +399,8 @@ function undo() {
   // Guardar estado actual en redo stack
   redoStack.push({
     lines: JSON.parse(JSON.stringify(lines)),
-    cotas: JSON.parse(JSON.stringify(cotas))
+    cotas: JSON.parse(JSON.stringify(cotas)),
+    textos: JSON.parse(JSON.stringify(textos))
   });
   document.getElementById('redo').disabled = false;
   
@@ -326,6 +409,7 @@ function undo() {
   const previousState = history[historyIndex];
   lines = JSON.parse(JSON.stringify(previousState.lines));
   cotas = JSON.parse(JSON.stringify(previousState.cotas));
+  textos = JSON.parse(JSON.stringify(previousState.textos));
   
   drawGrid();
 }
@@ -338,13 +422,15 @@ function redo() {
   historyIndex++;
   history[historyIndex] = {
     lines: JSON.parse(JSON.stringify(lines)),
-    cotas: JSON.parse(JSON.stringify(cotas))
+    cotas: JSON.parse(JSON.stringify(cotas)),
+    textos: JSON.parse(JSON.stringify(textos))
   };
   
   // Restaurar estado desde redo stack
   const nextState = redoStack.pop();
   lines = JSON.parse(JSON.stringify(nextState.lines));
   cotas = JSON.parse(JSON.stringify(nextState.cotas));
+  textos = JSON.parse(JSON.stringify(nextState.textos));
   
   if (redoStack.length === 0) {
     document.getElementById('redo').disabled = true;
@@ -358,6 +444,7 @@ function saveProject() {
   const projectData = {
     lines: lines,
     cotas: cotas,
+    textos: textos,
     cols: cols,
     rows: rows,
     dotSize: dotSize,
@@ -400,6 +487,7 @@ function handleProjectFile(e) {
       // Aplicar datos del proyecto
       lines = projectData.lines;
       cotas = projectData.cotas;
+      textos = projectData.textos || [];
       cols = projectData.cols;
       rows = projectData.rows;
       dotSize = projectData.dotSize || 6;
@@ -435,80 +523,8 @@ function handleProjectFile(e) {
   e.target.value = '';
 }
 
-// controles
-document.getElementById('cols').addEventListener('input',e=>{ 
-  cols=parseInt(e.target.value); 
-  document.getElementById('colsLabel').textContent=cols; 
-  document.getElementById('colsInput').value=cols;
-  rebuildPoints(); drawGrid(); 
-});
-
-document.getElementById('colsInput').addEventListener('input',e=>{ 
-  let newCols = parseInt(e.target.value);
-  if (newCols >= 8 && newCols <= 48) {
-    cols = newCols;
-    document.getElementById('cols').value = cols;
-    document.getElementById('colsLabel').textContent=cols; 
-    rebuildPoints(); drawGrid();
-  }
-});
-
-document.getElementById('rows').addEventListener('input',e=>{ 
-  rows=parseInt(e.target.value); 
-  document.getElementById('rowsLabel').textContent=rows; 
-  document.getElementById('rowsInput').value=rows;
-  rebuildPoints(); drawGrid(); 
-});
-
-document.getElementById('rowsInput').addEventListener('input',e=>{ 
-  let newRows = parseInt(e.target.value);
-  if (newRows >= 8 && newRows <= 48) {
-    rows = newRows;
-    document.getElementById('rows').value = rows;
-    document.getElementById('rowsLabel').textContent=rows; 
-    rebuildPoints(); drawGrid();
-  }
-});
-
-document.getElementById('dotSize').addEventListener('input',e=>{ dotSize=parseInt(e.target.value); document.getElementById('dotLabel').textContent=dotSize; drawGrid(); });
-document.getElementById('toggleCota').addEventListener('click',()=>{ 
-  cotaMode=!cotaMode; 
-  eraseMode = false;
-  document.getElementById('toggleCota').textContent='Modo cota: '+(cotaMode?'ON':'OFF'); 
-  document.getElementById('toggleEraser').textContent='Modo borrado: OFF';
-  canvas.style.cursor = 'default';
-});
-
-document.getElementById('toggleEraser').addEventListener('click',()=>{ 
-  eraseMode=!eraseMode; 
-  cotaMode = false;
-  document.getElementById('toggleEraser').textContent='Modo borrado: '+(eraseMode?'ON':'OFF'); 
-  document.getElementById('toggleCota').textContent='Modo cota: OFF';
-  canvas.style.cursor = eraseMode ? 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\'><circle cx=\'12\' cy=\'12\' r=\'10\' fill=\'%23dc3545\' opacity=\'0.7\'/><path d=\'M7 7l10 10M7 17L17 7\' stroke=\'white\' stroke-width=\'2\'/></svg>") 12 12, auto' : 'default';
-});
-
-document.getElementById('undo').addEventListener('click', undo);
-document.getElementById('redo').addEventListener('click', redo);
-document.getElementById('clear').addEventListener('click',()=>{ 
-  if(confirm('¿Borrar todo?')){ 
-    saveState();
-    lines=[];
-    cotas=[];
-    drawGrid(); 
-  } 
-});
-
-document.getElementById('scaleSelect').addEventListener('change',e=>{
-  scaleCM=parseFloat(e.target.value);
-  rebuildPoints(); drawGrid();
-});
-
-// Nuevos controles para guardar/cargar proyecto
-document.getElementById('saveProject').addEventListener('click', saveProject);
-document.getElementById('loadProject').addEventListener('click', loadProject);
-fileInput.addEventListener('change', handleProjectFile);
-
-document.getElementById('download').addEventListener('click',()=>{
+// Exportar a PDF con textos
+function exportToPDF() {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({unit:'mm',format:'a4',orientation:'landscape'});
   const startX=20, startY=20, step=10*scaleCM;
@@ -562,8 +578,107 @@ document.getElementById('download').addEventListener('click',()=>{
     }
   });
 
+  // textos
+  textos.forEach(txt=>{
+    pdf.setFontSize(txt.fontSize * 0.75); // Ajustar tamaño para PDF
+    pdf.text(txt.texto, startX + (txt.x / parseInt(canvas.style.width)) * (cols-1) * step, 
+                     startY + (txt.y / parseInt(canvas.style.height)) * (rows-1) * step);
+  });
+
   pdf.save('dibujo-planos.pdf');
+}
+
+// controles
+document.getElementById('cols').addEventListener('input',e=>{ 
+  cols=parseInt(e.target.value); 
+  document.getElementById('colsLabel').textContent=cols; 
+  document.getElementById('colsInput').value=cols;
+  rebuildPoints(); drawGrid(); 
 });
+
+document.getElementById('colsInput').addEventListener('input',e=>{ 
+  let newCols = parseInt(e.target.value);
+  if (newCols >= 8 && newCols <= 48) {
+    cols = newCols;
+    document.getElementById('cols').value = cols;
+    document.getElementById('colsLabel').textContent=cols; 
+    rebuildPoints(); drawGrid();
+  }
+});
+
+document.getElementById('rows').addEventListener('input',e=>{ 
+  rows=parseInt(e.target.value); 
+  document.getElementById('rowsLabel').textContent=rows; 
+  document.getElementById('rowsInput').value=rows;
+  rebuildPoints(); drawGrid(); 
+});
+
+document.getElementById('rowsInput').addEventListener('input',e=>{ 
+  let newRows = parseInt(e.target.value);
+  if (newRows >= 8 && newRows <= 48) {
+    rows = newRows;
+    document.getElementById('rows').value = rows;
+    document.getElementById('rowsLabel').textContent=rows; 
+    rebuildPoints(); drawGrid();
+  }
+});
+
+document.getElementById('dotSize').addEventListener('input',e=>{ dotSize=parseInt(e.target.value); document.getElementById('dotLabel').textContent=dotSize; drawGrid(); });
+document.getElementById('fontSize').addEventListener('change',e=>{ currentFontSize=parseInt(e.target.value); });
+
+document.getElementById('toggleCota').addEventListener('click',()=>{ 
+  cotaMode=!cotaMode; 
+  eraseMode = false;
+  textMode = false;
+  document.getElementById('toggleCota').textContent='Modo cota: '+(cotaMode?'ON':'OFF'); 
+  document.getElementById('toggleEraser').textContent='Modo borrado: OFF';
+  document.getElementById('toggleText').textContent='Modo texto: OFF';
+  canvas.style.cursor = 'default';
+});
+
+document.getElementById('toggleEraser').addEventListener('click',()=>{ 
+  eraseMode=!eraseMode; 
+  cotaMode = false;
+  textMode = false;
+  document.getElementById('toggleEraser').textContent='Modo borrado: '+(eraseMode?'ON':'OFF'); 
+  document.getElementById('toggleCota').textContent='Modo cota: OFF';
+  document.getElementById('toggleText').textContent='Modo texto: OFF';
+  canvas.style.cursor = eraseMode ? 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\'><circle cx=\'12\' cy=\'12\' r=\'10\' fill=\'%23dc3545\' opacity=\'0.7\'/><path d=\'M7 7l10 10M7 17L17 7\' stroke=\'white\' stroke-width=\'2\'/></svg>") 12 12, auto' : 'default';
+});
+
+document.getElementById('toggleText').addEventListener('click',()=>{ 
+  textMode=!textMode; 
+  cotaMode = false;
+  eraseMode = false;
+  document.getElementById('toggleText').textContent='Modo texto: '+(textMode?'ON':'OFF'); 
+  document.getElementById('toggleCota').textContent='Modo cota: OFF';
+  document.getElementById('toggleEraser').textContent='Modo borrado: OFF';
+  canvas.style.cursor = textMode ? 'text' : 'default';
+});
+
+document.getElementById('undo').addEventListener('click', undo);
+document.getElementById('redo').addEventListener('click', redo);
+document.getElementById('clear').addEventListener('click',()=>{ 
+  if(confirm('¿Borrar todo?')){ 
+    saveState();
+    lines=[];
+    cotas=[];
+    textos=[];
+    drawGrid(); 
+  } 
+});
+
+document.getElementById('scaleSelect').addEventListener('change',e=>{
+  scaleCM=parseFloat(e.target.value);
+  rebuildPoints(); drawGrid();
+});
+
+// Controles para guardar/cargar proyecto
+document.getElementById('saveProject').addEventListener('click', saveProject);
+document.getElementById('loadProject').addEventListener('click', loadProject);
+fileInput.addEventListener('change', handleProjectFile);
+
+document.getElementById('download').addEventListener('click', exportToPDF);
 
 function init(){ 
   fixDPI(); 
