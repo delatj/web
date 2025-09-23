@@ -13,15 +13,26 @@
         li { margin-bottom: 4px; }
         button { background-color: #003366; color: white; padding: 10px 20px; border: none; cursor: pointer; margin-top: 10px; }
         button:hover { background-color: #0059b3; }
-        input, textarea { width: 100%; padding: 8px; margin-top: 4px; margin-bottom: 12px; box-sizing: border-box; }
-        textarea { resize: vertical; min-height: 80px; }
-        .entry-group { display: flex; gap: 10px; margin-bottom: 10px; }
-        .entry-group input[type="text"], .entry-group input[type="number"] { flex: 1; }
+        input, textarea { padding: 8px; margin-top: 4px; margin-bottom: 12px; box-sizing: border-box; }
+        textarea { resize: vertical; min-height: 80px; width: 100%; }
+        .entry-group { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+        .entry-group input[type="text"], 
+        .entry-group input[type="number"],
+        .entry-group input[type="date"] { flex: 1; min-width: 120px; }
         .data-table { width: 100%; border-collapse: collapse; margin: 5px 0; }
         .data-table th, .data-table td { border: 1px solid #666; padding: 8px; }
         .data-table th { background-color: #555; color: white; }
         .data-table tr:nth-child(even) { background-color: #e0e0e0; }
         .data-table tr:nth-child(odd) { background-color: #f0f0f0; }
+        
+        .audio-controls { margin-top: 10px; display: flex; gap: 10px; }
+        .audio-controls button { margin-top: 0; }
+        .recording { background-color: #ff4444 !important; }
+        .recording:hover { background-color: #cc0000 !important; }
+        .audio-status { margin-top: 5px; font-style: italic; }
+        
+        .save-load-controls { display: flex; gap: 10px; margin-top: 20px; }
+        .save-load-controls button { flex: 1; }
     </style>
 </head>
 <body>
@@ -46,7 +57,8 @@
     <div class="entry-group">
         <input type="text" id="nuevoPlano" placeholder="Nombre del responsable">
         <input type="number" id="horasPlano" placeholder="Horas">
-        <button onclick="agregarEntrada('planosContainer', 'nuevoPlano', 'horasPlano')">Añadir</button>
+        <input type="date" id="fechaPlano">
+        <button onclick="agregarEntrada('planosContainer', 'nuevoPlano', 'horasPlano', 'fechaPlano')">Añadir</button>
     </div>
 
     <label>Construcción (Responsables y horas invertidas):</label>
@@ -54,7 +66,8 @@
     <div class="entry-group">
         <input type="text" id="nuevoConstruccion" placeholder="Nombre del responsable">
         <input type="number" id="horasConstruccion" placeholder="Horas">
-        <button onclick="agregarEntrada('construccionContainer', 'nuevoConstruccion', 'horasConstruccion')">Añadir</button>
+        <input type="date" id="fechaConstruccion">
+        <button onclick="agregarEntrada('construccionContainer', 'nuevoConstruccion', 'horasConstruccion', 'fechaConstruccion')">Añadir</button>
     </div>
 
     <label>Comprobación (Responsables y horas invertidas):</label>
@@ -62,31 +75,108 @@
     <div class="entry-group">
         <input type="text" id="nuevoComprobacion" placeholder="Nombre del responsable">
         <input type="number" id="horasComprobacion" placeholder="Horas">
-        <button onclick="agregarEntrada('comprobacionContainer', 'nuevoComprobacion', 'horasComprobacion')">Añadir</button>
+        <input type="date" id="fechaComprobacion">
+        <button onclick="agregarEntrada('comprobacionContainer', 'nuevoComprobacion', 'horasComprobacion', 'fechaComprobacion')">Añadir</button>
     </div>
 
     <label for="problemas">Problemas encontrados si ha habido y cómo se han resuelto:</label>
     <textarea id="problemas"></textarea>
 
-    <label for="audioInput">Sube un audio:</label>
-    <input type="file" id="audioInput" accept="audio/*">
+    <label>Explicación del proyecto (audio):</label>
     <p>En el audio se ha de explicar cómo se ha realizado el proyecto y durar al menos 1 minuto (herramientas y materiales usados, cómo se ha diseñado, cómo se ha construido, cómo se ha comprobado, etc.).</p>
+    
+    <div>
+        <button id="startRecording">🎤 Grabar Audio</button>
+        <button id="stopRecording" disabled>⏹️ Detener Grabación</button>
+        <button id="playRecording" disabled>▶️ Reproducir</button>
+        <div id="recordingStatus" class="audio-status"></div>
+        <audio id="recordedAudio" controls style="width: 100%; margin-top: 10px;"></audio>
+    </div>
+    
+    <label for="audioInput">O sube un audio existente:</label>
+    <input type="file" id="audioInput" accept="audio/*">
+    
+    <div class="save-load-controls">
+        <button onclick="guardarProyecto()">💾 Guardar Proyecto</button>
+        <button onclick="cargarProyecto()">📂 Cargar Proyecto</button>
+        <input type="file" id="projectFileInput" accept=".json" style="display: none;">
+    </div>
 
     <button onclick="generateHtml()">Generar HTML y Descargar</button>
 
     <script>
         let audioDataUrl = '';
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+        
+        const startButton = document.getElementById('startRecording');
+        const stopButton = document.getElementById('stopRecording');
+        const playButton = document.getElementById('playRecording');
+        const recordingStatus = document.getElementById('recordingStatus');
+        const recordedAudio = document.getElementById('recordedAudio');
+        const projectFileInput = document.getElementById('projectFileInput');
+
+        startButton.addEventListener('click', async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                
+                mediaRecorder.ondataavailable = event => {
+                    audioChunks.push(event.data);
+                };
+                
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        audioDataUrl = reader.result; // ✅ ahora queda en Base64
+                        recordedAudio.src = audioDataUrl;
+                        playButton.disabled = false;
+                        recordingStatus.textContent = 'Grabación completada. Puedes reproducirla o continuar.';
+                    };
+                    reader.readAsDataURL(audioBlob);
+                };
+                
+                mediaRecorder.start();
+                isRecording = true;
+                startButton.disabled = true;
+                stopButton.disabled = false;
+                startButton.classList.add('recording');
+                recordingStatus.textContent = 'Grabando... Habla ahora.';
+            } catch (error) {
+                recordingStatus.textContent = 'Error al acceder al micrófono: ' + error.message;
+            }
+        });
+        
+        stopButton.addEventListener('click', () => {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                isRecording = false;
+                startButton.disabled = false;
+                stopButton.disabled = true;
+                startButton.classList.remove('recording');
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+            }
+        });
+        
+        playButton.addEventListener('click', () => recordedAudio.play());
+        
         document.getElementById('audioInput').addEventListener('change', function(event) {
             const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     audioDataUrl = e.target.result;
+                    recordedAudio.src = audioDataUrl;
+                    playButton.disabled = false;
+                    recordingStatus.textContent = 'Audio cargado correctamente.';
                 };
                 reader.readAsDataURL(file);
             }
         });
-
+        
         function agregarMaterial() {
             const nombre = document.getElementById('nuevoMaterial').value.trim();
             const precio = document.getElementById('precioMaterial').value.trim();
@@ -100,195 +190,145 @@
             }
         }
 
-        function agregarEntrada(containerId, inputId, horasId) {
+        function agregarEntrada(containerId, inputId, horasId, fechaId) {
             const nombre = document.getElementById(inputId).value.trim();
             const horas = document.getElementById(horasId).value.trim();
-            if (nombre && horas) {
+            const fecha = document.getElementById(fechaId).value;
+            if (nombre && horas && fecha) {
                 const contenedor = document.getElementById(containerId);
                 const div = document.createElement('div');
-                div.textContent = `${nombre} - ${horas} hora(s)`;
+                div.textContent = `${nombre} - ${horas} hora(s) - ${fecha}`;
                 contenedor.appendChild(div);
                 document.getElementById(inputId).value = '';
                 document.getElementById(horasId).value = '';
+                document.getElementById(fechaId).value = '';
             }
         }
+        
+        function guardarProyecto() {
+            const proyecto = {
+                titulo: document.getElementById('title').value,
+                responsables: document.getElementById('responsables').value,
+                materiales: Array.from(document.getElementById('materialesContainer').children).map(el => el.textContent),
+                planos: Array.from(document.getElementById('planosContainer').children).map(el => el.textContent),
+                construccion: Array.from(document.getElementById('construccionContainer').children).map(el => el.textContent),
+                comprobacion: Array.from(document.getElementById('comprobacionContainer').children).map(el => el.textContent),
+                problemas: document.getElementById('problemas').value,
+                audio: audioDataUrl
+            };
+            
+            const blob = new Blob([JSON.stringify(proyecto)], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `proyecto_${Date.now()}.json`;
+            link.click();
+        }
+        
+        function cargarProyecto() { projectFileInput.click(); }
+        
+        projectFileInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const proyecto = JSON.parse(e.target.result);
+                        document.getElementById('title').value = proyecto.titulo || '';
+                        document.getElementById('responsables').value = proyecto.responsables || '';
+                        document.getElementById('problemas').value = proyecto.problemas || '';
+                        
+                        const materialesContainer = document.getElementById('materialesContainer');
+                        materialesContainer.innerHTML = '';
+                        proyecto.materiales.forEach(m => {
+                            const div = document.createElement('div'); div.textContent = m; materialesContainer.appendChild(div);
+                        });
+                        
+                        const planosContainer = document.getElementById('planosContainer');
+                        planosContainer.innerHTML = '';
+                        proyecto.planos.forEach(p => { const div = document.createElement('div'); div.textContent = p; planosContainer.appendChild(div); });
+                        
+                        const construccionContainer = document.getElementById('construccionContainer');
+                        construccionContainer.innerHTML = '';
+                        proyecto.construccion.forEach(c => { const div = document.createElement('div'); div.textContent = c; construccionContainer.appendChild(div); });
+                        
+                        const comprobacionContainer = document.getElementById('comprobacionContainer');
+                        comprobacionContainer.innerHTML = '';
+                        proyecto.comprobacion.forEach(c => { const div = document.createElement('div'); div.textContent = c; comprobacionContainer.appendChild(div); });
+                        
+                        if (proyecto.audio) {
+                            audioDataUrl = proyecto.audio;
+                            recordedAudio.src = audioDataUrl;
+                            playButton.disabled = false;
+                            recordingStatus.textContent = 'Proyecto cargado correctamente. Audio disponible.';
+                        }
+                    } catch (error) { alert('Error al cargar el proyecto: ' + error.message); }
+                };
+                reader.readAsText(file);
+            }
+        });
 
         function generateHtml() {
             const title = document.getElementById('title').value;
             const responsables = document.getElementById('responsables').value.split('\n').filter(r => r.trim() !== '').map(r => `<li>${r.trim()}</li>`).join('');
             
-            // Materiales como tabla
             const materialesRows = Array.from(document.getElementById('materialesContainer').children)
-                .map(div => {
-                    const [nombre, precio] = div.textContent.split(' - ');
-                    return `<tr><td>${nombre}</td><td>${precio}</td></tr>`;
-                }).join('');
-            const materialesTable = materialesRows ? 
-                `<table class="data-table">
-                    <thead><tr><th>Material/Herramienta</th><th>Precio</th></tr></thead>
-                    <tbody>${materialesRows}</tbody>
-                </table>` : 'No se añadieron materiales';
+                .map(div => { const [nombre, precio] = div.textContent.split(' - '); return `<tr><td>${nombre}</td><td>${precio}</td></tr>`; }).join('');
+            const materialesTable = materialesRows ? `<table class="data-table"><thead><tr><th>Material/Herramienta</th><th>Precio</th></tr></thead><tbody>${materialesRows}</tbody></table>` : 'No se añadieron materiales';
             
-            // Planos como tabla
-            const planosRows = Array.from(document.getElementById('planosContainer').children)
-                .map(div => {
-                    const [nombre, horas] = div.textContent.split(' - ');
-                    return `<tr><td>${nombre}</td><td>${horas}</td></tr>`;
-                }).join('');
-            const planosTable = planosRows ? 
-                `<table class="data-table">
-                    <thead><tr><th>Responsable</th><th>Horas</th></tr></thead>
-                    <tbody>${planosRows}</tbody>
-                </table>` : 'No se añadieron responsables';
-            
-            // Construcción como tabla
-            const construccionRows = Array.from(document.getElementById('construccionContainer').children)
-                .map(div => {
-                    const [nombre, horas] = div.textContent.split(' - ');
-                    return `<tr><td>${nombre}</td><td>${horas}</td></tr>`;
-                }).join('');
-            const construccionTable = construccionRows ? 
-                `<table class="data-table">
-                    <thead><tr><th>Responsable</th><th>Horas</th></tr></thead>
-                    <tbody>${construccionRows}</tbody>
-                </table>` : 'No se añadieron responsables';
-            
-            // Comprobación como tabla
-            const comprobacionRows = Array.from(document.getElementById('comprobacionContainer').children)
-                .map(div => {
-                    const [nombre, horas] = div.textContent.split(' - ');
-                    return `<tr><td>${nombre}</td><td>${horas}</td></tr>`;
-                }).join('');
-            const comprobacionTable = comprobacionRows ? 
-                `<table class="data-table">
-                    <thead><tr><th>Responsable</th><th>Horas</th></tr></thead>
-                    <tbody>${comprobacionRows}</tbody>
-                </table>` : 'No se añadieron responsables';
+            function tablaEntradas(container, titulo) {
+                const rows = Array.from(document.getElementById(container).children)
+                    .map(div => {
+                        const partes = div.textContent.split(' - ');
+let fechaFormateada = '';
+if (partes[2]) {
+    const [yyyy, mm, dd] = partes[2].split('-');
+    fechaFormateada = `${dd}/${mm}/${yyyy}`;
+}
+return `<tr><td>${partes[0]}</td><td>${partes[1]}</td><td>${fechaFormateada}</td></tr>`;
+
+                    }).join('');
+                return rows ? `<table class="data-table"><thead><tr><th>Responsable</th><th>Horas</th><th>Fecha</th></tr></thead><tbody>${rows}</tbody></table>` : `No se añadieron ${titulo}`;
+            }
             
             const problemasFormatted = document.getElementById('problemas').value.replace(/\n/g, '<br>');
 
             const htmlContent = `<!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${title}</title>
-    <style>
-        body { 
-            background-color: #E6F0FA; 
-            font-family: Arial, sans-serif; 
-            padding: 20px; 
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-        h1 { 
-            text-align: center; 
-            color: #003366; 
-            margin-bottom: 30px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #003366;
-        }
-        .main-table { 
-            background-color: #FFFFCC; 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin-top: 20px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            border: 2px solid black;
-        }
-        .main-table th, .main-table td { 
-            border: 2px solid black; 
-            padding: 12px; 
-            text-align: left; 
-            vertical-align: top; 
-        }
-        .main-table th { 
-            background-color: #003366; 
-            color: white;
-            width: 20%;
-        }
-        .data-table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin: 5px 0; 
-            border: 2px solid black;
-        }
-        .data-table th, .data-table td { 
-            border: 2px solid black; 
-            padding: 8px; 
-        }
-        .data-table th { 
-            background-color: #555; 
-            color: white;
-        }
-        .data-table tr:nth-child(even) {
-            background-color: #e0e0e0;
-        }
-        .data-table tr:nth-child(odd) {
-            background-color: #f0f0f0;
-        }
-        .audio-section {
-            margin-top: 30px;
-            text-align: center;
-        }
-        .audio-section button {
-            background-color: #003366;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            border-radius: 5px;
-        }
-        .audio-section button:hover {
-            background-color: #0059b3;
-        }
-        audio {
-            margin-top: 15px;
-            width: 100%;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>${title}</title>
+<style>
+body { background-color:#E6F0FA; font-family:Arial; padding:20px; max-width:1000px; margin:0 auto; }
+h1 { text-align:center; color:#003366; margin-bottom:30px; border-bottom:2px solid #003366; padding-bottom:10px; }
+.main-table { background:#FFFFCC; width:100%; border-collapse:collapse; margin-top:20px; border:2px solid black; }
+.main-table th, .main-table td { border:2px solid black; padding:12px; text-align:left; vertical-align:top; }
+.main-table th { background:#003366; color:white; width:20%; }
+.data-table { width:100%; border-collapse:collapse; margin:5px 0; border:2px solid black; }
+.data-table th, .data-table td { border:2px solid black; padding:8px; }
+.data-table th { background:#555; color:white; }
+.data-table tr:nth-child(even){background:#e0e0e0;} .data-table tr:nth-child(odd){background:#f0f0f0;}
+audio{margin-top:15px;width:100%;}
+</style>
 </head>
 <body>
-    <h1>${title}</h1>
-    <table class="main-table">
-        <tr>
-            <th>Personas Responsables</th>
-            <td>${responsables ? `<ul>${responsables}</ul>` : 'No se especificaron responsables'}</td>
-        </tr>
-        <tr>
-            <th>Materiales y Herramientas</th>
-            <td>${materialesTable}</td>
-        </tr>
-        <tr>
-            <th>Responsables de Planos</th>
-            <td>${planosTable}</td>
-        </tr>
-        <tr>
-            <th>Construcción</th>
-            <td>${construccionTable}</td>
-        </tr>
-        <tr>
-            <th>Comprobación</th>
-            <td>${comprobacionTable}</td>
-        </tr>
-        <tr>
-            <th>Problemas y Soluciones</th>
-            <td>${problemasFormatted || 'No se reportaron problemas'}</td>
-        </tr>
-    </table>
-    
-    <div class="audio-section">
-        <button onclick="document.getElementById('audio').play()">▶ Reproducir Explicación del Proyecto</button>
-        <audio id="audio" src="${audioDataUrl}" controls></audio>
-    </div>
+<h1>${title}</h1>
+<table class="main-table">
+<tr><th>Personas Responsables</th><td>${responsables ? `<ul>${responsables}</ul>` : 'No se especificaron responsables'}</td></tr>
+<tr><th>Materiales y Herramientas</th><td>${materialesTable}</td></tr>
+<tr><th>Responsables de Planos</th><td>${tablaEntradas('planosContainer','planos')}</td></tr>
+<tr><th>Construcción</th><td>${tablaEntradas('construccionContainer','construcción')}</td></tr>
+<tr><th>Comprobación</th><td>${tablaEntradas('comprobacionContainer','comprobación')}</td></tr>
+<tr><th>Problemas y Soluciones</th><td>${problemasFormatted || 'No se reportaron problemas'}</td></tr>
+</table>
+<div class="audio-section">
+<audio controls src="${audioDataUrl}"></audio>
+</div>
 </body>
 </html>`;
-
             const blob = new Blob([htmlContent], { type: 'text/html' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = `${title.replace(/\s+/g, '_') || 'proyecto_sin_titulo'}.html`;
+            link.download = `${title.replace(/\s+/g,'_') || 'proyecto'}.html`;
             link.click();
         }
     </script>
