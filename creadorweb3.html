@@ -1,7 +1,8 @@
 <!DOCTYPE html>
+<!-- saved from url=(0045)https://delatj.github.io/web/creadorweb3.html -->
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <title>Creador de Páginas Web</title>
   <style>
     body {
@@ -277,15 +278,18 @@
         mediaRecorder.ondataavailable = e => chunks.push(e.data);
         mediaRecorder.onstop = () => {
           const blob = new Blob(chunks, { type: 'audio/ogg; codecs=opus' });
-          const url = URL.createObjectURL(blob);
-          audioCount++;
-          const id = `rec-${audioCount}`;
-          const block = document.createElement("div");
-          block.className = "audio-block";
-          block.id = id;
-          block.innerHTML = `<audio controls src="${url}"></audio> 
-                             <button onclick="this.parentElement.remove()">Eliminar</button>`;
-          document.getElementById("editor").appendChild(block);
+          const reader = new FileReader();
+          reader.onload = () => {
+            audioCount++;
+            const id = `rec-${audioCount}`;
+            const block = document.createElement("div");
+            block.className = "audio-block";
+            block.id = id;
+            block.innerHTML = `<audio controls src="${reader.result}"></audio> 
+                               <button onclick="this.parentElement.remove()">Eliminar</button>`;
+            document.getElementById("editor").appendChild(block);
+          };
+          reader.readAsDataURL(blob);
         };
         mediaRecorder.start();
         setTimeout(() => mediaRecorder.stop(), 5000);
@@ -327,7 +331,7 @@
               controls.appendChild(deleteBtn);
               pdfContainer.appendChild(controls);
 
-              let zoom = 0.33 * 1.8; // escala inicial aumentada un 30%
+              let zoom = 0.33 * 1.8;
 
               zoomInBtn.onclick = () => {
                 zoom += 0.2;
@@ -345,7 +349,6 @@
                 pdfContainer.remove();
               };
 
-              // insertar siempre al final
               document.getElementById("editor").appendChild(pdfContainer);
 
               indexItems.push({ id: id, name: file.name });
@@ -407,35 +410,58 @@
       input.click();
     }
 
-    // --- Descargar HTML ---
+    // --- Descargar HTML (con audio embebido) ---
     function downloadHTML() {
-      const content = document.getElementById('editor').innerHTML;
-      const bgColor = document.getElementById('bgColor').value;
-      const pageTitle = document.getElementById('pageTitle').value.trim();
-      const errorSpan = document.getElementById('titleError');
-      if (!pageTitle) {
-        errorSpan.textContent = "⚠️ Debes escribir un título antes de descargar.";
-        document.getElementById('pageTitle').focus();
-        return;
-      } else {
-        errorSpan.textContent = "";
-      }
+      const editor = document.getElementById('editor');
+      const audios = editor.querySelectorAll("audio");
 
-      let indexHTML = "<h2>Índice</h2><ul>";
-      indexItems.forEach(item => {
-        indexHTML += `<li><a href="#${item.id}">${item.name}</a></li>`;
+      // Convertir audios blob -> dataURL antes de guardar
+      const promises = Array.from(audios).map(audio => {
+        const src = audio.getAttribute("src");
+        if (src && src.startsWith("blob:")) {
+          return fetch(src).then(r => r.blob()).then(blob => {
+            return new Promise(resolve => {
+              const reader = new FileReader();
+              reader.onload = () => {
+                audio.setAttribute("src", reader.result);
+                resolve();
+              };
+              reader.readAsDataURL(blob);
+            });
+          });
+        }
+        return Promise.resolve();
       });
-      indexHTML += "</ul>";
 
-      const html = `<!DOCTYPE html><html><head><meta charset='UTF-8'><title>${pageTitle}</title>
-      <style>body{background-color:${bgColor}; font-family: Arial, sans-serif;} ul{list-style:square;}</style>
-      </head><body>${indexHTML}${content}</body></html>`;
+      Promise.all(promises).then(() => {
+        const content = editor.innerHTML;
+        const bgColor = document.getElementById('bgColor').value;
+        const pageTitle = document.getElementById('pageTitle').value.trim();
+        const errorSpan = document.getElementById('titleError');
+        if (!pageTitle) {
+          errorSpan.textContent = "⚠️ Debes escribir un título antes de descargar.";
+          document.getElementById('pageTitle').focus();
+          return;
+        } else {
+          errorSpan.textContent = "";
+        }
 
-      const blob = new Blob([html], { type: 'text/html' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = pageTitle.replace(/\s+/g, "_").toLowerCase() + '.html';
-      a.click();
+        let indexHTML = "<h2>Índice</h2><ul>";
+        indexItems.forEach(item => {
+          indexHTML += `<li><a href="#${item.id}">${item.name}</a></li>`;
+        });
+        indexHTML += "</ul>";
+
+        const html = `<!DOCTYPE html><html><head><meta charset='UTF-8'><title>${pageTitle}</title>
+        <style>body{background-color:${bgColor}; font-family: Arial, sans-serif;} ul{list-style:square;}</style>
+        </head><body>${indexHTML}${content}</body></html>`;
+
+        const blob = new Blob([html], { type: 'text/html' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = pageTitle.replace(/\s+/g, "_").toLowerCase() + '.html';
+        a.click();
+      });
     }
   </script>
 </body>
