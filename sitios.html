@@ -1,250 +1,844 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<title>Diseñador de sitios de alumnos — 9x6 (A4 horizontal)</title>
-<style>
-  :root{
-    --cell-w: 100px;
-    --cell-h: 80px;
-    --gap: 6px;
-  }
-  body { font-family: Arial, Helvetica, sans-serif; margin: 18px; color: #222; }
-  h2 { margin: 0 0 10px 0; }
-  #controls { display:flex; gap:8px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
-  button { padding:6px 10px; border-radius:6px; border:1px solid #777; background:#fff; cursor:pointer; }
-  #palette {
-    min-height: 100px; border: 1px dashed #bbb; padding:8px;
-    display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; background:#fafafa;
-  }
-  #grid {
-    display: grid;
-    grid-template-columns: repeat(9, var(--cell-w));
-    grid-auto-rows: var(--cell-h);
-    gap: var(--gap);
-    border: 3px solid #333;
-    padding: var(--gap);
-    background: #f7f7f7;
-  }
-  .cell {
-    border: 1px dashed #aaa;
-    background: #fff;
-    display:flex; align-items:center; justify-content:center;
-    font-size: 12px; position: relative;
-  }
-  .student {
-    padding:4px 6px;
-    background: linear-gradient(180deg,#CFEFFF,#87CEFA);
-    border-radius:6px;
-    cursor:grab;
-    user-select:none;
-    text-align:center;
-    line-height:1.1;
-    font-size: 13px;
-    min-width: 60px;
-  }
-  .student span { display:block; }
-  .student .name { font-weight:bold; }
-  .student .pc { font-size:11px; color:#222; margin-top:2px; }
-  @page { size: A4 landscape; margin: 10mm; }
-  @media print {
-    #controls, #palette { display:none !important; }
-    body { margin: 0; }
-    :root {
-      --gap: 4mm;
-      --cell-w: calc((277mm - (8 * var(--gap))) / 9 );
-      --cell-h: calc((197mm - (5 * var(--gap))) / 6 );
-    }
-    .student { font-size: 9pt; padding: 2mm; border-radius:2mm; }
-    .student .pc { font-size:8pt; }
-    .cell { border: 1px solid #999; }
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planificador de Asientos de Aula</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary: #3b5998;
+            --secondary: #6d8cbb;
+            --accent: #e74c3c;
+            --light: #f5f7fa;
+            --dark: #2c3e50;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --desk-color: #ecf0f1;
+            --desk-border: #bdc3c7;
+            --student-list: #e8f4fc;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: #f0f3f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            width: 100vw;
+            overflow-x: hidden;
+        }
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--light);
+        }
+        h1 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-size: 2.2rem;
+        }
+        .description {
+            color: var(--dark);
+            font-size: 1.1rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .comments-section {
+            max-width: 100%;
+            width: 100%;
+            margin: 0 0 8px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .comments-label {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 1.08rem;
+            margin-bottom: 2px;
+            text-align: left;
+        }
+        .comments-textarea {
+            width: 100%;
+            min-height: 38px;
+            max-height: 44px;
+            padding: 7px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--secondary);
+            resize: none;
+            font-size: 1.03rem;
+            background: var(--light);
+            margin-bottom: 2px;
+            line-height: 1.2;
+        }
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
+            width: 100%;
+        }
+        .config-panel {
+            flex: 1;
+            min-width: 320px;
+            background: var(--light);
+            padding: 25px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .classroom-container {
+            flex: 2;
+            min-width: 60%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+            overflow: hidden;
+        }
+        .classroom-view {
+            background: white;
+            border: 2px solid var(--light);
+            border-radius: 10px;
+            padding: 15px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            overflow: auto;
+        }
+        .students-drag-area {
+            background: var(--student-list);
+            border: 2px solid var(--light);
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 150px;
+            width: 100%;
+        }
+        .panel-title {
+            font-size: 1.3rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--secondary);
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        select, input, button, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+        button:hover {
+            background-color: #2d4373;
+            transform: translateY(-2px);
+        }
+        .btn-generate {
+            background-color: var(--success);
+        }
+        .btn-generate:hover {
+            background-color: #219653;
+        }
+        .btn-landscape {
+            background-color: var(--secondary);
+        }
+        .btn-landscape:hover {
+            background-color: #5a7cab;
+        }
+        .btn-warning {
+            background-color: var(--warning);
+        }
+        .btn-warning:hover {
+            background-color: #e67e22;
+        }
+        .students-input {
+            min-height: 200px;
+            resize: vertical;
+            font-family: monospace;
+            padding: 15px;
+        }
+        .file-import {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px dashed var(--secondary);
+        }
+        .classroom-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 10px;
+            flex-grow: 1;
+            width: 100%;
+            justify-content: center;
+        }
+        .class-row {
+            display: flex;
+            gap: 25px;
+            justify-content: center;
+            flex-wrap: nowrap;
+            width: 100%;
+        }
+        .desk-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex: 1;
+        }
+        .desk {
+            border: 2px solid var(--desk-border);
+            border-radius: 8px;
+            padding: 16px;
+            min-height: 110px;
+            min-width: 110px;
+            background: var(--desk-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            flex: 1;
+            word-break: break-word;
+            overflow: hidden;
+            text-align: center;
+        }
+        .desk:hover {
+            background: #dfe6e9;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .desk.empty {
+            background: var(--desk-color);
+            color: #7f8c8d;
+        }
+        .desk.occupied {
+            background: #d5f5e3;
+            border-color: #2ecc71;
+        }
+        .desk-number {
+            font-size: 0.7rem;
+            color: #7f8c8d;
+            position: absolute;
+            top: 3px;
+            left: 5px;
+        }
+        .student-name {
+            font-weight: 500;
+            text-align: center;
+            max-width: 100%;
+            font-size: 1.2rem;
+            line-height: 1.1;
+            word-break: break-word;
+            white-space: pre-line;     /* Permite saltos de línea automáticos */
+            overflow-wrap: break-word; /* Permite cortar palabras largas */
+            padding: 2px 0;
+        }
+        .teacher-area {
+            background: #d6eaf8;
+            border-color: #3498db;
+            text-align: center;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            font-weight: 600;
+            width: 100%;
+        }
+        .actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .actions button {
+            width: auto;
+            padding: 15px 30px;
+            min-width: 220px;
+        }
+        .dimensions-config {
+            display: flex;
+            gap: 15px;
+        }
+        .dimensions-config .form-group {
+            flex: 1;
+        }
+        .students-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .student-card {
+            background: var(--light);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: move;
+            transition: all 0.3s;
+            border: 1px solid #ddd;
+            word-break: break-word;
+        }
+        .student-card:hover {
+            background: #dfe6e9;
+            transform: translateY(-3px);
+        }
+        .student-card.assigned {
+            display: none;
+        }
+        .desk-color-menu {
+            position: absolute;
+            z-index: 999;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background: #f5f7fa;
+            border: 1px solid #6d8cbb;
+            border-radius: 7px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.13);
+            padding: 8px 16px;
+            display: flex;
+            gap: 14px;
+        }
+        .desk-color-btn {
+            border: none;
+            background: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            outline: none;
+            box-shadow: 0 0 3px rgba(0,0,0,0.07);
+        }
+        .desk-color-btn.gray { background: #bdc3c7; }
+        .desk-color-btn.white { background: #fff; border: 1px solid #ccc;}
+        .desk-color-btn.green { background: #d5f5e3; }
+        .desk-color-btn:active, .desk-color-btn:focus { box-shadow: 0 0 8px #3b5998; }
+        @media (max-width: 1200px) {
+            .main-content {
+                flex-direction: column;
+            }
+            .config-panel, .classroom-container {
+                min-width: 100%;
+            }
+            .dimensions-config {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .class-row {
+                flex-wrap: wrap;
+            }
+            .desk-group {
+                flex: 1 1 45%;
+            }
+        }
+        @media (max-width: 768px) {
+            .desk-group {
+                flex: 1 1 100%;
+            }
+            .actions {
+                flex-direction: column;
+                align-items: center;
+            }
+            .actions button {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <header>
+            <h1>Planificador de Asientos de Aula</h1>
+            <p class="description">Organiza a tus estudiantes en diferentes configuraciones de aula. Escribe los nombres o impórtalos desde Excel, arrástralos a los asientos y genera un PDF para imprimir.</p>
+        </header>
+        <div class="main-content">
+            <div class="config-panel">
+                <div>
+                    <h2 class="panel-title">Configuración del Aula</h2>
+                    <div class="form-group">
+                        <label for="layoutType">Modelo de Agrupamiento:</label>
+                        <select id="layoutType">
+                            <option value="pairs">Parejas (2 asientos juntos)</option>
+                            <option value="individual">Individual (todos separados)</option>
+                            <option value="trios">Tríos (3 asientos juntos)</option>
+                            <option value="mixed">Mixto (personalizado)</option>
+                        </select>
+                    </div>
+                    <div class="dimensions-config">
+                        <div class="form-group">
+                            <label for="rowsNumber">Filas (horizontal):</label>
+                            <input type="number" id="rowsNumber" min="1" max="10" value="4">
+                        </div>
+                        <div class="form-group">
+                            <label for="columnsNumber">Columnas (vertical):</label>
+                            <input type="number" id="columnsNumber" min="1" max="10" value="3">
+                        </div>
+                    </div>
+                    <div class="form-group" id="mixedConfig" style="display: none;">
+                        <label for="mixedPattern">Agrupamiento por columnas (ej: 2,3,2):</label>
+                        <input type="text" id="mixedPattern" placeholder="Escribe el patrón separado por comas">
+                    </div>
+                    <button id="applyLayout">Aplicar Configuración</button>
+                </div>
+                <div>
+                    <h2 class="panel-title">Gestión de Estudiantes</h2>
+                    <div class="form-group">
+                        <label for="studentsInput">Nombres de Estudiantes (uno por línea):</label>
+                        <textarea id="studentsInput" class="students-input" placeholder="Escribe un nombre por línea&#10;Ej:&#10;María González&#10;Carlos Rodríguez&#10;Ana Martínez"></textarea>
+                    </div>
+                    <button id="loadStudents">Cargar Estudiantes</button>
+                    <div class="file-import">
+                        <label>Importar desde Excel:</label>
+                        <input type="file" id="excelFile" accept=".xlsx, .xls">
+                        <button id="importExcel">Importar Nombres</button>
+                    </div>
+                </div>
+            </div>
+            <div class="classroom-container">
+                <div class="comments-section">
+                    <label class="comments-label" for="commentsInput">Comentarios adicionales:</label>
+                    <textarea id="commentsInput" class="comments-textarea" placeholder="Escribe aquí tus comentarios, observaciones o notas..."></textarea>
+                </div>
+                <div class="classroom-view">
+                    <h2 class="panel-title">Distribución del Aula</h2>
+                    <div class="classroom-layout" id="classroomLayout">
+                        <!-- El diseño del aula se generará aquí -->
+                    </div>
+                </div>
+                <div class="students-drag-area">
+                    <h2 class="panel-title">Estudiantes para asignar</h2>
+                    <p>Arrastra los estudiantes a los asientos del aula. Los estudiantes asignados desaparecerán de esta lista.</p>
+                    <div class="students-grid" id="studentsGrid">
+                        <!-- Los estudiantes se mostrarán aquí -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="actions">
+            <button class="btn-generate" id="generatePDF">Descargar PDF</button>
+            <button class="btn-warning" id="resetAll">Reiniciar Todo</button>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const layoutType = document.getElementById('layoutType');
+            const rowsNumber = document.getElementById('rowsNumber');
+            const columnsNumber = document.getElementById('columnsNumber');
+            const studentsInput = document.getElementById('studentsInput');
+            const loadStudentsBtn = document.getElementById('loadStudents');
+            const excelFile = document.getElementById('excelFile');
+            const importExcelBtn = document.getElementById('importExcel');
+            const applyLayoutBtn = document.getElementById('applyLayout');
+            const classroomLayout = document.getElementById('classroomLayout');
+            const generatePDFBtn = document.getElementById('generatePDF');
+            const resetAllBtn = document.getElementById('resetAll');
+            const mixedConfig = document.getElementById('mixedConfig');
+            const mixedPattern = document.getElementById('mixedPattern');
+            const studentsGrid = document.getElementById('studentsGrid');
+            const commentsInput = document.getElementById('commentsInput');
+            
+            let students = [];
+            let deskAssignments = {};
+            let deskColors = {};
+            let deletedDesks = {};
+            let currentLayout = 'pairs';
 
-<h2>Diseñador de sitios de alumnos — Cuadrícula 9 × 6</h2>
-<div id="controls">
-  <label>
-    Cargar Excel:
-    <input id="fileInput" type="file" accept=".xls,.xlsx" style="margin-left:6px;">
-  </label>
-  <label>
-    Cargar layout (.json):
-    <input id="loadLayout" type="file" accept=".json" style="margin-left:6px;">
-  </label>
-  <button id="saveBtn">Guardar distribución</button>
-  <button id="printBtn">Imprimir / PDF</button>
-</div>
+            layoutType.addEventListener('change', function() {
+                mixedConfig.style.display = (this.value === 'mixed') ? 'block' : 'none';
+                currentLayout = this.value;
+            });
 
-<div id="palette"><div style="color:#666;font-size:13px;">Paleta de alumnos</div></div>
-<div id="grid"></div>
+            loadStudentsBtn.addEventListener('click', function() {
+                const namesText = studentsInput.value.trim();
+                if (namesText) {
+                    students = namesText.split('\n')
+                        .map(name => name.trim())
+                        .filter(name => name.length > 0);
+                    alert(`Se han cargado ${students.length} estudiantes`);
+                    renderClassroomLayout();
+                    renderStudentsGrid();
+                } else {
+                    alert('Por favor, introduce al menos un nombre de estudiante');
+                }
+            });
 
-<!-- Librería SheetJS -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script>
-const grid = document.getElementById('grid');
-const fileInput = document.getElementById('fileInput');
-const saveBtn = document.getElementById('saveBtn');
-const loadLayout = document.getElementById('loadLayout');
-const printBtn = document.getElementById('printBtn');
-const palette = document.getElementById('palette');
+            importExcelBtn.addEventListener('click', function() {
+                if (!excelFile.files.length) {
+                    alert('Por favor, selecciona un archivo Excel primero');
+                    return;
+                }
+                const file = excelFile.files[0];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                        students = [];
+                        jsonData.forEach(row => {
+                            if (row[0] && typeof row[0] === 'string' && row[0].trim().length > 0) {
+                                students.push(row[0].trim());
+                            }
+                        });
+                        studentsInput.value = students.join('\n');
+                        alert(`Se han importado ${students.length} estudiantes desde Excel`);
+                        renderClassroomLayout();
+                        renderStudentsGrid();
+                    } catch (error) {
+                        console.error('Error al importar Excel:', error);
+                        alert('Error al importar el archivo Excel. Asegúrate de que es un formato válido.');
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            });
 
-let students = [];
-let nextId = 1;
+            function renderStudentsGrid() {
+                studentsGrid.innerHTML = '';
+                students.forEach((student, index) => {
+                    if (Object.values(deskAssignments).includes(index)) return;
+                    const studentCard = document.createElement('div');
+                    studentCard.className = 'student-card';
+                    studentCard.textContent = student;
+                    studentCard.setAttribute('data-id', index);
+                    studentCard.draggable = true;
+                    studentCard.addEventListener('dragstart', function(e) {
+                        e.dataTransfer.setData('text/plain', this.getAttribute('data-id'));
+                    });
+                    studentsGrid.appendChild(studentCard);
+                });
+            }
 
-// Crear 9x6 celdas
-for (let i=0; i<54; i++){
-  const cell=document.createElement('div');
-  cell.className="cell";
-  cell.dataset.index=i;
-  cell.addEventListener('dragover', e=>e.preventDefault());
-  cell.addEventListener('drop', dropStudent);
-  grid.appendChild(cell);
-}
+            applyLayoutBtn.addEventListener('click', function() {
+                renderClassroomLayout();
+            });
 
-fileInput.addEventListener('change', handleFile);
-saveBtn.addEventListener('click', saveLayout);
-loadLayout.addEventListener('change', loadSavedLayout);
-printBtn.addEventListener('click', ()=>window.print());
+            function renderClassroomLayout() {
+                const config = getLayoutConfig();
+                classroomLayout.innerHTML = '';
+                let deskCounter = 1;
+                for (let row = 0; row < config.rows; row++) {
+                    const rowElement = document.createElement('div');
+                    rowElement.className = 'class-row';
+                    for (let col = 0; col < config.columns; col++) {
+                        const groupSize = config.groups[col % config.groups.length];
+                        const deskGroup = document.createElement('div');
+                        deskGroup.className = 'desk-group';
+                        for (let i = 0; i < groupSize; i++) {
+                            if (deletedDesks[deskCounter]) {
+                                deskCounter++;
+                                continue;
+                            }
+                            const desk = createDesk(deskCounter);
+                            deskGroup.appendChild(desk);
+                            deskCounter++;
+                        }
+                        rowElement.appendChild(deskGroup);
+                    }
+                    classroomLayout.appendChild(rowElement);
+                }
+                const teacherArea = document.createElement('div');
+                teacherArea.className = 'teacher-area';
+                teacherArea.textContent = 'Área del Profesor';
+                classroomLayout.appendChild(teacherArea);
+                initDragAndDrop();
+            }
 
-// === Función para interpretar nombres ===
-function parseName(raw) {
-  if (!raw) return { first: '', surnameInitial: '' };
-  let s = String(raw).trim();
-  s = s.replace(/^[,.\s]+|[,.\s]+$/g, '').trim();
+            function getLayoutConfig() {
+                const rows = parseInt(rowsNumber.value) || 4;
+                const columns = parseInt(columnsNumber.value) || 3;
+                switch(currentLayout) {
+                    case 'pairs':
+                        return { rows, columns, groups: [2] };
+                    case 'individual':
+                        return { rows, columns, groups: [1] };
+                    case 'trios':
+                        return { rows, columns, groups: [3] };
+                    case 'mixed':
+                        const pattern = mixedPattern.value.split(',')
+                            .map(num => parseInt(num.trim()))
+                            .filter(num => !isNaN(num) && num > 0);
+                        return { 
+                            rows, 
+                            columns, 
+                            groups: pattern.length > 0 ? pattern : [2, 3, 2] 
+                        };
+                    default:
+                        return { rows: 4, columns: 3, groups: [2] };
+                }
+            }
 
-  // Caso "Apellido, Nombre"
-  if (s.includes(',')) {
-    const [apellido, nombre] = s.split(',').map(p=>p.trim());
-    const first = nombre.split(/\s+/)[0] || '';
-    const surnameInitial = apellido ? apellido.charAt(0).toUpperCase() + '.' : '';
-    return { first, surnameInitial };
-  }
+            function createDesk(deskId) {
+                const desk = document.createElement('div');
+                desk.className = 'desk empty';
+                desk.setAttribute('data-desk-id', deskId);
 
-  const tokens = s.split(/\s+/).filter(Boolean);
-  if (tokens.length === 1) {
-    return { first: tokens[0], surnameInitial: '' };
-  }
+                if (deskColors[deskId]) {
+                    desk.style.background = deskColors[deskId];
+                }
 
-  // Caso "Apellido Inicial"
-  const second = tokens[1];
-  if (/^[A-Za-zÀ-ÖØ-öø-ÿ]\.?$/.test(second)) {
-    const first = second.charAt(0).toUpperCase() + '.';
-    const surnameInitial = tokens[0].charAt(0).toUpperCase() + '.';
-    return { first, surnameInitial };
-  }
+                const deskNumber = document.createElement('div');
+                deskNumber.className = 'desk-number';
+                deskNumber.textContent = `#${deskId}`;
 
-  // Caso normal "Nombre Apellido"
-  const first = tokens[0];
-  const surnameInitial = tokens[1].charAt(0).toUpperCase() + '.';
-  return { first, surnameInitial };
-}
+                const studentName = document.createElement('div');
+                studentName.className = 'student-name';
+                studentName.textContent = 'Disponible';
 
-function updateStudentDisplay(el,s){
-  const parsed=parseName(s.nombre||'');
-  const firstPart=parsed.first||'';
-  const surnamePart=parsed.surnameInitial ? (' '+parsed.surnameInitial) : '';
-  el.innerHTML=`<span class="name">${firstPart}${surnamePart}</span><span class="pc">PC ${s.ordenador||''}</span>`;
-}
+                if (deskAssignments[deskId] !== undefined) {
+                    desk.classList.remove('empty');
+                    desk.classList.add('occupied');
+                    studentName.textContent = students[deskAssignments[deskId]];
+                }
 
-// Procesar Excel
-function handleFile(e){
-  const file=e.target.files[0];
-  if(!file) return;
-  const reader=new FileReader();
-  reader.onload=(ev)=>{
-    const data=new Uint8Array(ev.target.result);
-    const workbook=XLSX.read(data,{type:'array'});
-    const sheet=workbook.Sheets[workbook.SheetNames[0]];
-    const rows=XLSX.utils.sheet_to_json(sheet,{header:1});
+                desk.appendChild(deskNumber);
+                desk.appendChild(studentName);
 
-    students=[];
-    nextId=1;
-    clearPalette();
+                // Permitir eliminar el sitio con doble clic
+                desk.addEventListener('dblclick', function(e) {
+                    if (confirm('¿Deseas borrar este sitio del aula?')) {
+                        removeDesk(deskId);
+                    }
+                });
 
-    for(let i=1;i<rows.length;i++){ // saltar cabecera
-      const nombre=rows[i][0]||"";
-      const ordenador=rows[i][1]||"";
-      if(nombre){
-        const id=String(nextId++);
-        const s={id,nombre,ordenador};
-        students.push(s);
-        addStudentToPalette(s);
-      }
-    }
-  };
-  reader.readAsArrayBuffer(file);
-}
+                // Menú contextual para elegir color
+                desk.addEventListener('contextmenu', function(e) {
+                    e.preventDefault();
+                    showDeskColorMenu(desk, deskId, e);
+                });
 
-function clearPalette(){
-  while(palette.children.length>1) palette.removeChild(palette.lastChild);
-}
+                return desk;
+            }
 
-function addStudentToPalette(s){
-  const div=document.createElement('div');
-  div.className="student";
-  div.dataset.id=s.id;
-  updateStudentDisplay(div,s);
-  div.draggable=true;
-  div.addEventListener('dragstart', e=>{
-    e.dataTransfer.setData('text/plain', s.id);
-  });
-  div.addEventListener('dblclick',()=>{
-    const nuevoNombre=prompt("Editar nombre:",s.nombre);
-    if(nuevoNombre===null) return;
-    const nuevoPC=prompt("Editar número de ordenador:",s.ordenador);
-    if(nuevoPC===null) return;
-    s.nombre=nuevoNombre;
-    s.ordenador=nuevoPC;
-    document.querySelectorAll(`.student[data-id='${s.id}']`).forEach(el=>updateStudentDisplay(el,s));
-  });
-  palette.appendChild(div);
-}
+            function showDeskColorMenu(desk, deskId, event) {
+                document.querySelectorAll('.desk-color-menu').forEach(menu => menu.remove());
+                const menu = document.createElement('div');
+                menu.className = 'desk-color-menu';
+                const colors = [
+                    { name: 'gray', value: '#bdc3c7', title: 'Gris' },
+                    { name: 'white', value: '#fff', title: 'Blanco' },
+                    { name: 'green', value: '#d5f5e3', title: 'Verde' }
+                ];
+                colors.forEach(col => {
+                    const btn = document.createElement('button');
+                    btn.className = `desk-color-btn ${col.name}`;
+                    btn.title = col.title;
+                    btn.addEventListener('click', function(ev) {
+                        deskColors[deskId] = col.value;
+                        desk.style.background = col.value;
+                        menu.remove();
+                    });
+                    menu.appendChild(btn);
+                });
+                desk.appendChild(menu);
+                setTimeout(() => {
+                    document.addEventListener('click', function closeMenu(ev) {
+                        if (!menu.contains(ev.target)) {
+                            menu.remove();
+                            document.removeEventListener('click', closeMenu);
+                        }
+                    });
+                }, 10);
+            }
 
-function dropStudent(e){
-  e.preventDefault();
-  const id=e.dataTransfer.getData('text/plain');
-  const studentEl=document.querySelector(`.student[data-id='${id}']`);
-  if(studentEl) e.currentTarget.appendChild(studentEl);
-}
+            function removeDesk(deskId) {
+                if (deskAssignments[deskId] !== undefined) {
+                    delete deskAssignments[deskId];
+                }
+                if (deskColors[deskId] !== undefined) {
+                    delete deskColors[deskId];
+                }
+                deletedDesks[deskId] = true;
+                const deskElements = classroomLayout.querySelectorAll('.desk');
+                deskElements.forEach(desk => {
+                    if (desk.getAttribute('data-desk-id') == deskId) {
+                        desk.parentNode.removeChild(desk);
+                    }
+                });
+            }
 
-// Guardar JSON
-function saveLayout(){
-  const layout=[];
-  document.querySelectorAll('.cell').forEach(cell=>{
-    const s=cell.querySelector('.student');
-    if(s){
-      const stu=students.find(x=>x.id===s.dataset.id);
-      layout.push({pos:cell.dataset.index,...stu});
-    }
-  });
-  const out={layout,students};
-  const blob=new Blob([JSON.stringify(out,null,2)],{type:"application/json"});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download="layout.json";
-  a.click();
-}
+            function initDragAndDrop() {
+                const desks = document.querySelectorAll('.desk');
+                desks.forEach(desk => {
+                    desk.addEventListener('dragover', function(e) {
+                        e.preventDefault();
+                    });
+                    desk.addEventListener('drop', function(e) {
+                        e.preventDefault();
+                        const studentId = e.dataTransfer.getData('text/plain');
+                        if (studentId) {
+                            assignStudentToDesk(parseInt(studentId), this.getAttribute('data-desk-id'));
+                        }
+                    });
+                    desk.addEventListener('click', function() {
+                        const deskId = this.getAttribute('data-desk-id');
+                        if (deskAssignments[deskId] !== undefined) {
+                            delete deskAssignments[deskId];
+                            renderClassroomLayout();
+                            renderStudentsGrid();
+                        }
+                    });
+                });
+            }
 
-// Cargar JSON
-function loadSavedLayout(e){
-  const file=e.target.files[0];
-  if(!file) return;
-  const reader=new FileReader();
-  reader.onload=(ev)=>{
-    const data=JSON.parse(ev.target.result);
-    students=data.students||[];
-    clearPalette();
-    students.forEach(addStudentToPalette);
-    data.layout.forEach(item=>{
-      const cell=document.querySelector(`.cell[data-index='${item.pos}']`);
-      const el=document.querySelector(`.student[data-id='${item.id}']`);
-      if(cell&&el) cell.appendChild(el);
-    });
-  };
-  reader.readAsText(file);
-}
-</script>
+            function assignStudentToDesk(studentId, deskId) {
+                if (studentId >= 0 && studentId < students.length) {
+                    for (const assignedDesk in deskAssignments) {
+                        if (deskAssignments[assignedDesk] === studentId) {
+                            delete deskAssignments[assignedDesk];
+                        }
+                    }
+                    deskAssignments[deskId] = studentId;
+                    renderClassroomLayout();
+                    renderStudentsGrid();
+                }
+            }
+
+            function generatePDF() {
+                const pdfContainer = document.createElement('div');
+                pdfContainer.style.width = '100%';
+                pdfContainer.style.padding = '0';
+                pdfContainer.style.fontFamily = 'Arial, sans-serif';
+                pdfContainer.style.background = 'white';
+
+                const commentsSection = document.querySelector('.comments-section').cloneNode(true);
+                commentsSection.style.margin = '0 0 10px 0';
+                commentsSection.style.maxWidth = '100%';
+                commentsSection.style.fontSize = '1rem';
+                pdfContainer.appendChild(commentsSection);
+
+                const classroomView = document.querySelector('.classroom-view').cloneNode(true);
+
+                classroomView.querySelectorAll('.desk').forEach(desk => {
+                    const deskId = desk.getAttribute('data-desk-id');
+                    if (deskColors[deskId]) {
+                        desk.style.background = deskColors[deskId];
+                    }
+                    desk.style.fontSize = '1.2rem';
+                    desk.style.minWidth = '110px';
+                    desk.style.minHeight = '110px';
+                    desk.style.padding = '16px';
+                });
+                classroomView.querySelectorAll('.student-name').forEach(name => {
+                    name.style.fontSize = '1.1rem';
+                    name.style.lineHeight = '1.1';
+                    name.style.whiteSpace = 'pre-line';
+                    name.style.overflowWrap = 'break-word';
+                    name.style.wordBreak = 'break-word';
+                    name.style.textAlign = 'center';
+                    name.style.padding = '2px 0';
+                });
+
+                pdfContainer.appendChild(classroomView);
+
+                pdfContainer.style.fontSize = '16px';
+
+                const tempContainer = document.createElement('div');
+                tempContainer.style.position = 'absolute';
+                tempContainer.style.left = '-9999px';
+                tempContainer.style.width = '1200px';
+                tempContainer.appendChild(pdfContainer);
+                document.body.appendChild(tempContainer);
+
+                html2canvas(pdfContainer, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false
+                }).then(canvas => {
+                    document.body.removeChild(tempContainer);
+
+                    const imgData = canvas.toDataURL('image/png');
+                    const { jsPDF } = window.jspdf;
+
+                    const doc = new jsPDF({
+                        orientation: 'landscape',
+                        unit: 'mm',
+                        format: 'a4'
+                    });
+
+                    const pageWidth = doc.internal.pageSize.getWidth();
+                    const pageHeight = doc.internal.pageSize.getHeight();
+                    const margin = 8;
+                    const contentWidth = pageWidth - 2 * margin;
+                    const imgWidth = contentWidth;
+                    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                    let finalHeight = imgHeight;
+                    if (imgHeight > pageHeight - 2 * margin) {
+                        finalHeight = pageHeight - 2 * margin;
+                    }
+                    doc.addImage(imgData, 'PNG', margin, margin, imgWidth, finalHeight);
+                    doc.save(`planificacion-aula-${new Date().getTime()}.pdf`);
+                });
+            }
+
+            generatePDFBtn.addEventListener('click', function() {
+                generatePDF();
+            });
+
+            resetAllBtn.addEventListener('click', function() {
+                if (confirm('¿Estás seguro de que quieres reiniciar todo? Se perderán todos los datos.')) {
+                    students = [];
+                    deskAssignments = {};
+                    deskColors = {};
+                    deletedDesks = {};
+                    studentsInput.value = '';
+                    excelFile.value = '';
+                    rowsNumber.value = 4;
+                    columnsNumber.value = 3;
+                    commentsInput.value = '';
+                    renderClassroomLayout();
+                    renderStudentsGrid();
+                }
+            });
+
+            window.addEventListener('resize', function() {
+                renderClassroomLayout();
+            });
+
+            renderClassroomLayout();
+        });
+    </script>
 </body>
 </html>
