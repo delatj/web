@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de Exámenes Mejorado</title>
-    <script src="https://unpkg.com/docx@7.8.2/build/index.js"></script>
+    <title>Generador de Exámenes Mejorado - 4 Tipos</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
         body {
@@ -15,7 +14,7 @@
             background-color: #f5f5f5;
         }
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
             background-color: white;
             padding: 20px;
@@ -34,25 +33,31 @@
             border-radius: 5px;
         }
         .preview-section {
-            display: flex;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 20px;
             margin-bottom: 30px;
         }
         .exam-preview {
-            flex: 1;
             padding: 15px;
             background-color: #f9f9f9;
             border: 1px solid #ddd;
             border-radius: 5px;
+            max-height: 400px;
+            overflow-y: auto;
         }
         .exam-title {
-            background-color: #3498db;
             color: white;
             padding: 10px;
             text-align: center;
             margin: -15px -15px 15px -15px;
             border-radius: 5px 5px 0 0;
+            font-weight: bold;
         }
+        .exam-title-A { background-color: #3498db; }
+        .exam-title-B { background-color: #e74c3c; }
+        .exam-title-C { background-color: #2ecc71; }
+        .exam-title-D { background-color: #f39c12; }
         .btn {
             display: inline-block;
             padding: 10px 15px;
@@ -148,11 +153,64 @@
             white-space: normal;
             text-align: justify;
         }
+        .controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .info-panel {
+            background-color: #e8f4fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+        .question-count {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .answer-cell {
+            min-height: 40px;
+            background-color: white;
+        }
+        .instructions-panel {
+            background-color: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+        }
+        .instructions-panel h3 {
+            color: #856404;
+            margin-top: 0;
+        }
+        .instructions-panel ol {
+            margin-bottom: 0;
+        }
+        .instructions-panel li {
+            margin-bottom: 8px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Generador de Exámenes</h1>
+        <h1>Generador de Exámenes - 4 Tipos (10 preguntas cada uno)</h1>
+        
+        <div class="instructions-panel">
+            <h3>📋 Cómo descargar tests de la web Eduardo de la Torre:</h3>
+            <ol>
+                <li>Ve a la página web de Eduardo de la Torre con los tests</li>
+                <li>Selecciona un test que NO tenga imágenes (solo texto)</li>
+                <li>En tu navegador, haz clic derecho y selecciona <strong>"Guardar página como..."</strong></li>
+                <li>Guarda la página como <strong>"Página web, HTML completo"</strong></li>
+                <li>En este generador, usa el botón "Cargar Examen" para seleccionar el archivo HTML guardado</li>
+                <li>El sistema extraerá automáticamente las preguntas y respuestas</li>
+            </ol>
+        </div>
+        
+        <div class="info-panel">
+            <p><strong>Información:</strong> Cada examen generado contendrá exactamente <span class="question-count">10 preguntas</span> seleccionadas aleatoriamente del total disponible.</p>
+            <p id="questionsInfo">Total de preguntas disponibles: 0</p>
+        </div>
         
         <div class="upload-section">
             <h2>Cargar Examen</h2>
@@ -170,19 +228,28 @@ Copiar en la prueba conlleva la retirada de la misma, la calificación de 0 punt
         
         <div class="preview-section">
             <div class="exam-preview" id="examA">
-                <div class="exam-title">Vista Previa - Examen A</div>
-                <div id="previewA">Carga un examen para ver la vista previa</div>
+                <div class="exam-title exam-title-A">Vista Previa - Examen A (10 preguntas)</div>
+                <div id="previewA">No se encontraron preguntas en el archivo.</div>
             </div>
             
             <div class="exam-preview" id="examB">
-                <div class="exam-title">Vista Previa - Examen B</div>
-                <div id="previewB">Carga un examen para ver la vista previa</div>
+                <div class="exam-title exam-title-B">Vista Previa - Examen B (10 preguntas)</div>
+                <div id="previewB">No se encontraron preguntas en el archivo.</div>
+            </div>
+            
+            <div class="exam-preview" id="examC">
+                <div class="exam-title exam-title-C">Vista Previa - Examen C (10 preguntas)</div>
+                <div id="previewC">No se encontraron preguntas en el archivo.</div>
+            </div>
+            
+            <div class="exam-preview" id="examD">
+                <div class="exam-title exam-title-D">Vista Previa - Examen D (10 preguntas)</div>
+                <div id="previewD">No se encontraron preguntas en el archivo.</div>
             </div>
         </div>
         
-        <div>
-            <button class="btn btn-download" id="downloadAB" disabled>Descargar Exámenes A y B</button>
-            <button class="btn btn-download" id="downloadWord" disabled>Descargar en Word</button>
+        <div class="controls">
+            <button class="btn btn-download" id="downloadAll" disabled>Descargar Exámenes A, B, C y D</button>
             <button class="btn btn-answer" id="downloadAnswers" disabled>Descargar Exámenes con Respuestas</button>
         </div>
     </div>
@@ -198,10 +265,12 @@ Copiar en la prueba conlleva la retirada de la misma, la calificación de 0 punt
             const examFileInput = document.getElementById('examFile');
             const previewA = document.getElementById('previewA');
             const previewB = document.getElementById('previewB');
-            const downloadABBtn = document.getElementById('downloadAB');
-            const downloadWordBtn = document.getElementById('downloadWord');
+            const previewC = document.getElementById('previewC');
+            const previewD = document.getElementById('previewD');
+            const downloadAllBtn = document.getElementById('downloadAll');
             const downloadAnswersBtn = document.getElementById('downloadAnswers');
             const examInstructionsInput = document.getElementById('examInstructions');
+            const questionsInfo = document.getElementById('questionsInfo');
             
             // Cargar examen
             loadBtn.addEventListener('click', function() {
@@ -228,76 +297,45 @@ Copiar en la prueba conlleva la retirada de la misma, la calificación de 0 punt
                 tempDiv.innerHTML = content;
                 
                 // Extraer el tema del examen
-                const paragraphs = tempDiv.querySelectorAll('p');
-                for (let p of paragraphs) {
-                    const text = p.textContent.trim();
-                    if (text.includes('TEMA:')) {
-                        examTopic = text.replace('TEMA:', '').trim();
-                        break;
-                    }
+                const titleElement = tempDiv.querySelector('.ExerciseTitle');
+                if (titleElement) {
+                    examTopic = titleElement.textContent.replace(/\*/g, '').trim();
                 }
                 
-                let foundKey = false;
-                let currentQuestion = null;
+                // Extraer preguntas
+                const questionElements = tempDiv.querySelectorAll('.QuizQuestion');
                 
-                for (let p of paragraphs) {
-                    let text = p.textContent.trim();
-                    
-                    if (text.includes('----------Clave----------')) {
-                        foundKey = true;
-                        continue;
-                    }
-                    
-                    if (!foundKey) {
-                        if (text.match(/^\d+\./)) {
-                            if (currentQuestion) {
-                                questions.push(currentQuestion);
-                            }
-                            
-                            let questionText = text.replace(/^\d+\.\s*/, '').replace(/\s+/g, ' ').trim();
-                            
-                            currentQuestion = {
-                                text: questionText,
-                                options: [],
-                                answer: '',
-                                isTest: false // Por defecto no es pregunta test
-                            };
-                        } else if (currentQuestion && text.match(/^[a-d]\)/i)) {
-                            const optionText = text.replace(/^[a-d]\)\s*/i, '');
-                            const optionLetter = text.match(/^([a-d])/i)[1].toUpperCase();
-                            currentQuestion.options.push(`${optionLetter}. ${optionText.replace(/\s+/g, ' ').trim()}`);
-                            currentQuestion.isTest = true; // Marcar como pregunta test
-                        } else if (currentQuestion && text !== '') {
-                            if (currentQuestion.text.slice(-1) !== ' ') {
-                                currentQuestion.text += ' ';
-                            }
-                            currentQuestion.text += text.replace(/\s+/g, ' ').trim();
-                        }
-                    } else {
-                        if (text.match(/^\d+\.?/)) {
-                            const answerText = text.replace(/^\d+\.?\s*/, '').trim();
-                            const questionIndex = parseInt(text.match(/^\d+/)[0]) - 1;
-                            
-                            if (questions[questionIndex]) {
-                                // Solo procesar como letra si es pregunta test
-                                if (questions[questionIndex].isTest) {
-                                    const match = answerText.match(/^[a-d]/i);
-                                    if (match) {
-                                        questions[questionIndex].answer = match[0].toUpperCase();
-                                    } else {
-                                        questions[questionIndex].answer = answerText;
-                                    }
-                                } else {
-                                    questions[questionIndex].answer = answerText;
-                                }
+                questionElements.forEach((questionElement, index) => {
+                    const questionTextElement = questionElement.querySelector('.QuestionText');
+                    if (questionTextElement) {
+                        let questionText = questionTextElement.textContent.trim();
+                        
+                        // Limpiar el texto de la pregunta
+                        questionText = questionText.replace(/^\d+\.\s*/, '');
+                        
+                        // Buscar la respuesta correcta en el array I
+                        let correctAnswer = '';
+                        const match = content.match(new RegExp(`I\\[${index}\\]\\s*=\\s*new Array\\([^)]+\\);`));
+                        if (match) {
+                            const answerMatch = match[0].match(/new Array\('([^']+)'/);
+                            if (answerMatch && answerMatch[1]) {
+                                correctAnswer = answerMatch[1];
                             }
                         }
+                        
+                        questions.push({
+                            text: questionText,
+                            options: [],
+                            answer: correctAnswer,
+                            isTest: false
+                        });
                     }
-                }
+                });
                 
-                if (currentQuestion && !foundKey) {
-                    questions.push(currentQuestion);
-                }
+                // Actualizar información de preguntas
+                questionsInfo.textContent = `Total de preguntas disponibles: ${questions.length}`;
+                
+                console.log(`Se encontraron ${questions.length} preguntas`);
             }
             
             // Mezclar array aleatoriamente (Fisher-Yates)
@@ -309,29 +347,64 @@ Copiar en la prueba conlleva la retirada de la misma, la calificación de 0 punt
                 return array;
             }
             
+            // Seleccionar 10 preguntas aleatorias sin repetición entre exámenes
+            function selectQuestionsForExams() {
+                // Verificar que hay suficientes preguntas
+                if (questions.length < 10) {
+                    alert(`No hay suficientes preguntas. Se necesitan al menos 10, pero solo hay ${questions.length}.`);
+                    return null;
+                }
+                
+                // Mezclar todas las preguntas
+                const shuffledQuestions = shuffleArray([...questions]);
+                
+                // Crear 4 exámenes con 10 preguntas cada uno
+                const exams = {
+                    A: [],
+                    B: [],
+                    C: [],
+                    D: []
+                };
+                
+                // Si hay menos de 40 preguntas, algunas se repetirán entre exámenes
+                for (let i = 0; i < 10; i++) {
+                    exams.A.push(shuffledQuestions[i % shuffledQuestions.length]);
+                    exams.B.push(shuffledQuestions[(i + 10) % shuffledQuestions.length]);
+                    exams.C.push(shuffledQuestions[(i + 20) % shuffledQuestions.length]);
+                    exams.D.push(shuffledQuestions[(i + 30) % shuffledQuestions.length]);
+                }
+                
+                // Mezclar las preguntas dentro de cada examen
+                exams.A = shuffleArray(exams.A);
+                exams.B = shuffleArray(exams.B);
+                exams.C = shuffleArray(exams.C);
+                exams.D = shuffleArray(exams.D);
+                
+                return exams;
+            }
+            
             // Generar vistas previas
             function generatePreviews() {
                 if (questions.length === 0) {
                     previewA.innerHTML = 'No se encontraron preguntas en el archivo.';
                     previewB.innerHTML = 'No se encontraron preguntas en el archivo.';
+                    previewC.innerHTML = 'No se encontraron preguntas en el archivo.';
+                    previewD.innerHTML = 'No se encontraron preguntas en el archivo.';
                     return;
                 }
                 
-                // Mezclar preguntas aleatoriamente
-                const shuffledQuestions = shuffleArray([...questions]);
-                
-                // Dividir preguntas en A y B (si es impar, ignoramos la última)
-                const half = Math.floor(shuffledQuestions.length / 2);
-                const examAQuestions = shuffledQuestions.slice(0, half);
-                const examBQuestions = shuffledQuestions.slice(half, half * 2);
+                // Seleccionar preguntas para los 4 exámenes
+                const exams = selectQuestionsForExams();
+                if (!exams) return;
                 
                 // Generar HTML para los exámenes
-                previewA.innerHTML = generateExamHTML(examAQuestions, false, 'A');
-                previewB.innerHTML = generateExamHTML(examBQuestions, false, 'B');
+                previewA.innerHTML = generateExamHTML(exams.A, false, 'A');
+                previewB.innerHTML = generateExamHTML(exams.B, false, 'B');
+                previewC.innerHTML = generateExamHTML(exams.C, false, 'C');
+                previewD.innerHTML = generateExamHTML(exams.D, false, 'D');
                 
                 // Habilitar botones de descarga
-                downloadABBtn.disabled = false;
-                downloadWordBtn.disabled = false;
+                downloadAllBtn.disabled = false;
                 downloadAnswersBtn.disabled = false;
             }
             
@@ -347,11 +420,11 @@ Copiar en la prueba conlleva la retirada de la misma, la calificación de 0 punt
                     <table>
                         <thead>
                             <tr class="exam-type">
-                                <th colspan="2">EXAMEN TIPO ${examType}</th>
+                                <th colspan="2">EXAMEN TIPO ${examType} (10 preguntas)</th>
                             </tr>
                             <tr class="student-row">
-                                <td><strong>Nombre:</strong>-</td>
-                                <td><strong>Fecha:</strong>-</td>
+                                <td><strong>Nombre:</strong></td>
+                                <td><strong>Fecha:</strong></td>
                             </tr>
                             <tr>
                                 <th width="80%">Pregunta</th>
@@ -363,19 +436,14 @@ Copiar en la prueba conlleva la retirada de la misma, la calificación de 0 punt
                 
                 examQuestions.forEach((q, index) => {
                     let questionText = q.text;
-                    let answerText = showAnswers ? q.answer : '-';
-                    
-                    // Si hay opciones, las añadimos al texto de la pregunta
-                    if (q.options && q.options.length > 0) {
-                        questionText += `<ul class="test-options">${q.options.map(opt => `<li>${opt}</li>`).join('')}</ul>`;
-                    }
+                    let answerText = showAnswers ? q.answer : '';
                     
                     html += `
                         <tr>
                             <td class="question-text">
-                                ${questionText}
+                                ${index + 1}. ${questionText}
                             </td>
-                            <td>${answerText}</td>
+                            <td class="answer-cell">${answerText}</td>
                         </tr>
                     `;
                 });
@@ -388,23 +456,21 @@ Copiar en la prueba conlleva la retirada de la misma, la calificación de 0 punt
                 return html;
             }
             
-            // Descargar exámenes A y B
-            downloadABBtn.addEventListener('click', function() {
+            // Descargar todos los exámenes (A, B, C y D)
+            downloadAllBtn.addEventListener('click', function() {
                 if (questions.length === 0) {
                     alert('No hay preguntas cargadas.');
                     return;
                 }
                 
-                // Mezclar preguntas aleatoriamente
-                const shuffledQuestions = shuffleArray([...questions]);
+                // Seleccionar preguntas para los 4 exámenes
+                const exams = selectQuestionsForExams();
+                if (!exams) return;
                 
-                // Dividir preguntas en A y B (si es impar, ignoramos la última)
-                const half = Math.floor(shuffledQuestions.length / 2);
-                const examAQuestions = shuffledQuestions.slice(0, half);
-                const examBQuestions = shuffledQuestions.slice(half, half * 2);
-                
-                const examAHtml = generateExamHTML(examAQuestions, false, 'A');
-                const examBHtml = generateExamHTML(examBQuestions, false, 'B');
+                const examAHtml = generateExamHTML(exams.A, false, 'A');
+                const examBHtml = generateExamHTML(exams.B, false, 'B');
+                const examCHtml = generateExamHTML(exams.C, false, 'C');
+                const examDHtml = generateExamHTML(exams.D, false, 'D');
                 
                 const combinedHtml = `
                     <!DOCTYPE html>
@@ -421,7 +487,11 @@ Copiar en la prueba conlleva la retirada de la misma, la calificación de 0 punt
                             th { background-color: #f2f2f2; }
                             .header-info { margin-bottom: 20px; }
                             .warning { background-color: #f8d7da; padding: 10px; margin-bottom: 15px; }
-                            .exam-type { background-color: #3498db; color: white; font-weight: bold; text-align: center; }
+                            .exam-type { color: white; font-weight: bold; text-align: center; }
+                            .exam-type-A { background-color: #3498db; }
+                            .exam-type-B { background-color: #e74c3c; }
+                            .exam-type-C { background-color: #2ecc71; }
+                            .exam-type-D { background-color: #f39c12; }
                             .student-row { background-color: #f2f2f2; font-weight: bold; }
                             .test-options { margin-left: 20px; margin-top: 5px; list-style-type: none; padding-left: 0; }
                             .test-options li { margin-bottom: 5px; word-wrap: break-word; }
@@ -430,14 +500,24 @@ Copiar en la prueba conlleva la retirada de la misma, la calificación de 0 punt
                                 white-space: normal;
                                 text-align: justify;
                             }
+                            .answer-cell {
+                                min-height: 40px;
+                                background-color: white;
+                            }
                         </style>
                     </head>
                     <body>
                         <div class="exam-page">
-                            ${examAHtml}
+                            ${examAHtml.replace('exam-type', 'exam-type exam-type-A')}
                         </div>
                         <div class="exam-page">
-                            ${examBHtml}
+                            ${examBHtml.replace('exam-type', 'exam-type exam-type-B')}
+                        </div>
+                        <div class="exam-page">
+                            ${examCHtml.replace('exam-type', 'exam-type exam-type-C')}
+                        </div>
+                        <div class="exam-page">
+                            ${examDHtml.replace('exam-type', 'exam-type exam-type-D')}
                         </div>
                     </body>
                     </html>
@@ -446,235 +526,6 @@ Copiar en la prueba conlleva la retirada de la misma, la calificación de 0 punt
                 downloadFile(`Examenes_${examTopic.replace(/\s+/g, '_')}.html`, combinedHtml);
             });
             
-            // Descargar exámenes en formato Word (versión mejorada)
-            downloadWordBtn.addEventListener('click', function() {
-                if (questions.length === 0) {
-                    alert('No hay preguntas cargadas.');
-                    return;
-                }
-
-                // Mezclar preguntas aleatoriamente
-                const shuffledQuestions = shuffleArray([...questions]);
-                
-                // Dividir preguntas en A y B
-                const half = Math.floor(shuffledQuestions.length / 2);
-                const examAQuestions = shuffledQuestions.slice(0, half);
-                const examBQuestions = shuffledQuestions.slice(half, half * 2);
-
-                // Crear documento Word con formato mejorado
-                const { Document, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, AlignmentType, WidthType } = docx;
-
-                const doc = new Document({
-                    styles: {
-                        paragraphStyles: [
-                            {
-                                id: "normal",
-                                name: "Normal",
-                                run: {
-                                    size: 22, // 11pt (22 half points)
-                                    font: "Arial"
-                                },
-                                paragraph: {
-                                    spacing: { line: 276 } // 1.15 line spacing
-                                }
-                            },
-                            {
-                                id: "header",
-                                name: "Header",
-                                basedOn: "normal",
-                                run: {
-                                    size: 28, // 14pt
-                                    bold: true,
-                                    color: "FFFFFF"
-                                },
-                                paragraph: {
-                                    alignment: AlignmentType.CENTER,
-                                    spacing: { before: 200, after: 200 },
-                                    shading: {
-                                        fill: "3498DB"
-                                    }
-                                }
-                            },
-                            {
-                                id: "question",
-                                name: "Question",
-                                basedOn: "normal",
-                                run: {
-                                    bold: true
-                                }
-                            },
-                            {
-                                id: "option",
-                                name: "Option",
-                                basedOn: "normal",
-                                paragraph: {
-                                    indent: { left: 720 }, // 0.5 inch
-                                    spacing: { before: 100, after: 100 }
-                                }
-                            }
-                        ]
-                    },
-                    sections: [
-                        {
-                            properties: {
-                                page: {
-                                    margin: {
-                                        top: 1440,    // 1 inch
-                                        right: 1440,  // 1 inch
-                                        bottom: 1440, // 1 inch
-                                        left: 1440    // 1 inch
-                                    }
-                                }
-                            },
-                            children: [
-                                // Examen A
-                                new Paragraph({
-                                    text: "EXAMEN TIPO A",
-                                    heading: HeadingLevel.HEADING_1,
-                                    style: "header"
-                                }),
-                                ...generateExamWordContent(examAQuestions, 'A'),
-                                
-                                // Salto de página
-                                new Paragraph({
-                                    children: [new TextRun({ text: "", break: 1 })]
-                                }),
-                                
-                                // Examen B
-                                new Paragraph({
-                                    text: "EXAMEN TIPO B",
-                                    heading: HeadingLevel.HEADING_1,
-                                    style: "header"
-                                }),
-                                ...generateExamWordContent(examBQuestions, 'B')
-                            ]
-                        }
-                    ]
-                });
-
-                // Generar y descargar el documento
-                docx.Packer.toBlob(doc).then(blob => {
-                    saveAs(blob, `Examenes_${examTopic.replace(/\s+/g, '_')}.docx`);
-                });
-            });
-
-            // Función mejorada para generar contenido del examen en formato Word
-            function generateExamWordContent(questions, examType) {
-                const { Paragraph, TextRun, Table, TableRow, TableCell, AlignmentType, WidthType } = docx;
-                const content = [];
-                
-                // Instrucciones
-                const instructions = examInstructionsInput.value.split('\n');
-                content.push(new Paragraph({
-                    text: "Departamento de Tecnología",
-                    bold: true,
-                    spacing: { after: 100 }
-                }));
-                
-                content.push(new Paragraph({
-                    text: `Control o tema: ${examTopic}`,
-                    bold: true,
-                    spacing: { after: 200 }
-                }));
-                
-                instructions.filter(line => line.trim() && !line.includes("Departamento") && !line.includes("Control tema"))
-                           .forEach(line => {
-                    content.push(new Paragraph({
-                        text: line.trim(),
-                        spacing: { after: 100 }
-                    }));
-                });
-                
-                // Información del estudiante
-                const studentTable = new Table({
-                    rows: [
-                        new TableRow({
-                            children: [
-                                new TableCell({
-                                    children: [new Paragraph({
-                                        text: "Nombre: ___________________________",
-                                        bold: true
-                                    })],
-                                    width: { size: 50, type: WidthType.PERCENTAGE }
-                                }),
-                                new TableCell({
-                                    children: [new Paragraph({
-                                        text: "Fecha: ___________________________",
-                                        bold: true
-                                    })],
-                                    width: { size: 50, type: WidthType.PERCENTAGE }
-                                })
-                            ]
-                        })
-                    ],
-                    width: { size: 100, type: WidthType.PERCENTAGE }
-                });
-                content.push(studentTable);
-                
-                // Tabla de preguntas
-                const questionTable = new Table({
-                    columnWidths: [70, 30],
-                    rows: [
-                        new TableRow({
-                            children: [
-                                new TableCell({
-                                    children: [new Paragraph({
-                                        text: "Pregunta",
-                                        bold: true
-                                    })],
-                                    shading: { fill: "F2F2F2" }
-                                }),
-                                new TableCell({
-                                    children: [new Paragraph({
-                                        text: "Respuesta",
-                                        bold: true
-                                    })],
-                                    shading: { fill: "F2F2F2" }
-                                })
-                            ]
-                        }),
-                        ...questions.map((q, index) => {
-                            const questionContent = [];
-                            questionContent.push(new Paragraph({
-                                text: `${index + 1}. ${q.text}`,
-                                style: "question",
-                                spacing: { after: 100 }
-                            }));
-                            
-                            // Añadir opciones si es pregunta test
-                            if (q.options && q.options.length > 0) {
-                                q.options.forEach(opt => {
-                                    questionContent.push(new Paragraph({
-                                        text: opt,
-                                        style: "option"
-                                    }));
-                                });
-                            }
-                            
-                            return new TableRow({
-                                children: [
-                                    new TableCell({
-                                        children: questionContent,
-                                        margins: { top: 100, bottom: 100, left: 100, right: 100 }
-                                    }),
-                                    new TableCell({
-                                        children: [new Paragraph({
-                                            text: "___________________________",
-                                            spacing: { after: 100 }
-                                        })],
-                                        margins: { top: 100, bottom: 100, left: 100, right: 100 }
-                                    })
-                                ]
-                            });
-                        })
-                    ],
-                    width: { size: 100, type: WidthType.PERCENTAGE }
-                });
-                content.push(questionTable);
-                
-                return content;
-            }
-            
             // Descargar exámenes con respuestas
             downloadAnswersBtn.addEventListener('click', function() {
                 if (questions.length === 0) {
@@ -682,16 +533,14 @@ Copiar en la prueba conlleva la retirada de la misma, la calificación de 0 punt
                     return;
                 }
                 
-                // Mezclar preguntas aleatoriamente
-                const shuffledQuestions = shuffleArray([...questions]);
+                // Seleccionar preguntas para los 4 exámenes
+                const exams = selectQuestionsForExams();
+                if (!exams) return;
                 
-                // Dividir preguntas en A y B (si es impar, ignoramos la última)
-                const half = Math.floor(shuffledQuestions.length / 2);
-                const examAQuestions = shuffledQuestions.slice(0, half);
-                const examBQuestions = shuffledQuestions.slice(half, half * 2);
-                
-                const examAHtml = generateExamHTML(examAQuestions, true, 'A');
-                const examBHtml = generateExamHTML(examBQuestions, true, 'B');
+                const examAHtml = generateExamHTML(exams.A, true, 'A');
+                const examBHtml = generateExamHTML(exams.B, true, 'B');
+                const examCHtml = generateExamHTML(exams.C, true, 'C');
+                const examDHtml = generateExamHTML(exams.D, true, 'D');
                 
                 const combinedHtml = `
                     <!DOCTYPE html>
@@ -708,7 +557,11 @@ Copiar en la prueba conlleva la retirada de la misma, la calificación de 0 punt
                             th { background-color: #f2f2f2; }
                             .header-info { margin-bottom: 20px; }
                             .warning { background-color: #f8d7da; padding: 10px; margin-bottom: 15px; }
-                            .exam-type { background-color: #3498db; color: white; font-weight: bold; text-align: center; }
+                            .exam-type { color: white; font-weight: bold; text-align: center; }
+                            .exam-type-A { background-color: #3498db; }
+                            .exam-type-B { background-color: #e74c3c; }
+                            .exam-type-C { background-color: #2ecc71; }
+                            .exam-type-D { background-color: #f39c12; }
                             .student-row { background-color: #f2f2f2; font-weight: bold; }
                             .test-options { margin-left: 20px; margin-top: 5px; list-style-type: none; padding-left: 0; }
                             .test-options li { margin-bottom: 5px; word-wrap: break-word; }
@@ -717,17 +570,29 @@ Copiar en la prueba conlleva la retirada de la misma, la calificación de 0 punt
                                 white-space: normal;
                                 text-align: justify;
                             }
+                            .answer-cell {
+                                min-height: 40px;
+                                background-color: white;
+                            }
                         </style>
                     </head>
                     <body>
                         <h2>Exámenes ${examTopic} con Respuestas</h2>
                         <div class="exam-page">
-                            <h3>Examen A</h3>
-                            ${examAHtml}
+                            <h3>Examen A (10 preguntas)</h3>
+                            ${examAHtml.replace('exam-type', 'exam-type exam-type-A')}
                         </div>
                         <div class="exam-page">
-                            <h3>Examen B</h3>
-                            ${examBHtml}
+                            <h3>Examen B (10 preguntas)</h3>
+                            ${examBHtml.replace('exam-type', 'exam-type exam-type-B')}
+                        </div>
+                        <div class="exam-page">
+                            <h3>Examen C (10 preguntas)</h3>
+                            ${examCHtml.replace('exam-type', 'exam-type exam-type-C')}
+                        </div>
+                        <div class="exam-page">
+                            <h3>Examen D (10 preguntas)</h3>
+                            ${examDHtml.replace('exam-type', 'exam-type exam-type-D')}
                         </div>
                     </body>
                     </html>
