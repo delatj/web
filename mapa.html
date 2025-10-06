@@ -1,0 +1,1415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor de Mapa Mental Interactivo</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .top-section {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .upload-section {
+            flex: 1;
+            min-width: 300px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-height: 400px;
+            overflow: hidden;
+        }
+
+        .pdf-section {
+            flex: 2;
+            min-width: 400px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .preview-section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            min-height: 600px;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            margin-bottom: 12px;
+            color: #2575fc;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 8px;
+        }
+
+        .file-upload {
+            border: 2px dashed #6a11cb;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .file-upload:hover {
+            background-color: #f0f4ff;
+        }
+
+        .file-upload i {
+            font-size: 2rem;
+            color: #6a11cb;
+            margin-bottom: 10px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .pdf-viewer {
+            width: 100%;
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: auto;
+            padding: 10px;
+            background-color: #f9f9f9;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            min-height: 200px;
+        }
+
+        .selection-toolbar {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .selection-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 110px;
+        }
+
+        .selection-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .selection-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .main-btn {
+            background-color: #ff9a9e;
+            color: white;
+        }
+
+        .secondary-btn {
+            background-color: #a1c4fd;
+            color: white;
+        }
+
+        .tertiary-btn {
+            background-color: #d4fc79;
+            color: #333;
+        }
+
+        .delete-btn {
+            background-color: #ff6b6b;
+            color: white;
+        }
+
+        .deselect-btn {
+            background-color: #ffa726;
+            color: white;
+        }
+
+        .save-btn {
+            background-color: #4caf50;
+            color: white;
+        }
+
+        .load-btn {
+            background-color: #2196f3;
+            color: white;
+        }
+
+        .mind-map-container {
+            width: 100%;
+            height: 700px;
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            position: relative;
+            overflow: auto;
+            background-color: #f9f9f9;
+        }
+
+        .mind-map {
+            width: 1200px;
+            height: 800px;
+            position: relative;
+            margin: 20px auto;
+            background-color: white;
+        }
+
+        .idea-node {
+            position: absolute;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            cursor: move;
+            max-width: 250px;
+            transition: all 0.3s ease;
+            z-index: 10;
+            word-wrap: break-word;
+            background: white;
+        }
+
+        .idea-node:hover {
+            transform: scale(1.03);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .main-idea {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+            top: 50px;
+            left: 475px;
+            width: 250px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .secondary-idea {
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            width: 220px;
+        }
+
+        .tertiary-idea {
+            background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+            width: 200px;
+            font-size: 0.9rem;
+        }
+
+        .idea-a {
+            top: 250px;
+            left: 200px;
+        }
+
+        .idea-b {
+            top: 250px;
+            left: 500px;
+        }
+
+        .idea-c {
+            top: 250px;
+            left: 800px;
+        }
+
+        .delete-icon {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .idea-node:hover .delete-icon {
+            opacity: 1;
+        }
+
+        .connection {
+            position: absolute;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .connection-line {
+            stroke: #666;
+            stroke-width: 2;
+            marker-end: url(#arrowhead);
+        }
+
+        .selected-text {
+            background-color: #ffeb3b;
+            padding: 2px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .selected-text:hover {
+            background-color: #ffd54f;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .selection-info {
+            margin-top: 8px;
+            padding: 8px;
+            background-color: #e3f2fd;
+            border-radius: 5px;
+            font-size: 0.85rem;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            gap: 10px;
+        }
+
+        .control-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .reset-btn {
+            background-color: #ff9a9e;
+            color: white;
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+        }
+
+        .save-project-btn {
+            background-color: #4caf50;
+            color: white;
+        }
+
+        .load-project-btn {
+            background-color: #2196f3;
+            color: white;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .extracted-content {
+            margin-top: 15px;
+            padding: 12px;
+            background-color: #f0f4ff;
+            border-radius: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 0.85rem;
+        }
+
+        .extracted-content h3 {
+            margin-bottom: 8px;
+            color: #2575fc;
+            font-size: 1rem;
+        }
+
+        .content-item {
+            margin-bottom: 8px;
+            padding: 8px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            font-size: 0.8rem;
+        }
+
+        .project-management {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .project-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .project-input {
+            flex: 2;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            color: white;
+            font-size: 1.5rem;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .loading-spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 400px;
+            max-width: 90%;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal h3 {
+            margin-bottom: 15px;
+            color: #2575fc;
+        }
+
+        .project-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 15px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+        }
+
+        .project-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .project-item:hover {
+            background-color: #f0f4ff;
+        }
+
+        .project-item:last-child {
+            border-bottom: none;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .modal-cancel {
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .modal-confirm {
+            background-color: #2575fc;
+            color: white;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .top-section {
+                flex-direction: column;
+            }
+            
+            .upload-section, .pdf-section {
+                min-width: 100%;
+                max-height: none;
+            }
+            
+            .mind-map-container {
+                height: 500px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Editor de Mapa Mental Interactivo</h1>
+            <p class="subtitle">Carga PDF, selecciona texto y crea tu mapa mental</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="top-section">
+                <div class="upload-section">
+                    <h2 class="section-title">Cargar PDF</h2>
+                    <div class="file-upload" id="dropArea">
+                        <i>📄</i>
+                        <p>Haz clic para seleccionar archivo PDF</p>
+                        <input type="file" id="fileInput" class="file-input" accept=".pdf">
+                        <button class="upload-btn" id="uploadBtn">Seleccionar Archivo</button>
+                    </div>
+                    
+                    <div class="project-management">
+                        <input type="text" id="projectName" class="project-input" placeholder="Nombre del proyecto">
+                        <button class="project-btn save-btn" id="saveProjectBtn">Guardar Proyecto</button>
+                        <button class="project-btn load-btn" id="loadProjectBtn">Cargar Proyecto</button>
+                    </div>
+                    
+                    <div class="extracted-content">
+                        <h3>Contenido Extraído</h3>
+                        <div id="contentDisplay">
+                            <p>El contenido del PDF aparecerá aquí después de cargarlo.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="pdf-section">
+                    <h2 class="section-title">Vista del PDF</h2>
+                    <div class="pdf-viewer" id="pdfViewer">
+                        <p>El contenido del PDF se mostrará aquí después de cargarlo.</p>
+                    </div>
+                    
+                    <div class="selection-info" id="selectionInfo">
+                        <strong>Instrucciones:</strong> Selecciona texto del PDF y luego elige el tipo de idea. 
+                        Haz clic en el texto resaltado para deseleccionarlo.
+                    </div>
+                    
+                    <div class="selection-toolbar">
+                        <button class="selection-btn main-btn" id="addMainBtn">Idea Principal</button>
+                        <button class="selection-btn secondary-btn" id="addSecondaryBtn">Idea Secundaria</button>
+                        <button class="selection-btn tertiary-btn" id="addTertiaryBtn">Idea Terciaria</button>
+                        <button class="selection-btn deselect-btn" id="deselectTextBtn">Deseleccionar</button>
+                        <button class="selection-btn delete-btn" id="deleteSelectedBtn">Borrar Idea</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="preview-section">
+                <h2 class="section-title">Vista Previa del Mapa Mental</h2>
+                <div class="mind-map-container">
+                    <div class="mind-map" id="mindMap">
+                        <!-- SVG para las flechas de conexión -->
+                        <svg width="100%" height="100%" style="position: absolute; top: 0; left: 0; z-index: 5; pointer-events: none;">
+                            <defs>
+                                <marker id="arrowhead" markerWidth="10" markerHeight="7" 
+                                        refX="9" refY="3.5" orient="auto">
+                                    <polygon points="0 0, 10 3.5, 0 7" fill="#666"/>
+                                </marker>
+                            </defs>
+                            <g id="connections"></g>
+                        </svg>
+                        <!-- Las ideas se agregarán dinámicamente aquí -->
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button class="control-btn reset-btn" id="resetBtn">Restablecer Mapa</button>
+                    <button class="control-btn save-project-btn" id="quickSaveBtn">Guardar Proyecto</button>
+                    <button class="control-btn load-project-btn" id="quickLoadBtn">Cargar Proyecto</button>
+                    <button class="control-btn download-btn" id="downloadBtn">Descargar PDF</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para cargar proyectos -->
+    <div class="modal" id="loadProjectModal">
+        <div class="modal-content">
+            <h3>Seleccionar Proyecto</h3>
+            <div class="project-list" id="projectList">
+                <!-- Los proyectos se cargarán aquí dinámicamente -->
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-cancel" id="cancelLoadBtn">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Referencias a elementos DOM
+            const fileInput = document.getElementById('fileInput');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const dropArea = document.getElementById('dropArea');
+            const contentDisplay = document.getElementById('contentDisplay');
+            const pdfViewer = document.getElementById('pdfViewer');
+            const selectionInfo = document.getElementById('selectionInfo');
+            const resetBtn = document.getElementById('resetBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const mindMap = document.getElementById('mindMap');
+            const connectionsSvg = document.getElementById('connections');
+            const addMainBtn = document.getElementById('addMainBtn');
+            const addSecondaryBtn = document.getElementById('addSecondaryBtn');
+            const addTertiaryBtn = document.getElementById('addTertiaryBtn');
+            const deselectTextBtn = document.getElementById('deselectTextBtn');
+            const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+            const saveProjectBtn = document.getElementById('saveProjectBtn');
+            const loadProjectBtn = document.getElementById('loadProjectBtn');
+            const quickSaveBtn = document.getElementById('quickSaveBtn');
+            const quickLoadBtn = document.getElementById('quickLoadBtn');
+            const projectNameInput = document.getElementById('projectName');
+            const loadProjectModal = document.getElementById('loadProjectModal');
+            const projectList = document.getElementById('projectList');
+            const cancelLoadBtn = document.getElementById('cancelLoadBtn');
+            
+            // Variables para el estado de la aplicación
+            let selectedText = '';
+            let selectedNode = null;
+            let mainIdea = null;
+            let secondaryIdeas = {};
+            let tertiaryIdeas = {};
+            let nodeCounter = 0;
+            let lastSelectedElement = null;
+            
+            // Configurar PDF.js
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+            
+            // Inicializar nombre del proyecto con fecha
+            projectNameInput.value = `Proyecto_${new Date().toISOString().slice(0, 10)}`;
+            
+            // Evento para abrir el selector de archivos
+            uploadBtn.addEventListener('click', function() {
+                fileInput.click();
+            });
+            
+            // Evento para arrastrar y soltar - DESHABILITADO
+            dropArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+            });
+            
+            dropArea.addEventListener('dragleave', function() {
+                // No hacer nada
+            });
+            
+            dropArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                alert('Por favor, utiliza el botón "Seleccionar Archivo" para cargar tu PDF.');
+            });
+            
+            // Evento para seleccionar archivo
+            fileInput.addEventListener('change', function() {
+                if (fileInput.files.length) {
+                    handleFileUpload(fileInput.files[0]);
+                }
+            });
+            
+            // Función para manejar la carga del archivo PDF
+            function handleFileUpload(file) {
+                if (file.type !== 'application/pdf') {
+                    alert('Por favor, selecciona un archivo PDF válido.');
+                    return;
+                }
+                
+                const fileReader = new FileReader();
+                
+                fileReader.onload = function() {
+                    const typedarray = new Uint8Array(this.result);
+                    
+                    // Cargar el PDF
+                    pdfjsLib.getDocument(typedarray).promise.then(function(pdf) {
+                        // Limpiar el visor de PDF
+                        pdfViewer.innerHTML = '';
+                        
+                        // Obtener la primera página
+                        pdf.getPage(1).then(function(page) {
+                            // Obtener el texto de la página
+                            page.getTextContent().then(function(textContent) {
+                                let text = '';
+                                textContent.items.forEach(function(item) {
+                                    text += item.str + ' ';
+                                });
+                                
+                                // Mostrar el contenido extraído
+                                contentDisplay.innerHTML = '<h3>Contenido Extraído</h3>';
+                                const contentItem = document.createElement('div');
+                                contentItem.className = 'content-item';
+                                contentItem.textContent = text.substring(0, 300) + '...';
+                                contentDisplay.appendChild(contentItem);
+                                
+                                // Mostrar el contenido en el visor de PDF para selección
+                                const textElement = document.createElement('div');
+                                textElement.innerHTML = text.replace(/\n/g, '<br>');
+                                textElement.style.padding = '10px';
+                                textElement.style.lineHeight = '1.5';
+                                textElement.id = 'pdfContent';
+                                textElement.style.fontSize = '0.85rem';
+                                
+                                // Agregar evento para capturar la selección de texto
+                                textElement.addEventListener('mouseup', function(e) {
+                                    handleTextSelection(e);
+                                });
+                                
+                                pdfViewer.appendChild(textElement);
+                            });
+                        });
+                    }).catch(function(error) {
+                        console.error('Error al cargar el PDF:', error);
+                        alert('Error al cargar el PDF. Asegúrate de que el archivo no esté dañado.');
+                    });
+                };
+                
+                fileReader.readAsArrayBuffer(file);
+            }
+            
+            // Función para manejar la selección de texto
+            function handleTextSelection(e) {
+                const selection = window.getSelection();
+                selectedText = selection.toString().trim();
+                
+                if (selectedText) {
+                    // Si ya hay un texto seleccionado, limpiarlo primero
+                    if (lastSelectedElement) {
+                        clearTextSelection();
+                    }
+                    
+                    // Resaltar el texto seleccionado
+                    const range = selection.getRangeAt(0);
+                    const selectedSpan = document.createElement('span');
+                    selectedSpan.className = 'selected-text';
+                    selectedSpan.title = 'Haz clic para deseleccionar';
+                    
+                    // Añadir evento para deseleccionar al hacer clic
+                    selectedSpan.addEventListener('click', function(clickEvent) {
+                        clickEvent.stopPropagation();
+                        clearTextSelection();
+                    });
+                    
+                    range.surroundContents(selectedSpan);
+                    lastSelectedElement = selectedSpan;
+                    
+                    // Actualizar información de selección
+                    selectionInfo.innerHTML = `<strong>Texto seleccionado:</strong> "${selectedText.substring(0, 50)}${selectedText.length > 50 ? '...' : ''}"`;
+                    
+                    // Habilitar los botones de añadir
+                    addMainBtn.disabled = false;
+                    addSecondaryBtn.disabled = false;
+                    addTertiaryBtn.disabled = false;
+                    deselectTextBtn.disabled = false;
+                }
+            }
+            
+            // Función para limpiar la selección de texto
+            function clearTextSelection() {
+                if (lastSelectedElement) {
+                    // Reemplazar el span seleccionado por su contenido
+                    const parent = lastSelectedElement.parentNode;
+                    while (lastSelectedElement.firstChild) {
+                        parent.insertBefore(lastSelectedElement.firstChild, lastSelectedElement);
+                    }
+                    parent.removeChild(lastSelectedElement);
+                    lastSelectedElement = null;
+                }
+                
+                // Limpiar selección del navegador
+                window.getSelection().removeAllRanges();
+                
+                // Limpiar estado
+                selectedText = '';
+                
+                // Actualizar información
+                selectionInfo.innerHTML = '<strong>Instrucciones:</strong> Selecciona texto del PDF y luego elige el tipo de idea. Haz clic en el texto resaltado para deseleccionarlo.';
+                
+                // Deshabilitar botones
+                addMainBtn.disabled = true;
+                addSecondaryBtn.disabled = true;
+                addTertiaryBtn.disabled = true;
+                deselectTextBtn.disabled = true;
+            }
+            
+            // Función para añadir una idea al mapa mental
+            function addIdeaToMindMap(text, type, parentId = null) {
+                const ideaNode = document.createElement('div');
+                ideaNode.className = `idea-node ${type}`;
+                ideaNode.textContent = text;
+                ideaNode.setAttribute('draggable', 'true');
+                nodeCounter++;
+                ideaNode.id = `node-${nodeCounter}`;
+                
+                // Añadir icono de eliminar
+                const deleteIcon = document.createElement('div');
+                deleteIcon.className = 'delete-icon';
+                deleteIcon.innerHTML = '✕';
+                deleteIcon.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    deleteIdea(ideaNode);
+                });
+                ideaNode.appendChild(deleteIcon);
+                
+                // Posicionar según el tipo
+                if (type === 'main-idea') {
+                    ideaNode.style.top = '50px';
+                    ideaNode.style.left = '475px';
+                    mainIdea = ideaNode.id;
+                } else if (type === 'secondary-idea') {
+                    // Posicionar secundarias alrededor de la principal
+                    const secondaryCount = Object.keys(secondaryIdeas).length;
+                    const angle = (secondaryCount * 120) * (Math.PI / 180); // 120 grados entre cada una
+                    const radius = 200;
+                    const centerX = 475;
+                    const centerY = 150;
+                    
+                    const x = centerX + radius * Math.cos(angle) - 110;
+                    const y = centerY + radius * Math.sin(angle);
+                    
+                    ideaNode.style.top = `${y}px`;
+                    ideaNode.style.left = `${x}px`;
+                    
+                    // Guardar referencia
+                    const secondaryId = `secondary-${Object.keys(secondaryIdeas).length + 1}`;
+                    secondaryIdeas[secondaryId] = ideaNode.id;
+                } else if (type === 'tertiary-idea') {
+                    if (!parentId) {
+                        alert('Debes seleccionar una idea secundaria primero para añadir una terciaria.');
+                        return;
+                    }
+                    
+                    // Encontrar la idea secundaria padre
+                    let parentSecondaryId = null;
+                    for (const [key, value] of Object.entries(secondaryIdeas)) {
+                        if (value === parentId) {
+                            parentSecondaryId = key;
+                            break;
+                        }
+                    }
+                    
+                    if (!parentSecondaryId) {
+                        alert('No se encontró la idea secundaria padre.');
+                        return;
+                    }
+                    
+                    // Inicializar array para esta secundaria si no existe
+                    if (!tertiaryIdeas[parentSecondaryId]) {
+                        tertiaryIdeas[parentSecondaryId] = [];
+                    }
+                    
+                    // Posicionar debajo de la secundaria
+                    const parentNode = document.getElementById(parentId);
+                    const parentRect = parentNode.getBoundingClientRect();
+                    const containerRect = mindMap.getBoundingClientRect();
+                    
+                    const parentTop = parentRect.top - containerRect.top;
+                    const parentLeft = parentRect.left - containerRect.left;
+                    
+                    // Calcular posición (debajo de la secundaria, una debajo de otra)
+                    const tertiaryCount = tertiaryIdeas[parentSecondaryId].length;
+                    const top = parentTop + parentRect.height + 20 + (tertiaryCount * 80);
+                    const left = parentLeft;
+                    
+                    ideaNode.style.top = `${top}px`;
+                    ideaNode.style.left = `${left}px`;
+                    
+                    // Guardar referencia
+                    tertiaryIdeas[parentSecondaryId].push(ideaNode.id);
+                }
+                
+                // Hacer el nodo arrastrable
+                makeNodeDraggable(ideaNode);
+                
+                // Añadir evento de selección
+                ideaNode.addEventListener('click', function() {
+                    // Deseleccionar nodo anterior
+                    if (selectedNode) {
+                        selectedNode.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
+                    }
+                    
+                    // Seleccionar nuevo nodo
+                    selectedNode = ideaNode;
+                    selectedNode.style.boxShadow = '0 0 0 3px #2575fc';
+                    
+                    // Habilitar botón de borrar
+                    deleteSelectedBtn.disabled = false;
+                    
+                    // Si es una secundaria, permitir añadir terciarias
+                    if (type === 'secondary-idea') {
+                        addTertiaryBtn.disabled = false;
+                    }
+                });
+                
+                // Añadir al mapa mental
+                mindMap.appendChild(ideaNode);
+                
+                // Actualizar conexiones
+                updateConnections();
+                
+                // Limpiar selección de texto después de añadir
+                clearTextSelection();
+                
+                return ideaNode.id;
+            }
+            
+            // Función para eliminar una idea
+            function deleteIdea(node) {
+                if (confirm('¿Estás seguro de que quieres eliminar esta idea?')) {
+                    const nodeId = node.id;
+                    
+                    // Eliminar de las referencias
+                    if (mainIdea === nodeId) {
+                        mainIdea = null;
+                    } else {
+                        // Buscar en secundarias
+                        for (const [key, value] of Object.entries(secondaryIdeas)) {
+                            if (value === nodeId) {
+                                delete secondaryIdeas[key];
+                                // También eliminar terciarias asociadas
+                                if (tertiaryIdeas[key]) {
+                                    tertiaryIdeas[key].forEach(tertiaryId => {
+                                        const tertiaryNode = document.getElementById(tertiaryId);
+                                        if (tertiaryNode) tertiaryNode.remove();
+                                    });
+                                    delete tertiaryIdeas[key];
+                                }
+                                break;
+                            }
+                        }
+                        
+                        // Buscar en terciarias
+                        for (const [secondaryKey, tertiaryArray] of Object.entries(tertiaryIdeas)) {
+                            const index = tertiaryArray.indexOf(nodeId);
+                            if (index !== -1) {
+                                tertiaryArray.splice(index, 1);
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // Eliminar nodo
+                    node.remove();
+                    
+                    // Actualizar conexiones
+                    updateConnections();
+                    
+                    // Deseleccionar nodo si era el seleccionado
+                    if (selectedNode === node) {
+                        selectedNode = null;
+                        deleteSelectedBtn.disabled = true;
+                    }
+                }
+            }
+            
+            // Función para actualizar las conexiones entre nodos
+            function updateConnections() {
+                // Limpiar conexiones existentes
+                connectionsSvg.innerHTML = '';
+                
+                // Conectar idea principal con secundarias
+                if (mainIdea) {
+                    const mainNode = document.getElementById(mainIdea);
+                    Object.values(secondaryIdeas).forEach(secondaryId => {
+                        const secondaryNode = document.getElementById(secondaryId);
+                        if (mainNode && secondaryNode) {
+                            createConnection(mainNode, secondaryNode);
+                        }
+                    });
+                }
+                
+                // Conectar secundarias con sus terciarias
+                for (const [secondaryKey, tertiaryArray] of Object.entries(tertiaryIdeas)) {
+                    const secondaryId = secondaryIdeas[secondaryKey];
+                    const secondaryNode = document.getElementById(secondaryId);
+                    
+                    if (secondaryNode) {
+                        tertiaryArray.forEach(tertiaryId => {
+                            const tertiaryNode = document.getElementById(tertiaryId);
+                            if (tertiaryNode) {
+                                createConnection(secondaryNode, tertiaryNode);
+                            }
+                        });
+                    }
+                }
+            }
+            
+            // Función para crear una conexión entre dos nodos
+            function createConnection(fromNode, toNode) {
+                const fromRect = fromNode.getBoundingClientRect();
+                const toRect = toNode.getBoundingClientRect();
+                const containerRect = mindMap.getBoundingClientRect();
+                
+                const fromX = fromRect.left - containerRect.left + fromRect.width / 2;
+                const fromY = fromRect.top - containerRect.top + fromRect.height / 2;
+                const toX = toRect.left - containerRect.left + toRect.width / 2;
+                const toY = toRect.top - containerRect.top + toRect.height / 2;
+                
+                // Crear línea con flecha
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', fromX);
+                line.setAttribute('y1', fromY);
+                line.setAttribute('x2', toX);
+                line.setAttribute('y2', toY);
+                line.setAttribute('class', 'connection-line');
+                
+                connectionsSvg.appendChild(line);
+            }
+            
+            // Función para guardar el proyecto
+            function saveProject() {
+                const projectName = projectNameInput.value.trim();
+                if (!projectName) {
+                    alert('Por favor, ingresa un nombre para el proyecto.');
+                    return;
+                }
+                
+                // Recopilar todos los datos del proyecto
+                const projectData = {
+                    name: projectName,
+                    timestamp: new Date().toISOString(),
+                    mainIdea: mainIdea,
+                    secondaryIdeas: secondaryIdeas,
+                    tertiaryIdeas: tertiaryIdeas,
+                    nodeCounter: nodeCounter,
+                    nodes: {}
+                };
+                
+                // Recopilar información de cada nodo
+                document.querySelectorAll('.idea-node').forEach(node => {
+                    projectData.nodes[node.id] = {
+                        text: node.textContent,
+                        type: Array.from(node.classList).find(cls => 
+                            cls.includes('main-idea') || cls.includes('secondary-idea') || cls.includes('tertiary-idea')
+                        ),
+                        position: {
+                            top: node.style.top,
+                            left: node.style.left
+                        }
+                    };
+                });
+                
+                // Guardar en localStorage
+                const projects = JSON.parse(localStorage.getItem('mindMapProjects') || '{}');
+                projects[projectName] = projectData;
+                localStorage.setItem('mindMapProjects', JSON.stringify(projects));
+                
+                alert(`Proyecto "${projectName}" guardado correctamente.`);
+            }
+            
+            // Función para cargar un proyecto
+            function loadProject(projectName) {
+                const projects = JSON.parse(localStorage.getItem('mindMapProjects') || '{}');
+                const projectData = projects[projectName];
+                
+                if (!projectData) {
+                    alert('No se encontró el proyecto especificado.');
+                    return;
+                }
+                
+                // Limpiar el mapa actual
+                document.querySelectorAll('.idea-node').forEach(node => node.remove());
+                
+                // Restaurar estado
+                mainIdea = projectData.mainIdea;
+                secondaryIdeas = projectData.secondaryIdeas || {};
+                tertiaryIdeas = projectData.tertiaryIdeas || {};
+                nodeCounter = projectData.nodeCounter || 0;
+                
+                // Recrear los nodos
+                Object.entries(projectData.nodes || {}).forEach(([nodeId, nodeData]) => {
+                    const ideaNode = document.createElement('div');
+                    ideaNode.className = `idea-node ${nodeData.type}`;
+                    ideaNode.textContent = nodeData.text;
+                    ideaNode.setAttribute('draggable', 'true');
+                    ideaNode.id = nodeId;
+                    ideaNode.style.top = nodeData.position.top;
+                    ideaNode.style.left = nodeData.position.left;
+                    
+                    // Añadir icono de eliminar
+                    const deleteIcon = document.createElement('div');
+                    deleteIcon.className = 'delete-icon';
+                    deleteIcon.innerHTML = '✕';
+                    deleteIcon.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        deleteIdea(ideaNode);
+                    });
+                    ideaNode.appendChild(deleteIcon);
+                    
+                    // Hacer el nodo arrastrable
+                    makeNodeDraggable(ideaNode);
+                    
+                    // Añadir evento de selección
+                    ideaNode.addEventListener('click', function() {
+                        if (selectedNode) {
+                            selectedNode.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
+                        }
+                        selectedNode = ideaNode;
+                        selectedNode.style.boxShadow = '0 0 0 3px #2575fc';
+                        deleteSelectedBtn.disabled = false;
+                    });
+                    
+                    mindMap.appendChild(ideaNode);
+                });
+                
+                // Actualizar conexiones
+                updateConnections();
+                
+                // Actualizar nombre del proyecto
+                projectNameInput.value = projectName;
+                
+                // Cerrar modal
+                loadProjectModal.style.display = 'none';
+                
+                alert(`Proyecto "${projectName}" cargado correctamente.`);
+            }
+            
+            // Función para mostrar la lista de proyectos
+            function showProjectList() {
+                const projects = JSON.parse(localStorage.getItem('mindMapProjects') || '{}');
+                projectList.innerHTML = '';
+                
+                if (Object.keys(projects).length === 0) {
+                    projectList.innerHTML = '<div class="project-item">No hay proyectos guardados</div>';
+                    return;
+                }
+                
+                Object.entries(projects).forEach(([projectName, projectData]) => {
+                    const projectItem = document.createElement('div');
+                    projectItem.className = 'project-item';
+                    projectItem.innerHTML = `
+                        <strong>${projectName}</strong><br>
+                        <small>Guardado: ${new Date(projectData.timestamp).toLocaleString()}</small>
+                    `;
+                    projectItem.addEventListener('click', function() {
+                        loadProject(projectName);
+                    });
+                    projectList.appendChild(projectItem);
+                });
+                
+                loadProjectModal.style.display = 'flex';
+            }
+            
+            // Eventos para los botones de añadir
+            addMainBtn.addEventListener('click', function() {
+                if (selectedText) {
+                    // Eliminar idea principal anterior si existe
+                    if (mainIdea) {
+                        const existingMain = document.getElementById(mainIdea);
+                        if (existingMain) {
+                            deleteIdea(existingMain);
+                        }
+                    }
+                    
+                    addIdeaToMindMap(selectedText, 'main-idea');
+                }
+            });
+            
+            addSecondaryBtn.addEventListener('click', function() {
+                if (selectedText) {
+                    addIdeaToMindMap(selectedText, 'secondary-idea');
+                }
+            });
+            
+            addTertiaryBtn.addEventListener('click', function() {
+                if (selectedText && selectedNode) {
+                    // Verificar que el nodo seleccionado es una secundaria
+                    const isSecondary = Object.values(secondaryIdeas).includes(selectedNode.id);
+                    if (isSecondary) {
+                        addIdeaToMindMap(selectedText, 'tertiary-idea', selectedNode.id);
+                    } else {
+                        alert('Para añadir una idea terciaria, primero selecciona una idea secundaria.');
+                    }
+                } else {
+                    alert('Para añadir una idea terciaria, primero selecciona texto y luego una idea secundaria.');
+                }
+            });
+            
+            // Evento para deseleccionar texto
+            deselectTextBtn.addEventListener('click', function() {
+                clearTextSelection();
+            });
+            
+            // Evento para borrar idea seleccionada
+            deleteSelectedBtn.addEventListener('click', function() {
+                if (selectedNode) {
+                    deleteIdea(selectedNode);
+                }
+            });
+            
+            // Eventos para guardar y cargar proyectos
+            saveProjectBtn.addEventListener('click', saveProject);
+            quickSaveBtn.addEventListener('click', saveProject);
+            loadProjectBtn.addEventListener('click', showProjectList);
+            quickLoadBtn.addEventListener('click', showProjectList);
+            cancelLoadBtn.addEventListener('click', function() {
+                loadProjectModal.style.display = 'none';
+            });
+            
+            // Hacer los nodos del mapa mental arrastrables
+            function makeNodeDraggable(node) {
+                let activeNode = null;
+                let offsetX, offsetY;
+                
+                node.addEventListener('mousedown', startDrag);
+                
+                function startDrag(e) {
+                    // Evitar arrastrar si se hace clic en el icono de eliminar
+                    if (e.target.classList.contains('delete-icon')) return;
+                    
+                    activeNode = node;
+                    const rect = activeNode.getBoundingClientRect();
+                    offsetX = e.clientX - rect.left;
+                    offsetY = e.clientY - rect.top;
+                    
+                    document.addEventListener('mousemove', onDrag);
+                    document.addEventListener('mouseup', stopDrag);
+                    
+                    // Traer al frente el nodo activo
+                    activeNode.style.zIndex = '100';
+                }
+                
+                function onDrag(e) {
+                    if (!activeNode) return;
+                    
+                    const container = mindMap.getBoundingClientRect();
+                    const x = e.clientX - container.left - offsetX;
+                    const y = e.clientY - container.top - offsetY;
+                    
+                    // Limitar el movimiento dentro del contenedor
+                    const maxX = container.width - activeNode.offsetWidth;
+                    const maxY = container.height - activeNode.offsetHeight;
+                    
+                    activeNode.style.left = Math.max(0, Math.min(x, maxX)) + 'px';
+                    activeNode.style.top = Math.max(0, Math.min(y, maxY)) + 'px';
+                    
+                    // Actualizar conexiones mientras se arrastra
+                    updateConnections();
+                }
+                
+                function stopDrag() {
+                    if (activeNode) {
+                        activeNode.style.zIndex = '10';
+                        activeNode = null;
+                    }
+                    
+                    document.removeEventListener('mousemove', onDrag);
+                    document.removeEventListener('mouseup', stopDrag);
+                }
+            }
+            
+            // Restablecer posiciones de los nodos
+            resetBtn.addEventListener('click', function() {
+                if (confirm('¿Estás seguro de que quieres restablecer el mapa mental? Se perderán todas las ideas.')) {
+                    // Eliminar todos los nodos
+                    document.querySelectorAll('.idea-node').forEach(node => node.remove());
+                    
+                    // Reiniciar estado
+                    mainIdea = null;
+                    secondaryIdeas = {};
+                    tertiaryIdeas = {};
+                    selectedNode = null;
+                    
+                    // Actualizar conexiones
+                    updateConnections();
+                    
+                    // Deshabilitar botones
+                    deleteSelectedBtn.disabled = true;
+                    addTertiaryBtn.disabled = true;
+                }
+            });
+            
+            // Descargar como PDF en A4 apaisado
+            downloadBtn.addEventListener('click', function() {
+                // Mostrar overlay de carga
+                const loadingOverlay = document.createElement('div');
+                loadingOverlay.className = 'loading-overlay';
+                loadingOverlay.innerHTML = `
+                    <div class="loading-spinner"></div>
+                    <div>Generando PDF...</div>
+                `;
+                document.body.appendChild(loadingOverlay);
+                
+                // Esperar un momento para que se renderice el overlay
+                setTimeout(function() {
+                    // Capturar directamente el contenedor del mapa mental
+                    html2canvas(mindMap, {
+                        scale: 2,
+                        useCORS: true,
+                        logging: false,
+                        backgroundColor: '#ffffff',
+                        width: mindMap.scrollWidth,
+                        height: mindMap.scrollHeight,
+                        scrollX: 0,
+                        scrollY: 0,
+                        windowWidth: mindMap.scrollWidth,
+                        windowHeight: mindMap.scrollHeight
+                    }).then(canvas => {
+                        // Crear un PDF en orientación apaisada (A4)
+                        const { jsPDF } = window.jspdf;
+                        const pdf = new jsPDF('l', 'mm', 'a4');
+                        
+                        // Dimensiones de A4 apaisado
+                        const pageWidth = 297; // mm
+                        const pageHeight = 210; // mm
+                        
+                        // Calcular escala para que quepa en la página
+                        const imgWidth = pageWidth - 20; // Margen de 10mm cada lado
+                        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                        
+                        // Si la altura es mayor que la página, ajustar
+                        let finalHeight = imgHeight;
+                        let finalWidth = imgWidth;
+                        
+                        if (imgHeight > pageHeight - 20) {
+                            finalHeight = pageHeight - 20;
+                            finalWidth = (canvas.width * finalHeight) / canvas.height;
+                        }
+                        
+                        // Centrar en la página
+                        const x = (pageWidth - finalWidth) / 2;
+                        const y = (pageHeight - finalHeight) / 2;
+                        
+                        // Añadir la imagen al PDF
+                        const imgData = canvas.toDataURL('image/png', 1.0);
+                        pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight);
+                        
+                        // Descargar el PDF
+                        pdf.save('mapa-mental.pdf');
+                        
+                        // Eliminar el overlay de carga
+                        document.body.removeChild(loadingOverlay);
+                    }).catch(error => {
+                        console.error('Error al generar el PDF:', error);
+                        alert('Error al generar el PDF. Por favor, intenta de nuevo.');
+                        document.body.removeChild(loadingOverlay);
+                    });
+                }, 100);
+            });
+            
+            // Inicialmente deshabilitar los botones de añadir y borrar
+            addMainBtn.disabled = true;
+            addSecondaryBtn.disabled = true;
+            addTertiaryBtn.disabled = true;
+            deselectTextBtn.disabled = true;
+            deleteSelectedBtn.disabled = true;
+        });
+    </script>
+</body>
+</html>
