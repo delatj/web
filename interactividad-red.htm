@@ -39,7 +39,7 @@ TEMA: Interactividad en la red
 	--strFontFace:       Geneva,Arial,sans-serif;
 	--strFontSize:       small;
 	--strTextColor:      #000000;
-	--strTitleColor:     #ff0000;
+	--strTitleColor:     #000000;
 
 	--strFuncLightColor: #ffffff;
 	--strFuncShadeColor: #7f7f7f;
@@ -51,7 +51,7 @@ TEMA: Interactividad en la red
 	--strNavShadeColor:  #000000;
 	--strNavTextColor:   #ffffff;
 	
-	--strPageBGColor:    #bce9b6;
+	--strPageBGColor:    #80ff00;
 	--strExBGColor:      #ffffff;
 }
 
@@ -960,7 +960,7 @@ function ClearTextBoxes(){
 var CurrQNum = 0;
 var CorrectIndicator = ' ';
 var IncorrectIndicator = ' ';
-var YourScoreIs = ':';
+var YourScoreIs = 'Tu puntuaci&#x00F3;n es:';
 
 //New for 6.2.2.0
 var CompletedSoFar = 'Questions completed so far: ';
@@ -1411,7 +1411,7 @@ function CheckFinished(){
 	
 //Report final score and submit if necessary
 		CalculateOverallScore();
-		FB = '<span style="font-size: 325px; font-weight: bold; color: red;">' + YourScoreIs + ' ' + Score + '%.</span>';
+		FB = YourScoreIs + ' ' + Score + '%.';
 		if (ShowCorrectFirstTime == true){
 			var CFT = 0;
 			for (QNum=0; QNum<State.length; QNum++){

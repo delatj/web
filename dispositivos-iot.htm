@@ -1,18 +1,18 @@
-   <!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en" prefix="dc: http://purl.org/dc/elements/1.1/">
 <head><meta name="author" content="Created with Hot Potatoes by Half-Baked Software, registered to Ies Arboleda."/><meta name="keywords" content="Hot Potatoes, Hot Potatoes, Half-Baked Software, Windows, University of Victoria"/>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 
 <meta name="dc:creator" content="Ies Arboleda" />
 <meta name="dc:creator" content="casa" />
-<meta name="dc: creator" content="CAS" />
- <meta name="dc:creator" content="usuario" />
+<meta name="dc:creator" content="CAS" />
+<meta name="dc:creator" content="usuario" />
 <meta name="dc:creator" content="cas" />
 <meta name="dc:title" content="TEMA: IoT Internet de las cosas" />
 
-  
 
-<title>   
+
+<title>
 TEMA: IoT Internet de las cosas
 </title>
 
@@ -49,9 +49,9 @@ TEMA: IoT Internet de las cosas
 	--strNavBarColor:    #000000;
 	--strNavLightColor:  #7f7f7f;
 	--strNavShadeColor:  #000000;
-	--strNavTextColor:    #ffffff;
+	--strNavTextColor:   #ffffff;
 	
-	--strPageBGColor:    rgb(30, 240, 255); 
+	--strPageBGColor:    #8080ff;
 	--strExBGColor:      #ffffff;
 }
 
@@ -960,7 +960,7 @@ function ClearTextBoxes(){
 var CurrQNum = 0;
 var CorrectIndicator = ' ';
 var IncorrectIndicator = ' ';
-var YourScoreIs = ':';
+var YourScoreIs = 'Tu puntuaci&#x00F3;n es:';
 
 //New for 6.2.2.0
 var CompletedSoFar = 'Questions completed so far: ';
@@ -1381,7 +1381,7 @@ function CheckFinished(){
 	
 //Report final score and submit if necessary
 		CalculateOverallScore();
-		FB = '<span style="font-size: 325px; font-weight: bold; color: red;">' + YourScoreIs + ' ' + Score + '%.</span>';
+		FB = YourScoreIs + ' ' + Score + '%.';
 		if (ShowCorrectFirstTime == true){
 			var CFT = 0;
 			for (QNum=0; QNum<State.length; QNum++){
@@ -1912,14 +1912,3 @@ function DownTime(){
 </body>
 
 </html>
-
-
-
-
-
-
-
-
-
-
-
