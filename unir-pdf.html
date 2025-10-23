@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Unir PDFs — Aplicación Offline</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;}
+    body{max-width:1024px;margin:28px auto;padding:18px;}
+    h1{font-size:20px;margin-bottom:6px}
+    .drop{border:2px dashed #999;padding:18px;border-radius:8px;text-align:center;background:#fafafa}
+    .files{margin-top:12px;display:grid;gap:10px}
+    .file-item{display:flex;gap:12px;align-items:center;padding:10px;border:1px solid #e3e3e3;border-radius:8px}
+    .thumb{width:96px;height:120px;background:#fff;border:1px solid #ddd;display:flex;align-items:center;justify-content:center;overflow:hidden}
+    .meta{flex:1}
+    .btn{padding:6px 10px;border-radius:6px;border:1px solid #888;background:#f3f3f3;cursor:pointer}
+    .controls{display:flex;gap:8px}
+    input[type=text]{padding:6px;border-radius:6px;border:1px solid #ccc;width:320px}
+    .actions{margin-top:14px;display:flex;gap:8px;align-items:center}
+    .muted{color:#666;font-size:13px}
+    .small{font-size:13px}
+  </style>
+</head>
+<body>
+  <h1>Unir PDFs — Aplicación en el navegador</h1>
+  <p class="muted">Arrastra y suelta archivos PDF o selecciona desde el botón. Puedes reordenar, previsualizar la primera página y dar un nombre al PDF resultante.</p>
+
+  <div class="drop" id="drop">Arrastra archivos PDF aquí o <button id="pick" class="btn">Seleccionar PDFs</button>
+    <input id="fileInput" type="file" accept="application/pdf" multiple style="display:none">
+  </div>
+
+  <div class="files" id="filesList"></div>
+
+  <div class="actions">
+    <label for="outName" class="small">Nombre del PDF resultante:</label>
+    <input id="outName" type="text" placeholder="mi_documento_unido" />
+    <button id="mergeBtn" class="btn">Unir y descargar</button>
+    <div id="status" class="muted small"></div>
+  </div>
+
+  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <script>
+    // Config PDF.js (usa el worker que provee el CDN build)
+    if (window['pdfjsLib']) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    }
+
+    const fileInput = document.getElementById('fileInput');
+    const pick = document.getElementById('pick');
+    const drop = document.getElementById('drop');
+    const filesList = document.getElementById('filesList');
+    const mergeBtn = document.getElementById('mergeBtn');
+    const status = document.getElementById('status');
+    const outName = document.getElementById('outName');
+
+    let items = []; // {file, name, arrayBuffer, thumbDataUrl}
+
+    pick.addEventListener('click',()=>fileInput.click());
+    fileInput.addEventListener('change', e => addFiles(e.target.files));
+
+    // Drag & drop handlers
+    ['dragenter','dragover'].forEach(ev=>{
+      drop.addEventListener(ev,e=>{e.preventDefault();drop.style.borderColor='#666';});
+    });
+    ['dragleave','drop'].forEach(ev=>{
+      drop.addEventListener(ev,e=>{e.preventDefault();drop.style.borderColor='#999';});
+    });
+    drop.addEventListener('drop', e=>{
+      e.preventDefault();addFiles(e.dataTransfer.files);
+    });
+
+    async function addFiles(fileList){
+      const filesArray = Array.from(fileList).filter(f=>f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf'));
+      if(filesArray.length===0){ alert('No se han detectado PDFs.'); return; }
+      status.textContent = 'Cargando archivos...';
+      for(const f of filesArray){
+        const ab = await f.arrayBuffer();
+        const item = {file: f, name: f.name, arrayBuffer: ab, thumbDataUrl: null};
+        items.push(item);
+        renderPreview(item).catch(e=>{console.error('preview error',e)});
+      }
+      renderList();
+      status.textContent = '';
+    }
+
+    function renderList(){
+      filesList.innerHTML = '';
+      items.forEach((it, idx)=>{
+        const el = document.createElement('div'); el.className = 'file-item';
+        const thumb = document.createElement('div'); thumb.className='thumb';
+        if(it.thumbDataUrl){
+          const img = document.createElement('img'); img.src = it.thumbDataUrl; img.style.maxWidth='100%'; img.style.maxHeight='100%';
+          thumb.appendChild(img);
+        } else {
+          thumb.textContent = 'Cargando...';
+        }
+        const meta = document.createElement('div'); meta.className='meta';
+        meta.innerHTML = `<strong>${escapeHtml(it.file.name)}</strong><div class="small">${formatBytes(it.file.size)}</div>`;
+
+        const controls = document.createElement('div'); controls.className='controls';
+        const up = document.createElement('button'); up.className='btn'; up.textContent='↑'; up.title='Subir'; up.onclick = ()=>moveUp(idx);
+        const down = document.createElement('button'); down.className='btn'; down.textContent='↓'; down.title='Bajar'; down.onclick = ()=>moveDown(idx);
+        const remove = document.createElement('button'); remove.className='btn'; remove.textContent='Eliminar'; remove.onclick = ()=>removeAt(idx);
+        const view = document.createElement('button'); view.className='btn'; view.textContent='Ver PDF'; view.onclick = ()=>openInNewTab(it.arrayBuffer,it.file.name);
+
+        controls.appendChild(up); controls.appendChild(down); controls.appendChild(remove); controls.appendChild(view);
+        el.appendChild(thumb); el.appendChild(meta); el.appendChild(controls);
+        filesList.appendChild(el);
+      });
+    }
+
+    function moveUp(i){ if(i<=0) return; [items[i-1], items[i]]=[items[i], items[i-1]]; renderList(); }
+    function moveDown(i){ if(i>=items.length-1) return; [items[i+1], items[i]]=[items[i], items[i+1]]; renderList(); }
+    function removeAt(i){ items.splice(i,1); renderList(); }
+
+    function openInNewTab(arrayBuffer, name){
+      const blob = new Blob([arrayBuffer], {type:'application/pdf'});
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(()=>URL.revokeObjectURL(url), 10000);
+    }
+
+    async function renderPreview(item){
+      try{
+        if(!window.pdfjsLib) { item.thumbDataUrl = null; renderList(); return; }
+        const loadingTask = pdfjsLib.getDocument({data: item.arrayBuffer});
+        const pdf = await loadingTask.promise;
+        const page = await pdf.getPage(1);
+        const viewport = page.getViewport({scale: 1});
+        const scale = Math.min(96/viewport.width, 120/viewport.height, 1);
+        const vp = page.getViewport({scale});
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.floor(vp.width); canvas.height = Math.floor(vp.height);
+        const ctx = canvas.getContext('2d');
+        await page.render({canvasContext: ctx, viewport: vp}).promise;
+        item.thumbDataUrl = canvas.toDataURL('image/png');
+        renderList();
+        pdf.destroy();
+      }catch(e){ console.warn('No se pudo generar miniatura', e); item.thumbDataUrl = null; renderList(); }
+    }
+
+    mergeBtn.addEventListener('click', async ()=>{
+      if(items.length===0){ alert('No hay archivos para unir.'); return; }
+      mergeBtn.disabled = true; status.textContent = 'Uniendo PDFs...';
+      try{
+        const mergedPdf = await PDFLib.PDFDocument.create();
+        for(const it of items){
+          const donor = await PDFLib.PDFDocument.load(it.arrayBuffer);
+          const copied = await mergedPdf.copyPages(donor, donor.getPageIndices());
+          copied.forEach(p=> mergedPdf.addPage(p));
+        }
+        const bytes = await mergedPdf.save();
+        const blob = new Blob([bytes], {type:'application/pdf'});
+        const filenameRaw = (outName.value || 'documento_unido').trim();
+        const safeName = filenameRaw.replace(/[^a-zA-Z0-9_\-\u00C0-\u017F ]/g,'').replace(/\s+/g,'_') || 'documento_unido';
+        const filename = safeName + '.pdf';
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(()=>URL.revokeObjectURL(url), 15000);
+        status.textContent = 'Completado.';
+      }catch(err){ console.error(err); alert('Error al unir PDFs: '+err.message); status.textContent = 'Error.'; }
+      mergeBtn.disabled = false;
+    });
+
+    // Helpers
+    function formatBytes(n){ if(n<1024) return n+' B'; if(n<1024*1024) return (n/1024).toFixed(1)+' KB'; return (n/(1024*1024)).toFixed(2)+' MB'; }
+    function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  </script>
+
+  <footer style="margin-top:26px;color:#666;font-size:13px">Funciona 100% en el navegador. Los archivos no se suben a ningún servidor. Para grandes PDFs (muchas páginas) el proceso puede consumir memoria y tardar más.</footer>
+</body>
+</html>
