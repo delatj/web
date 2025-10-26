@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analizador de Notas de Estudiantes</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        h1, h2 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .upload-section {
+            text-align: center;
+            padding: 30px;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            background-color: #f9f9f9;
+        }
+        
+        .file-input {
+            margin: 15px 0;
+        }
+        
+        .btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .results-section {
+            display: none;
+        }
+        
+        .student-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: #fff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .student-name {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .student-comment {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            white-space: pre-line;
+        }
+        
+        .student-comment:hover {
+            background-color: #e9ecef;
+        }
+        
+        .student-comment:focus {
+            outline: none;
+            background-color: #e9ecef;
+        }
+        
+        .copy-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #2ecc71;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            display: none;
+            z-index: 1000;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 6px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .instructions {
+            background-color: #e8f4fd;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .warning {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .zero-grade {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .comment-cell {
+            max-width: 500px;
+            white-space: pre-line;
+            cursor: pointer;
+            font-size: 13px;
+            min-width: 300px;
+        }
+        
+        .comment-cell:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .category-header {
+            background-color: #e9ecef;
+            font-weight: bold;
+        }
+        
+        .grade-cell {
+            font-size: 12px;
+            text-align: center;
+            min-width: 50px;
+            max-width: 60px;
+        }
+        
+        .name-cell {
+            min-width: 180px;
+            font-weight: bold;
+        }
+        
+        .average-cell {
+            font-size: 12px;
+            text-align: center;
+            min-width: 60px;
+            font-weight: bold;
+        }
+        
+        .detected-categories {
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Analizador de Notas de Estudiantes</h1>
+        
+        <div class="instructions">
+            <p><strong>Instrucciones:</strong></p>
+            <p>1. Exporta las notas de tus alumnos desde tu aplicación del profesor con formato csv a dropbox.</p>
+            <p>2. Abre el archivo con openoffice, en opciones de separador..marca detectado y exporta el archivo como xml.</p>
+            <p>3. Sube el archivo usando el botón a continuación.</p>
+            <p>4. Haz clic en cualquier comentario para copiarlo al portapapeles.</p>
+        </div>
+        
+        <div class="upload-section">
+            <h2>Subir Archivo de Notas</h2>
+            <input type="file" id="fileInput" class="file-input" accept=".xml,.xls,.xlsx">
+            <br>
+            <button id="uploadBtn" class="btn">Procesar Archivo</button>
+        </div>
+        
+        <div id="resultsSection" class="results-section">
+            <div id="categoriesInfo" class="detected-categories" style="display: none;">
+                <h3>Categorías Detectadas</h3>
+                <div id="categoriesList"></div>
+            </div>
+            
+            <h2>Resultados - Tabla Completa</h2>
+            <div class="table-container">
+                <table id="studentsTable">
+                    <thead id="tableHeader">
+                        <!-- Los encabezados se generarán dinámicamente -->
+                    </thead>
+                    <tbody id="studentsTableBody">
+                        <!-- Los datos se llenarán dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <h2>Comentarios para Copiar Fácilmente</h2>
+            <div id="studentsList">
+                <!-- Los comentarios se generarán aquí -->
+            </div>
+        </div>
+    </div>
+    
+    <div id="copyNotification" class="copy-notification">
+        ¡Comentario copiado al portapapeles!
+    </div>
+
+    <script>
+        document.getElementById('uploadBtn').addEventListener('click', function() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Por favor, selecciona un archivo XML o XLS.');
+                return;
+            }
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const xmlContent = e.target.result;
+                    const result = parseXML(xmlContent);
+                    displayResults(result.students, result.categories);
+                } catch (error) {
+                    console.error('Error al procesar el archivo:', error);
+                    alert('Error al procesar el archivo. Asegúrate de que es un formato válido.');
+                }
+            };
+            
+            if (file.name.endsWith('.xml')) {
+                reader.readAsText(file);
+            } else {
+                alert('Para archivos XLS/XLSX, necesitaríamos una biblioteca adicional. Por ahora, usa archivos XML.');
+            }
+        });
+        
+        function parseXML(xmlContent) {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(xmlContent, 'text/xml');
+            
+            const students = [];
+            const rows = xmlDoc.getElementsByTagName('Row');
+            
+            // Obtener los encabezados para identificar las columnas
+            const headerRow = rows[0];
+            const headerCells = headerRow.getElementsByTagName('Cell');
+            const headers = [];
+            
+            for (let i = 0; i < headerCells.length; i++) {
+                const headerCell = headerCells[i].getElementsByTagName('Data')[0];
+                if (headerCell) {
+                    headers.push(headerCell.textContent.trim());
+                }
+            }
+            
+            console.log('Encabezados encontrados:', headers);
+            
+            // Detectar categorías automáticamente
+            const categories = detectCategories(headers);
+            console.log('Categorías detectadas:', categories);
+            
+            // Procesar filas de estudiantes
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                const cells = row.getElementsByTagName('Cell');
+                
+                if (cells.length >= 1) {
+                    const nameCell = cells[0].getElementsByTagName('Data')[0];
+                    
+                    if (nameCell && nameCell.textContent.trim() && 
+                        nameCell.textContent.trim() !== 'Estudiante') {
+                        
+                        const student = {
+                            name: nameCell.textContent.trim(),
+                            notas: {} // Objeto para almacenar notas por categoría
+                        };
+                        
+                        // Inicializar arrays para cada categoría
+                        Object.keys(categories).forEach(cat => {
+                            student.notas[cat] = [];
+                        });
+                        
+                        // Procesar cada columna según su categoría detectada
+                        for (let j = 1; j < headers.length; j++) {
+                            if (j < cells.length) {
+                                const header = headers[j];
+                                const grade = getGradeFromCell(cells[j]);
+                                
+                                // Encontrar a qué categoría pertenece este encabezado
+                                const category = findCategoryForHeader(header, categories);
+                                if (category && student.notas[category]) {
+                                    student.notas[category].push({
+                                        instrumento: header,
+                                        nota: grade
+                                    });
+                                }
+                            }
+                        }
+                        
+                        console.log(`Estudiante: ${student.name}`, student.notas);
+                        students.push(student);
+                    }
+                }
+            }
+            
+            return {
+                students: students,
+                categories: categories
+            };
+        }
+        
+        function detectCategories(headers) {
+            const categories = {
+                'proyectos': { encabezados: [], descripcion: 'Proyectos (P)' },
+                'asimilacion': { encabezados: [], descripcion: 'Asimilación de contenido (C)' },
+                'tareas': { encabezados: [], descripcion: 'Tareas de clase (T)' },
+                'otros': { encabezados: [], descripcion: 'Otros instrumentos' }
+            };
+            
+            // Clasificar cada encabezado (excepto el primero que es "Estudiante")
+            for (let i = 1; i < headers.length; i++) {
+                const header = headers[i].toLowerCase();
+                
+                if (header.startsWith('p') || header.includes('proyecto') || header.includes('project')) {
+                    categories.proyectos.encabezados.push(headers[i]);
+                } else if (header.startsWith('c') || header.includes('contenido') || header.includes('asimilación') || header.includes('asimilacion')) {
+                    categories.asimilacion.encabezados.push(headers[i]);
+                } else if (header.startsWith('t') || header.includes('tarea') || header.includes('trabajo') || header.includes('task')) {
+                    categories.tareas.encabezados.push(headers[i]);
+                } else {
+                    categories.otros.encabezados.push(headers[i]);
+                }
+            }
+            
+            // Eliminar categorías vacías
+            Object.keys(categories).forEach(cat => {
+                if (categories[cat].encabezados.length === 0) {
+                    delete categories[cat];
+                }
+            });
+            
+            return categories;
+        }
+        
+        function findCategoryForHeader(header, categories) {
+            const headerLower = header.toLowerCase();
+            
+            for (const [category, data] of Object.entries(categories)) {
+                if (data.encabezados.includes(header)) {
+                    return category;
+                }
+            }
+            
+            return null;
+        }
+        
+        function getGradeFromCell(cell) {
+            if (!cell) return 0;
+            
+            const dataElement = cell.getElementsByTagName('Data')[0];
+            if (!dataElement) return 0;
+            
+            const textContent = dataElement.textContent.trim();
+            if (!textContent) return 0;
+            
+            // Reemplazar coma por punto para manejar decimales
+            const normalizedContent = textContent.replace(',', '.');
+            const grade = parseFloat(normalizedContent);
+            
+            return isNaN(grade) ? 0 : grade;
+        }
+        
+        function displayResults(students, categories) {
+            const tableHeader = document.getElementById('tableHeader');
+            const tableBody = document.getElementById('studentsTableBody');
+            const studentsList = document.getElementById('studentsList');
+            const resultsSection = document.getElementById('resultsSection');
+            const categoriesInfo = document.getElementById('categoriesInfo');
+            const categoriesList = document.getElementById('categoriesList');
+            
+            // Limpiar contenido previo
+            tableHeader.innerHTML = '';
+            tableBody.innerHTML = '';
+            studentsList.innerHTML = '';
+            categoriesList.innerHTML = '';
+            
+            // Mostrar información de categorías detectadas
+            let categoriesHTML = '<ul>';
+            Object.entries(categories).forEach(([key, data]) => {
+                categoriesHTML += `<li><strong>${data.descripcion}:</strong> ${data.encabezados.join(', ')}</li>`;
+            });
+            categoriesHTML += '</ul>';
+            categoriesList.innerHTML = categoriesHTML;
+            categoriesInfo.style.display = 'block';
+            
+            // Generar encabezados de tabla dinámicamente
+            let headerHTML = '<tr><th class="name-cell">Estudiante</th><th class="comment-cell">Comentario</th>';
+            
+            // Contar el número máximo de columnas por categoría
+            const maxColumns = {};
+            Object.keys(categories).forEach(cat => {
+                maxColumns[cat] = categories[cat].encabezados.length;
+            });
+            
+            // Crear encabezados para cada categoría
+            Object.entries(categories).forEach(([key, data]) => {
+                if (data.encabezados.length > 0) {
+                    headerHTML += `<th colspan="${data.encabezados.length}" class="category-header">${data.descripcion}</th>`;
+                }
+            });
+            
+            headerHTML += '<th class="average-cell">Media</th></tr>';
+            
+            // Segunda fila de encabezados con nombres específicos de instrumentos
+            headerHTML += '<tr><th></th><th></th>';
+            
+            Object.entries(categories).forEach(([key, data]) => {
+                data.encabezados.forEach(header => {
+                    // Acortar el nombre del instrumento para que quepa mejor
+                    const shortHeader = header.length > 10 ? header.substring(0, 10) + '...' : header;
+                    headerHTML += `<th class="grade-cell" title="${header}">${shortHeader}</th>`;
+                });
+            });
+            
+            headerHTML += '<th class="average-cell">Media</th></tr>';
+            
+            tableHeader.innerHTML = headerHTML;
+            
+            // Mostrar la sección de resultados
+            resultsSection.style.display = 'block';
+            
+            // Procesar cada estudiante
+            students.forEach(student => {
+                const comment = generateComment(student, categories);
+                const average = calculateAverage(student);
+                
+                // Agregar a la tabla
+                const row = document.createElement('tr');
+                let rowHTML = `<td class="name-cell">${student.name}</td>`;
+                rowHTML += `<td class="comment-cell" title="Haz clic para copiar">${comment}</td>`;
+                
+                // Agregar celdas para cada categoría
+                Object.keys(categories).forEach(cat => {
+                    if (student.notas[cat]) {
+                        student.notas[cat].forEach(notaObj => {
+                            const className = `grade-cell ${notaObj.nota === 0 ? 'zero-grade' : ''}`;
+                            rowHTML += `<td class="${className}">${formatGrade(notaObj.nota)}</td>`;
+                        });
+                    }
+                });
+                
+                rowHTML += `<td class="average-cell">${average.toFixed(2)}</td>`;
+                row.innerHTML = rowHTML;
+                tableBody.appendChild(row);
+                
+                // Agregar evento para copiar desde la tabla
+                const commentCell = row.querySelector('.comment-cell');
+                commentCell.addEventListener('click', function() {
+                    copyToClipboard(comment);
+                });
+                
+                // Agregar tarjeta de estudiante
+                const studentCard = document.createElement('div');
+                studentCard.className = 'student-card';
+                studentCard.innerHTML = `
+                    <div class="student-name">${student.name}</div>
+                    <div class="student-comment" tabindex="0">${comment}</div>
+                `;
+                studentsList.appendChild(studentCard);
+                
+                // Agregar evento para copiar
+                const commentElement = studentCard.querySelector('.student-comment');
+                commentElement.addEventListener('click', function() {
+                    copyToClipboard(comment);
+                });
+            });
+        }
+        
+        function calculateAverage(student) {
+            // Combinar todas las notas de todas las categorías (incluyendo ceros)
+            let total = 0;
+            let count = 0;
+            
+            Object.values(student.notas).forEach(notasCategoria => {
+                notasCategoria.forEach(notaObj => {
+                    total += notaObj.nota;
+                    count++;
+                });
+            });
+            
+            return count > 0 ? total / count : 0;
+        }
+        
+        function generateComment(student, categories) {
+            const overallAvg = calculateAverage(student);
+            
+            // Determinar nivel de desempeño
+            let advice = '';
+            if (overallAvg < 3) {
+                advice = 'El alumno necesita esforzarse y aplicarse más si quiere aprobar.';
+            } else if (overallAvg < 6) {
+                advice = 'El alumno no debe relajarse y debe seguir esforzándose.';
+            } else {
+                advice = 'El alumno por ahora va bien y si sigue así aprobará.';
+            }
+            
+            // Verificar si hay ceros
+            let hasZeros = false;
+            Object.values(student.notas).forEach(notasCategoria => {
+                if (notasCategoria.some(notaObj => notaObj.nota === 0)) {
+                    hasZeros = true;
+                }
+            });
+            
+            if (hasZeros) {
+                advice += ' Además, tiene calificaciones de 0 en algunos instrumentos, lo que indica que debe esforzarse y trabajar más en esas áreas si quiere aprobar.';
+            }
+            
+            // Construir el comentario
+            let comment = `Estimado/a tutor/a de ${student.name},\n\n`;
+            
+            // Generar sección para cada categoría detectada
+            Object.entries(categories).forEach(([key, data]) => {
+                if (student.notas[key] && student.notas[key].length > 0) {
+                    const notas = student.notas[key].map(notaObj => formatGrade(notaObj.nota));
+                    comment += `Las notas que lleva en ${data.descripcion} son: ${notas.join(' / ')}.\n`;
+                } else {
+                    comment += `En ${data.descripcion.toLowerCase()}, el alumno no tiene calificaciones registradas.\n`;
+                }
+            });
+            
+            comment += `\n${advice}`;
+            
+            return comment;
+        }
+        
+        function formatGrade(grade) {
+            return grade % 1 === 0 ? grade.toString() : grade.toFixed(1).replace('.', ',');
+        }
+        
+        function copyToClipboard(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            
+            const notification = document.getElementById('copyNotification');
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
