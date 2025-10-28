@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ejercicio de Movimiento en Cuadrícula</title>
+    <style>
+        body {
+            transition: background-color 0.5s;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 40px;
+            margin-top: 20px;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .game-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(5, 60px);
+            grid-template-rows: repeat(5, 60px);
+            gap: 2px;
+            background-color: #e6e6fa;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .grid-item {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #4a4a8a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: background-color 0.3s;
+            border-radius: 5px;
+        }
+
+        .character {
+            background-color: #87ceeb;
+            border-radius: 50%;
+            z-index: 10;
+            position: relative;
+            transition: all 0.5s ease;
+        }
+
+        .goal {
+            background-color: #90ee90;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        .obstacle {
+            background-color: #ffa500;
+            border-radius: 10%;
+        }
+
+        .path {
+            background-color: #d8bfd8;
+        }
+
+        .controls-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            background-color: #e6e6fa;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .controls-row {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .controls button {
+            padding: 12px;
+            font-size: 18px;
+            width: 80px;
+            height: 80px;
+            transition: all 0.3s;
+            background-color: #4a4a8a;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .controls button:hover {
+            background-color: #6a6aaa;
+            transform: scale(1.05);
+        }
+
+        .controls button:active {
+            transform: scale(0.95);
+        }
+
+        #message {
+            text-align: center;
+            font-size: 20px;
+            color: green;
+            margin-top: 10px;
+            font-weight: bold;
+            min-height: 30px;
+        }
+
+        #score {
+            font-size: 32px;
+            color: #4a4a8a;
+            background-color: #e6e6fa;
+            padding: 10px 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #4a4a8a;
+            margin-top: 10px;
+            font-size: 28px;
+        }
+
+        .instructions {
+            background-color: #e6e6fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .moving {
+            animation: moveAnimation 0.5s ease;
+        }
+
+        @keyframes moveAnimation {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Movimiento en Cuadrícula</h2>
+    
+    <div id="score">Puntuación: 0</div>
+    
+    <div class="container">
+        <div class="game-area">
+            <div class="grid-container" id="grid"></div>
+            <div id="message"></div>
+        </div>
+        
+        <div class="controls-container">
+            <div class="controls">
+                <!-- Fila superior: solo botón Arriba -->
+                <div class="controls-row">
+                    <button onclick="moveWithEffect('up', this)">↑</button>
+                </div>
+                
+                <!-- Fila central: botones Izquierda y Derecha -->
+                <div class="controls-row">
+                    <button onclick="moveWithEffect('left', this)">←</button>
+                    <div style="width: 80px;"></div> <!-- Espacio para mantener la alineación -->
+                    <button onclick="moveWithEffect('right', this)">→</button>
+                </div>
+                
+                <!-- Fila inferior: solo botón Abajo -->
+                <div class="controls-row">
+                    <button onclick="moveWithEffect('down', this)">↓</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="instructions">
+        <p><strong>Instrucciones:</strong> Mueve al gato 🐱 hasta el trébol 🍀 evitando los obstáculos naranjas.</p>
+        <p>Usa los botones de dirección para moverte. ¡Cada vez que llegues al trébol ganarás un punto!</p>
+    </div>
+
+    <script>
+        const gridSize = 5;
+        let characterPosition = { x: 0, y: 0 };
+        let goalPosition = { x: 0, y: 0 };
+        let obstacles = [];
+        let score = 0;
+        let path = [];
+        let isMoving = false;
+
+        function generateObstacles() {
+            let numberOfObstacles = Math.floor(score / 10) + 4;
+
+            obstacles = [];
+            while (obstacles.length < numberOfObstacles) {
+                const obstaclePosition = {
+                    x: Math.floor(Math.random() * gridSize),
+                    y: Math.floor(Math.random() * gridSize)
+                };
+                if (
+                    (obstaclePosition.x !== characterPosition.x || obstaclePosition.y !== characterPosition.y) &&
+                    (obstaclePosition.x !== goalPosition.x || obstaclePosition.y !== goalPosition.y) &&
+                    !obstacles.some(o => o.x === obstaclePosition.x && o.y === obstaclePosition.y)
+                ) {
+                    obstacles.push(obstaclePosition);
+                }
+            }
+        }
+
+        function isPathAvailable(start, goal) {
+            const queue = [start];
+            const visited = Array.from({ length: gridSize }, () => Array(gridSize).fill(false));
+            visited[start.y][start.x] = true;
+
+            const directions = [
+                { x: 0, y: -1 }, { x: 0, y: 1 },
+                { x: -1, y: 0 }, { x: 1, y: 0 }
+            ];
+
+            while (queue.length > 0) {
+                const { x, y } = queue.shift();
+                if (x === goal.x && y === goal.y) return true;
+
+                for (const { x: dx, y: dy } of directions) {
+                    const newX = x + dx;
+                    const newY = y + dy;
+                    if (
+                        newX >= 0 && newX < gridSize && newY >= 0 && newY < gridSize &&
+                        !visited[newY][newX] &&
+                        !obstacles.some(o => o.x === newX && o.y === newY)
+                    ) {
+                        queue.push({ x: newX, y: newY });
+                        visited[newY][newX] = true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        function placeRandomCharacterAndGoal() {
+            do {
+                characterPosition = {
+                    x: Math.floor(Math.random() * gridSize),
+                    y: Math.floor(Math.random() * gridSize)
+                };
+                goalPosition = {
+                    x: Math.floor(Math.random() * gridSize),
+                    y: Math.floor(Math.random() * gridSize)
+                };
+            } while (
+                (characterPosition.x === goalPosition.x && characterPosition.y === goalPosition.y) ||
+                !isPathAvailable(characterPosition, goalPosition)
+            );
+            
+            // Reiniciar el camino
+            path = [characterPosition];
+        }
+
+        function initGrid() {
+            const gridContainer = document.getElementById("grid");
+            gridContainer.innerHTML = "";
+
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    const cell = document.createElement("div");
+                    cell.classList.add("grid-item");
+                    
+                    // Marcar las celdas del camino
+                    if (path.some(p => p.x === x && p.y === y)) {
+                        cell.classList.add("path");
+                    }
+
+                    if (x === characterPosition.x && y === characterPosition.y) {
+                        cell.classList.add("character");
+                        cell.innerText = "🐱";
+                    } else if (x === goalPosition.x && y === goalPosition.y) {
+                        cell.classList.add("goal");
+                        cell.innerText = "🍀";
+                    } else if (obstacles.some(o => o.x === x && o.y === y)) {
+                        cell.classList.add("obstacle");
+                    }
+
+                    gridContainer.appendChild(cell);
+                }
+            }
+        }
+
+        function moveWithEffect(direction, button) {
+            if (isMoving) return; // Evitar movimientos múltiples simultáneos
+            
+            button.style.backgroundColor = "green";
+            setTimeout(() => {
+                button.style.backgroundColor = "#4a4a8a";
+            }, 500);
+
+            move(direction);
+        }
+
+        function move(direction) {
+            isMoving = true;
+            
+            const newPosition = { ...characterPosition };
+            if (direction === "up") newPosition.y--;
+            else if (direction === "down") newPosition.y++;
+            else if (direction === "left") newPosition.x--;
+            else if (direction === "right") newPosition.x++;
+
+            // Añadir efecto visual de movimiento
+            const characterCell = document.querySelector('.character');
+            if (characterCell) {
+                characterCell.classList.add('moving');
+                setTimeout(() => {
+                    characterCell.classList.remove('moving');
+                }, 500);
+            }
+
+            // Actualizar la posición después de un breve retraso para mostrar la animación
+            setTimeout(() => {
+                path.push(newPosition);
+                checkResult(newPosition);
+                isMoving = false;
+            }, 300);
+        }
+
+        function checkResult(newPosition) {
+            const messageElement = document.getElementById("message");
+
+            if (newPosition.x < 0 || newPosition.x >= gridSize || newPosition.y < 0 || newPosition.y >= gridSize) {
+                messageElement.innerText = "¡Has perdido! Te has salido de la cuadrícula.";
+                updateScore(-1);
+                resetGame();
+                return;
+            }
+
+            if (obstacles.some(o => o.x === newPosition.x && o.y === newPosition.y)) {
+                messageElement.innerText = "¡Has perdido! Has chocado con un obstáculo.";
+                updateScore(-1);
+                resetGame();
+                return;
+            }
+
+            if (newPosition.x === goalPosition.x && newPosition.y === goalPosition.y) {
+                messageElement.innerText = "¡Lo has conseguido!";
+                updateScore(1);
+                resetGame();
+                return;
+            }
+
+            characterPosition = newPosition;
+            initGrid();
+        }
+
+        function updateScore(change) {
+            score += change;
+            document.getElementById("score").innerText = `Puntuación: ${score}`;
+
+            if (score >= 80) {
+                document.body.style.backgroundColor = "pink";
+            } else if (score >= 50) {
+                document.body.style.backgroundColor = "lightyellow";
+            } else if (score >= 30) {
+                document.body.style.backgroundColor = "lightblue";
+            } else {
+                document.body.style.backgroundColor = "#f0f8ff";
+            }
+
+            if (change > 0 && score % 10 === 0) {
+                generateObstacles();
+            }
+        }
+
+        function resetGame() {
+            setTimeout(() => {
+                placeRandomCharacterAndGoal();
+                generateObstacles();
+                initGrid();
+                document.getElementById("message").innerText = "";
+            }, 1000);
+        }
+
+        // Inicializar el juego
+        placeRandomCharacterAndGoal();
+        generateObstacles();
+        initGrid();
+    </script>
+</body>
+</html>
