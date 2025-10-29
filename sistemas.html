@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Diagramas de Control Automático - Interfaz Optimizada</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            padding: 10px;
+            color: #333;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 12px 15px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .toolbox {
+            width: 200px;
+            background-color: #ecf0f1;
+            padding: 12px;
+            border-right: 1px solid #bdc3c7;
+            overflow-y: auto;
+        }
+        
+        .toolbox h2 {
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            color: #2c3e50;
+        }
+        
+        .toolbox-section {
+            margin-bottom: 20px;
+        }
+        
+        .toolbox-section h3 {
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            color: #34495e;
+            border-bottom: 1px solid #bdc3c7;
+            padding-bottom: 5px;
+        }
+        
+        .toolbox-item {
+            background-color: white;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            padding: 10px 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+            font-size: 0.85rem;
+        }
+        
+        .toolbox-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .toolbox-item:active {
+            transform: scale(0.98);
+        }
+        
+        .block {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .comparator {
+            background-color: #e74c3c;
+            color: white;
+            border-radius: 50%;
+        }
+        
+        .arrow-right {
+            background-color: #2ecc71;
+            color: white;
+        }
+        
+        .arrow-left {
+            background-color: #2ecc71;
+            color: white;
+        }
+        
+        .arrow-up {
+            background-color: #2ecc71;
+            color: white;
+        }
+        
+        .arrow-down {
+            background-color: #2ecc71;
+            color: white;
+        }
+        
+        .line-horizontal {
+            background-color: #f39c12;
+            color: white;
+        }
+        
+        .line-vertical {
+            background-color: #f39c12;
+            color: white;
+        }
+        
+        .text {
+            background-color: #9b59b6;
+            color: white;
+        }
+        
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            overflow: auto;
+            background-color: #f9f9f9;
+            touch-action: none;
+        }
+
+        /* Scrollbar más ancha para tablets */
+        .canvas-container::-webkit-scrollbar {
+            width: 16px;
+        }
+        
+        .canvas-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 8px;
+        }
+        
+        .canvas-container::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 8px;
+            border: 3px solid #f1f1f1;
+        }
+        
+        .canvas-container::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        
+        #canvas {
+            width: 100%;
+            height: 100%;
+            min-height: 500px;
+            background-color: white;
+            position: relative;
+            touch-action: none;
+        }
+        
+        .element {
+            position: absolute;
+            cursor: move;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+        
+        .block-element {
+            width: 120px;
+            height: 60px;
+            background-color: #3498db;
+            border: 2px solid #2980b9;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            touch-action: none;
+        }
+        
+        .comparator-element {
+            width: 60px;
+            height: 60px;
+            background-color: #e74c3c;
+            border: 2px solid #c0392b;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            touch-action: none;
+        }
+        
+        /* Flechas con grosor reducido */
+        .arrow-right-element {
+            width: 80px;
+            height: 20px; /* Grosor reducido */
+            background-color: #2ecc71;
+            border: 1px solid #27ae60;
+            clip-path: polygon(0% 20%, 60% 20%, 60% 0%, 100% 50%, 60% 100%, 60% 80%, 0% 80%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            touch-action: none;
+        }
+        
+        .arrow-left-element {
+            width: 80px;
+            height: 20px; /* Grosor reducido */
+            background-color: #2ecc71;
+            border: 1px solid #27ae60;
+            clip-path: polygon(100% 20%, 40% 20%, 40% 0%, 0% 50%, 40% 100%, 40% 80%, 100% 80%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            touch-action: none;
+        }
+        
+        .arrow-up-element {
+            width: 20px; /* Grosor reducido */
+            height: 80px;
+            background-color: #2ecc71;
+            border: 1px solid #27ae60;
+            clip-path: polygon(20% 100%, 20% 40%, 0% 40%, 50% 0%, 100% 40%, 80% 40%, 80% 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            touch-action: none;
+        }
+        
+        .arrow-down-element {
+            width: 20px; /* Grosor reducido */
+            height: 80px;
+            background-color: #2ecc71;
+            border: 1px solid #27ae60;
+            clip-path: polygon(20% 0%, 20% 60%, 0% 60%, 50% 100%, 100% 60%, 80% 60%, 80% 0%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            touch-action: none;
+        }
+        
+        /* Líneas con grosor aumentado */
+        .line-horizontal-element {
+            width: 100px;
+            height: 6px; /* Grosor aumentado */
+            background-color: #f39c12;
+            border: none;
+            touch-action: none;
+        }
+        
+        .line-vertical-element {
+            width: 6px; /* Grosor aumentado */
+            height: 100px;
+            background-color: #f39c12;
+            border: none;
+            touch-action: none;
+        }
+        
+        .text-element {
+            padding: 5px 10px;
+            background-color: #9b59b6;
+            color: white;
+            border: 2px solid #8e44ad;
+            border-radius: 4px;
+            font-weight: bold;
+            touch-action: none;
+        }
+        
+        /* Controles reorganizados en dos filas compactas */
+        .controls {
+            padding: 8px 12px;
+            background-color: #ecf0f1;
+            border-top: 1px solid #bdc3c7;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: auto auto;
+            gap: 6px;
+            min-height: auto;
+        }
+        
+        button {
+            padding: 8px 6px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+            touch-action: manipulation;
+            font-size: 0.8rem;
+            min-height: 36px;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+            transform: translateY(-1px);
+        }
+        
+        .delete-btn {
+            background-color: #e74c3c;
+        }
+        
+        .delete-btn:hover {
+            background-color: #c0392b;
+        }
+        
+        .edit-btn {
+            background-color: #f39c12;
+        }
+        
+        .edit-btn:hover {
+            background-color: #d35400;
+        }
+        
+        .pdf-btn {
+            background-color: #27ae60;
+        }
+        
+        .pdf-btn:hover {
+            background-color: #219653;
+        }
+        
+        .instructions {
+            padding: 10px 12px;
+            background-color: #f9f9f9;
+            border-top: 1px solid #ddd;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+        
+        .instructions h3 {
+            margin-bottom: 6px;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+        
+        .instructions ul {
+            padding-left: 18px;
+            font-size: 0.75rem;
+        }
+        
+        .instructions li {
+            margin-bottom: 3px;
+        }
+        
+        .editable {
+            outline: none;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: text;
+            user-select: text;
+            -webkit-user-select: text;
+        }
+        
+        .selected {
+            box-shadow: 0 0 0 3px #f1c40f;
+        }
+        
+        .editing {
+            box-shadow: 0 0 0 3px #9b59b6;
+        }
+        
+        /* Modal para editar texto */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 18px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 380px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal h3 {
+            margin-bottom: 12px;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+        
+        .modal-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 12px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+        
+        .modal-btn {
+            padding: 8px 12px;
+            min-width: 70px;
+            min-height: 36px;
+            font-size: 0.85rem;
+        }
+        
+        /* Estilos para mejorar la experiencia táctil */
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .toolbox {
+                width: 100%;
+                max-height: 180px;
+                overflow-x: auto;
+                display: flex;
+                flex-wrap: nowrap;
+                padding: 8px;
+            }
+            
+            .toolbox-section {
+                display: flex;
+                flex-direction: column;
+                margin-right: 15px;
+                margin-bottom: 0;
+                min-width: 150px;
+            }
+            
+            .toolbox h2 {
+                display: none;
+            }
+            
+            .toolbox-section h3 {
+                font-size: 0.8rem;
+                white-space: nowrap;
+            }
+            
+            .toolbox-item {
+                min-width: 70px;
+                margin-right: 5px;
+                margin-bottom: 5px;
+                flex-shrink: 0;
+                padding: 8px 5px;
+                font-size: 0.8rem;
+            }
+            
+            .canvas-container {
+                height: 65vh;
+            }
+            
+            /* En móviles, controles en grid 2x3 */
+            .controls {
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: auto auto auto;
+                gap: 6px;
+                padding: 6px 10px;
+            }
+            
+            button {
+                padding: 10px 6px;
+                font-size: 0.85rem;
+                min-height: 40px;
+            }
+            
+            .instructions {
+                max-height: 90px;
+                padding: 8px 10px;
+            }
+        }
+
+        /* Para tablets en orientación horizontal */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .controls {
+                grid-template-columns: 1fr 1fr 1fr;
+                grid-template-rows: auto auto;
+                gap: 8px;
+            }
+            
+            button {
+                padding: 9px 6px;
+                font-size: 0.82rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Sistema de Diagramas de Control Automático</h1>
+            <p class="subtitle">Interfaz optimizada - Mayor área de dibujo</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="toolbox">
+                <h2>Elementos</h2>
+                
+                <div class="toolbox-section">
+                    <h3>Componentes</h3>
+                    <div class="toolbox-item block" data-type="block">
+                        Bloque
+                    </div>
+                    <div class="toolbox-item comparator" data-type="comparator">
+                        Comparador
+                    </div>
+                    <div class="toolbox-item text" data-type="text">
+                        Texto
+                    </div>
+                </div>
+                
+                <div class="toolbox-section">
+                    <h3>Flechas</h3>
+                    <div class="toolbox-item arrow-right" data-type="arrow-right">
+                        Flecha →
+                    </div>
+                    <div class="toolbox-item arrow-left" data-type="arrow-left">
+                        Flecha ←
+                    </div>
+                    <div class="toolbox-item arrow-up" data-type="arrow-up">
+                        Flecha ↑
+                    </div>
+                    <div class="toolbox-item arrow-down" data-type="arrow-down">
+                        Flecha ↓
+                    </div>
+                </div>
+                
+                <div class="toolbox-section">
+                    <h3>Líneas</h3>
+                    <div class="toolbox-item line-horizontal" data-type="line-horizontal">
+                        Línea —
+                    </div>
+                    <div class="toolbox-item line-vertical" data-type="line-vertical">
+                        Línea |
+                    </div>
+                </div>
+            </div>
+            
+            <div class="canvas-container">
+                <div id="canvas"></div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="clearBtn">Limpiar Todo</button>
+            <button id="deleteBtn" class="delete-btn">Eliminar Seleccionado</button>
+            <button id="editBtn" class="edit-btn">Editar Texto</button>
+            <button id="pdfBtn" class="pdf-btn">Exportar a PDF</button>
+            <button id="zoomInBtn">Acercar</button>
+            <button id="zoomOutBtn">Alejar</button>
+        </div>
+        
+        <div class="instructions">
+            <h3>Instrucciones:</h3>
+            <ul>
+                <li>Toca un elemento en el panel lateral y luego toca en el área de trabajo para colocarlo</li>
+                <li>Toca y mantén presionado cualquier elemento para moverlo</li>
+                <li>Toca un elemento para seleccionarlo (borde amarillo)</li>
+                <li>Haz doble clic en cualquier elemento para editar su texto</li>
+                <li>Usa el botón "Exportar a PDF" para guardar tu diagrama</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Modal para editar texto -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h3>Editar Texto</h3>
+            <input type="text" id="textInput" class="modal-input" placeholder="Escribe el texto aquí">
+            <div class="modal-buttons">
+                <button id="cancelEdit" class="modal-btn delete-btn">Cancelar</button>
+                <button id="saveText" class="modal-btn">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para nombre del PDF -->
+    <div id="pdfModal" class="modal">
+        <div class="modal-content">
+            <h3>Exportar a PDF</h3>
+            <input type="text" id="pdfNameInput" class="modal-input" placeholder="Nombre del archivo PDF" value="diagrama_automatico">
+            <div class="modal-buttons">
+                <button id="cancelPdf" class="modal-btn delete-btn">Cancelar</button>
+                <button id="confirmPdf" class="modal-btn pdf-btn">Descargar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const canvas = document.getElementById('canvas');
+            const toolboxItems = document.querySelectorAll('.toolbox-item');
+            const clearBtn = document.getElementById('clearBtn');
+            const deleteBtn = document.getElementById('deleteBtn');
+            const editBtn = document.getElementById('editBtn');
+            const pdfBtn = document.getElementById('pdfBtn');
+            const zoomInBtn = document.getElementById('zoomInBtn');
+            const zoomOutBtn = document.getElementById('zoomOutBtn');
+            const editModal = document.getElementById('editModal');
+            const pdfModal = document.getElementById('pdfModal');
+            const textInput = document.getElementById('textInput');
+            const pdfNameInput = document.getElementById('pdfNameInput');
+            const cancelEdit = document.getElementById('cancelEdit');
+            const saveText = document.getElementById('saveText');
+            const cancelPdf = document.getElementById('cancelPdf');
+            const confirmPdf = document.getElementById('confirmPdf');
+            
+            let selectedElement = null;
+            let selectedTool = null;
+            let elementCounter = 0;
+            let isDragging = false;
+            let startX, startY, initialX, initialY;
+            let currentZoom = 1;
+            
+            // Cargar elementos guardados si existen
+            loadSavedElements();
+            
+            // Seleccionar herramienta del toolbox
+            toolboxItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    // Quitar selección anterior
+                    toolboxItems.forEach(i => i.style.boxShadow = 'none');
+                    // Seleccionar nueva herramienta
+                    this.style.boxShadow = '0 0 0 3px #f1c40f';
+                    selectedTool = this.dataset.type;
+                });
+                
+                // También permitir arrastrar en dispositivos de escritorio
+                item.addEventListener('dragstart', function(e) {
+                    e.dataTransfer.setData('text/plain', e.target.dataset.type);
+                });
+            });
+            
+            // Permitir colocar elementos en el canvas
+            canvas.addEventListener('click', function(e) {
+                if (selectedTool && e.target === canvas) {
+                    createElement(selectedTool, e.offsetX, e.offsetY);
+                }
+            });
+            
+            // Permitir soltar elementos arrastrados (para escritorio)
+            canvas.addEventListener('dragover', function(e) {
+                e.preventDefault();
+            });
+            
+            canvas.addEventListener('drop', function(e) {
+                e.preventDefault();
+                const type = e.dataTransfer.getData('text/plain');
+                createElement(type, e.offsetX, e.offsetY);
+            });
+            
+            // Funciones de zoom
+            zoomInBtn.addEventListener('click', function() {
+                currentZoom = Math.min(2, currentZoom + 0.1);
+                updateCanvasZoom();
+            });
+            
+            zoomOutBtn.addEventListener('click', function() {
+                currentZoom = Math.max(0.5, currentZoom - 0.1);
+                updateCanvasZoom();
+            });
+            
+            function updateCanvasZoom() {
+                canvas.style.transform = `scale(${currentZoom})`;
+                canvas.style.transformOrigin = '0 0';
+            }
+            
+            // Exportar a PDF
+            pdfBtn.addEventListener('click', function() {
+                pdfNameInput.value = 'diagrama_automatico_' + new Date().toISOString().slice(0, 10);
+                pdfModal.style.display = 'flex';
+                pdfNameInput.focus();
+            });
+            
+            cancelPdf.addEventListener('click', function() {
+                pdfModal.style.display = 'none';
+            });
+            
+            confirmPdf.addEventListener('click', function() {
+                const fileName = pdfNameInput.value.trim() || 'diagrama_automatico';
+                exportToPDF(fileName);
+                pdfModal.style.display = 'none';
+            });
+            
+            function exportToPDF(fileName) {
+                // Crear un canvas temporal para capturar solo el área del diagrama
+                const tempCanvas = document.createElement('canvas');
+                const ctx = tempCanvas.getContext('2d');
+                
+                // Obtener las dimensiones del contenido
+                const elements = canvas.querySelectorAll('.element');
+                let minX = Infinity, minY = Infinity, maxX = 0, maxY = 0;
+                
+                if (elements.length === 0) {
+                    alert('No hay elementos en el diagrama para exportar.');
+                    return;
+                }
+                
+                elements.forEach(element => {
+                    const rect = element.getBoundingClientRect();
+                    const canvasRect = canvas.getBoundingClientRect();
+                    
+                    const x = parseFloat(element.style.left);
+                    const y = parseFloat(element.style.top);
+                    const width = rect.width;
+                    const height = rect.height;
+                    
+                    minX = Math.min(minX, x);
+                    minY = Math.min(minY, y);
+                    maxX = Math.max(maxX, x + width);
+                    maxY = Math.max(maxY, y + height);
+                });
+                
+                // Añadir márgenes
+                const margin = 20;
+                const contentWidth = maxX - minX + margin * 2;
+                const contentHeight = maxY - minY + margin * 2;
+                
+                // Configurar el canvas temporal
+                tempCanvas.width = contentWidth;
+                tempCanvas.height = contentHeight;
+                
+                // Dibujar fondo blanco
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, contentWidth, contentHeight);
+                
+                // Capturar el contenido usando html2canvas
+                html2canvas(canvas, {
+                    scale: 2, // Mayor resolución
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#ffffff',
+                    x: minX - margin,
+                    y: minY - margin,
+                    width: contentWidth,
+                    height: contentHeight,
+                    onclone: function(clonedDoc) {
+                        // Asegurar que todos los elementos sean visibles en el clon
+                        const clonedCanvas = clonedDoc.getElementById('canvas');
+                        if (clonedCanvas) {
+                            clonedCanvas.style.transform = 'none';
+                            clonedCanvas.style.overflow = 'visible';
+                        }
+                    }
+                }).then(canvas => {
+                    // Crear PDF
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF({
+                        orientation: contentWidth > contentHeight ? 'landscape' : 'portrait',
+                        unit: 'px',
+                        format: [contentWidth, contentHeight]
+                    });
+                    
+                    // Añadir la imagen al PDF
+                    const imgData = canvas.toDataURL('image/png');
+                    pdf.addImage(imgData, 'PNG', 0, 0, contentWidth, contentHeight);
+                    
+                    // Descargar el PDF
+                    pdf.save(fileName + '.pdf');
+                }).catch(error => {
+                    console.error('Error al generar PDF:', error);
+                    alert('Error al generar el PDF. Inténtalo de nuevo.');
+                });
+            }
+            
+            // Función para crear elementos en el canvas
+            function createElement(type, x, y) {
+                const element = document.createElement('div');
+                element.className = `element ${type}-element`;
+                element.id = `element-${elementCounter++}`;
+                
+                // Posicionar el elemento
+                element.style.left = `${x}px`;
+                element.style.top = `${y}px`;
+                
+                // Contenido inicial según el tipo
+                let initialText = '';
+                let hasText = true;
+                
+                switch(type) {
+                    case 'block':
+                        initialText = 'Bloque';
+                        break;
+                    case 'comparator':
+                        initialText = '+/-';
+                        break;
+                    case 'text':
+                        initialText = 'Texto';
+                        break;
+                    case 'arrow-right':
+                        initialText = '→';
+                        break;
+                    case 'arrow-left':
+                        initialText = '←';
+                        break;
+                    case 'arrow-up':
+                        initialText = '↑';
+                        break;
+                    case 'arrow-down':
+                        initialText = '↓';
+                        break;
+                    case 'line-horizontal':
+                    case 'line-vertical':
+                        hasText = false;
+                        break;
+                }
+                
+                if (hasText) {
+                    element.innerHTML = `<div class="editable" contenteditable="false">${initialText}</div>`;
+                }
+                
+                // Hacer el elemento arrastrable
+                makeElementDraggable(element);
+                
+                // Añadir evento de toque/clic para seleccionar
+                element.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    selectElement(element);
+                });
+                
+                // Permitir edición con doble toque/clic
+                element.addEventListener('dblclick', function(e) {
+                    e.stopPropagation();
+                    if (hasText) {
+                        openEditModal(element);
+                    }
+                });
+                
+                canvas.appendChild(element);
+                saveElements();
+                
+                // Seleccionar el elemento recién creado
+                selectElement(element);
+            }
+            
+            // Hacer que los elementos sean arrastrables (compatible con tactil y ratón)
+            function makeElementDraggable(element) {
+                element.addEventListener('mousedown', startDrag);
+                element.addEventListener('touchstart', startDragTouch);
+                
+                function startDrag(e) {
+                    // Si estamos editando, no arrastrar
+                    if (element.classList.contains('editing')) return;
+                    
+                    e.preventDefault();
+                    isDragging = true;
+                    
+                    // Obtener la posición inicial
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    initialX = element.offsetLeft;
+                    initialY = element.offsetTop;
+                    
+                    document.addEventListener('mousemove', drag);
+                    document.addEventListener('mouseup', stopDrag);
+                    
+                    // Seleccionar el elemento
+                    selectElement(element);
+                }
+                
+                function startDragTouch(e) {
+                    // Si estamos editando, no arrastrar
+                    if (element.classList.contains('editing')) return;
+                    
+                    e.preventDefault();
+                    isDragging = true;
+                    
+                    // Obtener la posición inicial
+                    const touch = e.touches[0];
+                    startX = touch.clientX;
+                    startY = touch.clientY;
+                    initialX = element.offsetLeft;
+                    initialY = element.offsetTop;
+                    
+                    document.addEventListener('touchmove', dragTouch);
+                    document.addEventListener('touchend', stopDrag);
+                    
+                    // Seleccionar el elemento
+                    selectElement(element);
+                }
+                
+                function drag(e) {
+                    if (!isDragging) return;
+                    e.preventDefault();
+                    
+                    // Calcular la nueva posición
+                    const dx = e.clientX - startX;
+                    const dy = e.clientY - startY;
+                    
+                    // Establecer la nueva posición del elemento
+                    element.style.left = `${initialX + dx}px`;
+                    element.style.top = `${initialY + dy}px`;
+                }
+                
+                function dragTouch(e) {
+                    if (!isDragging) return;
+                    e.preventDefault();
+                    
+                    const touch = e.touches[0];
+                    // Calcular la nueva posición
+                    const dx = touch.clientX - startX;
+                    const dy = touch.clientY - startY;
+                    
+                    // Establecer la nueva posición del elemento
+                    element.style.left = `${initialX + dx}px`;
+                    element.style.top = `${initialY + dy}px`;
+                }
+                
+                function stopDrag() {
+                    isDragging = false;
+                    document.removeEventListener('mousemove', drag);
+                    document.removeEventListener('touchmove', dragTouch);
+                    document.removeEventListener('mouseup', stopDrag);
+                    document.removeEventListener('touchend', stopDrag);
+                    
+                    // Guardar la nueva posición
+                    saveElements();
+                }
+            }
+            
+            // Seleccionar un elemento
+            function selectElement(element) {
+                // Deseleccionar el elemento anterior
+                if (selectedElement) {
+                    selectedElement.classList.remove('selected');
+                }
+                
+                // Seleccionar el nuevo elemento
+                selectedElement = element;
+                selectedElement.classList.add('selected');
+            }
+            
+            // Deseleccionar elementos al hacer clic en el canvas
+            canvas.addEventListener('click', function(e) {
+                if (e.target === canvas) {
+                    if (selectedElement) {
+                        selectedElement.classList.remove('selected');
+                        selectedElement = null;
+                    }
+                    // Deseleccionar herramienta
+                    toolboxItems.forEach(i => i.style.boxShadow = 'none');
+                    selectedTool = null;
+                }
+            });
+            
+            // Limpiar todo el canvas
+            clearBtn.addEventListener('click', function() {
+                if (confirm('¿Estás seguro de que quieres limpiar todo el diagrama?')) {
+                    canvas.innerHTML = '';
+                    selectedElement = null;
+                    localStorage.removeItem('automationDiagram');
+                }
+            });
+            
+            // Eliminar elemento seleccionado
+            deleteBtn.addEventListener('click', function() {
+                if (selectedElement) {
+                    selectedElement.remove();
+                    selectedElement = null;
+                    saveElements();
+                }
+            });
+            
+            // Editar texto del elemento seleccionado
+            editBtn.addEventListener('click', function() {
+                if (selectedElement) {
+                    const type = selectedElement.className.split(' ')[1];
+                    if (type !== 'line-horizontal-element' && type !== 'line-vertical-element') {
+                        openEditModal(selectedElement);
+                    } else {
+                        alert('Los elementos de línea no tienen texto editable.');
+                    }
+                } else {
+                    alert('Por favor, selecciona un elemento primero.');
+                }
+            });
+            
+            // Abrir modal para editar texto
+            function openEditModal(element) {
+                const editable = element.querySelector('.editable');
+                if (editable) {
+                    textInput.value = editable.textContent;
+                    editModal.style.display = 'flex';
+                    textInput.focus();
+                    
+                    // Marcar el elemento como en edición
+                    element.classList.add('editing');
+                    
+                    // Guardar referencia al elemento que estamos editando
+                    textInput.dataset.editingElement = element.id;
+                }
+            }
+            
+            // Cerrar modal sin guardar
+            cancelEdit.addEventListener('click', function() {
+                editModal.style.display = 'none';
+                const elementId = textInput.dataset.editingElement;
+                if (elementId) {
+                    const element = document.getElementById(elementId);
+                    if (element) {
+                        element.classList.remove('editing');
+                    }
+                }
+            });
+            
+            // Guardar texto editado
+            saveText.addEventListener('click', function() {
+                const elementId = textInput.dataset.editingElement;
+                if (elementId) {
+                    const element = document.getElementById(elementId);
+                    if (element) {
+                        const editable = element.querySelector('.editable');
+                        if (editable) {
+                            editable.textContent = textInput.value;
+                            element.classList.remove('editing');
+                            saveElements();
+                        }
+                    }
+                }
+                editModal.style.display = 'none';
+            });
+            
+            // Cerrar modal al hacer clic fuera
+            editModal.addEventListener('click', function(e) {
+                if (e.target === editModal) {
+                    editModal.style.display = 'none';
+                    const elementId = textInput.dataset.editingElement;
+                    if (elementId) {
+                        const element = document.getElementById(elementId);
+                        if (element) {
+                            element.classList.remove('editing');
+                        }
+                    }
+                }
+            });
+            
+            pdfModal.addEventListener('click', function(e) {
+                if (e.target === pdfModal) {
+                    pdfModal.style.display = 'none';
+                }
+            });
+            
+            // Guardar elementos en localStorage
+            function saveElements() {
+                const elements = [];
+                document.querySelectorAll('.element').forEach(el => {
+                    const editable = el.querySelector('.editable');
+                    const type = el.className.split(' ')[1].replace('-element', '');
+                    elements.push({
+                        id: el.id,
+                        type: type,
+                        left: el.style.left,
+                        top: el.style.top,
+                        content: editable ? editable.textContent : ''
+                    });
+                });
+                
+                localStorage.setItem('automationDiagram', JSON.stringify(elements));
+            }
+            
+            // Cargar elementos desde localStorage
+            function loadSavedElements() {
+                const saved = localStorage.getItem('automationDiagram');
+                if (saved) {
+                    const elements = JSON.parse(saved);
+                    
+                    elements.forEach(el => {
+                        const element = document.createElement('div');
+                        element.className = `element ${el.type}-element`;
+                        element.id = el.id;
+                        element.style.left = el.left;
+                        element.style.top = el.top;
+                        
+                        // Determinar si el tipo tiene texto
+                        const hasText = !(el.type === 'line-horizontal' || el.type === 'line-vertical');
+                        
+                        if (hasText) {
+                            element.innerHTML = `<div class="editable" contenteditable="false">${el.content}</div>`;
+                        }
+                        
+                        // Hacer el elemento arrastrable
+                        makeElementDraggable(element);
+                        
+                        // Añadir evento de toque/clic para seleccionar
+                        element.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            selectElement(element);
+                        });
+                        
+                        // Permitir edición con doble toque/clic
+                        element.addEventListener('dblclick', function(e) {
+                            e.stopPropagation();
+                            if (hasText) {
+                                openEditModal(element);
+                            }
+                        });
+                        
+                        canvas.appendChild(element);
+                    });
+                }
+            }
+            
+            // Prevenir el menú contextual en elementos (útil en tablets)
+            document.addEventListener('contextmenu', function(e) {
+                if (e.target.classList.contains('element') || e.target.classList.contains('toolbox-item')) {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
