@@ -6,7 +6,7 @@
     <title>Conversor a PDF</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -26,6 +26,7 @@
             object-fit: contain;
             display: block;
             margin: 0 auto;
+            transition: transform 0.3s ease;
         }
         .image-controls {
             margin-top: 5px;
@@ -72,6 +73,12 @@
         }
         input[type="file"] {
             margin-bottom: 10px;
+        }
+        .save-rotation-btn {
+            background-color: #34a853;
+            color: white;
+            border: none;
+            margin-top: 5px;
         }
     </style>
 </head>
@@ -146,7 +153,10 @@
                     name: file.name,
                     rotation: 0,
                     naturalWidth: canvas.width,
-                    naturalHeight: canvas.height
+                    naturalHeight: canvas.height,
+                    originalWidth: canvas.width,
+                    originalHeight: canvas.height,
+                    rotatedData: correctedDataUrl // Guardamos la versión sin rotar inicialmente
                 };
 
                 files.push(fileData);
@@ -216,12 +226,18 @@
             rotateBtn.innerHTML = "↻ Rotar";
             rotateBtn.onclick = () => rotateImage(fileData.id, 90);
 
+            const saveRotationBtn = document.createElement("button");
+            saveRotationBtn.className = "save-rotation-btn";
+            saveRotationBtn.innerHTML = "💾 Guardar Rotación";
+            saveRotationBtn.onclick = () => saveRotation(fileData.id);
+
             const deleteBtn = document.createElement("button");
             deleteBtn.className = "delete-btn";
             deleteBtn.innerHTML = "× Eliminar";
             deleteBtn.onclick = () => removeImage(fileData.id);
 
             controls.appendChild(rotateBtn);
+            controls.appendChild(saveRotationBtn);
             controls.appendChild(deleteBtn);
 
             if (fileData.type === "application/pdf") {
@@ -229,21 +245,7 @@
                 img.alt = "PDF Icon";
             } else {
                 img.src = fileData.data;
-                
-                // Mostrar exactamente como aparecerá en el PDF
-                const aspectRatio = fileData.naturalWidth / fileData.naturalHeight;
-                const containerWidth = 200;
-                const containerHeight = 150;
-                
-                if (aspectRatio > 1) {
-                    // Horizontal
-                    img.style.width = `${containerWidth}px`;
-                    img.style.height = `${containerWidth / aspectRatio}px`;
-                } else {
-                    // Vertical
-                    img.style.height = `${containerHeight}px`;
-                    img.style.width = `${containerHeight * aspectRatio}px`;
-                }
+                updateThumbnailSize(img, fileData);
             }
 
             container.appendChild(img);
@@ -257,6 +259,39 @@
             thumbnailsContainer.appendChild(container);
         }
 
+        function updateThumbnailSize(img, fileData) {
+            // Calcular dimensiones según rotación actual
+            let displayWidth, displayHeight;
+            
+            if (fileData.rotation % 180 === 90) {
+                // Imagen rotada 90 o 270 grados
+                displayWidth = fileData.naturalHeight;
+                displayHeight = fileData.naturalWidth;
+            } else {
+                // Imagen normal o rotada 180 grados
+                displayWidth = fileData.naturalWidth;
+                displayHeight = fileData.naturalHeight;
+            }
+            
+            // Ajustar al contenedor manteniendo relación de aspecto
+            const containerWidth = 200;
+            const containerHeight = 150;
+            const aspectRatio = displayWidth / displayHeight;
+            
+            if (aspectRatio > 1) {
+                // Horizontal
+                img.style.width = `${containerWidth}px`;
+                img.style.height = `${containerWidth / aspectRatio}px`;
+            } else {
+                // Vertical
+                img.style.height = `${containerHeight}px`;
+                img.style.width = `${containerHeight * aspectRatio}px`;
+            }
+            
+            // Aplicar rotación
+            img.style.transform = `rotate(${fileData.rotation}deg)`;
+        }
+
         function rotateImage(id, degrees) {
             const fileIndex = files.findIndex(f => f.id === id);
             if (fileIndex !== -1) {
@@ -264,14 +299,57 @@
                 
                 const container = document.getElementById(id);
                 const img = container.querySelector('img');
-                img.style.transform = `rotate(${files[fileIndex].rotation}deg)`;
                 
                 // Actualizar dimensiones naturales para rotaciones de 90/270 grados
                 if (degrees % 180 !== 0) {
-                    const temp = files[fileIndex].naturalWidth;
-                    files[fileIndex].naturalWidth = files[fileIndex].naturalHeight;
-                    files[fileIndex].naturalHeight = temp;
+                    files[fileIndex].naturalWidth = files[fileIndex].originalHeight;
+                    files[fileIndex].naturalHeight = files[fileIndex].originalWidth;
                 }
+                
+                updateThumbnailSize(img, files[fileIndex]);
+            }
+        }
+
+        function saveRotation(id) {
+            const fileIndex = files.findIndex(f => f.id === id);
+            if (fileIndex !== -1 && files[fileIndex].type.startsWith('image/')) {
+                const file = files[fileIndex];
+                
+                // Crear un canvas con la rotación aplicada
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Configurar dimensiones del canvas según la rotación
+                if (file.rotation % 180 === 90) {
+                    canvas.width = file.originalHeight;
+                    canvas.height = file.originalWidth;
+                } else {
+                    canvas.width = file.originalWidth;
+                    canvas.height = file.originalHeight;
+                }
+                
+                // Aplicar transformaciones para la rotación
+                ctx.translate(canvas.width / 2, canvas.height / 2);
+                ctx.rotate(file.rotation * Math.PI / 180);
+                
+                // Dibujar la imagen
+                const img = new Image();
+                img.onload = function() {
+                    ctx.drawImage(img, -file.originalWidth / 2, -file.originalHeight / 2, file.originalWidth, file.originalHeight);
+                    
+                    // Actualizar la data de la imagen con la rotación aplicada
+                    file.rotatedData = canvas.toDataURL('image/jpeg');
+                    file.data = file.rotatedData; // Actualizamos también la data principal
+                    
+                    // Actualizar la miniatura
+                    const container = document.getElementById(id);
+                    const thumbImg = container.querySelector('img');
+                    thumbImg.src = file.rotatedData;
+                    updateThumbnailSize(thumbImg, file);
+                    
+                    alert('Rotación guardada correctamente');
+                };
+                img.src = file.data;
             }
         }
 
@@ -355,35 +433,24 @@
                             let width, height;
                             const aspectRatio = file.naturalWidth / file.naturalHeight;
                             
-                            if (file.rotation % 180 === 90) {
-                                // Imagen rotada
-                                const rotatedAspectRatio = file.naturalHeight / file.naturalWidth;
-                                width = pageHeight * rotatedAspectRatio;
+                            width = pageWidth;
+                            height = pageWidth / aspectRatio;
+                            
+                            if (height > pageHeight) {
                                 height = pageHeight;
-                                
-                                if (width > pageWidth) {
-                                    width = pageWidth;
-                                    height = pageWidth / rotatedAspectRatio;
-                                }
-                            } else {
-                                // Imagen normal
-                                width = pageWidth;
-                                height = pageWidth / aspectRatio;
-                                
-                                if (height > pageHeight) {
-                                    height = pageHeight;
-                                    width = pageHeight * aspectRatio;
-                                }
+                                width = pageHeight * aspectRatio;
                             }
                             
                             // Centrar la imagen
                             const x = (pageWidth - width) / 2;
                             const y = (pageHeight - height) / 2;
                             
-                            pdf.addImage(img, 'JPEG', x, y, width, height, null, file.rotation);
+                            // Usar la imagen ya rotada (si se guardó la rotación)
+                            const imageData = file.rotatedData || file.data;
+                            pdf.addImage(imageData, 'JPEG', x, y, width, height);
                             resolve();
                         };
-                        img.src = file.data;
+                        img.src = file.rotatedData || file.data;
                     });
                 }
             }
