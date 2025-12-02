@@ -1,0 +1,1030 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Derriba la Torre - 2 Jugadores</title>
+  <style>
+    :root {
+      --bg: #f6f9fc;
+      --panel: #ffffff;
+      --accent: #1f6feb;
+      --danger: #ff5c5c;
+      --player1-color: #4CAF50;
+      --player2-color: #2196F3;
+      --player1-bg: #f0f9f0;
+      --player2-bg: #f0f8ff;
+    }
+    
+    body {
+      font-family: Inter, system-ui, Arial;
+      margin: 12px;
+      background: var(--bg);
+      color: #111;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    
+    h1 {
+      margin: 0 0 20px;
+      font-size: 24px;
+      text-align: center;
+    }
+    
+    #player-names-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    
+    #player-names-form {
+      background-color: white;
+      padding: 30px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+      min-width: 400px;
+    }
+    
+    #player-names-form h2 {
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+    
+    #player-names-form input {
+      margin: 10px;
+      padding: 12px;
+      width: 250px;
+      font-size: 16px;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    #player-names-form button {
+      margin-top: 20px;
+      padding: 12px 30px;
+      font-size: 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    
+    #player-names-form button:hover {
+      background-color: #45a049;
+    }
+    
+    #game-area {
+      display: flex;
+      gap: 20px;
+      max-width: 1600px;
+      width: 100%;
+      justify-content: center;
+      display: none; /* Oculto hasta que se ingresen los nombres */
+    }
+    
+    .player-container {
+      flex: 1;
+      max-width: 800px;
+      background: var(--panel);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(20,30,50,0.08);
+      transition: background-color 0.5s ease;
+    }
+    
+    .player-container.player1 {
+      background-color: var(--player1-bg);
+    }
+    
+    .player-container.player2 {
+      background-color: var(--player2-bg);
+    }
+    
+    .player-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid;
+    }
+    
+    .player-header.player1 {
+      border-color: var(--player1-color);
+    }
+    
+    .player-header.player2 {
+      border-color: var(--player2-color);
+    }
+    
+    .player-name {
+      font-size: 20px;
+      font-weight: 700;
+      color: #000000 !important; /* Negro para mejor contraste */
+    }
+    
+    .player-name.player1 {
+      color: #000000 !important;
+    }
+    
+    .player-name.player2 {
+      color: #000000 !important;
+    }
+    
+    .score-display {
+      font-size: 24px;
+      font-weight: 700;
+      background: rgba(255,255,255,0.9);
+      padding: 5px 15px;
+      border-radius: 20px;
+      border: 2px solid #000000; /* Borde negro */
+    }
+    
+    .score-display.player1 {
+      border-color: #000000;
+      color: #000000 !important; /* Negro para puntos */
+    }
+    
+    .score-display.player2 {
+      border-color: #000000;
+      color: #000000 !important; /* Negro para puntos */
+    }
+    
+    .canvas-container {
+      position: relative;
+      margin-bottom: 15px;
+    }
+    
+    canvas {
+      background: linear-gradient(180deg, #eaf4ff 0%, #ffffff 100%);
+      display: block;
+      border-radius: 8px;
+      border: 2px solid #d7e7ff;
+      width: 100%;
+      max-width: 720px;
+    }
+    
+    .coordinates-display {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin: 15px 0;
+      font-size: 18px;
+      font-weight: bold;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 8px;
+    }
+    
+    .coord-value {
+      padding: 5px 15px;
+      border-radius: 5px;
+      min-width: 60px;
+      text-align: center;
+      border: 2px solid;
+      color: #000000 !important; /* Negro para coordenadas */
+    }
+    
+    .coord-value.x {
+      background: rgba(76, 175, 80, 0.1);
+      border-color: #4CAF50;
+      color: #000000 !important;
+    }
+    
+    .coord-value.y {
+      background: rgba(33, 150, 243, 0.1);
+      border-color: #2196F3;
+      color: #000000 !important;
+    }
+    
+    .message {
+      margin-top: 10px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      min-height: 20px;
+      text-align: center;
+      color: #000000 !important; /* Negro para mensajes */
+    }
+    
+    .message.player1 {
+      background: rgba(76, 175, 80, 0.1);
+      color: #000000 !important;
+    }
+    
+    .message.player2 {
+      background: rgba(33, 150, 243, 0.1);
+      color: #000000 !important;
+    }
+    
+    .game-info {
+      font-size: 13px;
+      color: #000000 !important; /* Negro para información */
+      margin-top: 10px;
+      line-height: 1.5;
+      text-align: center;
+      font-weight: 500;
+    }
+    
+    .instructions {
+      max-width: 1600px;
+      margin: 30px auto 20px;
+      padding: 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      display: none; /* Oculto hasta que se ingresen los nombres */
+    }
+    
+    .controls-info {
+      display: flex;
+      justify-content: space-between;
+      gap: 30px;
+      margin-top: 15px;
+    }
+    
+    .player-controls {
+      flex: 1;
+      padding: 15px;
+      border-radius: 8px;
+    }
+    
+    .player-controls.player1 {
+      background: rgba(76, 175, 80, 0.05);
+      border-left: 4px solid var(--player1-color);
+    }
+    
+    .player-controls.player2 {
+      background: rgba(33, 150, 243, 0.05);
+      border-left: 4px solid var(--player2-color);
+    }
+    
+    .control-item {
+      margin: 8px 0;
+      display: flex;
+      align-items: center;
+      color: #000000 !important;
+    }
+    
+    .key {
+      display: inline-block;
+      padding: 2px 8px;
+      background: #f0f0f0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-family: monospace;
+      font-weight: bold;
+      margin-right: 10px;
+      min-width: 30px;
+      text-align: center;
+      color: #000000 !important;
+    }
+    
+    #send-results {
+      margin: 20px;
+      padding: 12px 24px;
+      font-size: 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      display: none; /* Oculto hasta que se ingresen los nombres */
+    }
+    
+    #send-results:hover {
+      background-color: #45a049;
+    }
+    
+    #send-results:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+    
+    #status-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1001;
+      display: none;
+    }
+    
+    #status-message {
+      background-color: white;
+      padding: 40px;
+      border-radius: 15px;
+      text-align: center;
+      font-size: 36px;
+      font-weight: bold;
+      color: #155724;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+      min-width: 500px;
+      border: 5px solid #4CAF50;
+    }
+    
+    #status-message.error {
+      color: #721c24;
+      border-color: #f44336;
+    }
+    
+    #status-message.info {
+      color: #0c5460;
+      border-color: #2196F3;
+    }
+  </style>
+</head>
+<body>
+  <!-- Modal para ingresar nombres -->
+  <div id="player-names-modal">
+    <div id="player-names-form">
+      <h2>Ingresa los nombres de los jugadores</h2>
+      <input type="text" id="player1-name-input" placeholder="Nombre del Jugador 1" required>
+      <input type="text" id="player2-name-input" placeholder="Nombre del Jugador 2" required>
+      <button id="start-game">Comenzar Juego</button>
+    </div>
+  </div>
+  
+  <!-- Título -->
+  <h1 id="game-title" style="display: none;">Derriba la Torre - 2 Jugadores</h1>
+  
+  <!-- Área de juego -->
+  <div id="game-area">
+    <!-- Jugador 1 -->
+    <div class="player-container player1" id="player1-container">
+      <div class="player-header player1">
+        <div class="player-name player1" id="player1-name">Jugador 1</div>
+        <div class="score-display player1">Puntos: <span id="score1">0</span></div>
+      </div>
+      
+      <div class="canvas-container">
+        <canvas id="game1" width="720" height="480"></canvas>
+      </div>
+      
+      <div class="coordinates-display">
+        <div>X: <span class="coord-value x" id="coordX1">10</span></div>
+        <div>Y: <span class="coord-value y" id="coordY1">6</span></div>
+      </div>
+      
+      <div class="message player1" id="message1"></div>
+      
+      <div class="game-info">
+        <div>Bloques restantes: <strong id="blocksCount1">0</strong></div>
+        <div>Coordenadas válidas: X: 0-19, Y: 0-11</div>
+      </div>
+    </div>
+    
+    <!-- Jugador 2 -->
+    <div class="player-container player2" id="player2-container">
+      <div class="player-header player2">
+        <div class="player-name player2" id="player2-name">Jugador 2</div>
+        <div class="score-display player2">Puntos: <span id="score2">0</span></div>
+      </div>
+      
+      <div class="canvas-container">
+        <canvas id="game2" width="720" height="480"></canvas>
+      </div>
+      
+      <div class="coordinates-display">
+        <div>X: <span class="coord-value x" id="coordX2">10</span></div>
+        <div>Y: <span class="coord-value y" id="coordY2">6</span></div>
+      </div>
+      
+      <div class="message player2" id="message2"></div>
+      
+      <div class="game-info">
+        <div>Bloques restantes: <strong id="blocksCount2">0</strong></div>
+        <div>Coordenadas válidas: X: 0-19, Y: 0-11</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Instrucciones -->
+  <div class="instructions" id="game-instructions">
+    <h3>Instrucciones del juego</h3>
+    <p>Observa la cuadrícula (origen en la esquina inferior izquierda). Ajusta las coordenadas X e Y usando las teclas y luego lanza la bola. Si golpea una pieza, la pieza y todas las de arriba caen. Sumas 5 puntos cuando derribas TODA la torre. ¡Continúa hasta que no quede ningún bloque!</p>
+    
+    <div class="controls-info">
+      <div class="player-controls player1">
+        <h4>Controles Jugador 1 (Verde)</h4>
+        <div class="control-item"><span class="key">Q</span> Incrementar X</div>
+        <div class="control-item"><span class="key">A</span> Decrementar X</div>
+        <div class="control-item"><span class="key">W</span> Incrementar Y</div>
+        <div class="control-item"><span class="key">S</span> Decrementar Y</div>
+        <div class="control-item"><span class="key">E</span> Lanzar bola</div>
+        <div class="control-item"><span class="key">R</span> Nueva torre</div>
+      </div>
+      
+      <div class="player-controls player2">
+        <h4>Controles Jugador 2 (Azul)</h4>
+        <div class="control-item"><span class="key">I</span> Incrementar X</div>
+        <div class="control-item"><span class="key">K</span> Decrementar X</div>
+        <div class="control-item"><span class="key">O</span> Incrementar Y</div>
+        <div class="control-item"><span class="key">L</span> Decrementar Y</div>
+        <div class="control-item"><span class="key">P</span> Lanzar bola</div>
+        <div class="control-item"><span class="key">;</span> Nueva torre</div>
+      </div>
+    </div>
+    
+    <p style="margin-top: 15px;"><strong>Nota:</strong> El color de fondo de cada jugador cambiará cada 20 puntos (azul, amarillo, verde, rojo, etc.). El texto siempre será negro para mejor visibilidad.</p>
+  </div>
+  
+  <!-- Botón para enviar resultados -->
+  <button id="send-results">Enviar resultados a Google Sheets</button>
+  
+  <!-- Overlay para mensajes de estado -->
+  <div id="status-overlay">
+    <div id="status-message"></div>
+  </div>
+
+  <script>
+    // Configuración del juego
+    const GRID_W = 20;
+    const GRID_H = 12;
+    const CELL = 32;
+    const PADDING = 10;
+    const POINTS_PER_FULL_TOWER = 5;
+    const COLOR_CHANGE_THRESHOLD = 20;
+    
+    // Variables globales
+    let player1Name = "";
+    let player2Name = "";
+    let resultsSent = false;
+    let player1Game, player2Game;
+    
+    // Elementos del DOM
+    const playerNamesModal = document.getElementById('player-names-modal');
+    const gameArea = document.getElementById('game-area');
+    const gameTitle = document.getElementById('game-title');
+    const gameInstructions = document.getElementById('game-instructions');
+    const sendResultsButton = document.getElementById('send-results');
+    const startGameButton = document.getElementById('start-game');
+    
+    // Configurar evento para comenzar juego
+    startGameButton.addEventListener('click', startGame);
+    
+    // También permitir Enter en los inputs
+    document.getElementById('player1-name-input').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') startGameButton.click();
+    });
+    
+    document.getElementById('player2-name-input').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') startGameButton.click();
+    });
+    
+    function startGame() {
+      player1Name = document.getElementById('player1-name-input').value.trim();
+      player2Name = document.getElementById('player2-name-input').value.trim();
+      
+      if (!player1Name || !player2Name) {
+        alert("Por favor ingresa nombres para ambos jugadores");
+        return;
+      }
+      
+      // Ocultar modal y mostrar juego
+      playerNamesModal.style.display = 'none';
+      gameArea.style.display = 'flex';
+      gameTitle.style.display = 'block';
+      gameInstructions.style.display = 'block';
+      sendResultsButton.style.display = 'block';
+      
+      // Actualizar nombres en la interfaz
+      document.getElementById('player1-name').textContent = player1Name;
+      document.getElementById('player2-name').textContent = player2Name;
+      
+      // Inicializar juegos
+      initializeGames();
+    }
+    
+    // Colores intensos para cada nivel de 20 puntos (hasta 300 puntos)
+    const COLOR_LEVELS = [
+      { bg: '#f0f9f0', name: 'Verde claro' }, // 0-19
+      { bg: '#2196F3', name: 'Azul' },        // 20-39
+      { bg: '#FFEB3B', name: 'Amarillo' },    // 40-59
+      { bg: '#4CAF50', name: 'Verde' },       // 60-79
+      { bg: '#FF5722', name: 'Naranja' },     // 80-99
+      { bg: '#F44336', name: 'Rojo' },        // 100-119
+      { bg: '#9C27B0', name: 'Púrpura' },     // 120-139
+      { bg: '#00BCD4', name: 'Cian' },        // 140-159
+      { bg: '#FF9800', name: 'Naranja oscuro' }, // 160-179
+      { bg: '#795548', name: 'Marrón' },      // 180-199
+      { bg: '#607D8B', name: 'Gris azulado' }, // 200-219
+      { bg: '#E91E63', name: 'Rosa' },        // 220-239
+      { bg: '#3F51B5', name: 'Índigo' },      // 240-259
+      { bg: '#009688', name: 'Verde azulado' }, // 260-279
+      { bg: '#8BC34A', name: 'Verde lima' },  // 280-299
+      { bg: '#FFC107', name: 'Ámbar' }        // 300+
+    ];
+    
+    // Clase para manejar cada jugador
+    class PlayerGame {
+      constructor(canvasId, scoreId, messageId, blocksCountId, containerId, 
+                  coordXId, coordYId, playerNumber, playerName) {
+        this.canvas = document.getElementById(canvasId);
+        this.ctx = this.canvas.getContext('2d');
+        this.scoreElement = document.getElementById(scoreId);
+        this.messageElement = document.getElementById(messageId);
+        this.blocksCountElement = document.getElementById(blocksCountId);
+        this.container = document.getElementById(containerId);
+        this.coordXElement = document.getElementById(coordXId);
+        this.coordYElement = document.getElementById(coordYId);
+        this.playerNumber = playerNumber;
+        this.playerName = playerName;
+        
+        // Coordenadas actuales (inicializadas en el centro)
+        this.currentX = 10;
+        this.currentY = 6;
+        
+        // Ajustar tamaño del canvas
+        this.canvas.width = GRID_W * CELL + PADDING * 2 + 40;
+        this.canvas.height = GRID_H * CELL + PADDING * 2 + 40;
+        
+        // Estado del juego
+        this.blocks = [];
+        this.score = 0;
+        this.animating = false;
+        this.launcher = { x: 1, y: 1 };
+        this.colors = playerNumber === 1 ? 
+          { primary: '#4CAF50', secondary: '#2E7D32', bg: '#f0f9f0' } : 
+          { primary: '#2196F3', secondary: '#1565C0', bg: '#f0f8ff' };
+        
+        // Inicializar
+        this.generateStructure();
+        this.drawGrid();
+        this.updateCoordinatesDisplay();
+        
+        // Configurar eventos del canvas
+        this.setupCanvasEvents();
+      }
+      
+      randInt(a, b) {
+        return Math.floor(Math.random() * (b - a + 1)) + a;
+      }
+      
+      generateStructure() {
+        this.blocks = [];
+        const towerCols = this.randInt(3, 6);
+        const startCol = this.randInt(4, GRID_W - towerCols - 2);
+        
+        for (let c = 0; c < towerCols; c++) {
+          const col = startCol + c;
+          const height = this.randInt(2, Math.min(6, GRID_H - 1));
+          for (let r = 0; r < height; r++) {
+            this.blocks.push({ x: col, y: r });
+          }
+        }
+        
+        const floating = this.randInt(1, 4);
+        for (let i = 0; i < floating; i++) {
+          const fx = this.randInt(0, GRID_W - 1);
+          const fy = this.randInt(Math.max(2, Math.floor(GRID_H / 2)), GRID_H - 1);
+          if (!this.blocks.some(b => b.x === fx && b.y === fy)) {
+            this.blocks.push({ x: fx, y: fy });
+          }
+        }
+        
+        this.updateBlocksCount();
+      }
+      
+      updateBlocksCount() {
+        this.blocksCountElement.textContent = this.blocks.length;
+      }
+      
+      updateCoordinatesDisplay() {
+        this.coordXElement.textContent = this.currentX;
+        this.coordYElement.textContent = this.currentY;
+      }
+      
+      adjustX(increment) {
+        this.currentX += increment;
+        this.currentX = Math.max(0, Math.min(GRID_W - 1, this.currentX));
+        this.updateCoordinatesDisplay();
+        this.drawGrid();
+      }
+      
+      adjustY(increment) {
+        this.currentY += increment;
+        this.currentY = Math.max(0, Math.min(GRID_H - 1, this.currentY));
+        this.updateCoordinatesDisplay();
+        this.drawGrid();
+      }
+      
+      gridToPixel(cx, cy) {
+        const x = PADDING + 20 + cx * CELL + CELL / 2;
+        const y = PADDING + (GRID_H * CELL - (cy + 1) * CELL) + CELL / 2;
+        return { x, y };
+      }
+      
+      cellAtPixel(px, py) {
+        const gx = Math.floor((px - (PADDING + 20)) / CELL);
+        const gy = GRID_H - 1 - Math.floor((py - PADDING) / CELL);
+        if (gx < 0 || gx >= GRID_W || gy < 0 || gy >= GRID_H) return null;
+        return { x: gx, y: gy };
+      }
+      
+      areAllBlocksDestroyed() {
+        return this.blocks.length === 0;
+      }
+      
+      launch() {
+        if (this.animating) {
+          this.messageElement.textContent = 'Espera a que termine la animación';
+          setTimeout(() => {
+            this.messageElement.textContent = '';
+          }, 1000);
+          return;
+        }
+        
+        this.messageElement.textContent = `Lanzando a (${this.currentX}, ${this.currentY})...`;
+        this.launchTo(this.currentX, this.currentY);
+      }
+      
+      launchTo(targetX, targetY) {
+        if (this.animating) return;
+        
+        const tx = Math.max(0, Math.min(GRID_W - 1, targetX));
+        const ty = Math.max(0, Math.min(GRID_H - 1, targetY));
+        const start = this.gridToPixel(this.launcher.x, this.launcher.y);
+        const end = this.gridToPixel(tx, ty);
+        const dx = end.x - start.x;
+        const dy = end.y - start.y;
+        const dist = Math.hypot(dx, dy);
+        const steps = Math.max(20, Math.floor(dist / 3));
+        let step = 0;
+        
+        this.animating = true;
+        
+        const animate = () => {
+          step++;
+          const t = step / steps;
+          const arc = Math.sin(Math.PI * t) * Math.min(100, CELL * 4);
+          const px = start.x + dx * t;
+          const py = start.y + dy * t - arc;
+          
+          this.drawGrid();
+          
+          // Dibujar lanzador
+          const lpos = this.gridToPixel(this.launcher.x, this.launcher.y);
+          this.ctx.beginPath();
+          this.ctx.arc(lpos.x, lpos.y, 8, 0, Math.PI * 2);
+          this.ctx.fillStyle = this.colors.primary;
+          this.ctx.fill();
+          
+          // Dibujar proyectil
+          this.ctx.beginPath();
+          this.ctx.arc(px, py, 7, 0, Math.PI * 2);
+          this.ctx.fillStyle = this.playerNumber === 1 ? '#1f6feb' : '#ff5722';
+          this.ctx.fill();
+          this.ctx.strokeStyle = this.playerNumber === 1 ? '#083d77' : '#d84315';
+          this.ctx.stroke();
+          
+          // Verificar colisión
+          const cell = this.cellAtPixel(px, py);
+          if (cell) {
+            const hitIndex = this.blocks.findIndex(b => b.x === cell.x && b.y === cell.y);
+            if (hitIndex !== -1) {
+              const hitX = cell.x;
+              const hitY = cell.y;
+              
+              // Eliminar todos los bloques en la misma columna desde la Y del impacto hacia arriba
+              this.blocks = this.blocks.filter(b => !(b.x === hitX && b.y >= hitY));
+              
+              const allDestroyed = this.areAllBlocksDestroyed();
+              
+              if (allDestroyed) {
+                // Sumar puntos por derribar toda la torre
+                this.score += POINTS_PER_FULL_TOWER;
+                this.scoreElement.textContent = this.score;
+                this.messageElement.textContent = `¡Torre completamente derribada! +${POINTS_PER_FULL_TOWER} puntos`;
+                this.updatePlayerColor();
+              } else {
+                this.messageElement.textContent = '¡Impacto! Bloques eliminados';
+              }
+              
+              this.animating = false;
+              this.drawGrid();
+              this.updateBlocksCount();
+              
+              if (allDestroyed) {
+                setTimeout(() => {
+                  this.messageElement.textContent = '¡Perfecto! Generando nueva torre...';
+                  setTimeout(() => {
+                    this.generateStructure();
+                    this.drawGrid();
+                    this.updateCoordinatesDisplay();
+                    this.messageElement.textContent = 'Nueva torre lista. ¡Continúa!';
+                    setTimeout(() => {
+                      this.messageElement.textContent = '';
+                    }, 1500);
+                  }, 1000);
+                }, 1000);
+              } else {
+                setTimeout(() => {
+                  this.messageElement.textContent = `Bloques restantes: ${this.blocks.length}`;
+                  setTimeout(() => {
+                    this.messageElement.textContent = '';
+                  }, 1000);
+                }, 800);
+              }
+              return;
+            }
+          }
+          
+          if (step < steps) {
+            requestAnimationFrame(animate);
+          } else {
+            this.animating = false;
+            this.drawGrid();
+            this.messageElement.textContent = 'Fallaste. Intenta de nuevo.';
+            setTimeout(() => {
+              this.messageElement.textContent = '';
+            }, 1000);
+          }
+        };
+        
+        requestAnimationFrame(animate);
+      }
+      
+      drawGrid() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.save();
+        this.ctx.translate(0, 0);
+        
+        // Fondo
+        this.ctx.fillStyle = '#f8fbff';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.translate(PADDING + 20, PADDING);
+        
+        // Cuadrícula
+        this.ctx.fillStyle = '#fff';
+        this.ctx.fillRect(0, 0, GRID_W * CELL, GRID_H * CELL);
+        
+        // Líneas de la cuadrícula
+        this.ctx.strokeStyle = '#e5eefb';
+        this.ctx.lineWidth = 1;
+        for (let i = 0; i <= GRID_W; i++) {
+          this.ctx.beginPath();
+          this.ctx.moveTo(i * CELL, 0);
+          this.ctx.lineTo(i * CELL, GRID_H * CELL);
+          this.ctx.stroke();
+        }
+        for (let j = 0; j <= GRID_H; j++) {
+          this.ctx.beginPath();
+          this.ctx.moveTo(0, j * CELL);
+          this.ctx.lineTo(GRID_W * CELL, j * CELL);
+          this.ctx.stroke();
+        }
+        
+        // Números de los ejes
+        this.ctx.fillStyle = '#000000'; // Negro para mejor contraste
+        this.ctx.font = 'bold 12px sans-serif';
+        for (let i = 0; i < GRID_W; i++) {
+          this.ctx.fillText(i, i * CELL + CELL / 2 - 4, GRID_H * CELL + 14);
+        }
+        for (let j = 0; j < GRID_H; j++) {
+          this.ctx.fillText(j, -14, GRID_H * CELL - j * CELL - CELL / 2 + 4);
+        }
+        
+        // Bloques
+        for (const b of this.blocks) {
+          const sx = b.x * CELL;
+          const sy = GRID_H * CELL - (b.y + 1) * CELL;
+          this.ctx.fillStyle = this.playerNumber === 1 ? '#d39e3f' : '#9c27b0';
+          this.ctx.fillRect(sx + 4, sy + 4, CELL - 8, CELL - 8);
+          this.ctx.strokeStyle = this.playerNumber === 1 ? '#b57727' : '#7b1fa2';
+          this.ctx.strokeRect(sx + 4, sy + 4, CELL - 8, CELL - 8);
+        }
+        
+        this.ctx.restore();
+        
+        // Lanzador
+        const lpos = this.gridToPixel(this.launcher.x, this.launcher.y);
+        this.ctx.beginPath();
+        this.ctx.arc(lpos.x, lpos.y, 10, 0, Math.PI * 2);
+        this.ctx.fillStyle = this.colors.primary;
+        this.ctx.fill();
+        this.ctx.fillStyle = '#000000'; // Negro para la 'L'
+        this.ctx.font = 'bold 11px sans-serif';
+        this.ctx.fillText('L', lpos.x - 4, lpos.y + 4);
+        
+        this.updateBlocksCount();
+      }
+      
+      setupCanvasEvents() {
+        // Click en el canvas para establecer coordenadas
+        this.canvas.addEventListener('click', (ev) => {
+          const rect = this.canvas.getBoundingClientRect();
+          const px = ev.clientX - rect.left;
+          const py = ev.clientY - rect.top;
+          const cell = this.cellAtPixel(px, py);
+          if (cell) {
+            this.currentX = cell.x;
+            this.currentY = cell.y;
+            this.updateCoordinatesDisplay();
+            this.drawGrid();
+          }
+        });
+      }
+      
+      updatePlayerColor() {
+        // Determinar el nivel de color basado en los puntos
+        const level = Math.floor(this.score / COLOR_CHANGE_THRESHOLD);
+        
+        // Usar el nivel correspondiente o el último si es mayor
+        const colorLevel = Math.min(level, COLOR_LEVELS.length - 1);
+        
+        // Aplicar el color de fondo intenso
+        this.container.style.backgroundColor = COLOR_LEVELS[colorLevel].bg;
+        
+        // Asegurarse de que el texto sea negro para buen contraste
+        this.container.style.color = '#000000';
+        
+        // Mostrar información sobre el nivel actual
+        this.messageElement.textContent = `${this.messageElement.textContent} (Nivel ${level + 1}: ${COLOR_LEVELS[colorLevel].name})`;
+      }
+      
+      reset() {
+        this.generateStructure();
+        this.drawGrid();
+        this.messageElement.textContent = 'Nueva torre generada';
+        setTimeout(() => {
+          this.messageElement.textContent = '';
+        }, 1500);
+      }
+      
+      getScore() {
+        return this.score;
+      }
+    }
+    
+    // Inicializar juegos
+    function initializeGames() {
+      player1Game = new PlayerGame('game1', 'score1', 'message1', 'blocksCount1', 
+                                   'player1-container', 'coordX1', 'coordY1', 1, player1Name);
+      player2Game = new PlayerGame('game2', 'score2', 'message2', 'blocksCount2', 
+                                   'player2-container', 'coordX2', 'coordY2', 2, player2Name);
+    }
+    
+    // Controles de teclado globales
+    document.addEventListener('keydown', (e) => {
+      const key = e.key.toLowerCase();
+      
+      // Solo procesar teclas si el juego está activo
+      if (playerNamesModal.style.display === 'flex') return;
+      
+      // Jugador 1 - Controles WASD + QE + R
+      if (key === 'q') {
+        // Incrementar X
+        player1Game.adjustX(1);
+        e.preventDefault();
+      } else if (key === 'a') {
+        // Decrementar X
+        player1Game.adjustX(-1);
+        e.preventDefault();
+      } else if (key === 'w') {
+        // Incrementar Y
+        player1Game.adjustY(1);
+        e.preventDefault();
+      } else if (key === 's') {
+        // Decrementar Y
+        player1Game.adjustY(-1);
+        e.preventDefault();
+      } else if (key === 'e') {
+        // Lanzar
+        player1Game.launch();
+        e.preventDefault();
+      } else if (key === 'r') {
+        // Nueva torre
+        player1Game.reset();
+        e.preventDefault();
+      }
+      
+      // Jugador 2 - Controles I K O L P ;
+      if (key === 'i') {
+        // Incrementar X
+        player2Game.adjustX(1);
+        e.preventDefault();
+      } else if (key === 'k') {
+        // Decrementar X
+        player2Game.adjustX(-1);
+        e.preventDefault();
+      } else if (key === 'o') {
+        // Incrementar Y
+        player2Game.adjustY(1);
+        e.preventDefault();
+      } else if (key === 'l') {
+        // Decrementar Y
+        player2Game.adjustY(-1);
+        e.preventDefault();
+      } else if (key === 'p') {
+        // Lanzar
+        player2Game.launch();
+        e.preventDefault();
+      } else if (key === ';' || key === 'ñ') {
+        // Nueva torre (para teclado español)
+        player2Game.reset();
+        e.preventDefault();
+      }
+    });
+    
+    // Función para enviar resultados a Google Sheets
+    document.getElementById('send-results').addEventListener('click', sendResultsToGoogleSheets);
+    
+    function sendResultsToGoogleSheets() {
+      const sendButton = document.getElementById('send-results');
+      const statusMessage = document.getElementById('status-message');
+      const statusOverlay = document.getElementById('status-overlay');
+      
+      // Verificar si ya se enviaron los resultados
+      if (resultsSent) {
+        statusMessage.textContent = "¡Los resultados ya fueron enviados!";
+        statusMessage.className = "info";
+        statusOverlay.style.display = 'flex';
+        setTimeout(() => {
+          statusOverlay.style.display = 'none';
+        }, 3000);
+        return;
+      }
+      
+      const score1 = player1Game ? player1Game.getScore() : 0;
+      const score2 = player2Game ? player2Game.getScore() : 0;
+      const timestamp = new Date().toLocaleString();
+      
+      const data = {
+        player1: "Angry " + player1Name,
+        score1: score1,
+        player2: "Angry " + player2Name,
+        score2: score2,
+        timestamp: timestamp
+      };
+      
+      // Deshabilitar el botón inmediatamente y marcar como enviado
+      resultsSent = true;
+      sendButton.disabled = true;
+      sendButton.textContent = "Resultados enviados";
+      
+      // Mostrar mensaje de "enviando" en el centro de la pantalla
+      statusMessage.textContent = "ENVIANDO RESULTADOS...";
+      statusMessage.className = "info";
+      statusOverlay.style.display = 'flex';
+      
+      // URL del Web App de Google Apps Script
+      const scriptUrl = "https://script.google.com/macros/s/AKfycbwVPttSZrhwfWwSZpFo7KWjJ39vldQm3MPGykMWEPWOoF4UsZ24mC8YhgiaE-0xm_7G/exec";
+      
+      fetch(scriptUrl, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data)
+      })
+      .then(() => {
+        statusMessage.textContent = "¡RESULTADOS ENVIADOS CORRECTAMENTE!";
+        statusMessage.className = "success";
+        // Mantener el mensaje visible por 5 segundos
+        setTimeout(() => {
+          statusOverlay.style.display = 'none';
+        }, 5000);
+      })
+      .catch(error => {
+        statusMessage.textContent = "ERROR AL ENVIAR RESULTADOS";
+        statusMessage.className = "error";
+        console.error("Error:", error);
+        
+        // Rehabilitar el botón en caso de error
+        resultsSent = false;
+        sendButton.disabled = false;
+        sendButton.textContent = "Enviar resultados a Google Sheets";
+        
+        // Ocultar el mensaje después de 3 segundos
+        setTimeout(() => {
+          statusOverlay.style.display = 'none';
+        }, 3000);
+      });
+    }
+  </script>
+</body>
+</html>
