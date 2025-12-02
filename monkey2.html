@@ -1,10 +1,11 @@
 <!DOCTYPE html>
+<!-- saved from url=(0041)https://delatj.github.io/web/monkey2.html -->
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Donkey Kong - 2 Jugadores</title>
-    <script src="https://cdn.jsdelivr.net/npm/p5@1.6.0/lib/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
     <style>
         body {
             display: flex;
@@ -25,7 +26,8 @@
         }
         #game-container {
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
+            align-items: center;
             width: 900px;
         }
         #game-area {
@@ -37,11 +39,11 @@
         #key-display {
             display: flex;
             justify-content: space-between;
-            width: 900px;
+            width: 700px;
             margin-top: 10px;
         }
         #key-display div {
-            width: 100px;
+            width: 320px;
             padding: 10px;
             background-color: #f0f0f0;
             border: 1px solid #ccc;
@@ -52,6 +54,7 @@
             font-size: 14px;
             color: #333;
             text-align: center;
+            width: 700px;
         }
         #example {
             margin-top: 20px;
@@ -62,6 +65,7 @@
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
+            width: 700px;
         }
         #player-zones {
             display: flex;
@@ -93,14 +97,47 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            transition: background-color 0.3s;
         }
         #send-results:hover {
             background-color: #45a049;
         }
+        #send-results:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        #status-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+            display: none;
+        }
         #status-message {
-            margin-top: 10px;
-            color: #333;
+            background-color: white;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 36px;
             font-weight: bold;
+            color: #155724;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            min-width: 500px;
+            border: 5px solid #4CAF50;
+        }
+        #status-message.error {
+            color: #721c24;
+            border-color: #f44336;
+        }
+        #status-message.info {
+            color: #0c5460;
+            border-color: #2196F3;
         }
         #player-names-modal {
             position: fixed;
@@ -116,79 +153,98 @@
         }
         #player-names-form {
             background-color: white;
-            padding: 20px;
+            padding: 30px;
             border-radius: 10px;
             text-align: center;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
         }
         #player-names-form h2 {
             margin-top: 0;
+            margin-bottom: 20px;
         }
         #player-names-form input {
             margin: 10px;
-            padding: 8px;
-            width: 200px;
+            padding: 12px;
+            width: 250px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
         }
         #player-names-form button {
-            margin-top: 10px;
-            padding: 10px 20px;
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 16px;
             background-color: #4CAF50;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
         }
+        #player-names-form button:hover {
+            background-color: #45a049;
+        }
     </style>
 </head>
 <body>
-    <div id="player-names-modal">
+    <div id="player-names-modal" style="display: flex;">
         <div id="player-names-form">
             <h2>Ingresa los nombres de los jugadores</h2>
-            <input type="text" id="player1-name" placeholder="Nombre del Jugador 1" required>
-            <input type="text" id="player2-name" placeholder="Nombre del Jugador 2" required>
+            <input type="text" id="player1-name" placeholder="Nombre del Jugador 1" required="">
+            <input type="text" id="player2-name" placeholder="Nombre del Jugador 2" required="">
             <button id="start-game">Comenzar Juego</button>
         </div>
+    </div>
+
+    <div id="status-overlay">
+        <div id="status-message"></div>
     </div>
 
     <div id="player-zones">
         <div id="player1-zone"></div>
         <div id="player2-zone"></div>
     </div>
+    
     <h1>Donkey Kong - Modo 2 Jugadores</h1>
     <div id="scoreboard">
         <div>Jugador 1: <span id="score1">0</span> puntos</div>
         <div>Jugador 2: <span id="score2">0</span> puntos</div>
     </div>
+    
     <div id="game-container">
         <div id="game-area"></div>
         <div id="key-display">
-            <div id="keys1">Secuencia: </div>
-            <div id="keys2">Secuencia: </div>
+            <div id="keys1">Secuencia Jugador 1: </div>
+            <div id="keys2">Secuencia Jugador 2: </div>
         </div>
     </div>
+    
     <div id="instructions">
         <h3>Controles</h3>
         <p><strong>Jugador 1 (izquierda):</strong> A (izquierda), D (derecha), W (subir), S (bajar), Q (recoger), E (volver a inicio)</p>
         <p><strong>Jugador 2 (derecha):</strong> ← (izquierda), → (derecha), ↑ (subir), ↓ (bajar), P (recoger), I (volver a inicio)</p>
         <p>Introduce una secuencia de teclas y pulsa <strong>X</strong> (Jugador 1) o <strong>M</strong> (Jugador 2) para ejecutarla.</p>
     </div>
+    
     <div id="example">
         <h3>Ejemplo</h3>
         <p>Para coger la bola amarilla a dos pasos a la derecha:</p>
         <p><strong>d (derecha) d (derecha) q (coger) x (ejecutar)</strong></p>
     </div>
+    
     <button id="send-results">Enviar resultados a Google Sheets</button>
-    <div id="status-message"></div>
+
     <script>
-        let mono1 = { x: 150, y: 400, visualX: 150, visualY: 400, puntos: 0, path: [], initialPos: { x: 150, y: 400 } };
-        let mono2 = { x: 550, y: 400, visualX: 550, visualY: 400, puntos: 0, path: [], initialPos: { x: 550, y: 400 } };
-        let tonel1 = { x: 200, y: 400 };
-        let tonel2 = { x: 500, y: 400 };
+        let mono1 = { x: 100, y: 400, visualX: 100, visualY: 400, puntos: 0, path: [], initialPos: { x: 100, y: 400 } };
+        let mono2 = { x: 600, y: 400, visualX: 600, visualY: 400, puntos: 0, path: [], initialPos: { x: 600, y: 400 } };
+        let tonel1 = { x: 150, y: 400 };
+        let tonel2 = { x: 550, y: 400 };
         let ladders1 = [];
         let ladders2 = [];
         let sequence1 = [];
         let sequence2 = [];
         let player1Name = "";
         let player2Name = "";
+        let resultsSent = false;
 
         const colorMap = {
             20: "blue",
@@ -204,14 +260,14 @@
             let canvas = createCanvas(700, 450);
             canvas.parent('game-area');
             
-            // Mostrar el modal para ingresar nombres
-            document.getElementById('player-names-modal').style.display = 'flex';
-            
             // Configurar el botón de comenzar juego
             document.getElementById('start-game').addEventListener('click', startGame);
             
             // Configurar el botón de enviar resultados
             document.getElementById('send-results').addEventListener('click', sendResultsToGoogleSheets);
+            
+            // Generar las escaleras iniciales
+            generateRandomLadders();
         }
 
         function startGame() {
@@ -230,52 +286,112 @@
             // Ocultar el modal
             document.getElementById('player-names-modal').style.display = 'none';
             
-            // Generar las escaleras aleatorias
+            // Resetear puntuaciones
+            mono1.puntos = 0;
+            mono2.puntos = 0;
+            mono1.x = mono1.initialPos.x;
+            mono1.y = mono1.initialPos.y;
+            mono1.visualX = mono1.initialPos.x;
+            mono1.visualY = mono1.initialPos.y;
+            mono1.path = [];
+            mono2.x = mono2.initialPos.x;
+            mono2.y = mono2.initialPos.y;
+            mono2.visualX = mono2.initialPos.x;
+            mono2.visualY = mono2.initialPos.y;
+            mono2.path = [];
+            
+            // Actualizar marcadores
+            document.getElementById('score1').innerText = "0";
+            document.getElementById('score2').innerText = "0";
+            
+            // Resetear colores de zonas
+            document.getElementById('player1-zone').style.backgroundColor = "white";
+            document.getElementById('player2-zone').style.backgroundColor = "white";
+            
+            // Generar nuevas escaleras
             generateRandomLadders();
+            
+            // Resetear el estado de envío de resultados
+            resultsSent = false;
+            document.getElementById('send-results').disabled = false;
+            document.getElementById('send-results').textContent = "Enviar resultados a Google Sheets";
+            document.getElementById('status-overlay').style.display = 'none';
         }
 
         function draw() {
             background(220);
-            drawGame(mono1, tonel1, ladders1, 0, width / 2);
-            drawGame(mono2, tonel2, ladders2, width / 2, width);
-            stroke(0);
-            line(width / 2, 0, width / 2, height);
-        }
-
-        function drawGame(mono, tonel, ladders, xStart, xEnd) {
+            
+            // Dibujar plataformas
             fill(200);
             for (let i = 0; i < 4; i++) {
-                rect(xStart, i * 112.5, xEnd - xStart, 112.5);
+                rect(0, i * 112.5, width, 112.5);
             }
+            
+            // Dibujar escaleras del jugador 1
             fill(150);
-            for (let ladder of ladders) {
+            for (let ladder of ladders1) {
                 rect(ladder.x, ladder.y, 40, 112.5);
             }
+            
+            // Dibujar escaleras del jugador 2
+            for (let ladder of ladders2) {
+                rect(ladder.x, ladder.y, 40, 112.5);
+            }
+            
+            // Dibujar toneles
             fill(255, 204, 0);
-            ellipse(tonel.x, tonel.y + 15, 30, 30);
-
-            if (mono.path.length > 0) {
+            ellipse(tonel1.x, tonel1.y + 15, 30, 30);
+            ellipse(tonel2.x, tonel2.y + 15, 30, 30);
+            
+            // Dibujar rutas
+            if (mono1.path.length > 0) {
                 noFill();
                 stroke(255, 0, 0);
                 beginShape();
-                for (let pos of mono.path) {
+                for (let pos of mono1.path) {
                     vertex(pos.x, pos.y);
                 }
                 endShape();
             }
-
+            
+            if (mono2.path.length > 0) {
+                noFill();
+                stroke(0, 0, 255);
+                beginShape();
+                for (let pos of mono2.path) {
+                    vertex(pos.x, pos.y);
+                }
+                endShape();
+            }
+            
+            // Dibujar personajes
             fill(100, 100, 255);
-            ellipse(mono.visualX, mono.visualY + 15, 30, 30);
+            ellipse(mono1.visualX, mono1.visualY + 15, 30, 30);
+            fill(255, 100, 100);
+            ellipse(mono2.visualX, mono2.visualY + 15, 30, 30);
+            
+            // Línea divisoria
+            stroke(0);
+            line(width / 2, 0, width / 2, height);
         }
 
         function generateRandomLadders() {
             ladders1 = [];
             ladders2 = [];
+            
+            // Generar 3 escaleras para cada jugador en posiciones aleatorias
             for (let i = 1; i < 4; i++) {
-                const x1 = random([50, 100, 150]);
-                const x2 = random([450, 500, 550]);
-                ladders1.push({ x: x1, y: 450 - i * 112.5 });
-                ladders2.push({ x: x2, y: 450 - i * 112.5 });
+                const yPos = 450 - i * 112.5;
+                
+                // Escaleras para jugador 1 (lado izquierdo)
+                const x1Options = [50, 100, 150, 200];
+                const x1 = x1Options[Math.floor(Math.random() * x1Options.length)];
+                ladders1.push({ x: x1, y: yPos });
+                
+                // Escaleras para jugador 2 (lado derecho)
+                const x2Options = [500, 550, 600, 650];
+                const x2 = x2Options[Math.floor(Math.random() * x2Options.length)];
+                ladders2.push({ x: x2, y: yPos });
             }
         }
 
@@ -287,23 +403,23 @@
 
             if (key === 'a' || key === 'd' || key === 'w' || key === 's' || key === 'q') {
                 sequence1.push(key);
-                document.getElementById('keys1').innerText = "Secuencia: " + sequence1.join(" ");
+                document.getElementById('keys1').innerText = "Secuencia " + player1Name + ": " + sequence1.join(" ");
             }
             if (key === 'ArrowLeft' || key === 'ArrowRight' || key === 'ArrowUp' || key === 'ArrowDown' || key === 'p') {
                 sequence2.push(key);
-                document.getElementById('keys2').innerText = "Secuencia: " + sequence2.join(" ");
+                document.getElementById('keys2').innerText = "Secuencia " + player2Name + ": " + sequence2.join(" ");
             }
 
             if (key === 'x') {
                 executeSequence(mono1, sequence1, 0, width / 2, tonel1, 'score1', ladders1);
                 sequence1 = [];
-                document.getElementById('keys1').innerText = "Secuencia: ";
+                document.getElementById('keys1').innerText = "Secuencia " + player1Name + ": ";
             }
 
             if (key === 'm') {
                 executeSequence(mono2, sequence2, width / 2, width, tonel2, 'score2', ladders2);
                 sequence2 = [];
-                document.getElementById('keys2').innerText = "Secuencia: ";
+                document.getElementById('keys2').innerText = "Secuencia " + player2Name + ": ";
             }
 
             if (key === 'e') {
@@ -324,6 +440,8 @@
         }
 
         function executeSequence(mono, sequence, xStart, xEnd, tonel, scoreId, ladders) {
+            if (sequence.length === 0) return;
+            
             let delay = 500;
             let index = 0;
 
@@ -346,6 +464,7 @@
                         if (dist(mono.x, mono.y, tonel.x, tonel.y) < 30) {
                             mono.puntos++;
                             document.getElementById(scoreId).innerText = mono.puntos;
+                            // Reposicionar tonel en una posición aleatoria dentro de la zona del jugador
                             tonel.x = random(xStart + 50, xEnd - 50);
                             tonel.y = random(100, 400);
                             updateZoneColor(mono.puntos, scoreId);
@@ -390,9 +509,28 @@
 
         // Función para enviar resultados a Google Sheets
         function sendResultsToGoogleSheets() {
+            const sendButton = document.getElementById('send-results');
+            const statusMessage = document.getElementById('status-message');
+            const statusOverlay = document.getElementById('status-overlay');
+            
+            // Verificar si ya se enviaron los resultados
+            if (resultsSent) {
+                statusMessage.textContent = "¡Los resultados ya fueron enviados!";
+                statusMessage.className = "info";
+                statusOverlay.style.display = 'flex';
+                setTimeout(() => {
+                    statusOverlay.style.display = 'none';
+                }, 3000);
+                return;
+            }
+            
             if (!player1Name || !player2Name) {
-                document.getElementById('status-message').textContent = "Error: No se han definido los nombres de los jugadores";
-                document.getElementById('status-message').style.color = "red";
+                statusMessage.textContent = "Error: No se han definido los nombres de los jugadores";
+                statusMessage.className = "error";
+                statusOverlay.style.display = 'flex';
+                setTimeout(() => {
+                    statusOverlay.style.display = 'none';
+                }, 3000);
                 return;
             }
 
@@ -400,7 +538,7 @@
             const score2 = mono2.puntos;
             const timestamp = new Date().toLocaleString();
 
-            // Modificación: Añadir "Tetris" delante de los nombres de los jugadores
+            // Modificación: Añadir "Monkey2" delante de los nombres de los jugadores
             const data = {
                 player1: "Monkey2 " + player1Name,
                 score1: score1,
@@ -409,8 +547,15 @@
                 timestamp: timestamp
             };
 
-            document.getElementById('status-message').textContent = "Enviando datos...";
-            document.getElementById('status-message').style.color = "blue";
+            // Deshabilitar el botón inmediatamente y marcar como enviado
+            resultsSent = true;
+            sendButton.disabled = true;
+            sendButton.textContent = "Resultados enviados";
+            
+            // Mostrar mensaje de "enviando" en el centro de la pantalla
+            statusMessage.textContent = "ENVIANDO RESULTADOS...";
+            statusMessage.className = "info";
+            statusOverlay.style.display = 'flex';
 
             // URL del Web App de Google Apps Script
             const scriptUrl = "https://script.google.com/macros/s/AKfycbwVPttSZrhwfWwSZpFo7KWjJ39vldQm3MPGykMWEPWOoF4UsZ24mC8YhgiaE-0xm_7G/exec";
@@ -424,13 +569,27 @@
                 body: JSON.stringify(data)
             })
             .then(() => {
-                document.getElementById('status-message').textContent = "Resultados enviados correctamente!";
-                document.getElementById('status-message').style.color = "green";
+                statusMessage.textContent = "¡RESULTADOS ENVIADOS CORRECTAMENTE!";
+                statusMessage.className = "success";
+                // Mantener el mensaje visible por 5 segundos
+                setTimeout(() => {
+                    statusOverlay.style.display = 'none';
+                }, 5000);
             })
             .catch(error => {
-                document.getElementById('status-message').textContent = "Error al enviar resultados: " + error.message;
-                document.getElementById('status-message').style.color = "red";
+                statusMessage.textContent = "ERROR AL ENVIAR RESULTADOS";
+                statusMessage.className = "error";
                 console.error("Error:", error);
+                
+                // Rehabilitar el botón en caso de error
+                resultsSent = false;
+                sendButton.disabled = false;
+                sendButton.textContent = "Enviar resultados a Google Sheets";
+                
+                // Ocultar el mensaje después de 3 segundos
+                setTimeout(() => {
+                    statusOverlay.style.display = 'none';
+                }, 3000);
             });
         }
     </script>
