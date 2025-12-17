@@ -960,7 +960,7 @@ function ClearTextBoxes(){
 var CurrQNum = 0;
 var CorrectIndicator = ' ';
 var IncorrectIndicator = ' ';
-var YourScoreIs = 'Tu puntuaci&#x00F3;n es:';
+var YourScoreIs = ':';
 
 //New for 6.2.2.0
 var CompletedSoFar = 'Questions completed so far: ';
@@ -1411,7 +1411,14 @@ function CheckFinished(){
 	
 //Report final score and submit if necessary
 		CalculateOverallScore();
-		FB = YourScoreIs + ' ' + Score + '%.';
+		
+    FB = '<span style="font-size: 325px; font-weight: bold; color: red;">' + YourScoreIs + ' ' + Score + '%.</span>';
+    if (Score >= 0 && Score <= 20) { document.body.style.backgroundColor = "lightblue"; }
+    else if (Score > 20 && Score <= 40) { document.body.style.backgroundColor = "lightgreen"; }
+    else if (Score > 40 && Score <= 60) { document.body.style.backgroundColor = "yellow"; }
+    else if (Score > 60 && Score <= 80) { document.body.style.backgroundColor = "orange"; }
+    else if (Score > 80 && Score <= 100) { document.body.style.backgroundColor = "red"; }
+                    
 		if (ShowCorrectFirstTime == true){
 			var CFT = 0;
 			for (QNum=0; QNum<State.length; QNum++){
@@ -1856,7 +1863,7 @@ function DownTime(){
 
 </head>
 
-<body onload="StartUp()" id="TheBody" >
+<body style="background-color: lightgrey;" onload="StartUp()" id="TheBody" >
 
 <!-- BeginTopNavButtons -->
 
