@@ -3,53 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modificar Test Hot Potatoes</title>
+    <title>Modificar Test Hot Potatoes - ZIP Corregido</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 30px; background-color: #f0f2f5; text-align: center; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }
+        h2 { color: #1a73e8; }
+        input[type="file"] { margin: 20px 0; }
+        button { background-color: #1a73e8; color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #1557b0; }
+        #status { margin-top: 15px; color: #5f6368; }
+    </style>
 </head>
 <body>
+
+<div class="card">
     <h2>Modificar Test Hot Potatoes</h2>
-    <input type="file" id="fileInput" accept=".htm" multiple>
-    <button onclick="modifyAndDownload()">Modificar y Descargar</button>
+    <p>Selecciona los archivos .htm para aplicar el fondo gris y colores dinámicos por nota.</p>
     
-    <script>
-        function modifyAndDownload() {
-            const fileInput = document.getElementById('fileInput');
-            if (fileInput.files.length === 0) {
-                alert('Por favor, selecciona al menos un archivo.');
-                return;
-            }
-            
-            Array.from(fileInput.files).forEach(file => {
-                const reader = new FileReader();
-                
-                reader.onload = function(event) {
-                    let content = event.target.result;
-                    
-                    // Reemplazar la sección específica en el código JavaScript del archivo
-                    content = content.replace(
-                        /if \(AllDone == true\)\{[\s\S]*?ShowMessage\(Feedback\);/g,
-                        `if (AllDone == true){
-                            Feedback = '<span style="font-size: 325px; font-weight: bold; color: red;">' + ' ' + Score + '%.</span>';
-                        }
-                        else {
-                            Feedback = '<span style="font-size: 325px; font-weight: bold; color: red;">'  + ' ' + Score + '%.</span>';
-                        }
-                        ShowMessage(Feedback);`
-                    );
-                    
-                    // Crear un Blob y forzar la descarga con el mismo nombre original
-                    const blob = new Blob([content], { type: 'text/html' });
-                    const a = document.createElement('a');
-                    a.href = URL.createObjectURL(blob);
-                    a.download = file.name; // Mantener el mismo nombre del archivo original
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                };
-                
-                reader.readAsText(file);
-            });
+    <input type="file" id="fileInput" accept=".htm,.html" multiple="">
+    <br>
+    <button id="btnProcesar">Modificar y Descargar ZIP</button>
+    <div id="status"></div>
+</div>
+
+<script>
+    document.getElementById('btnProcesar').addEventListener('click', async function() {
+        const fileInput = document.getElementById('fileInput');
+        const status = document.getElementById('status');
+
+        if (fileInput.files.length === 0) {
+            alert('Por favor, selecciona al menos un archivo.');
+            return;
         }
-    </script>
+
+        const zip = new JSZip();
+        status.innerText = "Procesando...";
+        
+        const files = Array.from(fileInput.files);
+
+        for (const file of files) {
+            const content = await file.text();
+            
+            // 1. Establecer color de fondo inicial Gris Claro
+            let modifiedContent = content.replace(/<body/i, '<body style="background-color: lightgrey;"');
+
+            // 2. Definir la lógica de colores y feedback gigante
+            // Usamos strings normales para evitar conflictos de sintaxis
+            const colorLogic = 
+                'var bgColor = "lightgrey"; ' +
+                'if (Score >= 0 && Score <= 20) { bgColor = "lightblue"; } ' +
+                'else if (Score > 20 && Score <= 40) { bgColor = "lightgreen"; } ' +
+                'else if (Score > 40 && Score <= 60) { bgColor = "yellow"; } ' +
+                'else if (Score > 60 && Score <= 80) { bgColor = "orange"; } ' +
+                'else if (Score > 80 && Score <= 100) { bgColor = "red"; } ' +
+                'document.body.style.backgroundColor = bgColor; ' +
+                'Feedback = \'<span style="font-size: 325px; font-weight: bold; color: red;">\' + \' \' + Score + \'%.</span>\';';
+
+            // 3. Reemplazar la lógica de finalización respetando la estructura de Hot Potatoes
+            modifiedContent = modifiedContent.replace(
+                /if \(AllDone == true\)\{[\s\S]*?ShowMessage\(Feedback\);/g,
+                'if (AllDone == true){ ' + colorLogic + ' } else { ' + colorLogic + ' } ShowMessage(Feedback);'
+            );
+
+            // Añadir al ZIP manteniendo el nombre original del archivo
+            zip.file(file.name, modifiedContent);
+        }
+
+        // Generar y descargar el ZIP
+        zip.generateAsync({ type: "blob" }).then(function(zipContent) {
+            const url = URL.createObjectURL(zipContent);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "tests_modificados.zip";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            status.innerText = "¡Completado! Se han procesado " + files.length + " archivos.";
+        });
+    });
+</script>
+
 </body>
 </html>
-
