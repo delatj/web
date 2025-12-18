@@ -39,7 +39,7 @@ TEMA: Introducci&#x00F3;n a la programaci&#x00F3;n
 	--strFontFace:       Geneva,Arial,sans-serif;
 	--strFontSize:       small;
 	--strTextColor:      #000000;
-	--strTitleColor:     #000000;
+	--strTitleColor:     #ffffff;
 
 	--strFuncLightColor: #ffffff;
 	--strFuncShadeColor: #7f7f7f;
@@ -51,7 +51,7 @@ TEMA: Introducci&#x00F3;n a la programaci&#x00F3;n
 	--strNavShadeColor:  #000000;
 	--strNavTextColor:   #ffffff;
 	
-	--strPageBGColor:    rgb(30, 240, 255);
+	--strPageBGColor:    #408080;
 	--strExBGColor:      #ffffff;
 }
 
@@ -1401,7 +1401,17 @@ function CheckFinished(){
 	
 //Report final score and submit if necessary
 		CalculateOverallScore();
-		FB = '<span style="font-size: 325px; font-weight: bold; color: red;">' + YourScoreIs + ' ' + Score + '%.</span>';
+		
+                var bgColor = "lightgrey";
+                if (Score >= 0 && Score <= 20) { bgColor = "lightblue"; }
+                else if (Score > 20 && Score <= 40) { bgColor = "lightgreen"; }
+                else if (Score > 40 && Score <= 60) { bgColor = "yellow"; }
+                else if (Score > 60 && Score <= 80) { bgColor = "orange"; }
+                else if (Score > 80 && Score <= 100) { bgColor = "red"; }
+                document.body.style.backgroundColor = bgColor;
+
+                FB = '<span style="font-size: 325px; font-weight: bold; color: red;">' + YourScoreIs + ' ' + Score + '%.</span>';
+            
 		if (ShowCorrectFirstTime == true){
 			var CFT = 0;
 			for (QNum=0; QNum<State.length; QNum++){
@@ -1846,7 +1856,7 @@ function DownTime(){
 
 </head>
 
-<body onload="StartUp()" id="TheBody" >
+<body style="background-color: lightgrey;" onload="StartUp()" id="TheBody" >
 
 <!-- BeginTopNavButtons -->
 
@@ -1936,4 +1946,3 @@ function DownTime(){
 </body>
 
 </html>
-
