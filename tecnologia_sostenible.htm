@@ -1,31 +1,28 @@
-<?xml version="1.0"?>
-       <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "xhtml11.dtd">
-       <html xmlns="http://www.w3.org/1999/xhtml"
-             xml:lang="en"><head><meta name="author" content="Created with Hot Potatoes by Half-Baked Software, registered to Ies Arboleda."></meta><meta name="keywords" content="Hot Potatoes, Hot Potatoes, Half-Baked Software, Windows, University of Victoria"></meta>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en" prefix="dc: http://purl.org/dc/elements/1.1/">
+<head><meta name="author" content="Created with Hot Potatoes by Half-Baked Software, registered to Ies Arboleda."/><meta name="keywords" content="Hot Potatoes, Hot Potatoes, Half-Baked Software, Windows, University of Victoria"/>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 
-<link rel="schema.DC" href="http://purl.org/dc/elements/1.1/" />
-<meta name="DC:Creator" content="UNREGISTERED" />
-<meta name="DC:Creator" content="Ies Arboleda" />
-<meta name="DC:Creator" content="casa" />
-<meta name="DC:Creator" content="CAS" />
-<meta name="DC:Creator" content="usuario" />
-<meta name="DC:Creator" content="cas" />
-<meta name="DC:Title" content="TEMA: TECNOLOG&#205;A SOSTENIBLE." />
+<meta name="dc:creator" content="Ies Arboleda" />
+<meta name="dc:creator" content="casa" />
+<meta name="dc:creator" content="CAS" />
+<meta name="dc:creator" content="usuario" />
+<meta name="dc:creator" content="cas" />
+<meta name="dc:title" content="TEMA: TECNOLOG&#x00CD;A SOSTENIBLE." />
 
 
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" /> 
 
 <title>
 TEMA: TECNOLOG&#x00CD;A SOSTENIBLE.
 </title>
 
-<!-- Made with executable version 6.0 Release 4 Build 7 -->
+<!-- Made with executable version 7.0 Release 3 Build 0 -->
 
 <!-- The following insertion allows you to add your own code directly to this head tag from the configuration screen -->
 
 
 
-<style type="text/css">
+<style>
 
 
 /* This is the CSS stylesheet used in the exercise. */
@@ -33,61 +30,102 @@ TEMA: TECNOLOG&#x00CD;A SOSTENIBLE.
 
 /* BeginCorePageCSS */
 
-/* Made with executable version 6.0 Release 4 Build 7 */
+/* Made with executable version 7.0 Release 3 Build 0 */
+
+
+
+/* CSS variables for colours. */
+:root{
+	--strFontFace:       Geneva,Arial,sans-serif;
+	--strFontSize:       small;
+	--strTextColor:      #000000;
+	--strTitleColor:     #ffffff;
+
+	--strFuncLightColor: #ffffff;
+	--strFuncShadeColor: #7f7f7f;
+	--strLinkColor:      #0000FF;
+	--strVLinkColor:     #0000CC;
+	
+	--strNavBarColor:    #000000;
+	--strNavLightColor:  #7f7f7f;
+	--strNavShadeColor:  #000000;
+	--strNavTextColor:   #ffffff;
+	
+	--strPageBGColor:    #408080;
+	--strExBGColor:      #ffffff;
+}
 
 body{
-	font-family: Geneva,Arial,sans-serif;
-	background-color: #408080;
-	color: #000000;
+	font-family: var(--strFontFace);
+	background-color: var(--strPageBGColor);
+	color: var(--strTextColor);
  
 	margin-right: 5%;
 	margin-left: 5%;
-	font-size: small;
+	font-size: var(--strFontSize);
+	padding-bottom: 0.5em;
 }
 
 p{
 	text-align: left;
 	margin: 0px;
-	font-size: 100%;
+	font-size: 1em;
 }
 
 table,div,span,td{
-	font-size: 100%;
-	color: #000000;
+	font-size: 1em;
+	color: var(--strTextColor);
 }
 
 div.Titles{
 	padding: 0.5em;;
 	text-align: center;
-	color: #ffffff;
+	color: var(--strTitleColor);
 }
 
 button{
-	font-family: Geneva,Arial,sans-serif;
-	font-size: 100%;
+	font-family: var(--strFontFace);
+	font-size: 1em;
 	display: inline;
 }
 
 .ExerciseTitle{
 	font-size: 140%;
-	color: #ffffff;
+	color: var(--strTitleColor);
 }
 
 .ExerciseSubtitle{
 	font-size: 120%;
-	color: #ffffff;
+	color: var(--strTitleColor);
 }
 
-div.StdDiv{
-	background-color: #ffffff;
+div.StdDiv, div.ExerciseContainer, div.ReadingContainer{
+	background-color: var(--strExBGColor);
 	text-align: center;
-	font-size: 100%;
-	color: #000000;
+	font-size: 1em;
+	color: var(--strTextColor);
 	padding: 0.5em;
 	border-style: solid;
 	border-width: 1px 1px 1px 1px;
-	border-color: #000000;
+	border-color: var(--strTextColor);
 	margin-bottom: 1px;
+}
+
+div.ReadingContainer, div.ExerciseContainer{
+	min-width: 15em;
+	flex-grow: 1;
+	flex-basis: 0;
+	margin: 1px;
+}
+
+div#ContainerDiv{
+	margin: -1px;
+	padding: 0;
+	border: none;
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	justify-content: space-between;
 }
 
 /* EndCorePageCSS */
@@ -96,14 +134,14 @@ div.StdDiv{
 	text-align: right;
 	font-size: 150%;
 	direction: rtl;
-	font-family: "Simplified Arabic", "Traditional Arabic", "Times New Roman", Geneva,Arial,sans-serif; 
+	font-family: "Simplified Arabic", "Traditional Arabic", "Times New Roman", var(--strFontFace); 
 }
 
 .CentredRTLText{
 	text-align: center;
 	font-size: 150%;
 	direction: rtl;
-	font-family: "Simplified Arabic", "Traditional Arabic", "Times New Roman", Geneva,Arial,sans-serif; 
+	font-family: "Simplified Arabic", "Traditional Arabic", "Times New Roman", var(--strFontFace); 
 }
 
 button p.RTLText{
@@ -114,7 +152,7 @@ button p.RTLText{
 	text-align: right;
 	font-size: 150%;
 	direction: rtl;
-	font-family: "Times New Roman", Geneva,Arial,sans-serif;
+	font-family: "Times New Roman", var(--strFontFace);
 }
 
 .Guess{
@@ -130,7 +168,7 @@ div#Timer{
 	margin-left: auto;
 	margin-right: auto;
 	text-align: center;
-	color: #ffffff;
+	color: var(--strTitleColor);
 }
 
 span#TimerText{
@@ -139,7 +177,7 @@ span#TimerText{
 	border-style: solid;
 	font-weight: bold;
 	display: none;
-	color: #ffffff;
+	color: var(--strTitleColor);
 }
 
 span.Instructions{
@@ -151,19 +189,20 @@ div.ExerciseText{
 }
 
 .FeedbackText, .FeedbackText span.CorrectAnswer, .FeedbackText span.Guess, .FeedbackText span.Answer{
-	color: #ffffff;
+	color: var(--strTitleColor);
 }
 
 .LeftItem{
-	font-size: 100%;
-	color: #000000;
+	font-size: 1em;
+	color: var(--strTextColor);
 	text-align: left;
 }
 
 .RightItem{
 	font-weight: bold;
-	font-size: 100%;
-	color: #000000;
+	font-size: 1em;
+	color: var(--strTextColor);
+	text-align: left;
 }
 
 span.CorrectMark{
@@ -171,16 +210,16 @@ span.CorrectMark{
 }
 
 input, textarea{
-	font-family: Geneva,Arial,sans-serif;
+	font-family: var(--strFontFace);
 	font-size: 120%;
 }
 
 select{
-	font-size: 100%;
+	font-size: 1em;
 }
 
 div.Feedback {
-	background-color: #408080;
+	background-color: var(--strPageBGColor);
 	left: 33%;
 	width: 34%;
 	top: 33%;
@@ -189,29 +228,35 @@ div.Feedback {
 	border-width: 1px;
 	padding: 5px;
 	text-align: center;
-	color: #ffffff;
+	color: var(--strTitleColor);
 	position: absolute;
 	display: none;
-	font-size: 100%;
+	font-size: 1em;
 }
 
 
 
 
 div.ExerciseDiv{
-	color: #000000;
+	color: var(--strTextColor);
+}
+
+/* JMatch standard output table. */
+table.MatchTable{
+	margin: 2em auto; 
+	border-width: 0;
 }
 
 /* JMatch flashcard styles */
 table.FlashcardTable{
 	background-color: transparent;
-	color: #000000;
-	border-color: #000000;
-	margin-left: 5%;
-	margin-right: 5%;
+	color: var(--strTextColor);
+	border-color: var(--strTextColor);
+	margin-left: auto;
+	margin-right: auto;
 	margin-top: 2em;
 	margin-bottom: 2em;
-	width: 90%;
+	/*width: 90%;*/
 	position: relative;
 	text-align: center;
 	padding: 0px;
@@ -221,7 +266,7 @@ table.FlashcardTable tr{
 	border-style: none;
 	margin: 0px;
 	padding: 0px;
-	background-color: #ffffff;
+	background-color: var(--strExBGColor);
 }
 
 table.FlashcardTable td.Showing{
@@ -233,8 +278,10 @@ table.FlashcardTable td.Showing{
 	margin: 0px;
 	border-style: solid;
 	border-width: 1px;
-	color: #000000;
-	background-color: #ffffff;
+	border-radius: 0.5em;
+	color: var(--strTextColor);
+	box-shadow: 0.2em 0.3em 0.2em var(--strNavShadeColor);
+	background-color: var(--strPageBGColor);
 }
 
 table.FlashcardTable td.Hidden{
@@ -242,6 +289,17 @@ table.FlashcardTable td.Hidden{
 }
 
 /* JMix styles */
+div.JMixDrag, div.JMatchDrag{
+	padding: 0;
+	background-color: var(--strPageBGColor);
+	border-style: none;
+}
+
+div#GuessDiv{
+	padding: 0.5em;
+	margin-bottom: 2em;
+}
+
 div#SegmentDiv{
 	margin-top: 2em;
 	margin-bottom: 2em;
@@ -252,7 +310,11 @@ a.ExSegment{
 	font-size: 120%;
 	font-weight: bold;
 	text-decoration: none;
-	color: #000000;
+	color: var(--strTextColor);
+	display: inline-block;
+	padding: 0.5em;
+	border: solid 1pt gray;
+	margin-bottom: 0.5em;
 }
 
 span.RemainingWordList{
@@ -261,11 +323,12 @@ span.RemainingWordList{
 
 div.DropLine {
 	position: absolute;
-	text-align: center;
+	text-align: left;
 	border-bottom-style: solid;
 	border-bottom-width: 1px;
-	border-bottom-color: #ffffff;
+	border-bottom-color: var(--strTitleColor);
 	width: 80%;
+	left: 10%;
 }
 
 /* JCloze styles */
@@ -384,14 +447,21 @@ div#ClueEntry{
 
 div.Keypad{
 	text-align: center;
+	display: none; /* initially hidden, shown if needed */
+	margin-bottom: 0.5em;
 }
 
 div.Keypad button{
-	font-family: Geneva,Arial,sans-serif;
+	font-family: var(--strFontFace);
 	font-size: 120%;
 	background-color: #ffffff;
 	color: #000000;
 	width: 2em;
+	border-style: solid;
+	border-width: 1px;
+	border-radius: 0.5em;
+	color: var(--strTextColor);
+	box-shadow: 0.2em 0.3em 0.2em var(--strTextColor);
 }
 
 /* JQuiz styles */
@@ -407,22 +477,23 @@ div.QuestionNavigation{
 }
 
 textarea{
-	font-family: Geneva,Arial,sans-serif;
+	font-family: var(--strFontFace);
 }
 
 .QuestionText{
-
+	text-align: left;
+	margin: 0px;
+	font-size: 1em;
 }
 
 .Answer{
 	font-size: 120%;
-	letter-spacing: 0.1em;
 }
 
 .PartialAnswer{
 	font-size: 120%;
 	letter-spacing: 0.1em;
-	color: #ffffff;
+	color: var(--strTitleColor);
 }
 
 .Highlight{
@@ -464,133 +535,107 @@ div.ShortAnswer{
 }
 
 .FuncButton {
-	text-align: center;
 	border-style: solid;
+	border-radius: 0.5em;
+	padding: 0.5em;
+	min-width: 3em;
 
-	border-left-color: #ffffff;
-	border-top-color: #ffffff;
-	border-right-color: #7f7f7f;
-	border-bottom-color: #7f7f7f;
-	color: #000000;
-	background-color: #ffffff;
+	border-left-color: var(--strFuncLightColor);
+	border-top-color: var(--strFuncLightColor);
+	border-right-color: var(--strFuncShadeColor);
+	border-bottom-color: var(--strFuncShadeColor);
+	color: var(--strTextColor);
+	background-color: var(--strExBGColor);
 
-	border-width: 2px;
-	padding: 3px 6px 3px 6px;
-	cursor: pointer;
+	border-width: 1pt;
+	cursor: pointer;	
+	box-shadow: 0.2em 0.3em 0.2em var(--strFuncShadeColor);
 }
 
-.FuncButtonUp {
-	color: #ffffff;
-	text-align: center;
-	border-style: solid;
-
-	border-left-color: #ffffff;
-	border-top-color: #ffffff;
-	border-right-color: #7f7f7f;
-	border-bottom-color: #7f7f7f;
-
-	background-color: #000000;
-	color: #ffffff;
-	border-width: 2px;
-	padding: 3px 6px 3px 6px;
-	cursor: pointer;
+.FuncButton:active {
+	box-shadow: none;
 }
 
-.FuncButtonDown {
-	color: #ffffff;
-	text-align: center;
-	border-style: solid;
-
-	border-left-color: #7f7f7f;
-	border-top-color: #7f7f7f;
-	border-right-color: #ffffff;
-	border-bottom-color: #ffffff;
-	background-color: #000000;
-	color: #ffffff;
-
-	border-width: 2px;
-	padding: 3px 6px 3px 6px;
-	cursor: pointer;
+.FuncButton:hover{
+	color: var(--strExBGColor);
+	background-color: var(--strTextColor);
 }
 
 /*BeginNavBarStyle*/
 
 div.NavButtonBar{
-	background-color: #000000;
+	background-color: var(--strNavBarColor);
 	text-align: center;
-	margin: 2px 0px 2px 0px;
+	margin: 0.25rem 0;
 	clear: both;
-	font-size: 100%;
+	font-size: 1em;
+	padding: 0.2em;
+	box-sizing: border-box;
 }
 
 .NavButton {
 	border-style: solid;
+	border-radius: 0.5em;
+	padding: 0.5em;
+	min-width: 3em;
 	
-	border-left-color: #7f7f7f;
-	border-top-color: #7f7f7f;
-	border-right-color: #000000;
-	border-bottom-color: #000000;
-	background-color: #000000;
-	color: #ffffff;
+	border-left-color: var(--strNavLightColor);
+	border-top-color: var(--strNavLightColor);
+	border-right-color: var(--strNavShadeColor);
+	border-bottom-color: var(--strNavShadeColor); 
+	background-color: var(--strNavBarColor);
+	color: var(--strNavTextColor);
 
-	border-width: 2px;
+	border-width: 1pt;
 	cursor: pointer;	
+	box-shadow: 0.2em 0.3em 0.2em var(--strNavShadeColor);
 }
 
-.NavButtonUp {
-	border-style: solid;
-
-	border-left-color: #7f7f7f;
-	border-top-color: #7f7f7f;
-	border-right-color: #000000;
-	border-bottom-color: #000000;
-	color: #000000;
-	background-color: #ffffff;
-
-	border-width: 2px;
-	cursor: pointer;	
+.NavButton:active {
+	box-shadow: none;
 }
 
-.NavButtonDown {
-	border-style: solid;
-
-	border-left-color: #000000;
-	border-top-color: #000000;
-	border-right-color: #7f7f7f;
-	border-bottom-color: #7f7f7f;
-	color: #000000;
-	background-color: #ffffff;
-
-	border-width: 2px;
-	cursor: pointer;	
+.NavButton:hover{
+	color: var(--strNavBarColor);
+	background-color: var(--strNavTextColor);
 }
 
 /*EndNavBarStyle*/
 
 a{
-	color: #0000FF;
+	color: var(--strLinkColor);
 }
 
 a:visited{
-	color: #0000CC;
+	color: var(--strVLinkColor);
 }
 
 a:hover{
-	color: #0000FF;
+	color: var(--strLinkColor);
 }
 
 div.CardStyle {
 	position: absolute;
-	font-family: Geneva,Arial,sans-serif;
-	font-size: 100%;
-	padding: 5px;
+	font-family: var(--strFontFace);
+	font-size: 1em;
 	border-style: solid;
-	border-width: 1px;
-	color: #000000;
-	background-color: #ffffff;
+	border-radius: 0.5em;
+	padding: 0.5em;
+	min-width: 2em;
+	border-width: 1pt;
+	color: var(--strTextColor);
+	box-shadow: 0.2em 0.3em 0.2em var(--strTextColor);
+	background-color: var(--strExBGColor);
 	left: -50px;
 	top: -50px;
 	overflow: visible;
+	touch-action: none;
+	user-select: none;
+	box-sizing: border-box;
+}
+
+div.CardStyleCentered{
+	text-align: center;
 }
 
 .rtl{
@@ -601,97 +646,16 @@ div.CardStyle {
 
 </style>
 
-<script type="text/javascript">
+<script>
 
 //<![CDATA[
 
 <!--
 
 
-function Client(){
-//if not a DOM browser, hopeless
-	this.min = false; if (document.getElementById){this.min = true;};
-
-	this.ua = navigator.userAgent;
-	this.name = navigator.appName;
-	this.ver = navigator.appVersion;  
-
-//Get data about the browser
-	this.mac = (this.ver.indexOf('Mac') != -1);
-	this.win = (this.ver.indexOf('Windows') != -1);
-
-//Look for Gecko
-	this.gecko = (this.ua.indexOf('Gecko') > 1);
-	if (this.gecko){
-		this.geckoVer = parseInt(this.ua.substring(this.ua.indexOf('Gecko')+6, this.ua.length));
-		if (this.geckoVer < 20020000){this.min = false;}
-	}
-	
-//Look for Firebird
-	this.firebird = (this.ua.indexOf('Firebird') > 1);
-	
-//Look for Safari
-	this.safari = (this.ua.indexOf('Safari') > 1);
-	if (this.safari){
-		this.gecko = false;
-	}
-	
-//Look for IE
-	this.ie = (this.ua.indexOf('MSIE') > 0);
-	if (this.ie){
-		this.ieVer = parseFloat(this.ua.substring(this.ua.indexOf('MSIE')+5, this.ua.length));
-		if (this.ieVer < 5.5){this.min = false;}
-	}
-	
-//Look for Opera
-	this.opera = (this.ua.indexOf('Opera') > 0);
-	if (this.opera){
-		this.operaVer = parseFloat(this.ua.substring(this.ua.indexOf('Opera')+6, this.ua.length));
-		if (this.operaVer < 7.04){this.min = false;}
-	}
-	if (this.min == false){
-		alert('Your browser may not be able to handle this page.');
-	}
-	
-//Special case for the horrible ie5mac
-	this.ie5mac = (this.ie&&this.mac&&(this.ieVer<6));
-}
-
-var C = new Client();
-
-//for (prop in C){
-//	alert(prop + ': ' + C[prop]);
-//}
-
 
 
 //CODE FOR HANDLING NAV BUTTONS AND FUNCTION BUTTONS
-
-//[strNavBarJS]
-function NavBtnOver(Btn){
-	if (Btn.className != 'NavButtonDown'){Btn.className = 'NavButtonUp';}
-}
-
-function NavBtnOut(Btn){
-	Btn.className = 'NavButton';
-}
-
-function NavBtnDown(Btn){
-	Btn.className = 'NavButtonDown';
-}
-//[/strNavBarJS]
-
-function FuncBtnOver(Btn){
-	if (Btn.className != 'FuncButtonDown'){Btn.className = 'FuncButtonUp';}
-}
-
-function FuncBtnOut(Btn){
-	Btn.className = 'FuncButton';
-}
-
-function FuncBtnDown(Btn){
-	Btn.className = 'FuncButtonDown';
-}
 
 function FocusAButton(){
 	if (document.getElementById('CheckButton1') != null){
@@ -727,6 +691,7 @@ function ShowMessage(Feedback){
 	ShowElements(false, 'input');
 	ShowElements(false, 'select');
 	ShowElements(false, 'object');
+	ShowElements(true, 'object', 'FeedbackContent');
 
 //Focus the OK button
 	setTimeout("document.getElementById('FeedbackOKButton').focus()", 50);
@@ -734,29 +699,41 @@ function ShowMessage(Feedback){
 //
 }
 
-function ShowElements(Show, TagName){
-//Special for IE bug -- hide all the form elements that will show through the popup
-	if (C.ie){
-		var Els = document.getElementsByTagName(TagName);
-		for (var i=0; i<Els.length; i++){
+function ShowElements(Show, TagName, ContainerToReverse){
+// added third argument to allow objects in the feedback box to appear
+//IE bug -- hide all the form elements that will show through the popup
+//FF on Mac bug : doesn't redisplay objects whose visibility is set to visible
+//unless the object's display property is changed
+
+	//get container object (by Id passed in, or use document otherwise)
+	TopNode = document.getElementById(ContainerToReverse);
+	var Els;
+	if (TopNode != null) {
+		Els = TopNode.getElementsByTagName(TagName);
+	} else {
+		Els = document.getElementsByTagName(TagName);
+	}
+
+	for (var i=0; i<Els.length; i++){
+		if (TagName == "object") {
+			//manipulate object elements in all browsers
 			if (Show == true){
-				Els[i].style.display = 'inline';
+				Els[i].style.visibility = 'visible';
 			}
 			else{
-				Els[i].style.display = 'none';
+				Els[i].style.visibility = 'hidden';
 			}
-		}
-	} 
+		} 
+	}
 }
+
+
 
 function HideFeedback(){
 	document.getElementById('FeedbackDiv').style.display = 'none';
 	ShowElements(true, 'input');
 	ShowElements(true, 'select');
 	ShowElements(true, 'object');
-	if (Finished == true){
-		Finish();
-	}
 }
 
 
@@ -767,8 +744,8 @@ function PageDim(){
 //Get the page width and height
 	this.W = 600;
 	this.H = 400;
-	this.W = document.getElementsByTagName('body')[0].clientWidth;
-	this.H = document.getElementsByTagName('body')[0].clientHeight;
+	this.W = document.getElementsByTagName('body')[0].offsetWidth;
+	this.H = document.getElementsByTagName('body')[0].offsetHeight;
 }
 
 var pg = null;
@@ -784,25 +761,36 @@ function GetPageXY(El) {
 }
 
 function GetScrollTop(){
-	if (document.documentElement && document.documentElement.scrollTop){
-		return document.documentElement.scrollTop;
+	if (typeof(window.pageYOffset) == 'number'){
+		return window.pageYOffset;
 	}
 	else{
-		if (document.body){
- 			return document.body.scrollTop;
+		if ((document.body)&&(document.body.scrollTop)){
+			return document.body.scrollTop;
 		}
 		else{
-			return window.pageYOffset;
+			if ((document.documentElement)&&(document.documentElement.scrollTop)){
+				return document.documentElement.scrollTop;
+			}
+			else{
+				return 0;
+			}
 		}
 	}
 }
 
 function GetViewportHeight(){
-	if (window.innerHeight){
+	if (typeof window.innerHeight != 'undefined'){
 		return window.innerHeight;
 	}
 	else{
-		return document.getElementsByTagName('body')[0].clientHeight;
+		if (((typeof document.documentElement != 'undefined')&&(typeof document.documentElement.clientHeight !=
+     'undefined'))&&(document.documentElement.clientHeight != 0)){
+			return document.documentElement.clientHeight;
+		}
+		else{
+			return document.getElementsByTagName('body')[0].clientHeight;
+		}
 	}
 }
 
@@ -816,39 +804,17 @@ var InTextBox = false;
 
 function SuppressBackspace(e){ 
 	if (InTextBox == true){return;}
-	if (C.ie) {
-		thisKey = window.event.keyCode;
-	}
-	else {
-		thisKey = e.keyCode;
-	}
+	thisKey = e.keyCode;
 
 	var Suppress = false;
 
 	if (thisKey == 8) {
 		Suppress = true;
-	}
-
-	if (Suppress == true){
-		if (C.ie){
-			window.event.returnValue = false;	
-			window.event.cancelBubble = true;
-		}
-		else{
-			e.preventDefault();
-		}
+		e.preventDefault();
 	}
 }
 
-if (C.ie){
-	document.attachEvent('onkeydown',SuppressBackspace);
-	window.attachEvent('onkeydown',SuppressBackspace);
-}
-else{
-	if (window.addEventListener){
-		window.addEventListener('keypress',SuppressBackspace,false);
-	}
-}
+window.addEventListener('keypress',SuppressBackspace,false);
 
 function ReduceItems(InArray, ReduceToSize){
 	var ItemToDump=0;
@@ -931,6 +897,33 @@ function FindLongest(InArray){
 	return Longest;
 }
 
+//SELECTION OBJECT FOR TYPING WITH KEYPAD
+var selObj = null;
+            
+SelObj = function(box){
+	this.box = box;
+	this.selStart = this.box.selectionStart;
+	this.selEnd = this.box.selectionEnd;
+	this.selText = this.box.value.substring(this.selStart, this.selEnd);
+	return this;
+}
+
+function setSelText(newText){
+	var caretPos = this.selStart + newText.length;
+	var newValue = this.box.value.substring(0, this.selStart);
+	newValue += newText;
+	newValue += this.box.value.substring(this.selEnd, this.box.value.length);
+	this.box.value = newValue;
+	this.box.setSelectionRange(caretPos, caretPos);
+	this.box.focus();
+}
+SelObj.prototype.setSelText = setSelText;
+
+function setSelSelectionRange(start, end){
+	this.box.setSelectionRange(start, end);
+}
+SelObj.prototype.setSelSelectionRange = setSelSelectionRange;
+
 //UNICODE CHARACTER FUNCTIONS
 function IsCombiningDiacritic(CharNum){
 	var Result = (((CharNum >= 0x0300)&&(CharNum <= 0x370))||((CharNum >= 0x20d0)&&(CharNum <= 0x20ff)));
@@ -956,47 +949,9 @@ function ClearTextBoxes(){
 	}
 }
 
-//EXTENSION TO ARRAY OBJECT
-function Array_IndexOf(Input){
-	var Result = -1;
-	for (var i=0; i<this.length; i++){
-		if (this[i] == Input){
-			Result = i;
-		}
-	}
-	return Result;
-}
-Array.prototype.indexOf = Array_IndexOf;
-
-//IE HAS RENDERING BUG WITH BOTTOM NAVBAR
-function RemoveBottomNavBarForIE(){
-	if ((C.ie)&&(document.getElementById('Reading') != null)){
-		if (document.getElementById('BottomNavBar') != null){
-			document.getElementById('TheBody').removeChild(document.getElementById('BottomNavBar'));
-		}
-	}
-}
 
 
 
-
-//HOTPOTNET-RELATED CODE
-
-var HPNStartTime = (new Date()).getTime();
-var SubmissionTimeout = 30000;
-var Detail = ''; //Global that is used to submit tracking data
-
-function Finish(){
-//If there's a form, fill it out and submit it
-	if (document.store != null){
-		Frm = document.store;
-		Frm.starttime.value = HPNStartTime;
-		Frm.endtime.value = (new Date()).getTime();
-		Frm.mark.value = Score;
-		Frm.detail.value = Detail;
-		Frm.submit();
-	}
-}
 
 
 
@@ -1005,7 +960,13 @@ function Finish(){
 var CurrQNum = 0;
 var CorrectIndicator = ' ';
 var IncorrectIndicator = ' ';
-var YourScoreIs = 'Tu puntuaci&#x00F3;n es:';
+var YourScoreIs = ':';
+
+//New for 6.2.2.0
+var CompletedSoFar = 'Questions completed so far: ';
+var ExerciseCompleted = 'You have completed the exercise.';
+var ShowCompletedSoFar = true;
+
 var ContinuousScoring = false;
 var CorrectFirstTime = 'El n&#x00FA;mero de respuestas acertadas ha sido:';
 var ShowCorrectFirstTime = true;
@@ -1025,6 +986,7 @@ var State = new Array();
 var Feedback = '';
 var TimeOver = false;
 var strInstructions = '';
+var Locked = false;
 
 //The following variable can be used to add a message explaining that
 //the question is finished, so no further marking will take place.
@@ -1109,10 +1071,24 @@ function SetFocusToTextbox(){
 //if there's a textbox, set the focus in it
 	if (QArray[CurrQNum].getElementsByTagName('input')[0] != null){
 		QArray[CurrQNum].getElementsByTagName('input')[0].focus();
+//and show a keypad if there is one
+		if (document.getElementById('CharacterKeypad') != null){
+			document.getElementById('CharacterKeypad').style.display = 'block';
+		}
 	}
 	else{
   	if (QArray[CurrQNum].getElementsByTagName('textarea')[0] != null){
   		QArray[CurrQNum].getElementsByTagName('textarea')[0].focus();	
+//and show a keypad if there is one
+			if (document.getElementById('CharacterKeypad') != null){
+				document.getElementById('CharacterKeypad').style.display = 'block';
+			}
+		}
+//This added for 6.0.4.11: hide accented character buttons if no textbox
+		else{
+			if (document.getElementById('CharacterKeypad') != null){
+				document.getElementById('CharacterKeypad').style.display = 'none';
+			}
 		}
 	}
 }
@@ -1140,7 +1116,8 @@ function ShowSpecialReadingForQuestion(){
 			document.getElementById('ReadingDiv').innerHTML = '';
 		}
 		if (QArray[CurrQNum] != null){
-			var Children = QArray[CurrQNum].childNodes;
+//Fix for 6.0.4.25
+			var Children = QArray[CurrQNum].getElementsByTagName('div');
 			for (var i=0; i<Children.length; i++){
 			if (Children[i].className=="HiddenReading"){
 					document.getElementById('ReadingDiv').innerHTML = Children[i].innerHTML;
@@ -1179,7 +1156,7 @@ function SetQNumReadout(){
 	}
 }
 
-I=new Array();
+var I=new Array();
 I[0]=new Array();I[0][0]=100;
 I[0][1]='';
 I[0][2]='1';
@@ -1298,7 +1275,6 @@ I[22][3][0]=new Array('Change.org','',1,100,1);
 
 
 function StartUp(){
-	RemoveBottomNavBarForIE();
 
 //If there's only one question, no need for question navigation controls
 	if (QsToShow < 2){
@@ -1307,6 +1283,8 @@ function StartUp(){
 	
 //Stash the instructions so they can be redisplayed
 	strInstructions = document.getElementById('InstructionsDiv').innerHTML;
+	
+
 	
 
 	
@@ -1336,7 +1314,6 @@ function StartUp(){
 }
 
 function ShowHideQuestions(){
-	FuncBtnOut(document.getElementById('ShowMethodButton'));
 	document.getElementById('ShowMethodButton').style.display = 'none';
 	if (ShowingAllQuestions == false){
 		for (var i=0; i<QArray.length; i++){
@@ -1410,6 +1387,26 @@ function CalculateOverallScore(){
 	}
 }
 
+//New for 6.2.2.0
+function CheckQuestionsCompleted(){
+	if (ShowCompletedSoFar == false){return '';}
+	var QsCompleted = 0;
+	for (var QNum=0; QNum<State.length; QNum++){
+		if (State[QNum] != null){
+			if (State[QNum][0] >= 0){
+				QsCompleted++;
+			}
+		}
+	}
+//Fixes for 6.2.2.2
+	if (QsCompleted >= QArray.length){
+		return ExerciseCompleted;
+	}
+	else{
+		return CompletedSoFar + ' ' + QsCompleted + '/' + QArray.length + '.';
+	}
+}
+
 function CheckFinished(){
 	var FB = '';
 	var AllDone = true;
@@ -1424,7 +1421,17 @@ function CheckFinished(){
 	
 //Report final score and submit if necessary
 		CalculateOverallScore();
-		FB = YourScoreIs + ' ' + Score + '%.';
+		
+                var bgColor = "lightgrey";
+                if (Score >= 0 && Score <= 20) { bgColor = "lightblue"; }
+                else if (Score > 20 && Score <= 40) { bgColor = "lightgreen"; }
+                else if (Score > 40 && Score <= 60) { bgColor = "yellow"; }
+                else if (Score > 60 && Score <= 80) { bgColor = "orange"; }
+                else if (Score > 80 && Score <= 100) { bgColor = "red"; }
+                document.body.style.backgroundColor = bgColor;
+
+                FB = '<span style="font-size: 325px; font-weight: bold; color: red;">' + YourScoreIs + ' ' + Score + '%.</span>';
+            
 		if (ShowCorrectFirstTime == true){
 			var CFT = 0;
 			for (QNum=0; QNum<State.length; QNum++){
@@ -1436,11 +1443,18 @@ function CheckFinished(){
 			}
 			FB += '<br />' + CorrectFirstTime + ' ' + CFT + '/' + QsToShow;
 		}
+		
+//New for 6.2.2.0
+		FB += '<br />' + ExerciseCompleted;
+		
 		WriteToInstructions(FB);
 		
 		Finished == true;
 
 		window.clearInterval(Interval);
+
+
+
 
 		TimeOver = true;
 		Locked = true;
@@ -1457,8 +1471,8 @@ function CheckFinished(){
 			}
 		}
 		Detail += '</fields></hpnetresult>';
-		setTimeout('Finish()', SubmissionTimeout);
 	}
+
 }
 
 
@@ -1505,10 +1519,9 @@ function LeaveGap(){
 
 function TypeChars(Chars){
 	if (CurrBox != null){
-//Following check added for 6.0.4.4 to avoid error message in IE6
 		if (CurrBox.style.display != 'none'){
-			CurrBox.value += Chars;
-			CurrBox.focus();
+			var selObj = SelObj(CurrBox);
+			selObj.setSelText(Chars);
 		}
 	}
 }
@@ -1671,8 +1684,13 @@ function CheckShortAnswer(QNum){
 	CA.GetBestMatch();
 	
 //Store any match in the state tracking field
+	if (State[QNum][5].length > 0){State[QNum][5] += ' | ';}
 	if (CA.MatchNum > -1){
-		State[QNum][5] += String.fromCharCode(65+CA.MatchNum) + ',';
+		State[QNum][5] += String.fromCharCode(65+CA.MatchNum);
+	}
+//Else store the student's answer
+	else{
+		State[QNum][5] += G;
 	}
 
 //Add the percent correct value for this answer to the Q State (works for all
@@ -1687,6 +1705,10 @@ function CheckShortAnswer(QNum){
 		if (CA.Score == 100){
 //It's right
 			CalculateShortAnsQuestionScore(QNum);
+			
+//New for 6.2.2.0
+			var QsDone = CheckQuestionsCompleted();
+			
 //Get correct answer list if required, assuming there are any other correct alternatives
 			if (ShowAlsoCorrect == true){
 				var AlsoCorrectList = GetCorrectList(QNum, G, false);
@@ -1698,8 +1720,11 @@ function CheckShortAnswer(QNum){
 //Get the overall score and add it to the feedback
 			if (ContinuousScoring == true){
 				CalculateOverallScore();
-				CA.Feedback += '<br />' + YourScoreIs + ' ' + Score + '%.';
-				WriteToInstructions(YourScoreIs + ' ' + Score + '%.');
+				CA.Feedback += '<br />' + YourScoreIs + ' ' + Score + '%.' + '<br />' + QsDone;
+				WriteToInstructions(YourScoreIs + ' ' + Score + '%.' + '<br />' + QsDone);
+			}
+			else{
+				WriteToInstructions(QsDone);
 			}
 			ShowMessage(CA.Feedback);
 //Put the answer in
@@ -1851,7 +1876,7 @@ function DownTime(){
 
 </head>
 
-<body onload="StartUp()" id="TheBody">
+<body style="background-color: lightgrey;" onload="StartUp()" id="TheBody" >
 
 <!-- BeginTopNavButtons -->
 
@@ -1863,71 +1888,73 @@ function DownTime(){
 	<h2 class="ExerciseTitle">TEMA: TECNOLOG&#x00CD;A SOSTENIBLE.</h2>
 
 
-<div id="Timer"><span id="TimerText">&nbsp;&nbsp;</span></div>
+<div id="Timer"><span id="TimerText">&#160;&#160;</span></div>
 
 
 </div>
 
 <div id="InstructionsDiv" class="StdDiv">
-	<p id="Instructions">Pica en una sola respuesta de cada pregunta y luego pasa a la siguiente picando sobre los botones "OK" y "SIGUIENTE PREGUNTA", cuando hayas terminado las preguntas, espera a que el contador de minutos se ponga a 0:00 y pica sobre "SU TIEMPO HA TERMINADO" para conocer el n&#x00FA;mero de respuestas acertadas.</p>
+	<div id="Instructions">Pica en una sola respuesta de cada pregunta y luego pasa a la siguiente picando sobre los botones "OK" y "SIGUIENTE PREGUNTA", cuando hayas terminado las preguntas, espera a que el contador de minutos se ponga a 0:00 y pica sobre "SU TIEMPO HA TERMINADO" para conocer el n&#x00FA;mero de respuestas acertadas.</div>
 </div>
 
 
+<div id="ContainerDiv">
 
 
-<div id="MainDiv" class="StdDiv">
- 
+
+<div class="ExerciseContainer">
+
 <div id="QNav" class="QuestionNavigation">
 
 <p style="text-align: right;">
-<button id="ShowMethodButton" class="FuncButton" onfocus="FuncBtnOver(this)" onblur="FuncBtnOut(this)" onmouseover="FuncBtnOver(this)" onmouseout="FuncBtnOut(this)" onmousedown="FuncBtnDown(this)" onmouseup="FuncBtnOver(this)" onclick="ShowHideQuestions(); return false;"> </button>
+<button id="ShowMethodButton" class="FuncButton" onclick="ShowHideQuestions(); return false;"> </button>
 </p>
 
 <div id="OneByOneReadout">
-<button id="PrevQButton" class="FuncButton" onfocus="FuncBtnOver(this)" onblur="FuncBtnOut(this)" onmouseover="FuncBtnOver(this)" onmouseout="FuncBtnOut(this)" onmousedown="FuncBtnDown(this)" onmouseup="FuncBtnOver(this)" onclick="ChangeQ(-1); return false;"> </button>
+<button id="PrevQButton" class="FuncButton" onclick="ChangeQ(-1); return false;"> </button>
 
-<span id="QNumReadout" class="QNum">&nbsp;</span>
+<span id="QNumReadout" class="QNum">&#160;</span>
 
-<button id="NextQButton" class="FuncButton" onfocus="FuncBtnOver(this)" onblur="FuncBtnOut(this)" onmouseover="FuncBtnOver(this)" onmouseout="FuncBtnOut(this)" onmousedown="FuncBtnDown(this)" onmouseup="FuncBtnOver(this)" onclick="ChangeQ(1); return false;">SIGUIENTE PREGUNTA</button>
+<button id="NextQButton" class="FuncButton" onclick="ChangeQ(1); return false;">SIGUIENTE PREGUNTA</button>
 <br />
 </div>
 
 </div>
  
 <ol class="QuizQuestions" id="Questions">
-<li class="QuizQuestion" id="Q_0" style="display: none;"><p class="QuestionText">La sostenibilidad implica considerar la ecoeficiencia y el ...........de vida de los materiales utilizados.<br /><br /></p><div class="ShortAnswer" id="Q_0_SA"><form method="post" action="" onsubmit="return false;"><div><input type="text" id="Q_0_Guess" onfocus="TrackFocus('Q_0_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="9"></input><br /><br /><button class="FuncButton" onfocus="FuncBtnOver(this)" onblur="FuncBtnOut(this)" onmouseover="FuncBtnOver(this)" onmouseout="FuncBtnOut(this)"  onmousedown="FuncBtnDown(this)" onmouseup="FuncBtnOut(this)" onclick="CheckShortAnswer(0)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
-<li class="QuizQuestion" id="Q_1" style="display: none;"><p class="QuestionText">Son materiales biodegradables para la construcci&#x00F3;n el ..............., la madera,etc.</p><div class="ShortAnswer" id="Q_1_SA"><form method="post" action="" onsubmit="return false;"><div><input type="text" id="Q_1_Guess" onfocus="TrackFocus('Q_1_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="9"></input><br /><br /><button class="FuncButton" onfocus="FuncBtnOver(this)" onblur="FuncBtnOut(this)" onmouseover="FuncBtnOver(this)" onmouseout="FuncBtnOut(this)"  onmousedown="FuncBtnDown(this)" onmouseup="FuncBtnOut(this)" onclick="CheckShortAnswer(1)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
-<li class="QuizQuestion" id="Q_2" style="display: none;"><p class="QuestionText">La accesibilidad se refiere a la ....................... de los materiales.</p><div class="ShortAnswer" id="Q_2_SA"><form method="post" action="" onsubmit="return false;"><div><input type="text" id="Q_2_Guess" onfocus="TrackFocus('Q_2_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="14"></input><br /><br /><button class="FuncButton" onfocus="FuncBtnOver(this)" onblur="FuncBtnOut(this)" onmouseover="FuncBtnOver(this)" onmouseout="FuncBtnOut(this)"  onmousedown="FuncBtnDown(this)" onmouseup="FuncBtnOut(this)" onclick="CheckShortAnswer(2)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
-<li class="QuizQuestion" id="Q_3" style="display: none;"><p class="QuestionText">Desde siempre en relaci&#x00F3;n con la disponibilidad de los materiales se han usado para la construcci&#x00F3;n materiales que los pueblos ten&#x00ED;an cerca, por ejemplo en la zona de monta&#x00F1;as se utilizaba ....................para construcci&#x00F3;n de los tejados.</p><div class="ShortAnswer" id="Q_3_SA"><form method="post" action="" onsubmit="return false;"><div><input type="text" id="Q_3_Guess" onfocus="TrackFocus('Q_3_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="9"></input><br /><br /><button class="FuncButton" onfocus="FuncBtnOver(this)" onblur="FuncBtnOut(this)" onmouseover="FuncBtnOver(this)" onmouseout="FuncBtnOut(this)"  onmousedown="FuncBtnDown(this)" onmouseup="FuncBtnOut(this)" onclick="CheckShortAnswer(3)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
-<li class="QuizQuestion" id="Q_4" style="display: none;"><p class="QuestionText">El dise&#x00F1;o sostenible busca optimizar la eficiencia y minimizar el ................. de los productos.&#x00A0;</p><div class="ShortAnswer" id="Q_4_SA"><form method="post" action="" onsubmit="return false;"><div><input type="text" id="Q_4_Guess" onfocus="TrackFocus('Q_4_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="11"></input><br /><br /><button class="FuncButton" onfocus="FuncBtnOver(this)" onblur="FuncBtnOut(this)" onmouseover="FuncBtnOver(this)" onmouseout="FuncBtnOut(this)"  onmousedown="FuncBtnDown(this)" onmouseup="FuncBtnOut(this)" onclick="CheckShortAnswer(4)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
-<li class="QuizQuestion" id="Q_5" style="display: none;"><p class="QuestionText">En el dise&#x00F1;o sostenible tenemos tambi&#x00E9;n la reutilizaci&#x00F3;n de materiales como por ejemplo la reutilizaci&#x00F3;n de ...........................para la construcci&#x00F3;n de viviendas.</p><div class="ShortAnswer" id="Q_5_SA"><form method="post" action="" onsubmit="return false;"><div><input type="text" id="Q_5_Guess" onfocus="TrackFocus('Q_5_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="12"></input><br /><br /><button class="FuncButton" onfocus="FuncBtnOver(this)" onblur="FuncBtnOut(this)" onmouseover="FuncBtnOver(this)" onmouseout="FuncBtnOut(this)"  onmousedown="FuncBtnDown(this)" onmouseup="FuncBtnOut(this)" onclick="CheckShortAnswer(5)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
-<li class="QuizQuestion" id="Q_6" style="display: none;"><p class="QuestionText">La arquitectura bioclim&#x00E1;tica intenta aprovechar las condiciones .................... locales para lograr un ambiente interior confortable y eficiente en t&#x00E9;rminos energ&#x00E9;ticos.&#x00A0;</p><div class="ShortAnswer" id="Q_6_SA"><form method="post" action="" onsubmit="return false;"><div><input type="text" id="Q_6_Guess" onfocus="TrackFocus('Q_6_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="10"></input><br /><br /><button class="FuncButton" onfocus="FuncBtnOver(this)" onblur="FuncBtnOut(this)" onmouseover="FuncBtnOver(this)" onmouseout="FuncBtnOut(this)"  onmousedown="FuncBtnDown(this)" onmouseup="FuncBtnOut(this)" onclick="CheckShortAnswer(6)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
-<li class="QuizQuestion" id="Q_7" style="display: none;"><p class="QuestionText">Un ejemplo de dise&#x00F1;o en arquitectura bioclim&#x00E1;tica es la orientaci&#x00F3;n de la vivienda&#x00A0;con su fachada principal hacia el ................. en climas c&#x00E1;lidos para que el sol no le d&#x00E9; tanto.</p><div class="ShortAnswer" id="Q_7_SA"><form method="post" action="" onsubmit="return false;"><div><input type="text" id="Q_7_Guess" onfocus="TrackFocus('Q_7_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="9"></input><br /><br /><button class="FuncButton" onfocus="FuncBtnOver(this)" onblur="FuncBtnOut(this)" onmouseover="FuncBtnOver(this)" onmouseout="FuncBtnOut(this)"  onmousedown="FuncBtnDown(this)" onmouseup="FuncBtnOut(this)" onclick="CheckShortAnswer(7)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
-<li class="QuizQuestion" id="Q_8" style="display: none;"><p class="QuestionText">Un ejemplo de dise&#x00F1;o de arquitectura bioclim&#x00E1;tica es el uso de .............anchos para que se a&#x00ED;sle bien t&#x00E9;rmicamente la vivienda.</p><div class="ShortAnswer" id="Q_8_SA"><form method="post" action="" onsubmit="return false;"><div><input type="text" id="Q_8_Guess" onfocus="TrackFocus('Q_8_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="9"></input><br /><br /><button class="FuncButton" onfocus="FuncBtnOver(this)" onblur="FuncBtnOut(this)" onmouseover="FuncBtnOver(this)" onmouseout="FuncBtnOut(this)"  onmousedown="FuncBtnDown(this)" onmouseup="FuncBtnOut(this)" onclick="CheckShortAnswer(8)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
-<li class="QuizQuestion" id="Q_9" style="display: none;"><p class="QuestionText">Un ejemplo de dise&#x00F1;o de arquitectura bioclim&#x00E1;tica es el uso de ..................... de aire en las paredes para que amortig&#x00FC;en los cambios de temperatura.</p><div class="ShortAnswer" id="Q_9_SA"><form method="post" action="" onsubmit="return false;"><div><input type="text" id="Q_9_Guess" onfocus="TrackFocus('Q_9_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="9"></input><br /><br /><button class="FuncButton" onfocus="FuncBtnOver(this)" onblur="FuncBtnOut(this)" onmouseover="FuncBtnOver(this)" onmouseout="FuncBtnOut(this)"  onmousedown="FuncBtnDown(this)" onmouseup="FuncBtnOut(this)" onclick="CheckShortAnswer(9)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
-<li class="QuizQuestion" id="Q_10" style="display: none;"><p class="QuestionText">Un ejemplo de dise&#x00F1;o de arquitectura bioclim&#x00E1;tica es el uso de ................ en zonas c&#x00E1;lidas ya que en el interior de la tierra la temperatura es m&#x00E1;s fresca.</p><div class="ShortAnswer" id="Q_10_SA"><form method="post" action="" onsubmit="return false;"><div><input type="text" id="Q_10_Guess" onfocus="TrackFocus('Q_10_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="9"></input><br /><br /><button class="FuncButton" onfocus="FuncBtnOver(this)" onblur="FuncBtnOut(this)" onmouseover="FuncBtnOver(this)" onmouseout="FuncBtnOut(this)"  onmousedown="FuncBtnDown(this)" onmouseup="FuncBtnOut(this)" onclick="CheckShortAnswer(10)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
-<li class="QuizQuestion" id="Q_11" style="display: none;"><p class="QuestionText">Un ejemplo de dise&#x00F1;o y arquitectura bioclim&#x00E1;tica es el uso de .................. y toldos que eviten la entrada de luz directa en la vivienda.&#x00A0;</p><div class="ShortAnswer" id="Q_11_SA"><form method="post" action="" onsubmit="return false;"><div><input type="text" id="Q_11_Guess" onfocus="TrackFocus('Q_11_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="9"></input><br /><br /><button class="FuncButton" onfocus="FuncBtnOver(this)" onblur="FuncBtnOut(this)" onmouseover="FuncBtnOver(this)" onmouseout="FuncBtnOut(this)"  onmousedown="FuncBtnDown(this)" onmouseup="FuncBtnOut(this)" onclick="CheckShortAnswer(11)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
-<li class="QuizQuestion" id="Q_12" style="display: none;"><p class="QuestionText">Son muchas las medidas que se pueden tomar para reducir la energ&#x00ED;a consumida en la vivienda una de ellas es por ejemplo la colocaci&#x00F3;n de placas .................</p><div class="ShortAnswer" id="Q_12_SA"><form method="post" action="" onsubmit="return false;"><div><input type="text" id="Q_12_Guess" onfocus="TrackFocus('Q_12_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="13"></input><br /><br /><button class="FuncButton" onfocus="FuncBtnOver(this)" onblur="FuncBtnOut(this)" onmouseover="FuncBtnOver(this)" onmouseout="FuncBtnOut(this)"  onmousedown="FuncBtnDown(this)" onmouseup="FuncBtnOut(this)" onclick="CheckShortAnswer(12)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
-<li class="QuizQuestion" id="Q_13" style="display: none;"><p class="QuestionText">Son muchas las medidas que se pueden tomar para reducir la energ&#x00ED;a consumida en la vivienda una de ellas es por ejemplo la colocaci&#x00F3;n de luces .............. de bajo consumo.</p><div class="ShortAnswer" id="Q_13_SA"><form method="post" action="" onsubmit="return false;"><div><input type="text" id="Q_13_Guess" onfocus="TrackFocus('Q_13_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="9"></input><br /><br /><button class="FuncButton" onfocus="FuncBtnOver(this)" onblur="FuncBtnOut(this)" onmouseover="FuncBtnOver(this)" onmouseout="FuncBtnOut(this)"  onmousedown="FuncBtnDown(this)" onmouseup="FuncBtnOut(this)" onclick="CheckShortAnswer(13)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
-<li class="QuizQuestion" id="Q_14" style="display: none;"><p class="QuestionText">Para reducir el consumo de energ&#x00ED;a en una vivienda podemos utilizar un aislante t&#x00E9;rmico adecuado como por ejemplo la espuma de ..................</p><div class="ShortAnswer" id="Q_14_SA"><form method="post" action="" onsubmit="return false;"><div><input type="text" id="Q_14_Guess" onfocus="TrackFocus('Q_14_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="11"></input><br /><br /><button class="FuncButton" onfocus="FuncBtnOver(this)" onblur="FuncBtnOut(this)" onmouseover="FuncBtnOver(this)" onmouseout="FuncBtnOut(this)"  onmousedown="FuncBtnDown(this)" onmouseup="FuncBtnOut(this)" onclick="CheckShortAnswer(14)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
-<li class="QuizQuestion" id="Q_15" style="display: none;"><p class="QuestionText">Con las placas solares ..................... podemos reducir el consumo energ&#x00E9;tico de la vivienda ya que calientan el agua de la misma.</p><div class="ShortAnswer" id="Q_15_SA"><form method="post" action="" onsubmit="return false;"><div><input type="text" id="Q_15_Guess" onfocus="TrackFocus('Q_15_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="9"></input><br /><br /><button class="FuncButton" onfocus="FuncBtnOver(this)" onblur="FuncBtnOut(this)" onmouseover="FuncBtnOver(this)" onmouseout="FuncBtnOut(this)"  onmousedown="FuncBtnDown(this)" onmouseup="FuncBtnOut(this)" onclick="CheckShortAnswer(15)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
-<li class="QuizQuestion" id="Q_16" style="display: none;"><p class="QuestionText">Dentro del transporte sostenible tenemos el uso de veh&#x00ED;culos .................</p><div class="ShortAnswer" id="Q_16_SA"><form method="post" action="" onsubmit="return false;"><div><input type="text" id="Q_16_Guess" onfocus="TrackFocus('Q_16_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="10"></input><br /><br /><button class="FuncButton" onfocus="FuncBtnOver(this)" onblur="FuncBtnOut(this)" onmouseover="FuncBtnOver(this)" onmouseout="FuncBtnOut(this)"  onmousedown="FuncBtnDown(this)" onmouseup="FuncBtnOut(this)" onclick="CheckShortAnswer(16)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
-<li class="QuizQuestion" id="Q_17" style="display: none;"><p class="QuestionText">La ...................es un transporte sostenible.</p><div class="ShortAnswer" id="Q_17_SA"><form method="post" action="" onsubmit="return false;"><div><input type="text" id="Q_17_Guess" onfocus="TrackFocus('Q_17_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="9"></input><br /><br /><button class="FuncButton" onfocus="FuncBtnOver(this)" onblur="FuncBtnOut(this)" onmouseover="FuncBtnOver(this)" onmouseout="FuncBtnOut(this)"  onmousedown="FuncBtnDown(this)" onmouseup="FuncBtnOut(this)" onclick="CheckShortAnswer(17)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
-<li class="QuizQuestion" id="Q_18" style="display: none;"><p class="QuestionText">El uso de&#x00A0; veh&#x00ED;culos que funcionan con gases como los ............... y gnc es mucho m&#x00E1;s sostenible que el empleo de los de gasolina.</p><div class="ShortAnswer" id="Q_18_SA"><form method="post" action="" onsubmit="return false;"><div><input type="text" id="Q_18_Guess" onfocus="TrackFocus('Q_18_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="9"></input><br /><br /><button class="FuncButton" onfocus="FuncBtnOver(this)" onblur="FuncBtnOut(this)" onmouseover="FuncBtnOver(this)" onmouseout="FuncBtnOut(this)"  onmousedown="FuncBtnDown(this)" onmouseup="FuncBtnOut(this)" onclick="CheckShortAnswer(18)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
-<li class="QuizQuestion" id="Q_19" style="display: none;"><p class="QuestionText">El uso del ............ es m&#x00E1;s sostenible que el coche convencional.<br /></p><div class="ShortAnswer" id="Q_19_SA"><form method="post" action="" onsubmit="return false;"><div><input type="text" id="Q_19_Guess" onfocus="TrackFocus('Q_19_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="9"></input><br /><br /><button class="FuncButton" onfocus="FuncBtnOver(this)" onblur="FuncBtnOut(this)" onmouseover="FuncBtnOver(this)" onmouseout="FuncBtnOut(this)"  onmousedown="FuncBtnDown(this)" onmouseup="FuncBtnOut(this)" onclick="CheckShortAnswer(19)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
-<li class="QuizQuestion" id="Q_20" style="display: none;"><p class="QuestionText">La tecnolog&#x00ED;a se puede utilizar para construir plataformas que fomenten&#x00A0; el voluntariado y servicio .................</p><div class="ShortAnswer" id="Q_20_SA"><form method="post" action="" onsubmit="return false;"><div><input type="text" id="Q_20_Guess" onfocus="TrackFocus('Q_20_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="11"></input><br /><br /><button class="FuncButton" onfocus="FuncBtnOver(this)" onblur="FuncBtnOut(this)" onmouseover="FuncBtnOver(this)" onmouseout="FuncBtnOut(this)"  onmousedown="FuncBtnDown(this)" onmouseup="FuncBtnOut(this)" onclick="CheckShortAnswer(20)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
-<li class="QuizQuestion" id="Q_21" style="display: none;"><p class="QuestionText">Son muchas las asociaciones que contribuyen a limpiar espacios naturales ...........</p><div class="ShortAnswer" id="Q_21_SA"><form method="post" action="" onsubmit="return false;"><div><input type="text" id="Q_21_Guess" onfocus="TrackFocus('Q_21_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="10"></input><br /><br /><button class="FuncButton" onfocus="FuncBtnOver(this)" onblur="FuncBtnOut(this)" onmouseover="FuncBtnOver(this)" onmouseout="FuncBtnOut(this)"  onmousedown="FuncBtnDown(this)" onmouseup="FuncBtnOut(this)" onclick="CheckShortAnswer(21)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
-<li class="QuizQuestion" id="Q_22" style="display: none;"><p class="QuestionText">Hay plataformas en l&#x00ED;neas que recogen firmas para la mejora de preservaci&#x00F3;n del medio ambiente como &#x00A0;.............</p><div class="ShortAnswer" id="Q_22_SA"><form method="post" action="" onsubmit="return false;"><div><input type="text" id="Q_22_Guess" onfocus="TrackFocus('Q_22_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="10"></input><br /><br /><button class="FuncButton" onfocus="FuncBtnOver(this)" onblur="FuncBtnOut(this)" onmouseover="FuncBtnOver(this)" onmouseout="FuncBtnOut(this)"  onmousedown="FuncBtnDown(this)" onmouseup="FuncBtnOut(this)" onclick="CheckShortAnswer(22)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li></ol>
+<li class="QuizQuestion" id="Q_0" style="display: none;"><div class="QuestionText">La sostenibilidad implica considerar la ecoeficiencia y el ...........de vida de los materiales utilizados.<br /><br /></div><div class="ShortAnswer" id="Q_0_SA"><form method="post" autocomplete="off" onsubmit="return false;"><div><input type="text" autocomplete="off" id="Q_0_Guess" onfocus="TrackFocus('Q_0_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="9"/><br /><br /><button class="FuncButton" onclick="CheckShortAnswer(0)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
+<li class="QuizQuestion" id="Q_1" style="display: none;"><div class="QuestionText">Son materiales biodegradables para la construcci&#x00F3;n el ..............., la madera,etc.</div><div class="ShortAnswer" id="Q_1_SA"><form method="post" autocomplete="off" onsubmit="return false;"><div><input type="text" autocomplete="off" id="Q_1_Guess" onfocus="TrackFocus('Q_1_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="9"/><br /><br /><button class="FuncButton" onclick="CheckShortAnswer(1)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
+<li class="QuizQuestion" id="Q_2" style="display: none;"><div class="QuestionText">La accesibilidad se refiere a la ....................... de los materiales.</div><div class="ShortAnswer" id="Q_2_SA"><form method="post" autocomplete="off" onsubmit="return false;"><div><input type="text" autocomplete="off" id="Q_2_Guess" onfocus="TrackFocus('Q_2_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="14"/><br /><br /><button class="FuncButton" onclick="CheckShortAnswer(2)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
+<li class="QuizQuestion" id="Q_3" style="display: none;"><div class="QuestionText">Desde siempre en relaci&#x00F3;n con la disponibilidad de los materiales se han usado para la construcci&#x00F3;n materiales que los pueblos ten&#x00ED;an cerca, por ejemplo en la zona de monta&#x00F1;as se utilizaba ....................para construcci&#x00F3;n de los tejados.</div><div class="ShortAnswer" id="Q_3_SA"><form method="post" autocomplete="off" onsubmit="return false;"><div><input type="text" autocomplete="off" id="Q_3_Guess" onfocus="TrackFocus('Q_3_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="9"/><br /><br /><button class="FuncButton" onclick="CheckShortAnswer(3)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
+<li class="QuizQuestion" id="Q_4" style="display: none;"><div class="QuestionText">El dise&#x00F1;o sostenible busca optimizar la eficiencia y minimizar el ................. de los productos.&#x00A0;</div><div class="ShortAnswer" id="Q_4_SA"><form method="post" autocomplete="off" onsubmit="return false;"><div><input type="text" autocomplete="off" id="Q_4_Guess" onfocus="TrackFocus('Q_4_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="11"/><br /><br /><button class="FuncButton" onclick="CheckShortAnswer(4)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
+<li class="QuizQuestion" id="Q_5" style="display: none;"><div class="QuestionText">En el dise&#x00F1;o sostenible tenemos tambi&#x00E9;n la reutilizaci&#x00F3;n de materiales como por ejemplo la reutilizaci&#x00F3;n de ...........................para la construcci&#x00F3;n de viviendas.</div><div class="ShortAnswer" id="Q_5_SA"><form method="post" autocomplete="off" onsubmit="return false;"><div><input type="text" autocomplete="off" id="Q_5_Guess" onfocus="TrackFocus('Q_5_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="12"/><br /><br /><button class="FuncButton" onclick="CheckShortAnswer(5)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
+<li class="QuizQuestion" id="Q_6" style="display: none;"><div class="QuestionText">La arquitectura bioclim&#x00E1;tica intenta aprovechar las condiciones .................... locales para lograr un ambiente interior confortable y eficiente en t&#x00E9;rminos energ&#x00E9;ticos.&#x00A0;</div><div class="ShortAnswer" id="Q_6_SA"><form method="post" autocomplete="off" onsubmit="return false;"><div><input type="text" autocomplete="off" id="Q_6_Guess" onfocus="TrackFocus('Q_6_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="10"/><br /><br /><button class="FuncButton" onclick="CheckShortAnswer(6)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
+<li class="QuizQuestion" id="Q_7" style="display: none;"><div class="QuestionText">Un ejemplo de dise&#x00F1;o en arquitectura bioclim&#x00E1;tica es la orientaci&#x00F3;n de la vivienda&#x00A0;con su fachada principal hacia el ................. en climas c&#x00E1;lidos para que el sol no le d&#x00E9; tanto.</div><div class="ShortAnswer" id="Q_7_SA"><form method="post" autocomplete="off" onsubmit="return false;"><div><input type="text" autocomplete="off" id="Q_7_Guess" onfocus="TrackFocus('Q_7_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="9"/><br /><br /><button class="FuncButton" onclick="CheckShortAnswer(7)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
+<li class="QuizQuestion" id="Q_8" style="display: none;"><div class="QuestionText">Un ejemplo de dise&#x00F1;o de arquitectura bioclim&#x00E1;tica es el uso de .............anchos para que se a&#x00ED;sle bien t&#x00E9;rmicamente la vivienda.</div><div class="ShortAnswer" id="Q_8_SA"><form method="post" autocomplete="off" onsubmit="return false;"><div><input type="text" autocomplete="off" id="Q_8_Guess" onfocus="TrackFocus('Q_8_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="9"/><br /><br /><button class="FuncButton" onclick="CheckShortAnswer(8)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
+<li class="QuizQuestion" id="Q_9" style="display: none;"><div class="QuestionText">Un ejemplo de dise&#x00F1;o de arquitectura bioclim&#x00E1;tica es el uso de ..................... de aire en las paredes para que amortig&#x00FC;en los cambios de temperatura.</div><div class="ShortAnswer" id="Q_9_SA"><form method="post" autocomplete="off" onsubmit="return false;"><div><input type="text" autocomplete="off" id="Q_9_Guess" onfocus="TrackFocus('Q_9_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="9"/><br /><br /><button class="FuncButton" onclick="CheckShortAnswer(9)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
+<li class="QuizQuestion" id="Q_10" style="display: none;"><div class="QuestionText">Un ejemplo de dise&#x00F1;o de arquitectura bioclim&#x00E1;tica es el uso de ................ en zonas c&#x00E1;lidas ya que en el interior de la tierra la temperatura es m&#x00E1;s fresca.</div><div class="ShortAnswer" id="Q_10_SA"><form method="post" autocomplete="off" onsubmit="return false;"><div><input type="text" autocomplete="off" id="Q_10_Guess" onfocus="TrackFocus('Q_10_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="9"/><br /><br /><button class="FuncButton" onclick="CheckShortAnswer(10)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
+<li class="QuizQuestion" id="Q_11" style="display: none;"><div class="QuestionText">Un ejemplo de dise&#x00F1;o y arquitectura bioclim&#x00E1;tica es el uso de .................. y toldos que eviten la entrada de luz directa en la vivienda.&#x00A0;</div><div class="ShortAnswer" id="Q_11_SA"><form method="post" autocomplete="off" onsubmit="return false;"><div><input type="text" autocomplete="off" id="Q_11_Guess" onfocus="TrackFocus('Q_11_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="9"/><br /><br /><button class="FuncButton" onclick="CheckShortAnswer(11)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
+<li class="QuizQuestion" id="Q_12" style="display: none;"><div class="QuestionText">Son muchas las medidas que se pueden tomar para reducir la energ&#x00ED;a consumida en la vivienda una de ellas es por ejemplo la colocaci&#x00F3;n de placas .................</div><div class="ShortAnswer" id="Q_12_SA"><form method="post" autocomplete="off" onsubmit="return false;"><div><input type="text" autocomplete="off" id="Q_12_Guess" onfocus="TrackFocus('Q_12_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="13"/><br /><br /><button class="FuncButton" onclick="CheckShortAnswer(12)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
+<li class="QuizQuestion" id="Q_13" style="display: none;"><div class="QuestionText">Son muchas las medidas que se pueden tomar para reducir la energ&#x00ED;a consumida en la vivienda una de ellas es por ejemplo la colocaci&#x00F3;n de luces .............. de bajo consumo.</div><div class="ShortAnswer" id="Q_13_SA"><form method="post" autocomplete="off" onsubmit="return false;"><div><input type="text" autocomplete="off" id="Q_13_Guess" onfocus="TrackFocus('Q_13_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="9"/><br /><br /><button class="FuncButton" onclick="CheckShortAnswer(13)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
+<li class="QuizQuestion" id="Q_14" style="display: none;"><div class="QuestionText">Para reducir el consumo de energ&#x00ED;a en una vivienda podemos utilizar un aislante t&#x00E9;rmico adecuado como por ejemplo la espuma de ..................</div><div class="ShortAnswer" id="Q_14_SA"><form method="post" autocomplete="off" onsubmit="return false;"><div><input type="text" autocomplete="off" id="Q_14_Guess" onfocus="TrackFocus('Q_14_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="11"/><br /><br /><button class="FuncButton" onclick="CheckShortAnswer(14)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
+<li class="QuizQuestion" id="Q_15" style="display: none;"><div class="QuestionText">Con las placas solares ..................... podemos reducir el consumo energ&#x00E9;tico de la vivienda ya que calientan el agua de la misma.</div><div class="ShortAnswer" id="Q_15_SA"><form method="post" autocomplete="off" onsubmit="return false;"><div><input type="text" autocomplete="off" id="Q_15_Guess" onfocus="TrackFocus('Q_15_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="9"/><br /><br /><button class="FuncButton" onclick="CheckShortAnswer(15)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
+<li class="QuizQuestion" id="Q_16" style="display: none;"><div class="QuestionText">Dentro del transporte sostenible tenemos el uso de veh&#x00ED;culos .................</div><div class="ShortAnswer" id="Q_16_SA"><form method="post" autocomplete="off" onsubmit="return false;"><div><input type="text" autocomplete="off" id="Q_16_Guess" onfocus="TrackFocus('Q_16_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="10"/><br /><br /><button class="FuncButton" onclick="CheckShortAnswer(16)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
+<li class="QuizQuestion" id="Q_17" style="display: none;"><div class="QuestionText">La ...................es un transporte sostenible.</div><div class="ShortAnswer" id="Q_17_SA"><form method="post" autocomplete="off" onsubmit="return false;"><div><input type="text" autocomplete="off" id="Q_17_Guess" onfocus="TrackFocus('Q_17_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="9"/><br /><br /><button class="FuncButton" onclick="CheckShortAnswer(17)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
+<li class="QuizQuestion" id="Q_18" style="display: none;"><div class="QuestionText">El uso de&#x00A0; veh&#x00ED;culos que funcionan con gases como los ............... y gnc es mucho m&#x00E1;s sostenible que el empleo de los de gasolina.</div><div class="ShortAnswer" id="Q_18_SA"><form method="post" autocomplete="off" onsubmit="return false;"><div><input type="text" autocomplete="off" id="Q_18_Guess" onfocus="TrackFocus('Q_18_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="9"/><br /><br /><button class="FuncButton" onclick="CheckShortAnswer(18)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
+<li class="QuizQuestion" id="Q_19" style="display: none;"><div class="QuestionText">El uso del ............ es m&#x00E1;s sostenible que el coche convencional.<br /></div><div class="ShortAnswer" id="Q_19_SA"><form method="post" autocomplete="off" onsubmit="return false;"><div><input type="text" autocomplete="off" id="Q_19_Guess" onfocus="TrackFocus('Q_19_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="9"/><br /><br /><button class="FuncButton" onclick="CheckShortAnswer(19)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
+<li class="QuizQuestion" id="Q_20" style="display: none;"><div class="QuestionText">La tecnolog&#x00ED;a se puede utilizar para construir plataformas que fomenten&#x00A0; el voluntariado y servicio .................</div><div class="ShortAnswer" id="Q_20_SA"><form method="post" autocomplete="off" onsubmit="return false;"><div><input type="text" autocomplete="off" id="Q_20_Guess" onfocus="TrackFocus('Q_20_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="11"/><br /><br /><button class="FuncButton" onclick="CheckShortAnswer(20)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
+<li class="QuizQuestion" id="Q_21" style="display: none;"><div class="QuestionText">Son muchas las asociaciones que contribuyen a limpiar espacios naturales ...........</div><div class="ShortAnswer" id="Q_21_SA"><form method="post" autocomplete="off" onsubmit="return false;"><div><input type="text" autocomplete="off" id="Q_21_Guess" onfocus="TrackFocus('Q_21_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="10"/><br /><br /><button class="FuncButton" onclick="CheckShortAnswer(21)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li>
+<li class="QuizQuestion" id="Q_22" style="display: none;"><div class="QuestionText">Hay plataformas en l&#x00ED;neas que recogen firmas para la mejora de preservaci&#x00F3;n del medio ambiente como &#x00A0;.............</div><div class="ShortAnswer" id="Q_22_SA"><form method="post" autocomplete="off" onsubmit="return false;"><div><input type="text" autocomplete="off" id="Q_22_Guess" onfocus="TrackFocus('Q_22_Guess')" onblur="LeaveGap()" class="ShortAnswerBox" size="10"/><br /><br /><button class="FuncButton" onclick="CheckShortAnswer(22)">Pica aqu&#x00ED; para validar tu respuesta</button></div></form></div></li></ol>
 
 
 
 </div>
 
-
+</div>
 
 <div class="Feedback" id="FeedbackDiv">
 <div class="FeedbackText" id="FeedbackContent"></div>
-<button id="FeedbackOKButton" class="FuncButton" onfocus="FuncBtnOver(this)" onblur="FuncBtnOut(this)" onmouseover="FuncBtnOver(this)" onmouseout="FuncBtnOut(this)" onmousedown="FuncBtnDown(this)" onmouseup="FuncBtnOut(this)" onclick="HideFeedback(); return false;">&nbsp;OK&nbsp;</button>
+<button id="FeedbackOKButton" class="FuncButton" onclick="HideFeedback(); return false;">&#160;OK&#160;</button>
 </div>
 
 <!-- BeginBottomNavButtons -->
