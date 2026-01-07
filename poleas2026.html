@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Simulación de Poleas y Correas - 3 Zonas</title>
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #cce5ff;
+        transition: background 0.8s ease;
+        margin: 0;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        box-sizing: border-box;
+    }
+
+    h1 { margin: 5px 0; font-size: 1.5em; text-align: center; }
+
+    .grid-container {
+        display: grid;
+        grid-template-columns: 280px 1fr 320px;
+        gap: 15px;
+        flex: 1;
+        margin-top: 10px;
+        min-height: 0;
+    }
+
+    .panel {
+        background: rgba(255, 255, 255, 0.9);
+        padding: 12px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        overflow-y: auto;
+    }
+
+    /* ZONA 1: DATOS */
+    .input-group {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        font-size: 0.9em;
+    }
+    input[type="number"] {
+        width: 60px;
+        padding: 4px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    /* ZONA 2: SIMULADOR */
+    .zona-simulacion {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: white !important;
+    }
+    svg { width: 100%; max-height: 350px; }
+
+    /* ZONA 3: TEST */
+    #zonaTest { font-size: 0.85em; position: relative; }
+    
+    .test-bloqueado {
+        opacity: 0.4;
+        pointer-events: none;
+        user-select: none;
+    }
+
+    .opcion {
+        display: block;
+        background: #fff;
+        padding: 6px 10px;
+        margin: 4px 0;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+        cursor: pointer;
+    }
+    
+    h3, h4 { margin: 8px 0; font-size: 1.1em; }
+    p.instruccion-play {
+        font-size: 0.75em;
+        color: #d32f2f;
+        font-style: italic;
+        margin-top: 2px;
+    }
+
+    .btn-verify {
+        background: #27ae60; color: white; border: none; padding: 10px;
+        width: 100%; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px;
+    }
+    .btn-verify:disabled { background: #ccc; }
+    .btn-cargar { background: #4a90e2; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
+    .btn-cargar:disabled { background: #ccc; }
+
+    #mensaje { margin-top: 10px; font-size: 0.9em; text-align: center; }
+</style>
+</head>
+<body>
+
+<h1>Sistema de Transmisión por Poleas</h1>
+
+<div class="grid-container">
+    
+    <div class="panel">
+        <h3>1. Datos (cm / RPM)</h3>
+        <div class="input-group">
+            <span>D₁ (diámetro):</span>
+            <div><input type="number" id="in_D1"><button class="btn-cargar" onclick="cargarDato('D1')">OK</button></div>
+        </div>
+        <div class="input-group">
+            <span>n₁ (velocidad):</span>
+            <div><input type="number" id="in_n1"><button class="btn-cargar" onclick="cargarDato('n1')">OK</button></div>
+        </div>
+        <div class="input-group">
+            <span>D₂ (diámetro):</span>
+            <div><input type="number" id="in_D2"><button class="btn-cargar" onclick="cargarDato('D2')">OK</button></div>
+        </div>
+        <div class="input-group">
+            <span>n₂ (velocidad):</span>
+            <div><input type="number" id="in_n2"><button class="btn-cargar" onclick="cargarDato('n2')">OK</button></div>
+        </div>
+        <button onclick="location.reload()" style="width:100%; margin-top:10px; font-size: 0.8em; cursor:pointer;">Resetear Ejercicio</button>
+        <p style="font-size:0.7em; color:#666; margin-top:15px">Fórmula: n₁ · D₁ = n₂ · D₂</p>
+    </div>
+
+    <div class="panel zona-simulacion">
+        <svg viewBox="0 0 600 400" id="svgSim">
+            <path id="correa" d="" fill="none" stroke="#333" stroke-width="6" stroke-linecap="round" />
+            <g id="g1">
+                <circle id="pulley1" cx="0" cy="0" r="0" fill="#4a90e2" stroke="#2c3e50" stroke-width="3"/>
+                <line x1="0" y1="-5" x2="0" y2="5" stroke="white" stroke-width="2" />
+                <line x1="-5" y1="0" x2="5" y2="0" stroke="white" stroke-width="2" />
+                <text y="-10" text-anchor="middle" font-size="12" font-weight="bold" fill="white">1</text>
+            </g>
+            <g id="g2">
+                <circle id="pulley2" cx="0" cy="0" r="0" fill="#95a5a6" stroke="#2c3e50" stroke-width="3"/>
+                <line x1="0" y1="-5" x2="0" y2="5" stroke="white" stroke-width="2" />
+                <line x1="-5" y1="0" x2="5" y2="0" stroke="white" stroke-width="2" />
+                <text y="-10" text-anchor="middle" font-size="12" font-weight="bold" fill="white">2</text>
+            </g>
+        </svg>
+        <div style="margin-top:10px;">
+            <button onclick="iniciar()" style="background:#444; color:white; padding:8px 15px; border-radius:5px; cursor:pointer;">▶ Play</button>
+            <button onclick="parar()" style="background:#444; color:white; padding:8px 15px; border-radius:5px; cursor:pointer;">■ Stop</button>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div id="zonaTest" style="display:none">
+            <h3>2. Evaluación</h3>
+            <p id="avisoPlay" class="instruccion-play">⚠️ Debes pulsar el botón Play para activar el test.</p>
+            
+            <div id="contenedorTest" class="test-bloqueado">
+                <p id="pregFaltante" style="font-weight:bold;"></p>
+                <div id="respuestas1"></div>
+                
+                <h4>Relación de Transmisión (i):</h4>
+                <div id="respuestas2"></div>
+                
+                <button id="btnCorregir" class="btn-verify" onclick="corregir()">VERIFICAR</button>
+            </div>
+            <div id="mensaje"></div>
+        </div>
+        <div id="avisoCarga" style="color:#888; text-align:center; margin-top:40px; font-size:0.9em;">
+            Carga 3 datos a la izquierda para ver el test.
+        </div>
+    </div>
+
+</div>
+
+<script>
+let datos = { D1: null, n1: null, D2: null, n2: null };
+let cargados = [];
+let valorFaltanteReal, relacionReal, nombreFaltante;
+
+function cargarDato(id) {
+    const input = document.getElementById('in_' + id);
+    const val = parseFloat(input.value);
+    if (isNaN(val) || val <= 0) return alert("Valor no válido.");
+
+    datos[id] = val;
+    cargados.push(id);
+    input.disabled = true;
+    input.nextElementSibling.disabled = true;
+
+    if (cargados.length === 3) finalizarCarga();
+}
+
+function finalizarCarga() {
+    const todos = ['D1', 'n1', 'D2', 'n2'];
+    nombreFaltante = todos.find(x => !cargados.includes(x));
+    
+    const inputFaltante = document.getElementById('in_' + nombreFaltante);
+    inputFaltante.disabled = true;
+    inputFaltante.placeholder = "?";
+    inputFaltante.nextElementSibling.disabled = true;
+
+    // Cálculo: n1*D1 = n2*D2
+    if(nombreFaltante === 'D1') datos.D1 = (datos.n2 * datos.D2) / datos.n1;
+    if(nombreFaltante === 'D2') datos.D2 = (datos.n1 * datos.D1) / datos.n2;
+    if(nombreFaltante === 'n1') datos.n1 = (datos.n2 * datos.D2) / datos.D1;
+    if(nombreFaltante === 'n2') datos.n2 = (datos.n1 * datos.D1) / datos.D2;
+
+    valorFaltanteReal = datos[nombreFaltante];
+    relacionReal = (datos.D1 / datos.D2).toFixed(2);
+
+    dibujarSistema();
+    document.getElementById('avisoCarga').style.display = 'none';
+    document.getElementById('zonaTest').style.display = 'block';
+    document.getElementById('pregFaltante').innerText = `Valor de ${nombreFaltante}:`;
+    
+    generarOpciones('respuestas1', 'p1', valorFaltanteReal);
+    generarOpciones('respuestas2', 'p2', relacionReal);
+}
+
+function generarOpciones(contenedor, name, correcto) {
+    let valorC = parseFloat(correcto).toFixed(2);
+    let opciones = [valorC];
+    while(opciones.length < 4) {
+        let error = (parseFloat(correcto) * (Math.random() * 0.4 + 0.8)).toFixed(2);
+        if(!opciones.includes(error) && error != valorC) opciones.push(error);
+    }
+    opciones.sort(() => Math.random() - 0.5);
+    document.getElementById(contenedor).innerHTML = opciones.map(o => `
+        <label class="opcion"><input type="radio" name="${name}" value="${o}"> ${o}</label>
+    `).join('');
+}
+
+let ang = 0, animId = null;
+
+function iniciar() { 
+    if(cargados.length === 3) {
+        document.getElementById('contenedorTest').classList.remove('test-bloqueado');
+        document.getElementById('avisoPlay').style.display = 'none';
+        if(!animId) animar(); 
+    }
+}
+
+function animar() {
+    ang += 2; // Velocidad base
+    const r1 = Math.min(datos.D1 / 2, 80), r2 = Math.min(datos.D2 / 2, 80);
+    const cx1 = 150, cx2 = 450, cy = 200;
+    
+    // Ambas giran en el mismo sentido en poleas normales
+    g1.setAttribute("transform", `translate(${cx1},${cy}) rotate(${ang})`);
+    g2.setAttribute("transform", `translate(${cx2},${cy}) rotate(${ang * (datos.D1/datos.D2)})`);
+    
+    animId = requestAnimationFrame(animar);
+}
+
+function parar() { cancelAnimationFrame(animId); animId = null; }
+
+function corregir() {
+    const r1 = document.querySelector('input[name="p1"]:checked');
+    const r2 = document.querySelector('input[name="p2"]:checked');
+    if(!r1 || !r2) return alert("Selecciona ambas respuestas.");
+
+    document.querySelectorAll('input[type="radio"]').forEach(r => r.disabled = true);
+    document.getElementById('btnCorregir').disabled = true;
+
+    let aciertos = 0;
+    if(Math.abs(parseFloat(r1.value) - valorFaltanteReal) < 0.5) aciertos++;
+    if(Math.abs(parseFloat(r2.value) - relacionReal) < 0.05) aciertos++;
+
+    if(aciertos === 2) document.body.style.background = "#ff4d4d";
+    else if(aciertos === 1) document.body.style.background = "#2ecc71";
+    else document.body.style.background = "#cce5ff";
+
+    document.getElementById('mensaje').innerHTML = `<strong>Aciertos: ${aciertos}/2</strong><br>
+    <small>Real: ${nombreFaltante}=${valorFaltanteReal.toFixed(2)} | i=${relacionReal}</small>`;
+}
+
+function dibujarSistema() {
+    // Escalar diámetros para que quepan en el dibujo (max radio aprox 80)
+    const factor = 1.5; 
+    const r1 = Math.min(datos.D1 / 2 * factor, 120);
+    const r2 = Math.min(datos.D2 / 2 * factor, 120);
+    const cx1 = 150, cx2 = 450, cy = 200;
+
+    document.getElementById('pulley1').setAttribute("r", r1);
+    document.getElementById('pulley2').setAttribute("r", r2);
+    
+    // Dibujar la correa tangente a ambos círculos
+    // Para simplificar, trazamos las líneas superiores e inferiores
+    const dCorrea = `M ${cx1} ${cy - r1} L ${cx2} ${cy - r2} 
+                     A ${r2} ${r2} 0 0 1 ${cx2} ${cy + r2} 
+                     L ${cx1} ${cy + r1} 
+                     A ${r1} ${r1} 0 0 1 ${cx1} ${cy - r1}`;
+    document.getElementById('correa').setAttribute("d", dCorrea);
+
+    g1.setAttribute("transform", `translate(${cx1},${cy})`);
+    g2.setAttribute("transform", `translate(${cx2},${cy})`);
+}
+</script>
+</body>
+</html>

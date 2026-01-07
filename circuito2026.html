@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Simulador LED - Precisión Técnica</title>
+<style>
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        background: #cce5ff;
+        transition: background 0.8s ease;
+        margin: 0; padding: 10px;
+        display: flex; flex-direction: column; height: 100vh; box-sizing: border-box;
+    }
+
+    h1 { margin: 5px 0; font-size: 1.4em; text-align: center; }
+
+    .grid-container {
+        display: grid;
+        grid-template-columns: 280px 1fr 320px;
+        gap: 15px; flex: 1; margin-top: 10px; min-height: 0;
+    }
+
+    .panel {
+        background: rgba(255, 255, 255, 0.95);
+        padding: 15px; border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        overflow-y: auto;
+    }
+
+    .input-group {
+        display: flex; justify-content: space-between;
+        align-items: center; margin-bottom: 10px; font-size: 0.85em;
+    }
+
+    input[type="number"] { width: 85px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; }
+
+    .zona-simulacion {
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        background: #fdfdfd !important;
+    }
+    svg { width: 100%; max-height: 380px; }
+
+    #zonaTest { font-size: 0.82em; }
+    .test-bloqueado { opacity: 0.4; pointer-events: none; }
+
+    .opcion {
+        display: block; background: #fff; padding: 6px 12px;
+        margin: 4px 0; border-radius: 6px; border: 1px solid #ddd; cursor: pointer;
+    }
+    
+    .btn-verify {
+        background: #27ae60; color: white; border: none; padding: 12px;
+        width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px;
+    }
+    .btn-cargar { background: #4a90e2; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+
+    #mensaje { margin-top: 15px; font-size: 0.95em; text-align: center; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<h1>Laboratorio Eléctrico: Flujo Real de Electrones</h1>
+
+<div class="grid-container">
+    
+    <div class="panel">
+        <h3>1. Parámetros</h3>
+        <p><small>Introduce 2 datos (3 decimales):</small></p>
+        <div class="input-group">
+            <span>Voltaje (V):</span>
+            <div><input type="number" id="in_V" step="0.001"><button class="btn-cargar" onclick="cargarDato('V')">OK</button></div>
+        </div>
+        <div class="input-group">
+            <span>Resistencia (Ω):</span>
+            <div><input type="number" id="in_R" step="0.001"><button class="btn-cargar" onclick="cargarDato('R')">OK</button></div>
+        </div>
+        <div class="input-group">
+            <span>Intensidad (A):</span>
+            <div><input type="number" id="in_I" step="0.001"><button class="btn-cargar" onclick="cargarDato('I')">OK</button></div>
+        </div>
+        <button onclick="location.reload()" style="width:100%; margin-top:15px; padding:8px; cursor:pointer;">Reiniciar Simulador</button>
+    </div>
+
+    <div class="panel zona-simulacion">
+        <svg viewBox="0 0 400 300">
+            <path d="M 100 220 L 100 60 L 300 60 L 300 220 L 220 220 M 180 220 L 100 220" fill="none" stroke="#2c3e50" stroke-width="4" />
+            
+            <rect x="180" y="205" width="40" height="30" fill="#f1c40f" stroke="#333" />
+            <text x="185" y="225" font-size="14" font-weight="bold">-</text>
+            <text x="210" y="225" font-size="14" font-weight="bold">+</text>
+            <text x="200" y="255" text-anchor="middle" font-size="12" fill="#2c3e50">PILA (V)</text>
+
+            <rect x="175" y="50" width="50" height="20" fill="#d35400" rx="2" />
+            <text x="200" y="40" text-anchor="middle" font-size="12">R (Ω)</text>
+
+            <g id="simboloLED" transform="translate(300, 140)">
+                <path d="M -15 10 L 15 10 L 0 -15 Z" fill="#e74c3c" stroke="#333" />
+                <line x1="-15" y1="-15" x2="15" y2="-15" stroke="#333" stroke-width="3" />
+                <line x1="12" y1="-5" x2="25" y2="-15" stroke="#e74c3c" stroke-width="2" />
+                <line x1="18" y1="5" x2="31" y2="-5" stroke="#e74c3c" stroke-width="2" />
+                <path d="M 22 -15 L 25 -15 L 25 -12" fill="none" stroke="#e74c3c" stroke-width="2" />
+                <path d="M 28 -5 L 31 -5 L 31 -2" fill="none" stroke="#e74c3c" stroke-width="2" />
+                <circle id="glow" cx="0" cy="0" r="30" fill="red" opacity="0" />
+            </g>
+
+            <g id="e_flow" style="visibility:hidden">
+                <circle r="4" fill="#3498db">
+                    <animateMotion dur="3s" repeatCount="indefinite" path="M 180 220 L 100 220 L 100 60 L 300 60 L 300 220 L 220 220" />
+                </circle>
+                <circle r="4" fill="#3498db">
+                    <animateMotion begin="1.5s" dur="3s" repeatCount="indefinite" path="M 180 220 L 100 220 L 100 60 L 300 60 L 300 220 L 220 220" />
+                </circle>
+            </g>
+        </svg>
+        <button id="btnPlay" onclick="iniciar()" style="padding:12px 25px; border-radius:6px; cursor:pointer; background:#2c3e50; color:white; border:none; font-weight:bold;">▶ Play (Cerrar Circuito)</button>
+    </div>
+
+    <div class="panel">
+        <div id="zonaTest" style="display:none">
+            <h3>2. Evaluación</h3>
+            <p id="avisoPlay" style="color:#e74c3c; font-size:0.8em;">⚠️ Pulsa Play para habilitar el test.</p>
+            
+            <div id="contenedorTest" class="test-bloqueado">
+                <p id="pregDato" style="font-weight:bold;"></p>
+                <div id="resp1"></div>
+                <p style="font-weight:bold; margin-top:15px;">Potencia Disipada (W):</p>
+                <div id="resp2"></div>
+                <button id="btnCorregir" class="btn-verify" onclick="corregir()">VERIFICAR</button>
+            </div>
+            <div id="mensaje"></div>
+        </div>
+        <div id="avisoCarga" style="color:#7f8c8d; text-align:center; margin-top:50px;">Introduce 2 datos para ver el circuito.</div>
+    </div>
+</div>
+
+<script>
+let d = { V: null, R: null, I: null };
+let contador = 0;
+let incog, valIncog, valPot;
+
+function cargarDato(tipo) {
+    let input = document.getElementById('in_' + tipo);
+    let v = parseFloat(input.value);
+    if(isNaN(v) || v <= 0) return alert("Por favor, introduce un valor válido.");
+
+    d[tipo] = v;
+    contador++;
+    input.disabled = true;
+    input.nextElementSibling.disabled = true;
+
+    if(contador === 2) {
+        if(d.V === null) incog = "V";
+        else if(d.R === null) incog = "R";
+        else incog = "I";
+        
+        document.getElementById('in_'+incog).disabled = true;
+        document.getElementById('in_'+incog).placeholder = "CALCULADO";
+        
+        // Cálculos con 3 decimales
+        if(incog === "V") d.V = d.I * d.R;
+        if(incog === "R") d.R = d.V / d.I;
+        if(incog === "I") d.I = d.V / d.R;
+
+        valIncog = d[incog];
+        valPot = d.V * d.I;
+
+        document.getElementById('avisoCarga').style.display = 'none';
+        document.getElementById('zonaTest').style.display = 'block';
+        document.getElementById('pregDato').innerText = "Valor de " + (incog==="V"?"Voltaje (V)":incog==="R"?"Resistencia (Ω)":"Intensidad (I)") + ":";
+        
+        llenarOpts('resp1', 'p1', valIncog);
+        llenarOpts('resp2', 'p2', valPot);
+    }
+}
+
+function llenarOpts(cont, name, correcto) {
+    let vc = parseFloat(correcto).toFixed(3);
+    let o = [vc];
+    while(o.length < 5) {
+        let err = (correcto * (Math.random() * 0.3 + 0.85)).toFixed(3);
+        if(!o.includes(err) && err != vc) o.push(err);
+    }
+    o.sort(() => Math.random() - 0.5);
+    document.getElementById(cont).innerHTML = o.map(n => `<label class="opcion"><input type="radio" name="${name}" value="${n}"> ${n}</label>`).join('');
+}
+
+function iniciar() {
+    if(contador < 2) return alert("Debes cargar 2 datos primero.");
+    document.getElementById('e_flow').style.visibility = 'visible';
+    document.getElementById('glow').style.opacity = Math.min(d.V / 20, 0.7);
+    document.getElementById('contenedorTest').classList.remove('test-bloqueado');
+    document.getElementById('avisoPlay').style.display = 'none';
+}
+
+function corregir() {
+    let r1 = document.querySelector('input[name="p1"]:checked');
+    let r2 = document.querySelector('input[name="p2"]:checked');
+    if(!r1 || !r2) return alert("Responde a ambas preguntas.");
+
+    document.querySelectorAll('input[type="radio"]').forEach(r => r.disabled = true);
+    document.getElementById('btnCorregir').disabled = true;
+
+    let aciertos = 0;
+    if(Math.abs(parseFloat(r1.value) - valIncog) < 0.005) aciertos++;
+    if(Math.abs(parseFloat(r2.value) - valPot) < 0.005) aciertos++;
+
+    if(aciertos === 2) {
+        document.body.style.background = "#ff7675"; // Color de éxito
+        document.getElementById('mensaje').innerHTML = "¡CORRECTO! Análisis completado con éxito.";
+    } else {
+        document.body.style.background = "#fab1a0";
+        document.getElementById('mensaje').innerHTML = `Aciertos: ${aciertos}/2. Revisa tus cálculos.`;
+    }
+    document.getElementById('mensaje').innerHTML += `<br><small>Reales: ${incog}=${valIncog.toFixed(3)} | P=${valPot.toFixed(3)}W</small>`;
+}
+</script>
+</body>
+</html>

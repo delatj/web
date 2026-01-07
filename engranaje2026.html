@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Simulación de Engranajes - 3 Zonas Optimizado</title>
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #cce5ff;
+        transition: background 0.8s ease;
+        margin: 0;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        box-sizing: border-box;
+    }
+
+    h1 { margin: 5px 0; font-size: 1.5em; text-align: center; }
+
+    .grid-container {
+        display: grid;
+        grid-template-columns: 280px 1fr 320px;
+        gap: 15px;
+        flex: 1;
+        margin-top: 10px;
+        min-height: 0; /* Permite que el grid respete el contenedor */
+    }
+
+    .panel {
+        background: rgba(255, 255, 255, 0.9);
+        padding: 12px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        overflow-y: auto;
+    }
+
+    /* ZONA 1: DATOS */
+    .input-group {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        font-size: 0.9em;
+    }
+    input[type="number"] {
+        width: 60px;
+        padding: 4px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    /* ZONA 2: SIMULADOR */
+    .zona-simulacion {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: white !important;
+    }
+    svg { width: 100%; max-height: 350px; }
+
+    /* ZONA 3: PREGUNTAS (TEST) */
+    #zonaTest {
+        font-size: 0.85em; /* Tamaño de letra reducido */
+        position: relative;
+    }
+    
+    /* Capa de bloqueo para el test */
+    .test-bloqueado {
+        opacity: 0.4;
+        pointer-events: none;
+        user-select: none;
+    }
+
+    .opcion {
+        display: block;
+        background: #fff;
+        padding: 6px 10px;
+        margin: 4px 0;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+        cursor: pointer;
+    }
+    
+    h3, h4 { margin: 8px 0; font-size: 1.1em; }
+    p.instruccion-play {
+        font-size: 0.75em;
+        color: #d32f2f;
+        font-style: italic;
+        margin-top: 2px;
+    }
+
+    .btn-verify {
+        background: #27ae60;
+        color: white;
+        border: none;
+        padding: 10px;
+        width: 100%;
+        border-radius: 5px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+    .btn-verify:disabled { background: #ccc; }
+
+    .btn-cargar { background: #4a90e2; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
+    .btn-cargar:disabled { background: #ccc; }
+
+    #mensaje { margin-top: 10px; font-size: 0.9em; text-align: center; }
+</style>
+</head>
+<body>
+
+<h1>Laboratorio Virtual de Engranajes</h1>
+
+<div class="grid-container">
+    
+    <div class="panel">
+        <h3>1. Datos</h3>
+        <div class="input-group">
+            <span>Z₁ (dientes):</span>
+            <div><input type="number" id="in_Z1"><button class="btn-cargar" onclick="cargarDato('Z1')">OK</button></div>
+        </div>
+        <div class="input-group">
+            <span>Z₂ (dientes):</span>
+            <div><input type="number" id="in_Z2"><button class="btn-cargar" onclick="cargarDato('Z2')">OK</button></div>
+        </div>
+        <div class="input-group">
+            <span>n₁ (RPM):</span>
+            <div><input type="number" id="in_n1"><button class="btn-cargar" onclick="cargarDato('n1')">OK</button></div>
+        </div>
+        <div class="input-group">
+            <span>n₂ (RPM):</span>
+            <div><input type="number" id="in_n2"><button class="btn-cargar" onclick="cargarDato('n2')">OK</button></div>
+        </div>
+        <button onclick="location.reload()" style="width:100%; margin-top:10px; font-size: 0.8em; cursor:pointer;">Resetear</button>
+    </div>
+
+    <div class="panel zona-simulacion">
+        <svg viewBox="0 0 600 400" id="svgSim">
+            <g id="g1"><path id="gear1" fill="#4a90e2" stroke="#2c3e50" stroke-width="2"/><text y="5" text-anchor="middle" font-weight="bold" fill="white">1</text></g>
+            <g id="g2"><path id="gear2" fill="#95a5a6" stroke="#2c3e50" stroke-width="2"/><text y="5" text-anchor="middle" font-weight="bold" fill="white">2</text></g>
+        </svg>
+        <div style="margin-top:10px;">
+            <button onclick="iniciar()" style="background:#444; color:white; padding:8px 15px; border-radius:5px; cursor:pointer;">▶ Play</button>
+            <button onclick="parar()" style="background:#444; color:white; padding:8px 15px; border-radius:5px; cursor:pointer;">■ Stop</button>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div id="zonaTest" style="display:none">
+            <h3>2. Evaluación</h3>
+            <p id="avisoPlay" class="instruccion-play">⚠️ Debes pulsar el botón Play para activar el test.</p>
+            
+            <div id="contenedorTest" class="test-bloqueado">
+                <p id="pregFaltante" style="font-weight:bold;"></p>
+                <div id="respuestas1"></div>
+                
+                <h4>Relación (i):</h4>
+                <div id="respuestas2"></div>
+                
+                <button id="btnCorregir" class="btn-verify" onclick="corregir()">VERIFICAR</button>
+            </div>
+            <div id="mensaje"></div>
+        </div>
+        <div id="avisoCarga" style="color:#888; text-align:center; margin-top:40px; font-size:0.9em;">
+            Carga 3 datos a la izquierda para ver el test.
+        </div>
+    </div>
+
+</div>
+
+<script>
+let datos = { Z1: null, Z2: null, n1: null, n2: null };
+let cargados = [];
+let valorFaltanteReal, relacionReal, nombreFaltante;
+
+function cargarDato(id) {
+    const input = document.getElementById('in_' + id);
+    const val = parseFloat(input.value);
+    if (isNaN(val) || val <= 0) return alert("Valor no válido.");
+
+    datos[id] = val;
+    cargados.push(id);
+    input.disabled = true;
+    input.nextElementSibling.disabled = true;
+
+    if (cargados.length === 3) finalizarCarga();
+}
+
+function finalizarCarga() {
+    const todos = ['Z1', 'Z2', 'n1', 'n2'];
+    nombreFaltante = todos.find(x => !cargados.includes(x));
+    const inputFaltante = document.getElementById('in_' + nombreFaltante);
+    inputFaltante.disabled = true;
+    inputFaltante.placeholder = "?";
+    inputFaltante.nextElementSibling.disabled = true;
+
+    if(nombreFaltante === 'Z1') datos.Z1 = (datos.n2 * datos.Z2) / datos.n1;
+    if(nombreFaltante === 'Z2') datos.Z2 = (datos.n1 * datos.Z1) / datos.n2;
+    if(nombreFaltante === 'n1') datos.n1 = (datos.n2 * datos.Z2) / datos.Z1;
+    if(nombreFaltante === 'n2') datos.n2 = (datos.n1 * datos.Z1) / datos.Z2;
+
+    valorFaltanteReal = datos[nombreFaltante];
+    relacionReal = (datos.Z1 / datos.Z2).toFixed(2);
+
+    dibujarEngranajes();
+    document.getElementById('avisoCarga').style.display = 'none';
+    document.getElementById('zonaTest').style.display = 'block';
+    document.getElementById('pregFaltante').innerText = `Valor de ${nombreFaltante}:`;
+    
+    generarOpciones('respuestas1', 'p1', valorFaltanteReal);
+    generarOpciones('respuestas2', 'p2', relacionReal);
+}
+
+function generarOpciones(contenedor, name, correcto) {
+    let valorC = parseFloat(correcto).toFixed(2);
+    let opciones = [valorC];
+    while(opciones.length < 4) {
+        let error = (parseFloat(correcto) * (Math.random() * 0.4 + 0.8)).toFixed(2);
+        if(!opciones.includes(error) && error != valorC) opciones.push(error);
+    }
+    opciones.sort(() => Math.random() - 0.5);
+    document.getElementById(contenedor).innerHTML = opciones.map(o => `
+        <label class="opcion"><input type="radio" name="${name}" value="${o}"> ${o}</label>
+    `).join('');
+}
+
+let ang = 0, animId = null;
+
+function iniciar() { 
+    if(cargados.length === 3) {
+        // Habilitar test
+        document.getElementById('contenedorTest').classList.remove('test-bloqueado');
+        document.getElementById('avisoPlay').style.display = 'none';
+        
+        if(!animId) animar(); 
+    }
+}
+
+function animar() {
+    ang += 1;
+    const r1 = Math.min(datos.Z1 * 2.5, 140), r2 = Math.min(datos.Z2 * 2.5, 140);
+    g1.setAttribute("transform", `translate(160,200) rotate(${ang})`);
+    g2.setAttribute("transform", `translate(${160 + r1 + r2 + 2},200) rotate(${-ang * (datos.Z1/datos.Z2)})`);
+    animId = requestAnimationFrame(animar);
+}
+
+function parar() { cancelAnimationFrame(animId); animId = null; }
+
+function corregir() {
+    const r1 = document.querySelector('input[name="p1"]:checked');
+    const r2 = document.querySelector('input[name="p2"]:checked');
+    if(!r1 || !r2) return alert("Selecciona ambas respuestas.");
+
+    document.querySelectorAll('input[type="radio"]').forEach(r => r.disabled = true);
+    document.getElementById('btnCorregir').disabled = true;
+
+    let aciertos = 0;
+    if(Math.abs(parseFloat(r1.value) - valorFaltanteReal) < 0.5) aciertos++;
+    if(Math.abs(parseFloat(r2.value) - relacionReal) < 0.05) aciertos++;
+
+    if(aciertos === 2) document.body.style.background = "#ff4d4d";
+    else if(aciertos === 1) document.body.style.background = "#2ecc71";
+    else document.body.style.background = "#cce5ff";
+
+    document.getElementById('mensaje').innerHTML = `<strong>Aciertos: ${aciertos}/2</strong><br>
+    <small>Real: ${nombreFaltante}=${valorFaltanteReal.toFixed(2)} | i=${relacionReal}</small>`;
+}
+
+function crearPath(z, r) {
+    const paso = (Math.PI * 2) / z;
+    let p = "";
+    for(let i=0; i<z; i++) {
+        const a = i * paso;
+        const x1 = Math.cos(a-paso/4)*(r-8), y1 = Math.sin(a-paso/4)*(r-8);
+        const x2 = Math.cos(a-paso/6)*(r+8), y2 = Math.sin(a-paso/6)*(r+8);
+        const x3 = Math.cos(a+paso/6)*(r+8), y3 = Math.sin(a+paso/6)*(r+8);
+        const x4 = Math.cos(a+paso/4)*(r-8), y4 = Math.sin(a+paso/4)*(r-8);
+        p += (i===0?'M':'L')+`${x1} ${y1} L ${x2} ${y2} L ${x3} ${y3} L ${x4} ${y4}`;
+    }
+    return p + " Z";
+}
+
+function dibujarEngranajes() {
+    const r1 = Math.min(datos.Z1 * 2.5, 140), r2 = Math.min(datos.Z2 * 2.5, 140);
+    const cx1 = 160, cy = 200, cx2 = cx1 + r1 + r2 + 2;
+    document.getElementById('gear1').setAttribute("d", crearPath(datos.Z1, r1));
+    document.getElementById('gear2').setAttribute("d", crearPath(datos.Z2, r2));
+    g1.setAttribute("transform", `translate(${cx1},${cy})`);
+    g2.setAttribute("transform", `translate(${cx2},${cy})`);
+}
+</script>
+</body>
+</html>
