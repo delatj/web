@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Generador con Carga de Archivos</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; padding: 20px; color: white; }
+        .config-card { background: #f4f7f6; max-width: 850px; margin: auto; padding: 25px; border-radius: 15px; color: #333; }
+        h2 { text-align: center; color: #1a1a2e; margin-bottom: 25px; }
+        .diseno-global { display: flex; justify-content: space-around; background: #e2e8f0; padding: 20px; border-radius: 10px; margin-bottom: 25px; border: 1px solid #cbd5e1; }
+        .grid-botones { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .boton-config { border: 2px solid #e2e8f0; padding: 15px; border-radius: 10px; background: #ffffff; transition: 0.3s; }
+        .boton-config:hover { border-color: #3498db; }
+        label { display: block; font-size: 11px; font-weight: bold; text-transform: uppercase; color: #64748b; margin-bottom: 5px; }
+        input[type="text"] { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #cbd5e1; border-radius: 5px; box-sizing: border-box; }
+        input[type="file"] { font-size: 12px; width: 100%; }
+        .btn-descargar { width: 100%; padding: 20px; background: #10b981; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 30px; box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.39); }
+        .btn-descargar:hover { background: #059669; }
+    </style>
+</head>
+<body>
+
+<div class="config-card">
+    <h2>Configura tu Panel de Sonidos</h2>
+    
+    <div class="diseno-global">
+        <div>
+            <label>Color de Fondo:</label>
+            <input type="color" id="bgColor" value="#ffffff">
+        </div>
+        <div>
+            <label>Color de Botones:</label>
+            <input type="color" id="btnColor" value="#4f46e5">
+        </div>
+        <div>
+            <label>Color del Texto:</label>
+            <input type="color" id="txtColor" value="#ffffff">
+        </div>
+    </div>
+
+    <div class="grid-botones">
+        <script>
+            for(let i=1; i<=6; i++) {
+                document.write(`
+                    <div class="boton-config">
+                        <label>Botón ${i}: Título</label>
+                        <input type="text" id="t${i}" placeholder="Ej: Aplausos">
+                        <label>Seleccionar MP3:</label>
+                        <input type="file" id="file${i}" accept="audio/mpeg" onchange="actualizarNombre(${i})">
+                        <input type="hidden" id="f${i}">
+                    </div>
+                `);
+            }
+
+            function actualizarNombre(id) {
+                const fileInput = document.getElementById('file' + id);
+                const nameInput = document.getElementById('f' + id);
+                const titleInput = document.getElementById('t' + id);
+                
+                if (fileInput.files.length > 0) {
+                    const nombreArchivo = fileInput.files[0].name;
+                    nameInput.value = nombreArchivo;
+                    // Si el título está vacío, ponemos el nombre del archivo (sin el .mp3)
+                    if (titleInput.value === "") {
+                        titleInput.value = nombreArchivo.replace(".mp3", "");
+                    }
+                }
+            }
+        </script>
+    </div>
+
+    <button class="btn-descargar" onclick="generarApp()">Descargar Aplicación HTML</button>
+</div>
+
+<script>
+function generarApp() {
+    const bg = document.getElementById('bgColor').value;
+    const bCol = document.getElementById('btnColor').value;
+    const tCol = document.getElementById('txtColor').value;
+
+    let botonesHTML = '';
+    for(let i=1; i<=6; i++) {
+        const titulo = document.getElementById(`t${i}`).value;
+        const archivo = document.getElementById(`f${i}`).value;
+        
+        if(archivo) {
+            botonesHTML += `<button class="btn" onclick="play('${archivo}')">${titulo}</button>\n    `;
+        }
+    }
+
+    const codigoFinal = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soundboard</title>
+    <style>
+        body { background: ${bg}; display: flex; flex-wrap: wrap; justify-content: center; align-content: center; height: 100vh; margin: 0; font-family: 'Segoe UI', sans-serif; }
+        .btn { background: ${bCol}; color: ${tCol}; border: none; padding: 20px; margin: 15px; width: 160px; height: 160px; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.1); font-size: 18px; transition: 0.2s; }
+        .btn:hover { transform: scale(1.05); }
+        .btn:active { transform: scale(0.95); }
+    </style>
+</head>
+<body>
+    ${botonesHTML}
+    <script>
+        let audio = null;
+        function play(src) {
+            if(audio) audio.pause();
+            audio = new Audio(src);
+            audio.play().catch(e => alert("Error: Asegúrate de que el archivo '" + src + "' esté en la misma carpeta que este HTML."));
+        }
+    <\/script>
+</body>
+</html>`;
+
+    const blob = new Blob([codigoFinal], { type: 'text/html' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'mi_nueva_app.html';
+    a.click();
+}
+</script>
+
+</body>
+</html>
