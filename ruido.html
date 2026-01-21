@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detector de Ruido</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #1a1a1a;
+            color: white;
+            margin: 0;
+        }
+        #visualizer {
+            width: 80%;
+            height: 30px;
+            background: #333;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        #bar {
+            width: 0%;
+            height: 100%;
+            background: #4caf50;
+            transition: width 0.1s;
+        }
+        #status {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 1rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .alert { background: #ff4444 !important; }
+    </style>
+</head>
+<body>
+
+    <h1>Monitor de Sonido</h1>
+    <div id="status">Presiona para iniciar</div>
+    
+    <div id="visualizer">
+        <div id="bar"></div>
+    </div>
+    
+    <div id="db-display">0 dB</div>
+    <br>
+    <button id="startBtn">Activar Micrófono</button>
+
+    <script>
+        const startBtn = document.getElementById('startBtn');
+        const dbDisplay = document.getElementById('db-display');
+        const bar = document.getElementById('bar');
+        const statusText = document.getElementById('status');
+
+        let audioContext;
+        let analyser;
+        let microphone;
+        let isAlerting = false;
+
+        startBtn.addEventListener('click', async () => {
+            try {
+                // Configurar el contexto de audio
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                statusText.innerText = "Escuchando...";
+                startBtn.style.display = "none";
+
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256;
+                microphone = audioContext.createMediaStreamSource(stream);
+                microphone.connect(analyser);
+
+                const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+                function checkVolume() {
+                    analyser.getByteFrequencyData(dataArray);
+                    let sum = 0;
+                    for (let i = 0; i < dataArray.length; i++) {
+                        sum += dataArray[i];
+                    }
+                    let average = sum / dataArray.length;
+                    
+                    // Conversión aproximada a una escala de "volumen" (no son dB reales calibrados)
+                    // pero sirve para el umbral de 70 sobre 100.
+                    let volume = Math.round(average);
+                    dbDisplay.innerText = volume + " Nivel";
+                    bar.style.width = Math.min(volume, 100) + "%";
+
+                    // Umbral de activación
+                    if (volume > 70 && !isAlerting) {
+                        playAlarm();
+                    }
+
+                    requestAnimationFrame(checkVolume);
+                }
+
+                checkVolume();
+
+            } catch (err) {
+                alert("Error al acceder al micrófono: " + err);
+            }
+        });
+
+        function playAlarm() {
+            isAlerting = true;
+            statusText.innerText = "¡ALERTA: NIVEL ALTO!";
+            bar.classList.add('alert');
+
+            // Crear oscilador para el pitido agudo
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(3000, audioContext.currentTime); // 3000Hz es un pitido agudo
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.start();
+            
+            // Detener después de 20 segundos
+            setTimeout(() => {
+                oscillator.stop();
+                isAlerting = false;
+                statusText.innerText = "Escuchando...";
+                bar.classList.remove('alert');
+            }, 20000);
+        }
+    </script>
+</body>
+</html>
