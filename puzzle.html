@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Generador de Puzzles Personalizados</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; text-align: center; background: #fdf2f2; padding: 20px; color: #444; }
+        .container { background: white; padding: 30px; border-radius: 20px; display: inline-block; box-shadow: 0 8px 20px rgba(0,0,0,0.1); border: 4px solid #ffcfd2; width: 90%; max-width: 400px; }
+        h1 { color: #d85a5a; margin-top: 0; font-size: 1.5rem; }
+        #preview { max-width: 200px; margin: 15px auto; display: none; border-radius: 10px; border: 2px dashed #ffcfd2; }
+        .control { margin: 15px 0; text-align: left; }
+        label { font-weight: bold; display: block; margin-bottom: 5px; color: #666; font-size: 0.9rem; }
+        input[type="file"], select { width: 100%; padding: 10px; border-radius: 10px; border: 2px solid #eee; box-sizing: border-box; font-size: 14px; }
+        button { background: #ff7675; color: white; border: none; padding: 15px 30px; border-radius: 15px; cursor: pointer; font-size: 18px; font-weight: bold; width: 100%; transition: 0.3s; margin-top: 10px; }
+        button:hover { background: #d63031; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🧩 Creador de Puzzles</h1>
+        <div class="control">
+            <label>1. Sube tu foto (JPG, PNG, WebP):</label>
+            <input type="file" id="foto" accept="image/*">
+        </div>
+        
+        <img id="preview">
+
+        <div class="control">
+            <label>2. Dificultad del juego:</label>
+            <select id="piezas">
+                <option value="2">2x2 (4 piezas)</option>
+                <option value="3" selected>3x3 (9 piezas)</option>
+                <option value="4">4x4 (16 piezas)</option>
+                <option value="5">5x5 (25 piezas)</option>
+            </select>
+        </div>
+
+        <button id="btnDescargar" disabled>Descargar Puzzle</button>
+    </div>
+
+    <script>
+        const inputFoto = document.getElementById('foto');
+        const preview = document.getElementById('preview');
+        const btn = document.getElementById('btnDescargar');
+        let imagenBase64 = "";
+        let nombreOriginal = "mi_puzzle";
+
+        inputFoto.onchange = function(e) {
+            const archivo = e.target.files[0];
+            if (!archivo) return;
+
+            // Guardamos el nombre sin la extensión para usarlo después
+            nombreOriginal = archivo.name.split('.').slice(0, -1).join('.') || "puzzle";
+
+            const reader = new FileReader();
+            reader.onload = function() {
+                preview.src = reader.result;
+                preview.style.display = "block";
+                imagenBase64 = reader.result;
+                btn.disabled = false;
+            }
+            reader.readAsDataURL(archivo);
+        };
+
+        btn.onclick = function() {
+            const n = document.getElementById('piezas').value;
+            const contenido = crearHTMLPuzzle(imagenBase64, n);
+            const blob = new Blob([contenido], { type: 'text/html' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            
+            // Aquí asignamos el nombre del archivo basado en la foto subida
+            link.download = `puzzle-${nombreOriginal}.html`;
+            
+            link.click();
+        };
+
+        function crearHTMLPuzzle(img, n) {
+            return `<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jugando con mi Puzzle</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #e0f2f1; margin: 0; padding: 20px; }
+        #tablero { 
+            display: grid; 
+            grid-template-columns: repeat(${n}, 1fr); 
+            gap: 5px; 
+            max-width: 500px; 
+            width: 95vw;
+            margin: 20px auto; 
+            background: #263238;
+            border: 8px solid #263238;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .pieza { 
+            aspect-ratio: 1/1;
+            background-image: url('${img}');
+            background-size: ${n * 100}% ${n * 100}%;
+            cursor: pointer;
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .seleccionada { outline: 5px solid #ffeb3b; z-index: 10; transform: scale(0.95); box-shadow: 0 0 15px #ffeb3b; }
+        #mensaje { display: none; background: #4caf50; color: white; padding: 15px; border-radius: 15px; font-size: 1.5rem; margin: 20px auto; max-width: 500px; animation: bounce 0.5s infinite alternate; }
+        @keyframes bounce { from { transform: scale(1); } to { transform: scale(1.05); } }
+        .controles { margin-top: 20px; }
+        button { padding: 12px 25px; cursor: pointer; border-radius: 10px; border: none; background: #00796b; color: white; font-size: 1rem; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h2>🧩 ¡Arma el puzzle!</h2>
+    <div id="mensaje">🌟 ¡FELICIDADES, CAMPEÓN! 🌟</div>
+    <div id="tablero"></div>
+    <div class="controles">
+        <button onclick="window.location.reload()">Reiniciar</button>
+    </div>
+
+    <script>
+        const tam = ${n};
+        const tablero = document.getElementById('tablero');
+        let ordenActual = Array.from({length: tam*tam}, (_, i) => i);
+        let seleccionado = null;
+
+        // Mezclar piezas
+        ordenActual.sort(() => Math.random() - 0.5);
+
+        function render() {
+            tablero.innerHTML = '';
+            ordenActual.forEach((posOrig, index) => {
+                const div = document.createElement('div');
+                div.className = 'pieza';
+                if (seleccionado === index) div.classList.add('seleccionada');
+                
+                const fila = Math.floor(posOrig / tam);
+                const col = posOrig % tam;
+                const x = (col / (tam - 1)) * 100;
+                const y = (fila / (tam - 1)) * 100;
+                div.style.backgroundPosition = x + '% ' + y + '%';
+                
+                div.onclick = () => {
+                    if (seleccionado === null) {
+                        seleccionado = index;
+                    } else {
+                        const aux = ordenActual[seleccionado];
+                        ordenActual[seleccionado] = ordenActual[index];
+                        ordenActual[index] = aux;
+                        seleccionado = null;
+                        verificar();
+                    }
+                    render();
+                };
+                tablero.appendChild(div);
+            });
+        }
+
+        function verificar() {
+            if (ordenActual.every((v, i) => v === i)) {
+                document.getElementById('mensaje').style.display = 'block';
+            }
+        }
+
+        render();
+    <\/script>
+</body>
+</html>`;
+        }
+    </script>
+</body>
+</html>
