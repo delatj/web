@@ -3,81 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detector de Ruido</title>
+    <title>Detector Pro</title>
     <style>
         body {
-            font-family: sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            background-color: #1a1a1a;
-            color: white;
-            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex; flex-direction: column; align-items: center;
+            background-color: #121212; color: white; margin: 0; padding: 20px;
+        }
+        .card {
+            background: #1e1e1e; padding: 20px; border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); width: 100%; max-width: 400px;
+        }
+        .control-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #aaa; }
+        input {
+            width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #333;
+            background: #2d2d2d; color: white; box-sizing: border-box;
         }
         #visualizer {
-            width: 80%;
-            height: 30px;
-            background: #333;
-            border-radius: 15px;
-            overflow: hidden;
-            margin: 20px 0;
+            width: 100%; height: 20px; background: #333;
+            border-radius: 10px; overflow: hidden; margin: 20px 0;
         }
-        #bar {
-            width: 0%;
-            height: 100%;
-            background: #4caf50;
-            transition: width 0.1s;
-        }
-        #status {
-            font-size: 1.2rem;
-            margin-bottom: 10px;
-        }
+        #bar { width: 0%; height: 100%; background: #4caf50; transition: width 0.1s; }
         button {
-            padding: 15px 30px;
-            font-size: 1rem;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
+            width: 100%; padding: 15px; font-size: 1rem; font-weight: bold;
+            background-color: #007bff; color: white; border: none;
+            border-radius: 8px; cursor: pointer;
         }
-        .alert { background: #ff4444 !important; }
+        .alert-active { background: #ff4444 !important; }
+        #timer-display { font-size: 0.9rem; color: #ffeb3b; margin-top: 5px; }
     </style>
 </head>
 <body>
 
-    <h1>Monitor de Sonido</h1>
-    <div id="status">Presiona para iniciar</div>
-    
-    <div id="visualizer">
-        <div id="bar"></div>
+    <div class="card">
+        <h2>Configuración</h2>
+        
+        <div class="control-group">
+            <label>Umbral de Activación (Nivel):</label>
+            <input type="number" id="threshold" value="70">
+        </div>
+
+        <div class="control-group">
+            <label>Segundos de persistencia:</label>
+            <input type="number" id="persistSeconds" value="3">
+        </div>
+
+        <button id="startBtn">Iniciar Monitor</button>
+
+        <div id="visualizer">
+            <div id="bar"></div>
+        </div>
+        
+        <div style="text-align: center;">
+            <span id="db-display">Nivel: 0</span>
+            <div id="timer-display"></div>
+        </div>
     </div>
-    
-    <div id="db-display">0 dB</div>
-    <br>
-    <button id="startBtn">Activar Micrófono</button>
 
     <script>
         const startBtn = document.getElementById('startBtn');
         const dbDisplay = document.getElementById('db-display');
+        const timerDisplay = document.getElementById('timer-display');
         const bar = document.getElementById('bar');
-        const statusText = document.getElementById('status');
+        const thresholdInput = document.getElementById('threshold');
+        const persistInput = document.getElementById('persistSeconds');
 
-        let audioContext;
-        let analyser;
-        let microphone;
-        let isAlerting = false;
+        let audioContext, analyser, microphone;
+        let isAlarmPlaying = false;
+        let highLevelStartTime = null; // Para rastrear cuánto tiempo lleva el ruido alto
 
         startBtn.addEventListener('click', async () => {
             try {
-                // Configurar el contexto de audio
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 
-                statusText.innerText = "Escuchando...";
-                startBtn.style.display = "none";
+                startBtn.disabled = true;
+                startBtn.innerText = "Monitor Activo";
 
                 analyser = audioContext.createAnalyser();
                 analyser.fftSize = 256;
@@ -86,59 +88,67 @@
 
                 const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
-                function checkVolume() {
+                function monitor() {
                     analyser.getByteFrequencyData(dataArray);
-                    let sum = 0;
-                    for (let i = 0; i < dataArray.length; i++) {
-                        sum += dataArray[i];
-                    }
-                    let average = sum / dataArray.length;
-                    
-                    // Conversión aproximada a una escala de "volumen" (no son dB reales calibrados)
-                    // pero sirve para el umbral de 70 sobre 100.
+                    let average = dataArray.reduce((a, b) => a + b) / dataArray.length;
                     let volume = Math.round(average);
-                    dbDisplay.innerText = volume + " Nivel";
+                    
+                    dbDisplay.innerText = "Nivel Actual: " + volume;
                     bar.style.width = Math.min(volume, 100) + "%";
 
-                    // Umbral de activación
-                    if (volume > 70 && !isAlerting) {
-                        playAlarm();
+                    const limit = parseInt(thresholdInput.value);
+                    const requiredTime = parseInt(persistInput.value) * 1000;
+
+                    if (volume > limit && !isAlarmPlaying) {
+                        if (!highLevelStartTime) highLevelStartTime = Date.now();
+                        
+                        let elapsed = Date.now() - highLevelStartTime;
+                        let remaining = Math.max(0, (requiredTime - elapsed) / 1000);
+                        
+                        timerDisplay.innerText = `Manteniendo nivel alto... (${remaining.toFixed(1)}s)`;
+                        bar.style.backgroundColor = "#ff9800"; // Naranja mientras espera
+
+                        if (elapsed >= requiredTime) {
+                            playAlarm();
+                        }
+                    } else {
+                        if (!isAlarmPlaying) {
+                            highLevelStartTime = null;
+                            timerDisplay.innerText = "";
+                            bar.style.backgroundColor = "#4caf50";
+                        }
                     }
 
-                    requestAnimationFrame(checkVolume);
+                    requestAnimationFrame(monitor);
                 }
-
-                checkVolume();
-
+                monitor();
             } catch (err) {
-                alert("Error al acceder al micrófono: " + err);
+                alert("Error: " + err);
             }
         });
 
         function playAlarm() {
-            isAlerting = true;
-            statusText.innerText = "¡ALERTA: NIVEL ALTO!";
-            bar.classList.add('alert');
+            isAlarmPlaying = true;
+            timerDisplay.innerText = "¡ALARMA ACTIVADA!";
+            bar.style.backgroundColor = "#f44336";
 
-            // Crear oscilador para el pitido agudo
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
 
-            oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(3000, audioContext.currentTime); // 3000Hz es un pitido agudo
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(3000, audioContext.currentTime);
             
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
 
-            oscillator.start();
+            osc.start();
             
-            // Detener después de 20 segundos
             setTimeout(() => {
-                oscillator.stop();
-                isAlerting = false;
-                statusText.innerText = "Escuchando...";
-                bar.classList.remove('alert');
-            }, 20000);
+                osc.stop();
+                isAlarmPlaying = false;
+                highLevelStartTime = null;
+                timerDisplay.innerText = "Alarma finalizada";
+            }, 20000); // 20 segundos de pitido
         }
     </script>
 </body>
