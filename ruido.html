@@ -3,35 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detector Pro</title>
+    <title>Detector Pro Personalizable</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             display: flex; flex-direction: column; align-items: center;
             background-color: #121212; color: white; margin: 0; padding: 20px;
         }
         .card {
-            background: #1e1e1e; padding: 20px; border-radius: 15px;
+            background: #1e1e1e; padding: 25px; border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5); width: 100%; max-width: 400px;
         }
+        h2 { margin-top: 0; color: #007bff; text-align: center; }
         .control-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; color: #aaa; }
+        label { display: block; margin-bottom: 5px; color: #bbb; font-size: 0.9rem; }
         input {
-            width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #333;
-            background: #2d2d2d; color: white; box-sizing: border-box;
+            width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #333;
+            background: #2d2d2d; color: white; box-sizing: border-box; font-size: 1rem;
         }
         #visualizer {
-            width: 100%; height: 20px; background: #333;
-            border-radius: 10px; overflow: hidden; margin: 20px 0;
+            width: 100%; height: 25px; background: #333;
+            border-radius: 12px; overflow: hidden; margin: 20px 0;
+            border: 1px solid #444;
         }
         #bar { width: 0%; height: 100%; background: #4caf50; transition: width 0.1s; }
         button {
-            width: 100%; padding: 15px; font-size: 1rem; font-weight: bold;
+            width: 100%; padding: 15px; font-size: 1.1rem; font-weight: bold;
             background-color: #007bff; color: white; border: none;
-            border-radius: 8px; cursor: pointer;
+            border-radius: 8px; cursor: pointer; transition: background 0.3s;
         }
-        .alert-active { background: #ff4444 !important; }
-        #timer-display { font-size: 0.9rem; color: #ffeb3b; margin-top: 5px; }
+        button:disabled { background-color: #444; cursor: not-allowed; }
+        #db-display { font-size: 1.2rem; font-weight: bold; display: block; margin-bottom: 5px; }
+        #timer-display { font-size: 1rem; color: #ffeb3b; min-height: 1.2rem; }
+        .status-container { text-align: center; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -40,13 +44,18 @@
         <h2>Configuración</h2>
         
         <div class="control-group">
-            <label>Umbral de Activación (Nivel):</label>
-            <input type="number" id="threshold" value="70">
+            <label>Umbral de Activación (0-100):</label>
+            <input type="number" id="threshold" value="70" min="1" max="100">
         </div>
 
         <div class="control-group">
-            <label>Segundos de persistencia:</label>
-            <input type="number" id="persistSeconds" value="3">
+            <label>Segundos de ruido constante:</label>
+            <input type="number" id="persistSeconds" value="3" min="1">
+        </div>
+
+        <div class="control-group">
+            <label>Duración de la alarma (segundos):</label>
+            <input type="number" id="alarmDuration" value="20" min="1">
         </div>
 
         <button id="startBtn">Iniciar Monitor</button>
@@ -55,7 +64,7 @@
             <div id="bar"></div>
         </div>
         
-        <div style="text-align: center;">
+        <div class="status-container">
             <span id="db-display">Nivel: 0</span>
             <div id="timer-display"></div>
         </div>
@@ -66,20 +75,28 @@
         const dbDisplay = document.getElementById('db-display');
         const timerDisplay = document.getElementById('timer-display');
         const bar = document.getElementById('bar');
+        
+        // Inputs
         const thresholdInput = document.getElementById('threshold');
         const persistInput = document.getElementById('persistSeconds');
+        const durationInput = document.getElementById('alarmDuration');
 
         let audioContext, analyser, microphone;
         let isAlarmPlaying = false;
-        let highLevelStartTime = null; // Para rastrear cuánto tiempo lleva el ruido alto
+        let highLevelStartTime = null;
 
         startBtn.addEventListener('click', async () => {
             try {
+                // Inicializar audio tras interacción del usuario
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 
+                // Bloquear inputs para evitar cambios durante el funcionamiento
                 startBtn.disabled = true;
-                startBtn.innerText = "Monitor Activo";
+                startBtn.innerText = "Escuchando...";
+                thresholdInput.disabled = true;
+                persistInput.disabled = true;
+                durationInput.disabled = true;
 
                 analyser = audioContext.createAnalyser();
                 analyser.fftSize = 256;
@@ -97,39 +114,38 @@
                     bar.style.width = Math.min(volume, 100) + "%";
 
                     const limit = parseInt(thresholdInput.value);
-                    const requiredTime = parseInt(persistInput.value) * 1000;
+                    const waitTime = parseInt(persistInput.value) * 1000;
 
                     if (volume > limit && !isAlarmPlaying) {
                         if (!highLevelStartTime) highLevelStartTime = Date.now();
                         
                         let elapsed = Date.now() - highLevelStartTime;
-                        let remaining = Math.max(0, (requiredTime - elapsed) / 1000);
+                        let remaining = Math.max(0, (waitTime - elapsed) / 1000);
                         
-                        timerDisplay.innerText = `Manteniendo nivel alto... (${remaining.toFixed(1)}s)`;
-                        bar.style.backgroundColor = "#ff9800"; // Naranja mientras espera
+                        timerDisplay.innerText = `⚠️ Nivel alto... (${remaining.toFixed(1)}s)`;
+                        bar.style.backgroundColor = "#ff9800"; 
 
-                        if (elapsed >= requiredTime) {
+                        if (elapsed >= waitTime) {
                             playAlarm();
                         }
-                    } else {
-                        if (!isAlarmPlaying) {
-                            highLevelStartTime = null;
-                            timerDisplay.innerText = "";
-                            bar.style.backgroundColor = "#4caf50";
-                        }
+                    } else if (!isAlarmPlaying) {
+                        highLevelStartTime = null;
+                        timerDisplay.innerText = "✅ Ambiente normal";
+                        bar.style.backgroundColor = "#4caf50";
                     }
 
                     requestAnimationFrame(monitor);
                 }
                 monitor();
             } catch (err) {
-                alert("Error: " + err);
+                alert("Error de acceso al micrófono: " + err);
             }
         });
 
         function playAlarm() {
             isAlarmPlaying = true;
-            timerDisplay.innerText = "¡ALARMA ACTIVADA!";
+            const alarmSecs = parseInt(durationInput.value);
+            timerDisplay.innerText = `🚨 ¡ALERTA! Sonando (${alarmSecs}s)`;
             bar.style.backgroundColor = "#f44336";
 
             const osc = audioContext.createOscillator();
@@ -147,8 +163,8 @@
                 osc.stop();
                 isAlarmPlaying = false;
                 highLevelStartTime = null;
-                timerDisplay.innerText = "Alarma finalizada";
-            }, 20000); // 20 segundos de pitido
+                timerDisplay.innerText = "Alarma terminada. Reanudando...";
+            }, alarmSecs * 1000);
         }
     </script>
 </body>
