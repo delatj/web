@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrenamiento Electricidad - Nivel Pro</title>
+    <style>
+        :root {
+            --bg-page: #4a69bd;
+            --container-bg: #ffffff;
+            --primary: #1e3799;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: var(--bg-page);
+            margin: 0; padding: 0;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        #score-banner {
+            width: 100%; padding: 15px; background-color: #333; color: white;
+            text-align: center; font-size: 1.5rem; font-weight: bold;
+            position: sticky; top: 0; z-index: 1000; transition: background-color 0.5s ease;
+        }
+        .container {
+            background-color: var(--container-bg);
+            width: 95%; max-width: 600px; margin: 15px auto; padding: 20px;
+            border-radius: 12px; border: 2px solid #000;
+            box-shadow: 6px 6px 0px rgba(0,0,0,0.2); text-align: center;
+        }
+        .canvas-area {
+            background: #fff; border: 1px solid #ddd; border-radius: 8px;
+            margin: 15px 0; width: 100%; min-height: 180px;
+            display: flex; justify-content: center; align-items: center;
+        }
+        svg { max-width: 100%; height: auto; }
+        .problem-text {
+            text-align: left; font-size: 1.05rem; background: #f4f4f4;
+            padding: 15px; border-left: 5px solid var(--bg-page); margin-bottom: 15px;
+        }
+        .input-group { margin: 15px 0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        label { font-weight: bold; font-size: 0.9rem; color: #444; }
+        input[type="number"] {
+            padding: 12px; width: 100%; max-width: 220px; border: 2px solid #333;
+            border-radius: 6px; font-size: 1.1rem; text-align: center;
+        }
+        .btn {
+            cursor: pointer; padding: 15px; width: 100%; margin: 5px 0;
+            border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; text-transform: uppercase;
+        }
+        .btn-check { background-color: var(--primary); color: white; }
+        #feedback { display: none; padding: 12px; border-radius: 6px; margin: 10px 0; font-weight: bold; }
+        #explanation {
+            display: none; text-align: left; background: #fff9e6;
+            padding: 20px; border-radius: 8px; margin-top: 10px;
+            font-size: 0.95rem; border: 1px solid #ffeeba; line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+<div id="score-banner">ACIERTOS: <span id="points">0</span></div>
+
+<div class="container">
+    <h3 id="prob-title">CIRCUITO SERIE</h3>
+    <div class="canvas-area" id="drawing"></div>
+    <div class="problem-text" id="desc"></div>
+    <div id="inputs-container"></div>
+    <button class="btn btn-check" onclick="verify()">Validar Resultados</button>
+    <button class="btn" style="background:#eee; color:#333;" onclick="showHelp()">Guía Paso a Paso</button>
+    <div id="feedback"></div>
+    <div id="explanation"></div>
+</div>
+
+<script>
+    let current = {};
+    let score = 0;
+    let numResistors = 2;
+
+    function init(repeat = false) {
+        document.getElementById('feedback').style.display = 'none';
+        document.getElementById('explanation').style.display = 'none';
+        
+        // Cambiar número de resistencias solo si acertó
+        if (!repeat && score > 0) numResistors = (numResistors === 2) ? 3 : 2;
+        
+        generateCircuit();
+        updateUI();
+    }
+
+    function generateCircuit() {
+        let R1 = Math.floor(Math.random() * 5) + 1;
+        let R2 = Math.floor(Math.random() * 5) + 1;
+        let R3 = (numResistors === 3) ? Math.floor(Math.random() * 5) + 1 : 0;
+        let RT = R1 + R2 + R3;
+        let I = Math.floor(Math.random() * 3) + 1; 
+        let V = I * RT;
+        let P = V * I;
+
+        let giveVar = (Math.random() > 0.5) ? 'V' : 'I';
+        let intermediateVar = (giveVar === 'V') ? 'I' : 'V';
+
+        current = { R1, R2, R3, RT, I, V, P, numResistors, giveVar, intermediateVar };
+
+        document.getElementById('prob-title').innerText = `CIRCUITO SERIE (${numResistors} RESISTENCIAS)`;
+        
+        let svgRes = "";
+        if(numResistors === 2) {
+            svgRes = `
+                <rect x="110" y="20" width="60" height="20" fill="white" stroke="black" stroke-width="2"/>
+                <text x="130" y="15">R1</text>
+                <rect x="110" y="110" width="60" height="20" fill="white" stroke="black" stroke-width="2"/>
+                <text x="130" y="145">R2</text>`;
+        } else {
+            svgRes = `
+                <rect x="75" y="20" width="45" height="20" fill="white" stroke="black" stroke-width="2"/>
+                <text x="85" y="15">R1</text>
+                <rect x="155" y="20" width="45" height="20" fill="white" stroke="black" stroke-width="2"/>
+                <text x="165" y="15">R2</text>
+                <rect x="115" y="110" width="45" height="20" fill="white" stroke="black" stroke-width="2"/>
+                <text x="125" y="145">R3</text>`;
+        }
+
+        document.getElementById('drawing').innerHTML = `
+            <svg width="250" height="160" viewBox="0 0 250 160">
+                <path d="M50,80 L50,30 L210,30 L210,120 L50,120 L50,90" fill="none" stroke="black" stroke-width="2"/>
+                <line x1="40" y1="80" x2="60" y2="80" stroke="black" stroke-width="3"/>
+                <line x1="45" y1="90" x2="55" y2="90" stroke="black" stroke-width="1.5"/>
+                ${svgRes}
+                <text x="15" y="88" font-weight="bold">V</text>
+            </svg>`;
+
+        let desc = `<strong>DATOS:</strong><br>`;
+        desc += `R1 = ${R1} Ω, R2 = ${R2} Ω${numResistors === 3 ? `, R3 = ${R3} Ω` : ''}<br>`;
+        if(giveVar === 'V') desc += `Voltaje (V) = ${V} V<br>`;
+        else desc += `Intensidad (I) = ${I} A<br>`;
+        
+        desc += `<br>1. Calcula la <b>${intermediateVar === 'I' ? 'Intensidad (I)' : 'Voltaje (V)'}</b>.<br>2. Calcula la <b>Potencia total (P)</b>.`;
+        document.getElementById('desc').innerHTML = desc;
+
+        let labelInter = (intermediateVar === 'I') ? 'Intensidad (A)' : 'Voltaje (V)';
+        document.getElementById('inputs-container').innerHTML = `
+            <div class="input-group">
+                <label>${labelInter}:</label>
+                <input type="number" id="ans_inter">
+            </div>
+            <div class="input-group">
+                <label>Potencia Total (W):</label>
+                <input type="number" id="ans_p">
+            </div>`;
+    }
+
+    function verify() {
+        const valInter = parseInt(document.getElementById('ans_inter').value);
+        const valP = parseInt(document.getElementById('ans_p').value);
+        const fb = document.getElementById('feedback');
+        
+        let correctInter = (current.intermediateVar === 'I') ? current.I : current.V;
+        let isOk = (valInter === correctInter && valP === current.P);
+
+        fb.style.display = 'block';
+        if(isOk) {
+            score++;
+            fb.style.background = "#d4edda"; fb.style.color = "#155724";
+            fb.innerText = "¡CORRECTO! Buen trabajo.";
+            setTimeout(() => init(false), 1500);
+        } else {
+            fb.style.background = "#f8d7da"; fb.style.color = "#721c24";
+            fb.innerText = `FALLO. El valor de ${current.intermediateVar} era ${correctInter} y la Potencia era ${current.P} W.`;
+            setTimeout(() => init(true), 3000);
+        }
+        updateUI();
+    }
+
+    function updateUI() {
+        document.getElementById('points').innerText = score;
+        const banner = document.getElementById('score-banner');
+        
+        // Secuencia de colores según aciertos
+        if(score === 0) banner.style.backgroundColor = "#333";
+        else if(score <= 5) banner.style.backgroundColor = "#3498db"; // Azul
+        else if(score <= 10) banner.style.backgroundColor = "#27ae60"; // Verde
+        else if(score <= 15) banner.style.backgroundColor = "#f1c40f"; // Amarillo
+        else if(score <= 20) banner.style.backgroundColor = "#e67e22"; // Naranja
+        else banner.style.backgroundColor = "#e74c3c"; // Rojo
+    }
+
+    function showHelp() {
+        const d = document.getElementById('explanation');
+        d.style.display = 'block';
+        let h = `<strong>AYUDA PASO A PASO:</strong><br>`;
+        h += `1. Halla la <b>Resistencia Total (RT)</b> sumando todas: R1 + R2 ${current.numResistors === 3 ? '+ R3' : ''}.<br>`;
+        if(current.intermediateVar === 'I') {
+            h += `2. Calcula la Intensidad: <b>I = V / RT</b>.<br>`;
+        } else {
+            h += `2. Calcula el Voltaje: <b>V = I \u00B7 RT</b>.<br>`;
+        }
+        h += `3. Halla la Potencia: <b>P = V \u00B7 I</b>.`;
+        d.innerHTML = h;
+    }
+
+    window.onload = () => init();
+</script>
+</body>
+</html>
