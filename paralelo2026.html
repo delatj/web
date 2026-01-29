@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrenamiento Electricidad - Paralelo Avanzado</title>
+    <style>
+        :root {
+            --bg-page: #6c5ce7;
+            --container-bg: #ffffff;
+            --primary: #4834d4;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: var(--bg-page);
+            margin: 0; padding: 0;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        #score-banner {
+            width: 100%; padding: 15px; background-color: #333; color: white;
+            text-align: center; font-size: 1.5rem; font-weight: bold;
+            position: sticky; top: 0; z-index: 1000; transition: background-color 0.5s ease;
+        }
+        .container {
+            background-color: var(--container-bg);
+            width: 95%; max-width: 600px; margin: 15px auto; padding: 20px;
+            border-radius: 12px; border: 2px solid #000;
+            box-shadow: 6px 6px 0px rgba(0,0,0,0.2); text-align: center;
+        }
+        .canvas-area {
+            background: #fff; border: 1px solid #ddd; border-radius: 8px;
+            margin: 15px 0; width: 100%; min-height: 220px;
+            display: flex; justify-content: center; align-items: center;
+        }
+        svg { max-width: 100%; height: auto; }
+        .problem-text {
+            text-align: left; font-size: 1.05rem; background: #f4f4f4;
+            padding: 15px; border-left: 5px solid var(--bg-page); margin-bottom: 15px;
+        }
+        .input-group { margin: 10px 0; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        label { font-weight: bold; font-size: 0.85rem; color: #444; }
+        input[type="number"] {
+            padding: 10px; width: 100%; max-width: 180px; border: 2px solid #333;
+            border-radius: 6px; font-size: 1rem; text-align: center;
+        }
+        .btn {
+            cursor: pointer; padding: 15px; width: 100%; margin: 5px 0;
+            border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; text-transform: uppercase;
+        }
+        .btn-check { background-color: var(--primary); color: white; }
+        #feedback { display: none; padding: 12px; border-radius: 6px; margin: 10px 0; font-weight: bold; }
+        #explanation {
+            display: none; text-align: left; background: #fff9e6;
+            padding: 20px; border-radius: 8px; margin-top: 10px;
+            font-size: 0.9rem; border: 1px solid #ffeeba; line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+<div id="score-banner">ACIERTOS: <span id="points">0</span></div>
+
+<div class="container">
+    <h3 id="prob-title">CIRCUITO PARALELO</h3>
+    <div class="canvas-area" id="drawing"></div>
+    <div class="problem-text" id="desc"></div>
+    
+    <div id="inputs-container">
+        </div>
+
+    <button class="btn btn-check" onclick="verify()">Validar Circuito</button>
+    <button class="btn" style="background:#eee; color:#333;" onclick="showHelp()">Ver Resolución Paso a Paso</button>
+    <div id="feedback"></div>
+    <div id="explanation"></div>
+</div>
+
+<script>
+    let current = {};
+    let score = 0;
+    let numResistors = 2;
+
+    function init(repeat = false) {
+        document.getElementById('feedback').style.display = 'none';
+        document.getElementById('explanation').style.display = 'none';
+        if (!repeat && score > 0) numResistors = (numResistors === 2) ? 3 : 2;
+        generateParallelCircuit();
+        updateUI();
+    }
+
+    function generateParallelCircuit() {
+        // Usamos valores que faciliten el cálculo de Req (resistencias iguales)
+        let R_val = (Math.floor(Math.random() * 3) + 1) * 12; // 12, 24, 36
+        let R1 = R_val, R2 = R_val, R3 = (numResistors === 3) ? R_val : 0;
+        
+        let Req = numResistors === 2 ? (R_val / 2) : (R_val / 3);
+        let I_base = Math.floor(Math.random() * 2) + 1; // 1A o 2A
+        let V = I_base * Req;
+        let IT = I_base;
+        let P = V * IT;
+
+        // Determinar qué dato falta (V o I)
+        let giveVar = (Math.random() > 0.5) ? 'V' : 'I';
+        let intermediateVar = (giveVar === 'V') ? 'I' : 'V';
+
+        current = { R1, R2, R3, Req, IT, V, P, numResistors, giveVar, intermediateVar };
+
+        document.getElementById('prob-title').innerText = `PARALELO: ${numResistors} RESISTENCIAS`;
+        
+        // SVG
+        let branches = `
+            <line x1="100" y1="40" x2="100" y2="130" stroke="black" stroke-width="2"/>
+            <line x1="170" y1="40" x2="170" y2="130" stroke="black" stroke-width="2"/>
+            <rect x="85" y="65" width="30" height="45" fill="white" stroke="black" stroke-width="2"/>
+            <text x="92" y="60" font-size="11">R1</text>
+            <rect x="155" y="65" width="30" height="45" fill="white" stroke="black" stroke-width="2"/>
+            <text x="162" y="60" font-size="11">R2</text>
+        `;
+        if(numResistors === 3) {
+            branches += `
+                <line x1="230" y1="40" x2="230" y2="130" stroke="black" stroke-width="2"/>
+                <rect x="215" y="65" width="30" height="45" fill="white" stroke="black" stroke-width="2"/>
+                <text x="222" y="60" font-size="11">R3</text>`;
+        }
+
+        document.getElementById('drawing').innerHTML = `
+            <svg width="280" height="180" viewBox="0 0 280 180">
+                <path d="M40,85 L40,40 L${numResistors === 2 ? 170 : 230},40" fill="none" stroke="black" stroke-width="2"/>
+                <path d="M40,105 L40,130 L${numResistors === 2 ? 170 : 230},130" fill="none" stroke="black" stroke-width="2"/>
+                <line x1="30" y1="85" x2="50" y2="85" stroke="black" stroke-width="3"/>
+                <line x1="35" y1="95" x2="45" y2="95" stroke="black" stroke-width="1.5"/>
+                ${branches}
+                <text x="10" y="95" font-weight="bold">V</text>
+            </svg>`;
+
+        let desc = `<strong>DATOS:</strong><br>`;
+        desc += `R1=${R1}Ω, R2=${R2}Ω${numResistors === 3 ? `, R3=${R3}Ω` : ''}<br>`;
+        if(giveVar === 'V') desc += `Voltaje total (V) = ${V} V<br>`;
+        else desc += `Intensidad total (I) = ${IT} A<br>`;
+        
+        document.getElementById('desc').innerHTML = desc;
+
+        document.getElementById('inputs-container').innerHTML = `
+            <div class="input-group"><label>1. Resistencia Equivalente (Ω):</label><input type="number" id="ans_req"></div>
+            <div class="input-group"><label>2. ${intermediateVar === 'I' ? 'Intensidad Total (A)' : 'Voltaje Total (V)'}:</label><input type="number" id="ans_inter"></div>
+            <div class="input-group"><label>3. Potencia Total (W):</label><input type="number" id="ans_p"></div>
+        `;
+    }
+
+    function verify() {
+        const valReq = parseFloat(document.getElementById('ans_req').value);
+        const valInter = parseFloat(document.getElementById('ans_inter').value);
+        const valP = parseFloat(document.getElementById('ans_p').value);
+        const fb = document.getElementById('feedback');
+        
+        let correctInter = (current.intermediateVar === 'I') ? current.IT : current.V;
+        let isOk = (valReq === current.Req && valInter === correctInter && valP === current.P);
+
+        fb.style.display = 'block';
+        if(isOk) {
+            score++;
+            fb.style.background = "#d4edda"; fb.style.color = "#155724";
+            fb.innerText = "¡CORRECTO! Has calculado todo perfectamente.";
+            setTimeout(() => init(false), 2000);
+        } else {
+            fb.style.background = "#f8d7da"; fb.style.color = "#721c24";
+            fb.innerText = `ERROR. Los valores eran: Req=${current.Req}Ω, ${current.intermediateVar}=${correctInter} y P=${current.P}W.`;
+            setTimeout(() => init(true), 4000);
+        }
+        updateUI();
+    }
+
+    function updateUI() {
+        document.getElementById('points').innerText = score;
+        const banner = document.getElementById('score-banner');
+        if(score <= 5) banner.style.backgroundColor = "#3498db";
+        else if(score <= 10) banner.style.backgroundColor = "#27ae60";
+        else if(score <= 15) banner.style.backgroundColor = "#f1c40f";
+        else banner.style.backgroundColor = "#e74c3c";
+    }
+
+    function showHelp() {
+        const d = document.getElementById('explanation');
+        d.style.display = 'block';
+        let h = `<strong>RESOLUCIÓN PASO A PASO:</strong><br>`;
+        h += `1. <b>Resistencia Equivalente (Req):</b> Al ser todas iguales, divide el valor de una resistencia entre el número de ellas: <b>${current.R1} / ${current.numResistors} = ${current.Req} Ω</b>.<br>`;
+        if(current.intermediateVar === 'I') {
+            h += `2. <b>Intensidad Total (I):</b> Aplica la Ley de Ohm con el voltaje dado: <b>I = V / Req</b>.<br>`;
+        } else {
+            h += `2. <b>Voltaje (V):</b> Aplica la Ley de Ohm con la intensidad dada: <b>V = I \u00B7 Req</b>.<br>`;
+        }
+        h += `3. <b>Potencia (P):</b> Multiplica los resultados anteriores: <b>P = V \u00B7 I</b>.`;
+        d.innerHTML = h;
+    }
+
+    window.onload = () => init();
+</script>
+</body>
+</html>
