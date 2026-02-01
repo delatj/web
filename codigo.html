@@ -3,66 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador y Editor de Archivos HTML</title>
+    <title>Editor HTML Pro</title>
     <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --accent: #0ea5e9;
+            --danger: #ef4444;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            text-align: center;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
         }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        h2 {
+            color: var(--primary);
+            margin-bottom: 25px;
+            font-weight: 700;
+        }
+
+        .upload-section {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 2px dashed #cbd5e1;
+        }
+
         textarea {
-            width: 80%;
-            height: 200px;
-            margin: 10px 0;
+            width: 100%;
+            height: 350px;
+            padding: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            resize: vertical;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+            outline: none;
+            transition: border-color 0.3s;
         }
-        input, button {
-            padding: 10px;
-            margin: 5px;
+
+        textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-paste { background-color: var(--accent); color: white; }
+        .btn-clear { background-color: #94a3b8; color: white; }
+        .btn-download { background-color: var(--primary); color: white; width: 100%; justify-content: center; font-size: 1.1rem; }
+
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+        button:active { transform: translateY(0); }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+
+        .footer-note {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 15px;
         }
     </style>
 </head>
 <body>
-    <h2>Generador y Editor de Archivos HTML</h2>
-    <input type="file" id="fileInput" accept=".html"><br>
-    <textarea id="htmlContent" placeholder="Escribe o edita tu código HTML aquí..."></textarea><br>
-    <input type="text" id="fileName" placeholder="Nombre del archivo (ej. index.html)"><br>
-    <button onclick="downloadHTML()">Descargar HTML</button>
-    <button onclick="clearText()">Limpiar Pantalla</button>
 
-    <script>
-        function downloadHTML() {
-            let content = document.getElementById("htmlContent").value;
-            let fileName = document.getElementById("fileName").value.trim();
+<div class="container">
+    <h2>🚀 Editor HTML Pro</h2>
+    
+    <div class="upload-section">
+        <label style="display:block; margin-bottom:5px; font-weight:bold;">Subir archivo existente:</label>
+        <input type="file" id="fileInput" accept=".html">
+    </div>
 
-            if (!fileName) {
-                alert("Por favor, ingresa un nombre para el archivo.");
-                return;
-            }
+    <div class="button-group">
+        <button class="btn-paste" onclick="pasteText()">📋 Pegar Contenido</button>
+        <button class="btn-clear" onclick="clearText()">🧹 Limpiar Texto</button>
+    </div>
 
-            let blob = new Blob([content], { type: "text/html" });
-            let a = document.createElement("a");
-            a.href = URL.createObjectURL(blob);
-            a.download = fileName.endsWith(".html") ? fileName : fileName + ".html";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+    <textarea id="htmlContent" placeholder="Escribe, edita o pega tu código HTML aquí..."></textarea>
+    
+    <input type="text" id="fileName" placeholder="Nombre del archivo (ej. mi-pagina.html)">
+    
+    <button class="btn-download" onclick="downloadHTML()">💾 Descargar Archivo</button>
+    
+    <p class="footer-note">Nota: Para pegar sin anuncios, asegúrate de haber dado permiso al navegador en el icono del candado.</p>
+</div>
+
+<script>
+    // Función para pegar contenido
+    async function pasteText() {
+        try {
+            const text = await navigator.clipboard.readText();
+            document.getElementById("htmlContent").value = text;
+        } catch (err) {
+            alert("Para pegar, haz clic en el candado de la barra de direcciones y permite el 'Portapapeles'.");
+        }
+    }
+
+    // Descargar archivo
+    function downloadHTML() {
+        let content = document.getElementById("htmlContent").value;
+        let fileName = document.getElementById("fileName").value.trim();
+
+        if (!fileName) {
+            alert("Por favor, ingresa un nombre para el archivo.");
+            return;
         }
 
-        function clearText() {
+        let blob = new Blob([content], { type: "text/html" });
+        let a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = fileName.endsWith(".html") ? fileName : fileName + ".html";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    // Limpiar texto SIN borrar el nombre del archivo
+    function clearText() {
+        if(confirm("¿Estás seguro de que quieres limpiar el código?")) {
             document.getElementById("htmlContent").value = "";
-            document.getElementById("fileName").value = "";
         }
+    }
 
-        document.getElementById("fileInput").addEventListener("change", function(event) {
-            let file = event.target.files[0];
-            if (file) {
-                let reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById("htmlContent").value = e.target.result;
-                };
-                reader.readAsText(file);
-            }
-        });
-    </script>
+    // Manejador de carga de archivos
+    document.getElementById("fileInput").addEventListener("change", function(event) {
+        let file = event.target.files[0];
+        if (file) {
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById("htmlContent").value = e.target.result;
+                document.getElementById("fileName").value = file.name;
+            };
+            reader.readAsText(file);
+        }
+    });
+</script>
+
 </body>
 </html>
