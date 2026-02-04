@@ -31,12 +31,13 @@
         .hidden { display: none; }
         .current-info { background: #1a5f7a; color: white; padding: 10px 20px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .section-label { font-weight: bold; margin-top: 15px; display: block; color: #555; }
+        .alert-info { background: #fff9c4; padding: 10px; border-radius: 5px; border: 1px solid #fbc02d; margin-top: 10px; font-size: 0.9em; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>📝 Control de Prenotas Tecnología ,  si quieres exportar las notas de la app cuaderno del profesor recuerda pulsar en Guardar los números redondeados</h1>
+    <h1>📝 Control de Prenotas Tecnología</h1>
 
     <div id="setup" class="setup-section">
         <h2>Paso 1: Lista de Alumnado</h2>
@@ -55,16 +56,16 @@
         <div class="items-container">
             <div class="item-group buenos">
                 <strong>✅ Aspectos Positivos</strong>
-                <label><input type="checkbox" class="item" value="está trabajando bien, si sigue así aprobará."> Está trabajando bien...</label>
-                <label><input type="checkbox" class="item" value="tiene buena actitud."> Tiene buena actitud.</label>
-                <label><input type="checkbox" class="item" value="Se esfuerza pero le cuesta, debe seguir así y no bajar su ritmo."> Se esfuerza pero le cuesta...</label>
+                <label><input type="checkbox" class="item" value="está trabajando bien"> está trabajando bien...</label>
+                <label><input type="checkbox" class="item" value="tiene buena actitud"> tiene buena actitud.</label>
+                <label><input type="checkbox" class="item" value="se esfuerza pero le cuesta y debe seguir así sin bajar su ritmo"> se esfuerza pero le cuesta...</label>
             </div>
             <div class="item-group malos">
                 <strong>❌ Aspectos a Mejorar</strong>
-                <label><input type="checkbox" class="item" value="debe trabajar y esforzarse más si quiere aprobar."> Debe trabajar más...</label>
-                <label><input type="checkbox" class="item" value="tiene mala actitud en clase."> Mala actitud.</label>
-                <label><input type="checkbox" class="item" value="es absentista."> Absentista.</label>
-                <label><input type="checkbox" class="item" value="hay días que no ha entregado las tareas o las ha entregado mal."> Tareas: no entregadas/mal.</label>
+                <label><input type="checkbox" class="item" value="debe trabajar y esforzarse más si quiere aprobar"> debe trabajar más...</label>
+                <label><input type="checkbox" class="item" value="tiene mala actitud en clase"> tiene mala actitud.</label>
+                <label><input type="checkbox" class="item" value="es absentista"> es absentista.</label>
+                <label><input type="checkbox" class="item" value="hay días que no ha entregado las tareas o las ha entregado mal"> tareas: no entregadas/mal.</label>
             </div>
         </div>
 
@@ -82,6 +83,10 @@
 
         <div class="result-area">
             <div id="finalText"></div>
+        </div>
+        
+        <div class="alert-info">
+            ⚠️ <strong>Nota:</strong> En la aplicación del profesor, al descargar las notas, recuerda marcar <strong>"guardar números redondeados"</strong>.
         </div>
         
         <button class="btn-download" onclick="downloadAllHtml()" style="margin-top:20px;">📥 Descargar Informe con Botones de Copia</button>
@@ -116,12 +121,24 @@
         updatePreview();
     }
 
+    function formatItems(items) {
+        if (items.length === 0) return "";
+        if (items.length === 1) return items[0] + ".";
+        
+        // Unir todos menos el último con comas, y el último con " y "
+        const lastItem = items.pop();
+        return items.join(', ') + ' y ' + lastItem + '.';
+    }
+
     function updatePreview() {
         const selectedItems = Array.from(document.querySelectorAll('.item:checked')).map(cb => cb.value);
         const p1 = document.getElementById('part1').value;
         const p2 = document.getElementById('part2').value;
+        
+        let descripcion = formatItems([...selectedItems]); // Usamos una copia para no alterar el original
+        
         dataStore[students[currentIndex]] = { items: selectedItems, p1: p1, p2: p2 };
-        document.getElementById('finalText').innerText = `${p1}\n\n${p2}\n\nDescripción del alumnado: ${selectedItems.join(' ')}`;
+        document.getElementById('finalText').innerText = `${p1}\n\n${p2}\n\nDescripción del alumnado: ${descripcion}`;
     }
 
     document.querySelectorAll('.item, textarea').forEach(el => el.addEventListener('input', updatePreview));
@@ -138,16 +155,18 @@
         let content = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Notas de Tecnología</title><style>
             body{font-family:sans-serif;background:#f0f2f5;padding:30px;}
             .card{background:white;padding:20px;margin-bottom:25px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.1);max-width:800px;margin-left:auto;margin-right:auto;}
+            .alert-box{background:#fff9c4; padding:10px; border:1px solid #fbc02d; margin-bottom:20px; text-align:center; border-radius:5px;}
             h3{color:#1a5f7a;margin-top:0;}
             pre{white-space:pre-wrap;background:#f9f9f9;padding:15px;border:1px solid #ddd;border-radius:5px;font-family:inherit;}
             button{background:#2e7d32;color:white;padding:10px 20px;border:none;border-radius:5px;cursor:pointer;font-weight:bold;}
-            button:active{background:#1b5e20;}
-        </style></head><body><h1 style="text-align:center;">Listado de Prenotas</h1>`;
+        </style></head><body>
+        <div class="alert-box">⚠️ Recordatorio: Al descargar las notas en la aplicación del profesor, marcar <strong>"guardar números redondeados"</strong>.</div>
+        <h1 style="text-align:center;">Listado de Prenotas</h1>`;
 
         students.forEach(name => {
             const data = dataStore[name] || { items: [], p1: defPart1, p2: defPart2 };
-            const desc = "Descripción del alumnado: " + data.items.join(' ');
-            const fullText = `${data.p1}\n\n${data.p2}\n\n${desc}`;
+            const descripcion = formatItems([...data.items]);
+            const fullText = `${data.p1}\n\n${data.p2}\n\nDescripción del alumnado: ${descripcion}`;
             
             content += `<div class="card">
                 <h3>ALUMNO/A: ${name}</h3>
