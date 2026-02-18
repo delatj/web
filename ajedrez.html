@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Ajedrez Profesional - Reglas Completas</title>
+    <title>Ajedrez Pro - Enroque y Puntuación</title>
     <style>
         :root {
             --primary: #2ecc71; --dark: #1a1a1a; --panel: #2c3e50;
@@ -13,14 +13,14 @@
         }
         body { background: var(--dark); color: white; margin: 0; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; overflow: hidden; }
 
-        .sidebar { width: 300px; background: var(--panel); padding: 20px; display: flex; flex-direction: column; box-shadow: 4px 0 10px rgba(0,0,0,0.5); }
-        #turn-box { font-size: 1.2rem; font-weight: bold; text-align: center; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 2px solid white; }
+        .sidebar { width: 320px; background: var(--panel); padding: 20px; display: flex; flex-direction: column; box-shadow: 4px 0 10px rgba(0,0,0,0.5); }
+        #turn-box { font-size: 1.2rem; font-weight: bold; text-align: center; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 2px solid white; transition: all 0.3s; }
         
-        #status-msg { 
-            font-size: 1.4rem; font-weight: bold; text-align: center; 
-            margin: 20px 0; min-height: 1.6em; color: var(--danger);
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
+        .score-board { display: flex; justify-content: space-between; margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; }
+        .score-item { text-align: center; flex: 1; }
+        .score-val { font-size: 1.5rem; font-weight: bold; display: block; }
+
+        #status-msg { font-size: 1.3rem; font-weight: bold; text-align: center; margin: 10px 0; min-height: 1.5em; color: var(--danger); }
 
         .viewport { flex-grow: 1; display: flex; justify-content: center; align-items: center; background: #222; }
         .board { display: grid; grid-template-columns: repeat(8, 65px); grid-template-rows: repeat(8, 65px); border: 8px solid #444; }
@@ -37,20 +37,26 @@
         .piece.black { color: #000; }
 
         .btn-reset { margin-top: auto; padding: 12px; background: #34495e; border: none; color: white; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .btn-reset:hover { background: #e74c3c; }
     </style>
 </head>
 <body>
 
-    <div class="sidebar" id="panel-lateral">
+    <div class="sidebar">
         <div id="turn-box">TURNO: BLANCAS</div>
-        <div id="status-msg"></div>
-        <div style="font-size: 0.85rem; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px;">
-            <b>Reglas Activas:</b><br>
-            - No puedes mover si dejas a tu Rey en jaque.<br>
-            - El Rey no se puede comer.<br>
-            - Avisos de Jaque y Mate.
+        
+        <div class="score-board">
+            <div class="score-item">🤍 BLANCAS<span id="score-white" class="score-val">0</span></div>
+            <div class="score-item">🖤 NEGRAS<span id="score-black" class="score-val">0</span></div>
         </div>
+
+        <div id="status-msg"></div>
+
+        <div style="font-size: 0.8rem; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; line-height: 1.4;">
+            <b>Reglas Avanzadas:</b><br>
+            - Enroque: Mueve el Rey dos casillas hacia la Torre.<br>
+            - Puntos: P=1, N/B=3, R=5, Q=9.
+        </div>
+        
         <button class="btn-reset" onclick="initGame()">REINICIAR PARTIDA</button>
     </div>
 
@@ -59,19 +65,27 @@
     </div>
 
     <script>
-        const piecesSymbols = { 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟' };
-        let boardState = [];
+        const symbols = { 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟' };
+        const values = { 'P': 1, 'N': 3, 'B': 3, 'R': 5, 'Q': 9, 'K': 0 };
+        
+        let board = [];
         let turn = 'white';
         let selectedSq = null;
         let legalMoves = [];
         let isGameOver = false;
+        let score = { white: 0, black: 0 };
+        
+        // Tracking para enroque
+        let movedPieces = {
+            whiteK: false, whiteRa: false, whiteRh: false,
+            blackK: false, blackRa: false, blackRh: false
+        };
 
         function initGame() {
-            isGameOver = false;
-            turn = 'white';
-            selectedSq = null;
-            legalMoves = [];
-            boardState = [
+            isGameOver = false; turn = 'white'; selectedSq = null; legalMoves = [];
+            score = { white: 0, black: 0 };
+            movedPieces = { whiteK: false, whiteRa: false, whiteRh: false, blackK: false, blackRa: false, blackRh: false };
+            board = [
                 ['r','n','b','q','k','b','n','r'], ['p','p','p','p','p','p','p','p'],
                 ['.','.','.','.','.','.','.','.'], ['.','.','.','.','.','.','.','.'],
                 ['.','.','.','.','.','.','.','.'], ['.','.','.','.','.','.','.','.'],
@@ -85,43 +99,38 @@
         function renderBoard() {
             const boardEl = document.getElementById('board');
             boardEl.innerHTML = '';
-            const kingPos = findKing(turn === 'white' ? 'white' : 'black');
-            const inCheck = isSquareAttacked(kingPos.r, kingPos.c, turn === 'white' ? 'black' : 'white');
+            const kingPos = findKing(turn);
+            const inCheck = isAttacked(kingPos.r, kingPos.c, turn === 'white' ? 'black' : 'white');
 
             for (let r = 0; r < 8; r++) {
                 for (let c = 0; c < 8; c++) {
                     const sq = document.createElement('div');
                     sq.className = `square ${(r + c) % 2 === 0 ? 'light' : 'dark'}`;
-                    
                     if (selectedSq && selectedSq.r === r && selectedSq.c === c) sq.classList.add('selected');
                     if (legalMoves.some(m => m.r === r && m.c === c)) sq.classList.add('legal');
-                    if (inCheck && boardState[r][c].toUpperCase() === 'K' && getPieceColor(r,c) === turn) sq.classList.add('in-check');
+                    if (inCheck && board[r][c].toUpperCase() === 'K' && getCol(r,c) === turn) sq.classList.add('in-check');
 
-                    const piece = boardState[r][c];
-                    if (piece !== '.') {
-                        const pSpan = document.createElement('span');
-                        pSpan.className = `piece ${piece === piece.toUpperCase() ? 'white' : 'black'}`;
-                        pSpan.innerText = piecesSymbols[piece];
-                        sq.appendChild(pSpan);
+                    const p = board[r][c];
+                    if (p !== '.') {
+                        const span = document.createElement('span');
+                        span.className = `piece ${p === p.toUpperCase() ? 'white' : 'black'}`;
+                        span.innerText = symbols[p];
+                        sq.appendChild(span);
                     }
-                    sq.onclick = () => handleSquareClick(r, c);
+                    sq.onclick = () => handleSquare(r, c);
                     boardEl.appendChild(sq);
                 }
             }
         }
 
-        function handleSquareClick(r, c) {
+        function handleSquare(r, c) {
             if (isGameOver) return;
-
-            const piece = boardState[r][c];
-            const color = getPieceColor(r, c);
-
-            if (legalMoves.some(m => m.r === r && m.c === c)) {
-                executeMove(selectedSq.r, selectedSq.c, r, c);
+            const move = legalMoves.find(m => m.r === r && m.c === c);
+            if (move) {
+                executeMove(selectedSq.r, selectedSq.c, r, c, move.type);
                 return;
             }
-
-            if (color === turn) {
+            if (getCol(r, c) === turn) {
                 selectedSq = { r, c };
                 legalMoves = getSafeMoves(r, c);
                 renderBoard();
@@ -130,44 +139,95 @@
             }
         }
 
-        function getPieceColor(r, c) {
-            const p = boardState[r][c];
-            if (p === '.') return null;
-            return p === p.toUpperCase() ? 'white' : 'black';
+        function getSafeMoves(r, c) {
+            const potential = getPotentialMoves(r, c, board);
+            
+            // Añadir Enroque si es el Rey
+            if (board[r][c].toUpperCase() === 'K') {
+                const castling = checkCastling(turn);
+                castling.forEach(m => potential.push(m));
+            }
+
+            return potential.filter(m => {
+                const tempTo = board[m.r][m.c];
+                const tempFrom = board[r][c];
+                board[m.r][m.c] = tempFrom;
+                board[r][c] = '.';
+                const king = findKing(turn);
+                const safe = !isAttacked(king.r, king.c, turn === 'white' ? 'black' : 'white');
+                board[r][c] = tempFrom;
+                board[m.r][m.c] = tempTo;
+                return safe;
+            });
         }
 
-        // Obtiene movimientos que no dejan al rey en jaque
-        function getSafeMoves(r, c) {
-            const rawMoves = getPotentialMoves(r, c, boardState);
-            const safeMoves = [];
-            const myColor = getPieceColor(r, c);
+        function checkCastling(color) {
+            const r = color === 'white' ? 7 : 0;
+            const moves = [];
+            const enemyColor = color === 'white' ? 'black' : 'white';
 
-            rawMoves.forEach(m => {
-                const originalTo = boardState[m.r][m.c];
-                const originalFrom = boardState[r][c];
-                
-                // Simulación
-                boardState[m.r][m.c] = originalFrom;
-                boardState[r][c] = '.';
-                
-                const king = findKing(myColor);
-                if (!isSquareAttacked(king.r, king.c, myColor === 'white' ? 'black' : 'white')) {
-                    safeMoves.push(m);
+            // No enroque si está en jaque
+            const kingPos = findKing(color);
+            if (isAttacked(kingPos.r, kingPos.c, enemyColor)) return moves;
+
+            // Enroque Corto (h)
+            if (!movedPieces[color+'K'] && !movedPieces[color+'Rh']) {
+                if (board[r][5] === '.' && board[r][6] === '.') {
+                    if (!isAttacked(r, 5, enemyColor) && !isAttacked(r, 6, enemyColor)) {
+                        moves.push({ r, c: 6, type: 'castle-short' });
+                    }
                 }
-                
-                // Deshacer simulación
-                boardState[r][c] = originalFrom;
-                boardState[m.r][m.c] = originalTo;
-            });
-            return safeMoves;
+            }
+            // Enroque Largo (a)
+            if (!movedPieces[color+'K'] && !movedPieces[color+'Ra']) {
+                if (board[r][1] === '.' && board[r][2] === '.' && board[r][3] === '.') {
+                    if (!isAttacked(r, 3, enemyColor) && !isAttacked(r, 2, enemyColor)) {
+                        moves.push({ r, c: 2, type: 'castle-long' });
+                    }
+                }
+            }
+            return moves;
+        }
+
+        function executeMove(fR, fC, tR, tC, type) {
+            const piece = board[fR][fC];
+            const captured = board[tR][tC];
+
+            // Sumar puntos
+            if (captured !== '.') {
+                score[turn] += values[captured.toUpperCase()];
+            }
+
+            // Mover pieza principal
+            board[tR][tC] = piece;
+            board[fR][fC] = '.';
+
+            // Lógica extra de Enroque
+            if (type === 'castle-short') {
+                board[tR][5] = board[tR][7]; board[tR][7] = '.';
+            } else if (type === 'castle-long') {
+                board[tR][3] = board[tR][0]; board[tR][0] = '.';
+            }
+
+            // Actualizar tracking de movimientos para enroque
+            if (piece === 'K') movedPieces[turn+'K'] = true;
+            if (piece === 'R' && fC === 0) movedPieces[turn+'Ra'] = true;
+            if (piece === 'R' && fC === 7) movedPieces[turn+'Rh'] = true;
+            if (piece === 'r' && fC === 0) movedPieces[turn+'Ra'] = true;
+            if (piece === 'r' && fC === 7) movedPieces[turn+'Rh'] = true;
+
+            turn = (turn === 'white') ? 'black' : 'white';
+            selectedSq = null; legalMoves = [];
+            checkStatus();
+            updateUI();
+            renderBoard();
         }
 
         function getPotentialMoves(r, c, state) {
             const p = state[r][c].toUpperCase();
             const color = state[r][c] === state[r][c].toUpperCase() ? 'white' : 'black';
-            let moves = [];
-
-            const directions = {
+            let m = [];
+            const dirs = {
                 'R': [[0,1],[0,-1],[1,0],[-1,0]],
                 'B': [[1,1],[1,-1],[-1,1],[-1,-1]],
                 'Q': [[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]],
@@ -175,45 +235,40 @@
             };
 
             if (p === 'P') {
-                const dir = (color === 'white') ? -1 : 1;
-                if (isValid(r+dir, c) && state[r+dir][c] === '.') {
-                    moves.push({r: r+dir, c: c});
-                    if (((color === 'white' && r === 6) || (color === 'black' && r === 1)) && state[r+2*dir][c] === '.')
-                        moves.push({r: r+2*dir, c: c});
+                const d = color === 'white' ? -1 : 1;
+                if (isValid(r+d, c) && state[r+d][c] === '.') {
+                    m.push({r: r+d, c: c});
+                    if (((color === 'white' && r === 6) || (color === 'black' && r === 1)) && state[r+2*d][c] === '.') m.push({r: r+2*d, c: c});
                 }
-                [[-1,dir], [1,dir]].forEach(off => {
-                    const nr = r+dir, nc = c+off[0];
-                    if (isValid(nr, nc) && state[nr][nc] !== '.' && getPieceColor(nr,nc) !== color)
-                        moves.push({r: nr, c: nc});
+                [[-1,d],[1,d]].forEach(off => {
+                    const nr = r+d, nc = c+off[0];
+                    if (isValid(nr, nc) && state[nr][nc] !== '.' && getCol(nr,nc) !== color) m.push({r: nr, c: nc});
                 });
             } else if (p === 'N') {
-                [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]].forEach(m => {
-                    const nr = r+m[0], nc = c+m[1];
-                    if (isValid(nr, nc) && getPieceColor(nr,nc) !== color) moves.push({r: nr, c: nc});
+                [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]].forEach(off => {
+                    const nr = r+off[0], nc = c+off[1];
+                    if (isValid(nr, nc) && getCol(nr,nc) !== color) m.push({r: nr, c: nc});
                 });
-            } else if (directions[p]) {
-                const limit = (p === 'K') ? 1 : 8;
-                directions[p].forEach(d => {
-                    for (let i = 1; i <= limit; i++) {
-                        const nr = r+d[0]*i, nc = c+d[1]*i;
+            } else if (dirs[p]) {
+                const limit = p === 'K' ? 1 : 8;
+                dirs[p].forEach(dir => {
+                    for(let i=1; i<=limit; i++) {
+                        const nr = r+dir[0]*i, nc = c+dir[1]*i;
                         if (!isValid(nr, nc)) break;
-                        if (state[nr][nc] === '.') moves.push({r: nr, c: nc});
-                        else {
-                            if (getPieceColor(nr,nc) !== color) moves.push({r: nr, c: nc});
-                            break;
-                        }
+                        if (state[nr][nc] === '.') m.push({r: nr, c: nc});
+                        else { if (getCol(nr,nc) !== color) m.push({r: nr, c: nc}); break; }
                     }
                 });
             }
-            return moves;
+            return m;
         }
 
-        function isSquareAttacked(r, c, attackerColor) {
-            for (let i = 0; i < 8; i++) {
-                for (let j = 0; j < 8; j++) {
-                    if (getPieceColor(i, j) === attackerColor) {
-                        const moves = getPotentialMoves(i, j, boardState);
-                        if (moves.some(m => m.r === r && m.c === c)) return true;
+        function isAttacked(r, c, attackerColor) {
+            for(let i=0; i<8; i++) {
+                for(let j=0; j<8; j++) {
+                    if (getCol(i,j) === attackerColor) {
+                        const m = getPotentialMoves(i,j, board);
+                        if (m.some(move => move.r === r && move.c === c)) return true;
                     }
                 }
             }
@@ -221,64 +276,47 @@
         }
 
         function findKing(color) {
-            for (let r = 0; r < 8; r++) {
-                for (let c = 0; c < 8; c++) {
-                    if (boardState[r][c].toUpperCase() === 'K' && getPieceColor(r, c) === color) return {r, c};
+            for(let r=0; r<8; r++) {
+                for(let c=0; c<8; c++) {
+                    if (board[r][c].toUpperCase() === 'K' && getCol(r,c) === color) return {r, c};
                 }
             }
         }
 
-        function executeMove(fR, fC, tR, tC) {
-            boardState[tR][tC] = boardState[fR][fC];
-            boardState[fR][fC] = '.';
-            turn = (turn === 'white') ? 'black' : 'white';
-            selectedSq = null; legalMoves = [];
-            
-            checkGameStatus();
-            updateUI();
-            renderBoard();
-        }
-
-        function checkGameStatus() {
+        function checkStatus() {
             const king = findKing(turn);
-            const inCheck = isSquareAttacked(king.r, king.c, turn === 'white' ? 'black' : 'white');
-            
-            // ¿Tiene algún movimiento legal?
+            const inCheck = isAttacked(king.r, king.c, turn === 'white' ? 'black' : 'white');
             let hasMoves = false;
-            for (let r = 0; r < 8; r++) {
-                for (let c = 0; c < 8; c++) {
-                    if (getPieceColor(r, c) === turn) {
-                        if (getSafeMoves(r, c).length > 0) { hasMoves = true; break; }
-                    }
+            for(let r=0; r<8; r++) {
+                for(let c=0; c<8; c++) {
+                    if (getCol(r,c) === turn && getSafeMoves(r,c).length > 0) { hasMoves = true; break; }
                 }
                 if (hasMoves) break;
             }
-
             const msg = document.getElementById('status-msg');
             if (inCheck) {
-                if (!hasMoves) {
-                    msg.innerText = "¡JAQUE MATE!";
-                    isGameOver = true;
-                } else {
-                    msg.innerText = "¡JAQUE!";
-                }
+                if (!hasMoves) { msg.innerText = "¡JAQUE MATE!"; isGameOver = true; }
+                else msg.innerText = "¡JAQUE!";
             } else {
-                if (!hasMoves) {
-                    msg.innerText = "TABLAS (Ahogado)";
-                    isGameOver = true;
-                } else {
-                    msg.innerText = "";
-                }
+                if (!hasMoves) { msg.innerText = "TABLAS"; isGameOver = true; }
+                else msg.innerText = "";
             }
         }
 
+        function getCol(r, c) {
+            const p = board[r][c];
+            if (p === '.') return null;
+            return p === p.toUpperCase() ? 'white' : 'black';
+        }
         function isValid(r, c) { return r >= 0 && r < 8 && c >= 0 && c < 8; }
 
         function updateUI() {
             const box = document.getElementById('turn-box');
             box.innerText = `TURNO: ${turn === 'white' ? 'BLANCAS' : 'NEGRAS'}`;
-            box.style.color = turn === 'white' ? 'white' : '#000';
             box.style.backgroundColor = turn === 'white' ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.8)';
+            box.style.color = turn === 'white' ? 'white' : 'black';
+            document.getElementById('score-white').innerText = score.white;
+            document.getElementById('score-black').innerText = score.black;
         }
 
         initGame();
