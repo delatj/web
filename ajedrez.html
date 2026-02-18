@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Ajedrez Profesional - Reglas Completas</title>
+    <style>
+        :root {
+            --primary: #2ecc71; --dark: #1a1a1a; --panel: #2c3e50;
+            --light-sq: #dee3e6; --dark-sq: #8ca2ad; 
+            --highlight: rgba(241, 196, 15, 0.7);
+            --legal: rgba(46, 204, 113, 0.4);
+            --danger: #e74c3c;
+        }
+        body { background: var(--dark); color: white; margin: 0; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+
+        .sidebar { width: 300px; background: var(--panel); padding: 20px; display: flex; flex-direction: column; box-shadow: 4px 0 10px rgba(0,0,0,0.5); }
+        #turn-box { font-size: 1.2rem; font-weight: bold; text-align: center; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 2px solid white; }
+        
+        #status-msg { 
+            font-size: 1.4rem; font-weight: bold; text-align: center; 
+            margin: 20px 0; min-height: 1.6em; color: var(--danger);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .viewport { flex-grow: 1; display: flex; justify-content: center; align-items: center; background: #222; }
+        .board { display: grid; grid-template-columns: repeat(8, 65px); grid-template-rows: repeat(8, 65px); border: 8px solid #444; }
+        
+        .square { width: 65px; height: 65px; display: flex; justify-content: center; align-items: center; font-size: 45px; cursor: pointer; position: relative; }
+        .square.light { background-color: var(--light-sq); }
+        .square.dark { background-color: var(--dark-sq); }
+        .square.selected { background-color: var(--highlight) !important; }
+        .square.legal::after { content: ""; width: 16px; height: 16px; background: var(--legal); border-radius: 50%; position: absolute; }
+        .square.in-check { background-color: rgba(231, 76, 60, 0.6) !important; }
+
+        .piece { cursor: pointer; user-select: none; z-index: 2; }
+        .piece.white { color: #fff; text-shadow: 0 0 2px #000, 1px 1px 3px rgba(0,0,0,0.4); }
+        .piece.black { color: #000; }
+
+        .btn-reset { margin-top: auto; padding: 12px; background: #34495e; border: none; color: white; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-reset:hover { background: #e74c3c; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar" id="panel-lateral">
+        <div id="turn-box">TURNO: BLANCAS</div>
+        <div id="status-msg"></div>
+        <div style="font-size: 0.85rem; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px;">
+            <b>Reglas Activas:</b><br>
+            - No puedes mover si dejas a tu Rey en jaque.<br>
+            - El Rey no se puede comer.<br>
+            - Avisos de Jaque y Mate.
+        </div>
+        <button class="btn-reset" onclick="initGame()">REINICIAR PARTIDA</button>
+    </div>
+
+    <div class="viewport">
+        <div id="board" class="board"></div>
+    </div>
+
+    <script>
+        const piecesSymbols = { 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟' };
+        let boardState = [];
+        let turn = 'white';
+        let selectedSq = null;
+        let legalMoves = [];
+        let isGameOver = false;
+
+        function initGame() {
+            isGameOver = false;
+            turn = 'white';
+            selectedSq = null;
+            legalMoves = [];
+            boardState = [
+                ['r','n','b','q','k','b','n','r'], ['p','p','p','p','p','p','p','p'],
+                ['.','.','.','.','.','.','.','.'], ['.','.','.','.','.','.','.','.'],
+                ['.','.','.','.','.','.','.','.'], ['.','.','.','.','.','.','.','.'],
+                ['P','P','P','P','P','P','P','P'], ['R','N','B','Q','K','B','N','R']
+            ];
+            document.getElementById('status-msg').innerText = "";
+            updateUI();
+            renderBoard();
+        }
+
+        function renderBoard() {
+            const boardEl = document.getElementById('board');
+            boardEl.innerHTML = '';
+            const kingPos = findKing(turn === 'white' ? 'white' : 'black');
+            const inCheck = isSquareAttacked(kingPos.r, kingPos.c, turn === 'white' ? 'black' : 'white');
+
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const sq = document.createElement('div');
+                    sq.className = `square ${(r + c) % 2 === 0 ? 'light' : 'dark'}`;
+                    
+                    if (selectedSq && selectedSq.r === r && selectedSq.c === c) sq.classList.add('selected');
+                    if (legalMoves.some(m => m.r === r && m.c === c)) sq.classList.add('legal');
+                    if (inCheck && boardState[r][c].toUpperCase() === 'K' && getPieceColor(r,c) === turn) sq.classList.add('in-check');
+
+                    const piece = boardState[r][c];
+                    if (piece !== '.') {
+                        const pSpan = document.createElement('span');
+                        pSpan.className = `piece ${piece === piece.toUpperCase() ? 'white' : 'black'}`;
+                        pSpan.innerText = piecesSymbols[piece];
+                        sq.appendChild(pSpan);
+                    }
+                    sq.onclick = () => handleSquareClick(r, c);
+                    boardEl.appendChild(sq);
+                }
+            }
+        }
+
+        function handleSquareClick(r, c) {
+            if (isGameOver) return;
+
+            const piece = boardState[r][c];
+            const color = getPieceColor(r, c);
+
+            if (legalMoves.some(m => m.r === r && m.c === c)) {
+                executeMove(selectedSq.r, selectedSq.c, r, c);
+                return;
+            }
+
+            if (color === turn) {
+                selectedSq = { r, c };
+                legalMoves = getSafeMoves(r, c);
+                renderBoard();
+            } else {
+                selectedSq = null; legalMoves = []; renderBoard();
+            }
+        }
+
+        function getPieceColor(r, c) {
+            const p = boardState[r][c];
+            if (p === '.') return null;
+            return p === p.toUpperCase() ? 'white' : 'black';
+        }
+
+        // Obtiene movimientos que no dejan al rey en jaque
+        function getSafeMoves(r, c) {
+            const rawMoves = getPotentialMoves(r, c, boardState);
+            const safeMoves = [];
+            const myColor = getPieceColor(r, c);
+
+            rawMoves.forEach(m => {
+                const originalTo = boardState[m.r][m.c];
+                const originalFrom = boardState[r][c];
+                
+                // Simulación
+                boardState[m.r][m.c] = originalFrom;
+                boardState[r][c] = '.';
+                
+                const king = findKing(myColor);
+                if (!isSquareAttacked(king.r, king.c, myColor === 'white' ? 'black' : 'white')) {
+                    safeMoves.push(m);
+                }
+                
+                // Deshacer simulación
+                boardState[r][c] = originalFrom;
+                boardState[m.r][m.c] = originalTo;
+            });
+            return safeMoves;
+        }
+
+        function getPotentialMoves(r, c, state) {
+            const p = state[r][c].toUpperCase();
+            const color = state[r][c] === state[r][c].toUpperCase() ? 'white' : 'black';
+            let moves = [];
+
+            const directions = {
+                'R': [[0,1],[0,-1],[1,0],[-1,0]],
+                'B': [[1,1],[1,-1],[-1,1],[-1,-1]],
+                'Q': [[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]],
+                'K': [[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]]
+            };
+
+            if (p === 'P') {
+                const dir = (color === 'white') ? -1 : 1;
+                if (isValid(r+dir, c) && state[r+dir][c] === '.') {
+                    moves.push({r: r+dir, c: c});
+                    if (((color === 'white' && r === 6) || (color === 'black' && r === 1)) && state[r+2*dir][c] === '.')
+                        moves.push({r: r+2*dir, c: c});
+                }
+                [[-1,dir], [1,dir]].forEach(off => {
+                    const nr = r+dir, nc = c+off[0];
+                    if (isValid(nr, nc) && state[nr][nc] !== '.' && getPieceColor(nr,nc) !== color)
+                        moves.push({r: nr, c: nc});
+                });
+            } else if (p === 'N') {
+                [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]].forEach(m => {
+                    const nr = r+m[0], nc = c+m[1];
+                    if (isValid(nr, nc) && getPieceColor(nr,nc) !== color) moves.push({r: nr, c: nc});
+                });
+            } else if (directions[p]) {
+                const limit = (p === 'K') ? 1 : 8;
+                directions[p].forEach(d => {
+                    for (let i = 1; i <= limit; i++) {
+                        const nr = r+d[0]*i, nc = c+d[1]*i;
+                        if (!isValid(nr, nc)) break;
+                        if (state[nr][nc] === '.') moves.push({r: nr, c: nc});
+                        else {
+                            if (getPieceColor(nr,nc) !== color) moves.push({r: nr, c: nc});
+                            break;
+                        }
+                    }
+                });
+            }
+            return moves;
+        }
+
+        function isSquareAttacked(r, c, attackerColor) {
+            for (let i = 0; i < 8; i++) {
+                for (let j = 0; j < 8; j++) {
+                    if (getPieceColor(i, j) === attackerColor) {
+                        const moves = getPotentialMoves(i, j, boardState);
+                        if (moves.some(m => m.r === r && m.c === c)) return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        function findKing(color) {
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    if (boardState[r][c].toUpperCase() === 'K' && getPieceColor(r, c) === color) return {r, c};
+                }
+            }
+        }
+
+        function executeMove(fR, fC, tR, tC) {
+            boardState[tR][tC] = boardState[fR][fC];
+            boardState[fR][fC] = '.';
+            turn = (turn === 'white') ? 'black' : 'white';
+            selectedSq = null; legalMoves = [];
+            
+            checkGameStatus();
+            updateUI();
+            renderBoard();
+        }
+
+        function checkGameStatus() {
+            const king = findKing(turn);
+            const inCheck = isSquareAttacked(king.r, king.c, turn === 'white' ? 'black' : 'white');
+            
+            // ¿Tiene algún movimiento legal?
+            let hasMoves = false;
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    if (getPieceColor(r, c) === turn) {
+                        if (getSafeMoves(r, c).length > 0) { hasMoves = true; break; }
+                    }
+                }
+                if (hasMoves) break;
+            }
+
+            const msg = document.getElementById('status-msg');
+            if (inCheck) {
+                if (!hasMoves) {
+                    msg.innerText = "¡JAQUE MATE!";
+                    isGameOver = true;
+                } else {
+                    msg.innerText = "¡JAQUE!";
+                }
+            } else {
+                if (!hasMoves) {
+                    msg.innerText = "TABLAS (Ahogado)";
+                    isGameOver = true;
+                } else {
+                    msg.innerText = "";
+                }
+            }
+        }
+
+        function isValid(r, c) { return r >= 0 && r < 8 && c >= 0 && c < 8; }
+
+        function updateUI() {
+            const box = document.getElementById('turn-box');
+            box.innerText = `TURNO: ${turn === 'white' ? 'BLANCAS' : 'NEGRAS'}`;
+            box.style.color = turn === 'white' ? 'white' : '#000';
+            box.style.backgroundColor = turn === 'white' ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.8)';
+        }
+
+        initGame();
+    </script>
+</body>
+</html>
