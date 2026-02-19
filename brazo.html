@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Robot Game - Nivel Experto 25+</title>
+    <style>
+        :root {
+            --dark: #1a1a1a; --panel: #2c3e50; --accent: #f1c40f;
+            --robot: #ecf0f1; --belt: #34495e; --danger: #e74c3c;
+        }
+        body { background: #333; color: white; margin: 0; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; overflow: hidden; transition: background 1.2s ease; }
+
+        /* PANEL */
+        .sidebar { width: 310px; background: var(--panel); padding: 15px; display: flex; flex-direction: column; gap: 8px; z-index: 1000; box-shadow: 5px 0 15px rgba(0,0,0,0.5); }
+        .header-score { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; border: 2px solid var(--accent); }
+        .score-box { font-size: 1.8rem; font-weight: bold; color: var(--accent); }
+        .instructions { background: #111; padding: 12px; border-radius: 8px; border-left: 5px solid #2ecc71; min-height: 50px; font-size: 0.85rem; }
+        
+        .control-group { background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; display: flex; flex-direction: column; gap: 5px; }
+        input { background: #000; border: 1px solid #444; color: var(--accent); padding: 8px; border-radius: 4px; text-align: center; width: 80%; margin: 0 auto; display: block; }
+        
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        button { padding: 10px; cursor: pointer; border: none; border-radius: 4px; font-weight: bold; text-transform: uppercase; }
+        .btn-move { background: var(--accent); color: #000; }
+        .btn-grip { background: #9b59b6; color: white; }
+        .btn-save { background: #3498db; color: white; grid-column: span 2; }
+
+        .pos-list { flex-grow: 1; background: #111; border-radius: 6px; padding: 10px; overflow-y: auto; border: 1px solid #444; }
+        .pos-card { background: #222; margin-bottom: 5px; padding: 6px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid var(--accent); font-size: 0.75rem; }
+        .btn-go { background: #2ecc71; border: none; color: white; padding: 4px; border-radius: 3px; cursor: pointer; }
+
+        /* ESCENA */
+        .viewport { flex-grow: 1; position: relative; }
+        .conveyor { position: absolute; bottom: 0; width: 100%; height: 90px; background: var(--belt); border-top: 8px solid #222; z-index: 10; }
+
+        /* ROBOT */
+        #robot-system { position: absolute; bottom: 215px; left: 50%; z-index: 100; }
+        .base-platform { width: 120px; height: 35px; background: #444; position: absolute; bottom: -15px; left: -60px; border-radius: 10px; }
+        
+        .link { position: absolute; bottom: 0; left: -16px; width: 32px; background: var(--robot); border: 3px solid #7f8c8d; border-radius: 16px; transform-origin: bottom center; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+        .link-main { height: 140px; } 
+        .link-sub { height: 130px; bottom: 125px; left: -2px; }
+        
+        .gripper { position: absolute; bottom: 115px; left: -24px; width: 80px; height: 16px; background: #95a5a6; border: 2px solid #2c3e50; }
+        .claw { position: absolute; width: 18px; height: 55px; background: var(--danger); border-radius: 4px; transition: transform 0.2s; }
+        .claw-l { left: 8px; bottom: -45px; }
+        .claw-r { right: 8px; bottom: -45px; }
+
+        /* OBJETOS */
+        .piece { position: absolute; width: 40px; height: 40px; border-radius: 6px; z-index: 50; border: 2px solid rgba(0,0,0,0.2); }
+        .box { position: absolute; bottom: 90px; width: 110px; height: 80px; border: 5px solid #fff; background: rgba(255,255,255,0.1); border-top: none; z-index: 20; transition: left 0.8s ease; }
+        .box-label { background: white; color: black; font-size: 0.7rem; font-weight: bold; width: 100%; text-align: center; padding: 4px 0; position: absolute; top: 0; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="header-score">
+            <span>PUNTOS</span>
+            <div class="score-box" id="puntos">0</div>
+        </div>
+        <div class="instructions" id="mision-txt">Iniciando...</div>
+        
+        <div class="control-group">
+            <input type="number" id="inpA1" value="0">
+            <input type="number" id="inpA2" value="0">
+        </div>
+
+        <div class="btn-grid">
+            <button class="btn-move" onclick="manualMove()">Mover</button>
+            <button class="btn-grip" onclick="toggleClaw()" id="gripBtn">Pinza</button>
+            <button class="btn-save" onclick="savePos()">Guardar Posición</button>
+        </div>
+        
+        <div class="pos-list" id="posList"></div>
+    </div>
+
+    <div class="viewport" id="factory">
+        <div id="robot-system">
+            <div class="base-platform"></div>
+            <div class="link link-main" id="arm1">
+                <div class="link link-sub" id="arm2">
+                    <div class="gripper">
+                        <div class="claw claw-l" id="cL"></div>
+                        <div class="claw claw-r" id="cR"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="conveyor"></div>
+    </div>
+
+    <script>
+        let puntos = 0;
+        let isClawClosed = false;
+        let itemHeld = null;
+        let savedPositions = [];
+        const colors = { 'rojo': '#e74c3c', 'azul': '#3498db', 'verde': '#2ecc71', 'amarillo': '#f1c40f', 'naranja': '#e67e22' };
+        let misionesActivas = [];
+
+        function setMision() {
+            document.querySelectorAll('.box').forEach(b => b.remove());
+            misionesActivas = [];
+            
+            // RANGO 1/3 (110px) para asegurar alcance perfecto
+            const safeX = () => (Math.random() * 220) - 110; 
+
+            if (puntos < 6) {
+                const c = Object.keys(colors)[Math.floor(Math.random()*5)];
+                createBox(safeX(), c, 5); 
+                document.getElementById('mision-txt').innerText = `NIVEL 1: Entrega piezas ${c.toUpperCase()}.`;
+            } 
+            else if (puntos < 16) {
+                createBox(-110, 'rojo', 10);
+                createBox(110, 'azul', 10);
+                document.getElementById('mision-txt').innerText = `NIVEL 2: Clasificación dual (Fija).`;
+            } 
+            else {
+                // NIVEL FINAL INFINITO
+                createBox(-100, 'verde', 9999, true);
+                createBox(100, 'amarillo', 9999, true);
+                document.getElementById('mision-txt').innerText = `MODO INFINITO: ¡Cuidado con los colores cambiantes!`;
+            }
+            updateBackground();
+        }
+
+        function createBox(x, colorTarget, meta, dinamico = false) {
+            const b = document.createElement('div');
+            b.className = 'box';
+            const absoluteX = (window.innerWidth / 2) + x - 55;
+            b.style.left = absoluteX + "px";
+            b.style.borderColor = colors[colorTarget] || '#fff';
+            const label = document.createElement('div');
+            label.className = 'box-label';
+            label.innerText = colorTarget.toUpperCase();
+            b.appendChild(label);
+            document.getElementById('factory').appendChild(b);
+            misionesActivas.push({ el: b, color: colorTarget, meta: meta, actual: 0, xCenter: absoluteX + 55, dinamico });
+        }
+
+        function updateBackground() {
+            let bg = "#333";
+            if (puntos >= 1 && puntos <= 5) bg = "#005a9e";   // Azul
+            if (puntos >= 6 && puntos <= 10) bg = "#107c10";  // Verde
+            if (puntos >= 11 && puntos <= 15) bg = "#d29200"; // Amarillo
+            if (puntos >= 16 && puntos <= 24) bg = "#d35400"; // Naranja
+            if (puntos >= 25) bg = "#a4262c";                 // Rojo (Experto)
+            document.body.style.backgroundColor = bg;
+        }
+
+        function manualMove() {
+            document.getElementById('arm1').style.transform = `rotate(${document.getElementById('inpA1').value}deg)`;
+            document.getElementById('arm2').style.transform = `rotate(${document.getElementById('inpA2').value}deg)`;
+        }
+
+        function savePos() {
+            const a1 = document.getElementById('inpA1').value;
+            const a2 = document.getElementById('inpA2').value;
+            savedPositions.push({a1, a2});
+            renderList();
+        }
+
+        function renderList() {
+            const list = document.getElementById('posList');
+            list.innerHTML = savedPositions.map((p, i) => `
+                <div class="pos-card">
+                    <span>P${i+1}: ${p.a1}°, ${p.a2}°</span>
+                    <button class="btn-go" onclick="goTo(${p.a1}, ${p.a2})">IR</button>
+                </div>
+            `).join('');
+        }
+
+        function goTo(a1, a2) {
+            document.getElementById('inpA1').value = a1;
+            document.getElementById('inpA2').value = a2;
+            manualMove();
+        }
+
+        function toggleClaw() {
+            isClawClosed = !isClawClosed;
+            const cL = document.getElementById('cL'), cR = document.getElementById('cR');
+            if (isClawClosed) {
+                cL.style.transform = "translateX(18px)";
+                cR.style.transform = "translateX(-18px)";
+                const grip = cL.getBoundingClientRect();
+                document.querySelectorAll('.piece').forEach(p => {
+                    const pR = p.getBoundingClientRect();
+                    if (Math.abs(grip.x - pR.x) < 55 && Math.abs(grip.y - pR.y) < 55 && !itemHeld) itemHeld = p;
+                });
+            } else {
+                cL.style.transform = "translateX(0)";
+                cR.style.transform = "translateX(0)";
+                if(itemHeld) releasePiece();
+            }
+        }
+
+        function releasePiece() {
+            const p = itemHeld; itemHeld = null;
+            let y = parseFloat(p.style.top);
+            let x = parseFloat(p.style.left);
+            const gravity = setInterval(() => {
+                y += 8; p.style.top = y + "px";
+                misionesActivas.forEach(m => {
+                    if (y > window.innerHeight - 175 && Math.abs((x + 20) - m.xCenter) < 55) {
+                        clearInterval(gravity);
+                        p.style.top = (window.innerHeight - 140) + "px";
+                        checkScore(m, p);
+                    }
+                });
+                if (y > window.innerHeight - 130) {
+                    clearInterval(gravity);
+                    setTimeout(() => p.remove(), 800);
+                }
+            }, 20);
+        }
+
+        function checkScore(m, p) {
+            const colorP = p.getAttribute('data-color');
+            if (colorP === m.color) {
+                puntos++;
+                document.getElementById('puntos').innerText = puntos;
+                p.style.opacity = "0.4";
+                
+                if (puntos === 6 || puntos === 16) {
+                    setTimeout(setMision, 500);
+                } else if (m.dinamico) {
+                    m.color = Object.keys(colors)[Math.floor(Math.random()*5)];
+                    m.el.style.borderColor = colors[m.color];
+                    m.el.querySelector('.box-label').innerText = m.color.toUpperCase();
+                }
+            }
+            updateBackground();
+        }
+
+        function createPiece() {
+            const keys = Object.keys(colors);
+            const c = keys[Math.floor(Math.random()*5)];
+            const p = document.createElement('div');
+            p.className = 'piece';
+            p.style.backgroundColor = colors[c];
+            p.setAttribute('data-color', c);
+            p.style.left = "-50px";
+            p.style.top = (window.innerHeight - 130) + "px";
+            document.getElementById('factory').appendChild(p);
+            let xPos = -50;
+            const belt = setInterval(() => {
+                if (itemHeld === p) { clearInterval(belt); return; }
+                xPos += 2.5; p.style.left = xPos + "px";
+                if (xPos > window.innerWidth) { p.remove(); clearInterval(belt); }
+            }, 30);
+        }
+
+        setInterval(() => {
+            if (itemHeld) {
+                const g = document.getElementById('cL').getBoundingClientRect();
+                const f = document.getElementById('factory').getBoundingClientRect();
+                itemHeld.style.left = (g.left - f.left + 20) + "px";
+                itemHeld.style.top = (g.top - f.top + 20) + "px";
+            }
+        }, 16);
+
+        setInterval(createPiece, 4000);
+        setMision();
+    </script>
+</body>
+</html>
