@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Ajedrez Pro - Enroque y Puntuación</title>
+    <title>Ajedrez Pro - Versión Final Corregida</title>
     <style>
         :root {
             --primary: #2ecc71; --dark: #1a1a1a; --panel: #2c3e50;
@@ -11,315 +11,252 @@
             --legal: rgba(46, 204, 113, 0.4);
             --danger: #e74c3c;
         }
-        body { background: var(--dark); color: white; margin: 0; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+        body { background: var(--dark); color: white; margin: 0; font-family: 'Arial Black', Gadget, sans-serif; display: flex; height: 100vh; overflow: hidden; }
 
+        /* SIDEBAR Y PUNTUACIÓN GIGANTE */
         .sidebar { width: 320px; background: var(--panel); padding: 20px; display: flex; flex-direction: column; box-shadow: 4px 0 10px rgba(0,0,0,0.5); }
-        #turn-box { font-size: 1.2rem; font-weight: bold; text-align: center; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 2px solid white; transition: all 0.3s; }
+        #turn-box { font-size: 1.4rem; font-weight: bold; text-align: center; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 2px solid var(--primary); }
         
-        .score-board { display: flex; justify-content: space-between; margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; }
-        .score-item { text-align: center; flex: 1; }
-        .score-val { font-size: 1.5rem; font-weight: bold; display: block; }
+        .score-container { text-align: center; background: rgba(0,0,0,0.2); padding: 20px; border-radius: 15px; }
+        .score-label { font-size: 1.2rem; color: #bdc3c7; }
+        .score-num { font-size: 5rem; font-weight: 900; line-height: 1; margin: 10px 0 30px 0; display: block; color: var(--primary); text-shadow: 2px 2px 0px #000; }
 
-        #status-msg { font-size: 1.3rem; font-weight: bold; text-align: center; margin: 10px 0; min-height: 1.5em; color: var(--danger); }
-
-        .viewport { flex-grow: 1; display: flex; justify-content: center; align-items: center; background: #222; }
-        .board { display: grid; grid-template-columns: repeat(8, 65px); grid-template-rows: repeat(8, 65px); border: 8px solid #444; }
+        /* TABLERO */
+        .game-container { flex-grow: 1; display: flex; justify-content: center; align-items: center; background: radial-gradient(circle, #34495e, #1a1a1a); }
+        #board { display: grid; grid-template-columns: repeat(8, 75px); grid-template-rows: repeat(8, 75px); border: 8px solid #333; }
+        .square { width: 75px; height: 75px; display: flex; justify-content: center; align-items: center; font-size: 55px; cursor: pointer; user-select: none; }
+        .white-sq { background-color: var(--light-sq); }
+        .black-sq { background-color: var(--dark-sq); }
         
-        .square { width: 65px; height: 65px; display: flex; justify-content: center; align-items: center; font-size: 45px; cursor: pointer; position: relative; }
-        .square.light { background-color: var(--light-sq); }
-        .square.dark { background-color: var(--dark-sq); }
-        .square.selected { background-color: var(--highlight) !important; }
-        .square.legal::after { content: ""; width: 16px; height: 16px; background: var(--legal); border-radius: 50%; position: absolute; }
-        .square.in-check { background-color: rgba(231, 76, 60, 0.6) !important; }
+        /* ESTILO DE PIEZAS */
+        .piece { position: relative; z-index: 10; }
+        .piece.white { color: #ffffff; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
+        .piece.black { color: #222222; text-shadow: 0 0 10px rgba(255,255,255,0.8), 1px 1px 0 #fff; }
 
-        .piece { cursor: pointer; user-select: none; z-index: 2; }
-        .piece.white { color: #fff; text-shadow: 0 0 2px #000, 1px 1px 3px rgba(0,0,0,0.4); }
-        .piece.black { color: #000; }
+        .selected { background-color: var(--highlight) !important; }
+        .legal-dot::after { content: ''; width: 18px; height: 18px; background: var(--legal); border-radius: 50%; }
 
-        .btn-reset { margin-top: auto; padding: 12px; background: #34495e; border: none; color: white; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        /* MODAL CORONACIÓN */
+        #promotion-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; flex-direction: column; align-items: center; justify-content: center; }
+        #promotion-box { background: var(--panel); padding: 30px; border-radius: 20px; border: 4px solid var(--primary); text-align: center; }
+        .promo-btn { width: 90px; height: 90px; font-size: 60px; margin: 10px; cursor: pointer; border-radius: 15px; border: none; background: #eee; transition: 0.2s; }
+        .promo-btn:hover { background: var(--primary); color: white; transform: scale(1.1); }
     </style>
 </head>
 <body>
 
-    <div class="sidebar">
-        <div id="turn-box">TURNO: BLANCAS</div>
-        
-        <div class="score-board">
-            <div class="score-item">🤍 BLANCAS<span id="score-white" class="score-val">0</span></div>
-            <div class="score-item">🖤 NEGRAS<span id="score-black" class="score-val">0</span></div>
-        </div>
-
-        <div id="status-msg"></div>
-
-        <div style="font-size: 0.8rem; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; line-height: 1.4;">
-            <b>Reglas Avanzadas:</b><br>
-            - Enroque: Mueve el Rey dos casillas hacia la Torre.<br>
-            - Puntos: P=1, N/B=3, R=5, Q=9.
-        </div>
-        
-        <button class="btn-reset" onclick="initGame()">REINICIAR PARTIDA</button>
+<div class="sidebar">
+    <div id="turn-box">TURNO: BLANCAS</div>
+    <div class="score-container">
+        <span class="score-label">BLANCAS</span>
+        <span id="w-score" class="score-num">0</span>
+        <span class="score-label">NEGRAS</span>
+        <span id="b-score" class="score-num">0</span>
     </div>
+    <button onclick="location.reload()" style="background:var(--danger); color:white; border:none; padding:15px; border-radius:8px; cursor:pointer; font-weight:bold; margin-top:20px;">REINICIAR PARTIDA</button>
+</div>
 
-    <div class="viewport">
-        <div id="board" class="board"></div>
+<div class="game-container">
+    <div id="board"></div>
+</div>
+
+<div id="promotion-overlay">
+    <div id="promotion-box">
+        <h2 style="margin-top:0">¡PEÓN CORONADO!</h2>
+        <p>Elige tu nueva pieza:</p>
+        <div id="promo-options"></div>
     </div>
+</div>
 
-    <script>
-        const symbols = { 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟' };
-        const values = { 'P': 1, 'N': 3, 'B': 3, 'R': 5, 'Q': 9, 'K': 0 };
-        
-        let board = [];
-        let turn = 'white';
-        let selectedSq = null;
-        let legalMoves = [];
-        let isGameOver = false;
-        let score = { white: 0, black: 0 };
-        
-        // Tracking para enroque
-        let movedPieces = {
-            whiteK: false, whiteRa: false, whiteRh: false,
-            blackK: false, blackRa: false, blackRh: false
-        };
+<script>
+    const symbols = { 'r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♟','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔','P':'♙' };
+    let board = [
+        ['r','n','b','q','k','b','n','r'],
+        ['p','p','p','p','p','p','p','p'],
+        ['.','.','.','.','.','.','.','.'],
+        ['.','.','.','.','.','.','.','.'],
+        ['.','.','.','.','.','.','.','.'],
+        ['.','.','.','.','.','.','.','.'],
+        ['P','P','P','P','P','P','P','P'],
+        ['R','N','B','Q','K','B','N','R']
+    ];
 
-        function initGame() {
-            isGameOver = false; turn = 'white'; selectedSq = null; legalMoves = [];
-            score = { white: 0, black: 0 };
-            movedPieces = { whiteK: false, whiteRa: false, whiteRh: false, blackK: false, blackRa: false, blackRh: false };
-            board = [
-                ['r','n','b','q','k','b','n','r'], ['p','p','p','p','p','p','p','p'],
-                ['.','.','.','.','.','.','.','.'], ['.','.','.','.','.','.','.','.'],
-                ['.','.','.','.','.','.','.','.'], ['.','.','.','.','.','.','.','.'],
-                ['P','P','P','P','P','P','P','P'], ['R','N','B','Q','K','B','N','R']
-            ];
-            document.getElementById('status-msg').innerText = "";
-            updateUI();
-            renderBoard();
-        }
+    let turn = 'white', selected = null, isGameOver = false, scores = { white:0, black:0 };
+    let moved = { K:false, k:false, R0:false, R7:false, r0:false, r7:false };
+    let promotionData = null;
 
-        function renderBoard() {
-            const boardEl = document.getElementById('board');
-            boardEl.innerHTML = '';
-            const kingPos = findKing(turn);
-            const inCheck = isAttacked(kingPos.r, kingPos.c, turn === 'white' ? 'black' : 'white');
-
-            for (let r = 0; r < 8; r++) {
-                for (let c = 0; c < 8; c++) {
-                    const sq = document.createElement('div');
-                    sq.className = `square ${(r + c) % 2 === 0 ? 'light' : 'dark'}`;
-                    if (selectedSq && selectedSq.r === r && selectedSq.c === c) sq.classList.add('selected');
-                    if (legalMoves.some(m => m.r === r && m.c === c)) sq.classList.add('legal');
-                    if (inCheck && board[r][c].toUpperCase() === 'K' && getCol(r,c) === turn) sq.classList.add('in-check');
-
-                    const p = board[r][c];
-                    if (p !== '.') {
-                        const span = document.createElement('span');
-                        span.className = `piece ${p === p.toUpperCase() ? 'white' : 'black'}`;
-                        span.innerText = symbols[p];
-                        sq.appendChild(span);
-                    }
-                    sq.onclick = () => handleSquare(r, c);
-                    boardEl.appendChild(sq);
+    function renderBoard() {
+        const boardEl = document.getElementById('board');
+        boardEl.innerHTML = '';
+        for (let r=0; r<8; r++) {
+            for (let c=0; c<8; c++) {
+                const sq = document.createElement('div');
+                sq.className = `square ${(r+c)%2===0?'white-sq':'black-sq'}`;
+                
+                const p = board[r][c];
+                if(p !== '.') {
+                    const span = document.createElement('span');
+                    span.innerText = symbols[p];
+                    span.className = `piece ${p === p.toUpperCase() ? 'white' : 'black'}`;
+                    sq.appendChild(span);
                 }
+
+                if(selected && selected.r === r && selected.c === c) sq.classList.add('selected');
+                
+                if(selected) {
+                    const moves = getSafeMoves(selected.r, selected.c);
+                    if(moves.some(m => m.r === r && m.c === c)) sq.classList.add('legal-dot');
+                }
+
+                sq.onclick = () => handleClick(r, c);
+                boardEl.appendChild(sq);
             }
         }
+    }
 
-        function handleSquare(r, c) {
-            if (isGameOver) return;
-            const move = legalMoves.find(m => m.r === r && m.c === c);
-            if (move) {
-                executeMove(selectedSq.r, selectedSq.c, r, c, move.type);
+    function handleClick(r, c) {
+        if(isGameOver || promotionData) return;
+        const piece = board[r][c];
+        const color = piece === '.' ? null : (piece === piece.toUpperCase() ? 'white' : 'black');
+
+        if(selected) {
+            const moves = getSafeMoves(selected.r, selected.c);
+            const move = moves.find(m => m.r === r && m.c === c);
+            if(move) {
+                executeMove(selected.r, selected.c, r, c, move.castle);
                 return;
             }
-            if (getCol(r, c) === turn) {
-                selectedSq = { r, c };
-                legalMoves = getSafeMoves(r, c);
-                renderBoard();
+        }
+        if(color === turn) selected = {r, c};
+        else selected = null;
+        renderBoard();
+    }
+
+    function executeMove(fR, fC, tR, tC, castleSide) {
+        const piece = board[fR][fC];
+        const target = board[tR][tC];
+
+        // Puntos
+        if(target !== '.') {
+            const vals = {p:1, n:3, b:3, r:5, q:9, k:0};
+            scores[turn] += vals[target.toLowerCase()];
+        }
+
+        // Lógica de Enroque
+        if(castleSide) {
+            if(castleSide === 'king') {
+                board[tR][tC-1] = board[tR][7]; board[tR][7] = '.';
             } else {
-                selectedSq = null; legalMoves = []; renderBoard();
+                board[tR][tC+1] = board[tR][0]; board[tR][0] = '.';
             }
         }
 
-        function getSafeMoves(r, c) {
-            const potential = getPotentialMoves(r, c, board);
-            
-            // Añadir Enroque si es el Rey
-            if (board[r][c].toUpperCase() === 'K') {
-                const castling = checkCastling(turn);
-                castling.forEach(m => potential.push(m));
-            }
+        // Mover pieza
+        board[tR][tC] = piece;
+        board[fR][fC] = '.';
 
-            return potential.filter(m => {
-                const tempTo = board[m.r][m.c];
-                const tempFrom = board[r][c];
-                board[m.r][m.c] = tempFrom;
-                board[r][c] = '.';
-                const king = findKing(turn);
-                const safe = !isAttacked(king.r, king.c, turn === 'white' ? 'black' : 'white');
-                board[r][c] = tempFrom;
-                board[m.r][m.c] = tempTo;
-                return safe;
+        // Rastrear movimientos para enroque futuro
+        if(piece === 'K') moved.K = true;
+        if(piece === 'k') moved.k = true;
+        if(fR===7 && fC===0) moved.R0 = true;
+        if(fR===7 && fC===7) moved.R7 = true;
+        if(fR===0 && fC===0) moved.r0 = true;
+        if(fR===0 && fC===7) moved.r7 = true;
+
+        // Coronación
+        if((piece === 'P' && tR === 0) || (piece === 'p' && tR === 7)) {
+            showPromo(tR, tC);
+            return;
+        }
+
+        finalizeMove();
+    }
+
+    function finalizeMove() {
+        turn = turn === 'white' ? 'black' : 'white';
+        selected = null;
+        document.getElementById('w-score').innerText = scores.white;
+        document.getElementById('b-score').innerText = scores.black;
+        document.getElementById('turn-box').innerText = `TURNO: ${turn.toUpperCase()}`;
+        renderBoard();
+    }
+
+    function getSafeMoves(r, c) {
+        const p = board[r][c].toLowerCase();
+        const isW = board[r][c] === board[r][c].toUpperCase();
+        let moves = [];
+        
+        // Direcciones
+        if(p === 'p') {
+            let d = isW ? -1 : 1;
+            if(isValid(r+d, c) && board[r+d][c] === '.') moves.push({r:r+d, c});
+            if((isW && r===6 || !isW && r===1) && board[r+d][c]==='.' && board[r+2*d][c]==='.') moves.push({r:r+2*d, c});
+            [[d,1],[d,-1]].forEach(off => {
+                if(isValid(r+off[0], c+off[1]) && board[r+off[0]][c+off[1]] !== '.' && getCol(r+off[0], c+off[1]) !== turn)
+                    moves.push({r:r+off[0], c:c+off[1]});
             });
         }
-
-        function checkCastling(color) {
-            const r = color === 'white' ? 7 : 0;
-            const moves = [];
-            const enemyColor = color === 'white' ? 'black' : 'white';
-
-            // No enroque si está en jaque
-            const kingPos = findKing(color);
-            if (isAttacked(kingPos.r, kingPos.c, enemyColor)) return moves;
-
-            // Enroque Corto (h)
-            if (!movedPieces[color+'K'] && !movedPieces[color+'Rh']) {
-                if (board[r][5] === '.' && board[r][6] === '.') {
-                    if (!isAttacked(r, 5, enemyColor) && !isAttacked(r, 6, enemyColor)) {
-                        moves.push({ r, c: 6, type: 'castle-short' });
-                    }
-                }
-            }
-            // Enroque Largo (a)
-            if (!movedPieces[color+'K'] && !movedPieces[color+'Ra']) {
-                if (board[r][1] === '.' && board[r][2] === '.' && board[r][3] === '.') {
-                    if (!isAttacked(r, 3, enemyColor) && !isAttacked(r, 2, enemyColor)) {
-                        moves.push({ r, c: 2, type: 'castle-long' });
-                    }
-                }
-            }
-            return moves;
+        if(p === 'n') {
+            [[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]].forEach(d => {
+                if(isValid(r+d[0], c+d[1]) && getCol(r+d[0], c+d[1]) !== turn) moves.push({r:r+d[0], c:c+d[1]});
+            });
         }
-
-        function executeMove(fR, fC, tR, tC, type) {
-            const piece = board[fR][fC];
-            const captured = board[tR][tC];
-
-            // Sumar puntos
-            if (captured !== '.') {
-                score[turn] += values[captured.toUpperCase()];
-            }
-
-            // Mover pieza principal
-            board[tR][tC] = piece;
-            board[fR][fC] = '.';
-
-            // Lógica extra de Enroque
-            if (type === 'castle-short') {
-                board[tR][5] = board[tR][7]; board[tR][7] = '.';
-            } else if (type === 'castle-long') {
-                board[tR][3] = board[tR][0]; board[tR][0] = '.';
-            }
-
-            // Actualizar tracking de movimientos para enroque
-            if (piece === 'K') movedPieces[turn+'K'] = true;
-            if (piece === 'R' && fC === 0) movedPieces[turn+'Ra'] = true;
-            if (piece === 'R' && fC === 7) movedPieces[turn+'Rh'] = true;
-            if (piece === 'r' && fC === 0) movedPieces[turn+'Ra'] = true;
-            if (piece === 'r' && fC === 7) movedPieces[turn+'Rh'] = true;
-
-            turn = (turn === 'white') ? 'black' : 'white';
-            selectedSq = null; legalMoves = [];
-            checkStatus();
-            updateUI();
-            renderBoard();
+        if(['r','b','q'].includes(p)) {
+            let ds = [];
+            if(p==='r'||p==='q') ds.push([1,0],[-1,0],[0,1],[0,-1]);
+            if(p==='b'||p==='q') ds.push([1,1],[1,-1],[-1,1],[-1,-1]);
+            ds.forEach(d => {
+                for(let i=1; i<8; i++) {
+                    let nr=r+d[0]*i, nc=c+d[1]*i;
+                    if(!isValid(nr,nc)) break;
+                    if(board[nr][nc] === '.') moves.push({r:nr, c:nc});
+                    else { if(getCol(nr,nc) !== turn) moves.push({r:nr, c:nc}); break; }
+                }
+            });
         }
+        if(p === 'k') {
+            for(let dr=-1; dr<=1; dr++) for(let dc=-1; dc<=1; dc++) {
+                if(dr===0 && dc===0) continue;
+                if(isValid(r+dr, c+dc) && getCol(r+dr, c+dc) !== turn) moves.push({r:r+dr, c:c+dc});
+            }
+            // Lógica Enroque
+            if(isW && !moved.K) {
+                if(!moved.R7 && board[7][5]==='.' && board[7][6]==='.') moves.push({r:7, c:6, castle:'king'});
+                if(!moved.R0 && board[7][1]==='.' && board[7][2]==='.' && board[7][3]==='.') moves.push({r:7, c:2, castle:'queen'});
+            }
+            if(!isW && !moved.k) {
+                if(!moved.r7 && board[0][5]==='.' && board[0][6]==='.') moves.push({r:0, c:6, castle:'king'});
+                if(!moved.r0 && board[0][1]==='.' && board[0][2]==='.' && board[0][3]==='.') moves.push({r:0, c:2, castle:'queen'});
+            }
+        }
+        return moves;
+    }
 
-        function getPotentialMoves(r, c, state) {
-            const p = state[r][c].toUpperCase();
-            const color = state[r][c] === state[r][c].toUpperCase() ? 'white' : 'black';
-            let m = [];
-            const dirs = {
-                'R': [[0,1],[0,-1],[1,0],[-1,0]],
-                'B': [[1,1],[1,-1],[-1,1],[-1,-1]],
-                'Q': [[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]],
-                'K': [[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]]
+    function showPromo(r, c) {
+        promotionData = {r, c};
+        const overlay = document.getElementById('promotion-overlay');
+        const box = document.getElementById('promo-options');
+        box.innerHTML = '';
+        const opts = turn === 'white' ? ['Q','R','B','N'] : ['q','r','b','n'];
+        opts.forEach(o => {
+            const btn = document.createElement('button');
+            btn.className = 'promo-btn';
+            btn.innerText = symbols[o];
+            btn.onclick = () => {
+                board[r][c] = o;
+                overlay.style.display = 'none';
+                promotionData = null;
+                finalizeMove();
             };
+            box.appendChild(btn);
+        });
+        overlay.style.display = 'flex';
+    }
 
-            if (p === 'P') {
-                const d = color === 'white' ? -1 : 1;
-                if (isValid(r+d, c) && state[r+d][c] === '.') {
-                    m.push({r: r+d, c: c});
-                    if (((color === 'white' && r === 6) || (color === 'black' && r === 1)) && state[r+2*d][c] === '.') m.push({r: r+2*d, c: c});
-                }
-                [[-1,d],[1,d]].forEach(off => {
-                    const nr = r+d, nc = c+off[0];
-                    if (isValid(nr, nc) && state[nr][nc] !== '.' && getCol(nr,nc) !== color) m.push({r: nr, c: nc});
-                });
-            } else if (p === 'N') {
-                [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]].forEach(off => {
-                    const nr = r+off[0], nc = c+off[1];
-                    if (isValid(nr, nc) && getCol(nr,nc) !== color) m.push({r: nr, c: nc});
-                });
-            } else if (dirs[p]) {
-                const limit = p === 'K' ? 1 : 8;
-                dirs[p].forEach(dir => {
-                    for(let i=1; i<=limit; i++) {
-                        const nr = r+dir[0]*i, nc = c+dir[1]*i;
-                        if (!isValid(nr, nc)) break;
-                        if (state[nr][nc] === '.') m.push({r: nr, c: nc});
-                        else { if (getCol(nr,nc) !== color) m.push({r: nr, c: nc}); break; }
-                    }
-                });
-            }
-            return m;
-        }
+    function getCol(r, c) { const p = board[r][c]; return p==='.'?null:(p===p.toUpperCase()?'white':'black'); }
+    function isValid(r, c) { return r>=0 && r<8 && c>=0 && c<8; }
 
-        function isAttacked(r, c, attackerColor) {
-            for(let i=0; i<8; i++) {
-                for(let j=0; j<8; j++) {
-                    if (getCol(i,j) === attackerColor) {
-                        const m = getPotentialMoves(i,j, board);
-                        if (m.some(move => move.r === r && move.c === c)) return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        function findKing(color) {
-            for(let r=0; r<8; r++) {
-                for(let c=0; c<8; c++) {
-                    if (board[r][c].toUpperCase() === 'K' && getCol(r,c) === color) return {r, c};
-                }
-            }
-        }
-
-        function checkStatus() {
-            const king = findKing(turn);
-            const inCheck = isAttacked(king.r, king.c, turn === 'white' ? 'black' : 'white');
-            let hasMoves = false;
-            for(let r=0; r<8; r++) {
-                for(let c=0; c<8; c++) {
-                    if (getCol(r,c) === turn && getSafeMoves(r,c).length > 0) { hasMoves = true; break; }
-                }
-                if (hasMoves) break;
-            }
-            const msg = document.getElementById('status-msg');
-            if (inCheck) {
-                if (!hasMoves) { msg.innerText = "¡JAQUE MATE!"; isGameOver = true; }
-                else msg.innerText = "¡JAQUE!";
-            } else {
-                if (!hasMoves) { msg.innerText = "TABLAS"; isGameOver = true; }
-                else msg.innerText = "";
-            }
-        }
-
-        function getCol(r, c) {
-            const p = board[r][c];
-            if (p === '.') return null;
-            return p === p.toUpperCase() ? 'white' : 'black';
-        }
-        function isValid(r, c) { return r >= 0 && r < 8 && c >= 0 && c < 8; }
-
-        function updateUI() {
-            const box = document.getElementById('turn-box');
-            box.innerText = `TURNO: ${turn === 'white' ? 'BLANCAS' : 'NEGRAS'}`;
-            box.style.backgroundColor = turn === 'white' ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.8)';
-            box.style.color = turn === 'white' ? 'white' : 'black';
-            document.getElementById('score-white').innerText = score.white;
-            document.getElementById('score-black').innerText = score.black;
-        }
-
-        initGame();
-    </script>
+    renderBoard();
+</script>
 </body>
 </html>
