@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de Evaluación: Web Scraping</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --success: #27ae60;
+            --bg: #f4f7f6;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { background: white; max-width: 600px; width: 100%; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { color: var(--primary); text-align: center; border-bottom: 3px solid var(--accent); padding-bottom: 10px; }
+        .user-info { margin-bottom: 25px; padding: 15px; background: #e8f4fd; border-radius: 8px; }
+        .user-info input { width: 90%; padding: 10px; margin-top: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        
+        .question { margin-bottom: 25px; padding: 15px; border: 1px solid #eee; border-radius: 8px; }
+        .question p { font-weight: bold; margin-top: 0; }
+        .options label { display: block; padding: 8px; cursor: pointer; border-radius: 4px; transition: 0.2s; }
+        .options label:hover { background: #f0f0f0; }
+        .options input { margin-right: 10px; }
+
+        #btn-enviar { width: 100%; padding: 15px; background: var(--success); color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        #btn-enviar:hover { background: #219150; }
+        #btn-enviar:disabled { background: #95a5a6; cursor: not-allowed; }
+
+        #status-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; color: white; text-align: center; }
+        .result-box { background: white; color: #333; padding: 30px; border-radius: 12px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Evaluación Scraping</h1>
+
+        <div class="user-info">
+            <label for="nombre">Nombre y Apellidos del Alumno:</label>
+            <input type="text" id="nombre" placeholder="Escribe aquí tu nombre completo...">
+        </div>
+
+        <form id="quiz-form">
+            <div class="question">
+                <p>1. ¿Para qué sirve el número "1" al final de la fórmula =IMPORTHTML(A1; "table"; 1)?</p>
+                <div class="options">
+                    <label><input type="radio" name="q1" value="0"> A) Para indicar que solo queremos extraer la primera fila.</label>
+                    <label><input type="radio" name="q1" value="20"> B) Para extraer la primera tabla que Google encuentre en la página.</label>
+                    <label><input type="radio" name="q1" value="0"> C) Para que la fórmula se actualice solo una vez al día.</label>
+                </div>
+            </div>
+
+            <div class="question">
+                <p>2. Si queremos extraer información específica usando un código XPath (como //h1), ¿qué función debemos usar?</p>
+                <div class="options">
+                    <label><input type="radio" name="q2" value="0"> A) =IMPORTHTML</label>
+                    <label><input type="radio" name="q2" value="20"> B) =IMPORTXML</label>
+                    <label><input type="radio" name="q2" value="0"> C) =IMPORTDATA</label>
+                </div>
+            </div>
+
+            <div class="question">
+                <p>3. Si usamos el XPath "//h2" en una web de noticias, ¿qué estamos obteniendo?</p>
+                <div class="options">
+                    <label><input type="radio" name="q3" value="0"> A) Todos los enlaces de las redes sociales.</label>
+                    <label><input type="radio" name="q3" value="20"> B) El texto de los titulares de noticias.</label>
+                    <label><input type="radio" name="q3" value="0"> C) Todas las imágenes de la portada.</label>
+                </div>
+            </div>
+
+            <div class="question">
+                <p>4. ¿Qué símbolo se utiliza en XPath para extraer un "atributo" (como el link de una imagen)?</p>
+                <div class="options">
+                    <label><input type="radio" name="q4" value="20"> A) El símbolo de la arroba (@).</label>
+                    <label><input type="radio" name="q4" value="0"> B) El símbolo del dólar ($).</label>
+                    <label><input type="radio" name="q4" value="0"> C) El símbolo de la almohadilla (#).</label>
+                </div>
+            </div>
+
+            <div class="question">
+                <p>5. Si ejecutas la instrucción "//img/@src", ¿qué resultado obtendrás?</p>
+                <div class="options">
+                    <label><input type="radio" name="q5" value="0"> A) Una lista con los nombres de los fotógrafos.</label>
+                    <label><input type="radio" name="q5" value="0"> B) El texto descriptivo debajo de las fotos.</label>
+                    <label><input type="radio" name="q5" value="20"> C) Las direcciones URL de las imágenes de la web.</label>
+                </div>
+            </div>
+
+            <button type="button" id="btn-enviar" onclick="corregirYEnviar()">ENVIAR EXAMEN AL PROFESOR</button>
+        </form>
+    </div>
+
+    <div id="status-overlay">
+        <div class="result-box" id="result-content">
+            <h2 id="status-text">Enviando resultados...</h2>
+        </div>
+    </div>
+
+    <script>
+        function corregirYEnviar() {
+            const nombre = document.getElementById('nombre').value.trim();
+            if (!nombre) {
+                alert("Por favor, introduce tu nombre antes de enviar.");
+                return;
+            }
+
+            const form = document.getElementById('quiz-form');
+            const dataForm = new FormData(form);
+            let notaFinal = 0;
+            let contestadas = 0;
+
+            // Sumamos los valores (cada acierto vale 20 puntos)
+            for (let value of dataForm.values()) {
+                notaFinal += parseInt(value);
+                contestadas++;
+            }
+
+            if (contestadas < 5) {
+                if (!confirm("No has respondido todas las preguntas. ¿Quieres enviar el test de todas formas?")) {
+                    return;
+                }
+            }
+
+            // Configuración del envío
+            const btn = document.getElementById('btn-enviar');
+            const overlay = document.getElementById('status-overlay');
+            const statusText = document.getElementById('status-text');
+            
+            btn.disabled = true;
+            overlay.style.display = 'flex';
+
+            const scriptUrl = "https://script.google.com/macros/s/AKfycbwVPttSZrhwfWwSZpFo7KWjJ39vldQm3MPGykMWEPWOoF4UsZ24mC8YhgiaE-0xm_7G/exec";
+            
+            const dataEnvio = {
+                player1: "TEST " + nombre,
+                score1: notaFinal + "%", // Enviamos el porcentaje
+                player2: "SCRAPING",
+                score2: 0,
+                timestamp: new Date().toLocaleString()
+            };
+
+            fetch(scriptUrl, {
+                method: "POST",
+                mode: "no-cors",
+                body: JSON.stringify(dataEnvio)
+            })
+            .then(() => {
+                statusText.innerHTML = `
+                    <h2 style="color: #27ae60">¡Examen Enviado!</h2>
+                    <p>Has obtenido un <b>${notaFinal}%</b> de aciertos.</p>
+                    <p>Ya puedes cerrar esta ventana.</p>
+                `;
+            })
+            .catch(err => {
+                console.error(err);
+                statusText.innerHTML = `<h2 style="color: #e74c3c">Error al enviar</h2><p>Inténtalo de nuevo.</p>`;
+                btn.disabled = false;
+            });
+        }
+    </script>
+</body>
+</html>
