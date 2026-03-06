@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="UTF-8">
     <title>Robot Game - Progresión de Dificultad</title>
     <style>
         :root {
@@ -9,9 +9,18 @@
             --robot: #ecf0f1; --belt: #34495e; --danger: #e74c3c;
             --primary: #2ecc71;
         }
-        body { background: #333; color: white; margin: 0; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; overflow: hidden; transition: background 1.2s ease; }
+        /* Eliminamos el background fijo de aquí para que JS mande */
+        body { 
+            background: #333; 
+            color: white; 
+            margin: 0; 
+            font-family: 'Segoe UI', sans-serif; 
+            display: flex; 
+            height: 100vh; 
+            overflow: hidden; 
+            transition: background 1.2s ease; 
+        }
 
-        /* PANEL LATERAL */
         .sidebar { width: 310px; background: var(--panel); padding: 15px; display: flex; flex-direction: column; gap: 8px; z-index: 1000; box-shadow: 5px 0 15px rgba(0,0,0,0.5); }
         .header-score { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; border: 2px solid var(--accent); }
         .score-box { font-size: 1.8rem; font-weight: bold; color: var(--accent); }
@@ -30,7 +39,6 @@
         .pos-list { flex-grow: 1; background: #111; border-radius: 6px; padding: 10px; overflow-y: auto; border: 1px solid #444; }
         .pos-card { background: #222; margin-bottom: 5px; padding: 8px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid var(--accent); }
 
-        /* MODALES */
         #player-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 2000; }
         .modal-box { background: white; padding: 35px; border-radius: 12px; text-align: center; color: #333; width: 320px; }
         .modal-box input { margin: 15px 0; width: 90%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
@@ -38,7 +46,6 @@
         #status-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 2001; }
         #status-msg { background: white; padding: 25px; border-radius: 8px; color: #155724; font-weight: bold; border: 4px solid var(--primary); }
 
-        /* ESCENA ROBOT */
         .viewport { flex-grow: 1; position: relative; overflow: hidden; }
         .conveyor { position: absolute; bottom: 0; width: 100%; height: 90px; background: var(--belt); border-top: 8px solid #222; z-index: 10; }
         #robot-system { position: absolute; bottom: 215px; left: 50%; z-index: 100; }
@@ -74,7 +81,7 @@
             <span id="label-user">OP: ---</span>
             <div class="score-box" id="puntos">0</div>
         </div>
-        <div class="instructions" id="mision-txt">Esperando piloto...</div>
+        <div class="instructions" id="mision-txt">Conectando...</div>
         
         <div class="control-group">
             <input type="number" id="inpA1" value="0">
@@ -121,22 +128,22 @@
             operarioNombre = nom;
             document.getElementById('label-user').innerText = "OP: " + nom.split(" ")[0];
             document.getElementById('player-modal').style.display = 'none';
+            
+            // Forzamos la actualización inicial de fondo y misiones
+            updateBackground();
             setMision();
         }
 
-        // --- GESTIÓN DE MISIONES Y DIFICULTAD ---
         function setMision() {
             document.querySelectorAll('.box').forEach(b => b.remove());
             misionesActivas = [];
             const safeX = () => (Math.random() * 220) - 110; 
 
             if (puntos < 6) {
-                // NIVEL 1: Una sola caja que cambia
                 const c = Object.keys(colors)[Math.floor(Math.random()*5)];
                 createBox(safeX(), c); 
                 document.getElementById('mision-txt').innerText = `NIVEL 1: Entrega piezas ${c.toUpperCase()}.`;
             } else {
-                // NIVEL EXPERTO: Dos cajas fijas
                 createBox(-110, 'rojo');
                 createBox(110, 'azul');
                 document.getElementById('mision-txt').innerText = `NIVEL EXPERTO: Clasificación Dual (Rojo/Azul).`;
@@ -160,15 +167,15 @@
 
         function updateBackground() {
             let bg = "#333";
-            if (puntos >= 1 && puntos <= 5) bg = "#005a9e";   // Azul
-            if (puntos >= 6 && puntos <= 10) bg = "#107c10";  // Verde
-            if (puntos >= 11 && puntos <= 15) bg = "#d29200"; // Amarillo
-            if (puntos >= 16 && puntos <= 20) bg = "#d35400"; // Naranja
-            if (puntos >= 21) bg = "#a4262c";                 // Rojo (Experto)
+            // Lógica corregida para incluir el estado de 0 puntos
+            if (puntos >= 0 && puntos <= 5) bg = "#005a9e";   
+            if (puntos >= 6 && puntos <= 10) bg = "#107c10";  
+            if (puntos >= 11 && puntos <= 15) bg = "#d29200"; 
+            if (puntos >= 16 && puntos <= 20) bg = "#d35400"; 
+            if (puntos >= 21) bg = "#a4262c";                 
             document.body.style.backgroundColor = bg;
         }
 
-        // --- MOVIMIENTO Y GUARDADO ---
         function manualMove() {
             document.getElementById('arm1').style.transform = `rotate(${document.getElementById('inpA1').value}deg)`;
             document.getElementById('arm2').style.transform = `rotate(${document.getElementById('inpA2').value}deg)`;
@@ -204,7 +211,6 @@
             manualMove();
         }
 
-        // --- FÍSICA Y PINZA ---
         function toggleClaw() {
             isClawClosed = !isClawClosed;
             const cL = document.getElementById('cL'), cR = document.getElementById('cR');
@@ -237,7 +243,8 @@
                             puntos++;
                             document.getElementById('puntos').innerText = puntos;
                             p.style.opacity = "0.3";
-                            if(puntos <= 6) setTimeout(setMision, 600); // En nivel 1, la caja cambia al acertar
+                            updateBackground(); // Actualizamos fondo tras ganar punto
+                            if(puntos <= 6) setTimeout(setMision, 600);
                         }
                     }
                 });
