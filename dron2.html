@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dron Duel - Ilimitado y Táctico</title>
+    <style>
+        :root {
+            --primary: #2ecc71; --p1-color: #e74c3c; --p2-color: #3498db; --grid-size: 40px;
+        }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; height: 100vh; overflow: hidden; background: #111; color: white; }
+
+        #split-container { position: fixed; inset: 0; display: flex; z-index: 1; }
+        .arena { 
+            flex: 1; position: relative; transition: background 0.8s ease; 
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+            padding-bottom: 50px; perspective: 1000px;
+        }
+        #arena-p1 { background: #1a1a1a; border-right: 2px solid #333; }
+        #arena-p2 { background: #1a1a1a; }
+
+        /* Panel de Comandos con Scroll Ilimitado */
+        .cmd-panel { 
+            position: absolute; top: 110px; width: 200px; 
+            background: rgba(0,0,0,0.85); padding: 12px; border-radius: 10px; 
+            border: 2px solid #444; z-index: 100; font-family: monospace;
+        }
+        .p1-panel { left: 20px; border-color: var(--p1-color); }
+        .p2-panel { right: 20px; border-color: var(--p2-color); }
+        
+        .cmd-scroll {
+            height: 60px; overflow-y: auto; margin-top: 8px;
+            color: #0f0; font-size: 1.1rem; line-height: 1.4;
+            word-break: break-all; scroll-behavior: smooth;
+        }
+        /* Scrollbar estética */
+        .cmd-scroll::-webkit-scrollbar { width: 4px; }
+        .cmd-scroll::-webkit-scrollbar-thumb { background: #444; }
+
+        .top-bar { position: fixed; top: 0; width: 100%; display: flex; justify-content: space-around; height: 90px; background: #000; border-bottom: 3px solid var(--primary); z-index: 200; }
+        .score-card { text-align: center; color: white; }
+        .score-val { font-size: 2.5rem; font-weight: bold; color: var(--primary); margin: 0; }
+
+        .pista { 
+            width: 400px; height: 480px; position: relative; transform-style: preserve-3d; transform: rotateX(35deg);
+            background-color: rgba(0,0,0,0.5);
+            background-image: linear-gradient(#444 1px, transparent 1px), linear-gradient(90deg, #444 1px, transparent 1px);
+            background-size: var(--grid-size) var(--grid-size);
+            border: 4px solid #666;
+        }
+
+        .meta { position: absolute; width: 34px; height: 34px; border: 3px solid white; border-radius: 50%; z-index: 5; }
+        .meta-p1 { border-color: var(--p1-color); box-shadow: 0 0 15px var(--p1-color); }
+        .meta-p2 { border-color: var(--p2-color); box-shadow: 0 0 15px var(--p2-color); }
+
+        .dron-container { position: absolute; width: 40px; height: 40px; transform-style: preserve-3d; transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+        .dron-body { width: 34px; height: 34px; margin: 3px; border-radius: 6px; position: relative; transform-style: preserve-3d; transition: transform 0.3s; }
+        .p1-body { background: var(--p1-color); }
+        .p2-body { background: var(--p2-color); }
+        
+        .dron-front { position: absolute; top: 0; left: 50%; width: 20px; height: 8px; background: #000; transform: translateX(-50%); border-radius: 3px 3px 0 0; }
+        .foco { position: absolute; top: 1px; left: 50%; transform: translateX(-50%); width: 6px; height: 3px; background: #fff; border-radius: 50%; box-shadow: 0 0 8px #fff; }
+        .helice { position: absolute; width: 30px; height: 2px; background: #fff; top: 50%; left: 50%; margin-left: -15px; animation: spin 0.1s infinite linear; opacity: 0; }
+        @keyframes spin { to { transform: rotateZ(360deg); } }
+
+        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center; z-index: 3000; }
+        .modal-content { background: white; color: #333; padding: 30px; border-radius: 15px; text-align: center; width: 400px; }
+    </style>
+</head>
+<body>
+
+    <div id="modal">
+        <div class="modal-content">
+            <h2>DRON DUEL: UNLIMITED</h2>
+            <p>Introduce todos los comandos que necesites.<br>No hay límite de movimientos.</p>
+            <input type="text" id="name1" placeholder="Nombre Piloto Rojo" style="width:80%; padding:10px; margin:5px;">
+            <input type="text" id="name2" placeholder="Nombre Piloto Azul" style="width:80%; padding:10px; margin:5px;">
+            <button onclick="startGame()" style="margin-top:15px; padding:10px 30px; background:var(--primary); color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">INICIAR MISIÓN</button>
+        </div>
+    </div>
+
+    <div class="top-bar">
+        <div class="score-card"><div id="label-n1">P1</div><div class="score-val" id="score1">0</div></div>
+        <div style="align-self:center;"><button onclick="enviarResultados()" style="padding:10px; cursor:pointer;">ENVIAR DATOS</button></div>
+        <div class="score-card"><div id="label-n2">P2</div><div class="score-val" id="score2">0</div></div>
+    </div>
+
+    <div id="split-container">
+        <div id="arena-p1" class="arena">
+            <div class="cmd-panel p1-panel">
+                <b>COLA COMANDOS P1:</b>
+                <div id="list-p1" class="cmd-scroll"></div>
+                <small style="color:#888">W:↑ | A:↶ | D:↷<br>[Espacio] Ejecutar</small>
+            </div>
+            <div class="pista">
+                <div id="meta-p1" class="meta meta-p1"></div>
+                <div id="dron1" class="dron-container">
+                    <div class="dron-body p1-body"><div class="dron-front"><div class="foco"></div></div><div class="helice"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="arena-p2" class="arena">
+            <div class="cmd-panel p2-panel">
+                <b>COLA COMANDOS P2:</b>
+                <div id="list-p2" class="cmd-scroll"></div>
+                <small style="color:#888">↑:Avance | ←:↶ | →:↷<br>[Enter] Ejecutar</small>
+            </div>
+            <div class="pista">
+                <div id="meta-p2" class="meta meta-p2"></div>
+                <div id="dron2" class="dron-container">
+                    <div class="dron-body p2-body"><div class="dron-front"><div class="foco"></div></div><div class="helice"></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const GRID = 40;
+        const state = {
+            p1: { x: 0, y: 0, sX: 0, sY: 0, angle: 0, sAngle: 0, score: 0, cmds: [], exec: false, name: "" },
+            p2: { x: 9, y: 11, sX: 9, sY: 11, angle: 180, sAngle: 180, score: 0, cmds: [], exec: false, name: "" },
+            metas: { p1: {x: 4, y: 4}, p2: {x: 5, y: 5} }
+        };
+
+        function getColorByScore(score) {
+            if (score >= 20) return "#a4262c";
+            if (score >= 15) return "#d35400";
+            if (score >= 10) return "#d29200";
+            if (score >= 5) return "#107c10";
+            if (score >= 1) return "#005a9e";
+            return "#1a1a1a";
+        }
+
+        function startGame() {
+            state.p1.name = document.getElementById('name1').value || "P1";
+            state.p2.name = document.getElementById('name2').value || "P2";
+            document.getElementById('label-n1').innerText = state.p1.name;
+            document.getElementById('label-n2').innerText = state.p2.name;
+            document.getElementById('modal').style.display = 'none';
+            moverMeta('p1'); moverMeta('p2');
+            updateVisuals('p1'); updateVisuals('p2');
+        }
+
+        function moverMeta(p) {
+            state.metas[p].x = Math.floor(Math.random() * 10);
+            state.metas[p].y = Math.floor(Math.random() * 12);
+            const m = document.getElementById('meta-' + p);
+            m.style.left = (state.metas[p].x * GRID + 3) + "px";
+            m.style.top = (state.metas[p].y * GRID + 3) + "px";
+        }
+
+        window.onkeydown = (e) => {
+            if(state.p1.exec || state.p2.exec) return;
+            // P1
+            if(e.code === 'KeyW') addCmd('p1', '↑');
+            if(e.code === 'KeyA') addCmd('p1', '↶');
+            if(e.code === 'KeyD') addCmd('p1', '↷');
+            if(e.code === 'Space') ejecutar('p1');
+            // P2
+            if(e.code === 'ArrowUp') addCmd('p2', '↑');
+            if(e.code === 'ArrowLeft') addCmd('p2', '↶');
+            if(e.code === 'ArrowRight') addCmd('p2', '↷');
+            if(e.code === 'Enter') ejecutar('p2');
+        };
+
+        function addCmd(p, type) {
+            state[p].cmds.push(type);
+            const box = document.getElementById('list-' + p);
+            box.innerText = state[p].cmds.join(' ');
+            box.scrollTop = box.scrollHeight; // Auto-scroll al final
+        }
+
+        async function ejecutar(p) {
+            if(state[p].cmds.length === 0) return;
+            state[p].exec = true;
+            state[p].sX = state[p].x; state[p].sY = state[p].y; state[p].sAngle = state[p].angle;
+            
+            const dEl = document.getElementById(p === 'p1' ? 'dron1' : 'dron2');
+            dEl.querySelector('.helice').style.opacity = 1;
+            dEl.style.transform = "translateZ(40px)";
+
+            for(let cmd of state[p].cmds) {
+                await new Promise(r => setTimeout(r, 450));
+                if(cmd === '↶') state[p].angle -= 90;
+                if(cmd === '↷') state[p].angle += 90;
+                if(cmd === '↑') {
+                    const rad = state[p].angle * Math.PI / 180;
+                    state[p].x += Math.round(Math.sin(rad));
+                    state[p].y -= Math.round(Math.cos(rad));
+                }
+                // Límites de pista
+                state[p].x = Math.max(0, Math.min(9, state[p].x));
+                state[p].y = Math.max(0, Math.min(11, state[p].y));
+                updateVisuals(p);
+            }
+
+            await new Promise(r => setTimeout(r, 500));
+            dEl.style.transform = "translateZ(0px)";
+            dEl.querySelector('.helice').style.opacity = 0;
+
+            if(state[p].x === state.metas[p].x && state[p].y === state.metas[p].y) {
+                state[p].score++;
+                document.getElementById('score' + (p==='p1'?'1':'2')).innerText = state[p].score;
+                document.getElementById('arena-' + p).style.background = getColorByScore(state[p].score);
+                moverMeta(p);
+            } else {
+                // Si falla, espera un poco y vuelve al origen de este intento
+                await new Promise(r => setTimeout(r, 800));
+                state[p].x = state[p].sX; state[p].y = state[p].sY; state[p].angle = state[p].sAngle;
+                updateVisuals(p);
+            }
+            state[p].cmds = []; 
+            state[p].exec = false;
+            document.getElementById('list-' + p).innerText = "";
+        }
+
+        function updateVisuals(p) {
+            const d = document.getElementById(p === 'p1' ? 'dron1' : 'dron2');
+            d.style.left = (state[p].x * GRID) + "px";
+            d.style.top = (state[p].y * GRID) + "px";
+            d.querySelector('.dron-body').style.transform = `rotateZ(${state[p].angle}deg)`;
+        }
+
+        function enviarResultados() {
+            const scriptUrl = "https://script.google.com/macros/s/AKfycbwVPttSZrhwfWwSZpFo7KWjJ39vldQm3MPGykMWEPWOoF4UsZ24mC8YhgiaE-0xm_7G/exec";
+            fetch(scriptUrl, {
+                method: "POST", mode: "no-cors",
+                body: JSON.stringify({ 
+                    player1: "Dron2" + state.p1.name, score1: state.p1.score, 
+                    player2: "Dron2 " + state.p2.name, score2: state.p2.score, 
+                    timestamp: new Date().toLocaleString() 
+                })
+            }).then(() => alert("Datos enviados correctamente."));
+        }
+    </script>
+</body>
+</html>
