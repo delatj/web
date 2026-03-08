@@ -3,30 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test de Evaluación: Web Scraping</title>
+    <title>Test de Evaluación: IA</title>
     <style>
         :root {
             --primary: #2c3e50;
-            --accent: #3498db;
+            --accent: #8e44ad;
             --success: #27ae60;
             --bg: #f4f7f6;
         }
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
         .container { background: white; max-width: 600px; width: 100%; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         h1 { color: var(--primary); text-align: center; border-bottom: 3px solid var(--accent); padding-bottom: 10px; }
-        .user-info { margin-bottom: 25px; padding: 15px; background: #e8f4fd; border-radius: 8px; }
+        .user-info { margin-bottom: 25px; padding: 15px; background: #f3e5f5; border-radius: 8px; }
         .user-info input { width: 90%; padding: 10px; margin-top: 10px; border: 1px solid #ccc; border-radius: 4px; }
-        
         .question { margin-bottom: 25px; padding: 15px; border: 1px solid #eee; border-radius: 8px; background: #fff; }
         .question p { font-weight: bold; margin-top: 0; }
         .options label { display: block; padding: 8px; cursor: pointer; border-radius: 4px; transition: 0.2s; }
         .options label:hover { background: #f0f0f0; }
         .options input { margin-right: 10px; }
-
         #btn-enviar { width: 100%; padding: 15px; background: var(--success); color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; }
         #btn-enviar:hover { background: #219150; }
-        #btn-enviar:disabled { background: #95a5a6; cursor: not-allowed; }
-
         #status-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; color: white; text-align: center; }
         .result-box { background: white; color: #333; padding: 30px; border-radius: 12px; }
     </style>
@@ -34,16 +30,13 @@
 <body>
 
     <div class="container">
-        <h1>Evaluación Scraping</h1>
-
+        <h1>Evaluación IA</h1>
         <div class="user-info">
             <label for="nombre">Nombre y Apellidos del Alumno:</label>
-            <input type="text" id="nombre" placeholder="Escribe aquí tu nombre completo...">
+            <input type="text" id="nombre" placeholder="Escribe tu nombre aquí...">
         </div>
-
         <form id="quiz-form">
-            <div id="questions-container">
-                </div>
+            <div id="questions-container"></div>
             <button type="button" id="btn-enviar" onclick="corregirYEnviar()">ENVIAR EXAMEN AL PROFESOR</button>
         </form>
     </div>
@@ -55,51 +48,14 @@
     </div>
 
     <script>
-        // Banco de preguntas original de Scraping
         const questionsData = [
-            {
-                q: "¿Para qué sirve el número '1' al final de la fórmula =IMPORTHTML(A1; 'table'; 1)?",
-                options: [
-                    { text: "Para extraer la primera tabla que Google encuentre en la página.", val: 20 },
-                    { text: "Para indicar que solo queremos extraer la primera fila.", val: 0 },
-                    { text: "Para que la fórmula se actualice solo una vez al día.", val: 0 }
-                ]
-            },
-            {
-                q: "Si queremos extraer información específica usando un código XPath (como //h1), ¿qué función debemos usar?",
-                options: [
-                    { text: "=IMPORTXML", val: 20 },
-                    { text: "=IMPORTHTML", val: 0 },
-                    { text: "=IMPORTDATA", val: 0 }
-                ]
-            },
-            {
-                q: "Si usamos el XPath '//h2' en una web de noticias, ¿qué estamos obteniendo?",
-                options: [
-                    { text: "El texto de los titulares de noticias.", val: 20 },
-                    { text: "Todos los enlaces de las redes sociales.", val: 0 },
-                    { text: "Todas las imágenes de la portada.", val: 0 }
-                ]
-            },
-            {
-                q: "¿Qué símbolo se utiliza en XPath para extraer un 'atributo' (como el link de una imagen)?",
-                options: [
-                    { text: "El símbolo de la arroba (@).", val: 20 },
-                    { text: "El símbolo del dólar ($).", val: 0 },
-                    { text: "El símbolo de la almohadilla (#).", val: 0 }
-                ]
-            },
-            {
-                q: "Si ejecutas la instrucción '//img/@src', ¿qué resultado obtendrás?",
-                options: [
-                    { text: "Las direcciones URL de las imágenes de la web.", val: 20 },
-                    { text: "Una lista con los nombres de los fotógrafos.", val: 0 },
-                    { text: "El texto descriptivo debajo de las fotos.", val: 0 }
-                ]
-            }
+            { q: "¿Qué hemos utilizado en las prácticas dentro del lenguaje supervisado para que el programa ordenador reconozca algo?", options: [{ text: "Etiquetas", val: 20 }, { text: "Precintos", val: 0 }, { text: "Captura de pantallas", val: 0 }, { text: "Audios", val: 0 }] },
+            { q: "¿Qué tipo de lenguaje de inteligencia artificial se utiliza para que aprendan a jugar los juegos de ajedrez?", options: [{ text: "Supervisado", val: 0 }, { text: "No supervisado", val: 0 }, { text: "Semi supervisado", val: 0 }, { text: "Por refuerzo", val: 20 }] },
+            { q: "En la práctica de 'triste y contento', ¿por qué es más difícil que el ordenador reconozca esas opciones que un estuche o lápiz?", options: [{ text: "Porque un estuche y un lápiz se parecen menos entre ellos.", val: 20 }, { text: "Porque las caras son más difíciles de entender para el ordenador.", val: 0 }, { text: "Porque el programa no procesa bien las fotos de caras.", val: 0 }, { text: "Porque le hemos puesto menos fotos de caras.", val: 0 }] },
+            { q: "¿Cómo podemos conseguir que el reconocimiento de imágenes sea más efectivo, dentro de nuestras posibilidades?", options: [{ text: "Añadiendo más etiquetas a cada uno de los elementos.", val: 20 }, { text: "Editando el código del programa y reestructurándolo.", val: 0 }, { text: "Cogiendo solo una parte del objeto que queremos identificar.", val: 0 }] },
+            { q: "Cuando el código se programa deliberadamente para que ciertas imágenes no se reconozcan correctamente con fines económicos, hablamos de un...", options: [{ text: "Sesgo", val: 20 }, { text: "Scraping", val: 0 }, { text: "Phishing", val: 0 }, { text: "Ataque de fuerza", val: 0 }] }
         ];
 
-        // Función para mezclar
         function shuffle(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -108,27 +64,17 @@
             return array;
         }
 
-        // Renderizar test aleatorio
         function renderTest() {
             const container = document.getElementById('questions-container');
             const shuffledQuestions = shuffle([...questionsData]);
-
             shuffledQuestions.forEach((questionObj, index) => {
                 const qDiv = document.createElement('div');
                 qDiv.className = 'question';
-                
                 let optionsHtml = '';
                 const shuffledOptions = shuffle([...questionObj.options]);
-                
                 shuffledOptions.forEach(opt => {
-                    optionsHtml += `
-                        <label>
-                            <input type="radio" name="q${index}" value="${opt.val}"> 
-                            ${opt.text}
-                        </label>
-                    `;
+                    optionsHtml += `<label><input type="radio" name="q${index}" value="${opt.val}"> ${opt.text}</label>`;
                 });
-
                 qDiv.innerHTML = `<p>${index + 1}. ${questionObj.q}</p><div class="options">${optionsHtml}</div>`;
                 container.appendChild(qDiv);
             });
@@ -136,7 +82,7 @@
 
         function corregirYEnviar() {
             const nombreAlumno = document.getElementById('nombre').value.trim();
-            if (!nombreAlumno) { alert("Por favor, introduce tu nombre."); return; }
+            if (!nombreAlumno) { alert("Por favor, escribe tu nombre."); return; }
 
             const form = document.getElementById('quiz-form');
             const dataForm = new FormData(form);
@@ -148,20 +94,18 @@
                 contestadas++;
             }
 
-            if (contestadas < 5) {
-                if (!confirm("No has respondido todas las preguntas. ¿Enviar igualmente?")) return;
-            }
+            if (contestadas < 5 && !confirm("No has respondido todo. ¿Enviar igualmente?")) return;
 
             document.getElementById('btn-enviar').disabled = true;
             document.getElementById('status-overlay').style.display = 'flex';
 
             const scriptUrl = "https://script.google.com/macros/s/AKfycbwVPttSZrhwfWwSZpFo7KWjJ39vldQm3MPGykMWEPWOoF4UsZ24mC8YhgiaE-0xm_7G/exec";
             
-            // Misma estructura que el de IA para mantener consistencia
+            // Estructura de envío limpia
             const dataEnvio = {
-                player1: nombreAlumno,      // Columna 1: Nombre
-                score1: notaFinal.toString(), // Columna 2: Nota numérica (sin %)
-                player2: "SCRAPING",        // Columna 3: Nombre corto de la práctica
+                player1: nombreAlumno,      // Columna 1: Solo nombre
+                score1: notaFinal.toString(), // Columna 2: El número como texto para evitar el error de 2000%
+                player2: "IA",              // Columna 3: Solo las siglas
                 score2: "0",
                 timestamp: new Date().toLocaleString()
             };
@@ -175,16 +119,14 @@
                     <h2 style="color: #27ae60">¡Examen Enviado!</h2>
                     <p>Alumno: <b>${nombreAlumno}</b></p>
                     <p>Puntuación: <b>${notaFinal}</b></p>
-                    <p>Ya puedes cerrar esta ventana.</p>
                 `;
             }).catch(err => {
-                alert("Error al enviar. Inténtalo de nuevo.");
+                alert("Error. Reinténtalo.");
                 document.getElementById('btn-enviar').disabled = false;
             });
         }
 
         window.onload = renderTest;
     </script>
-
 </body>
 </html>
