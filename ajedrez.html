@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Ajedrez Pro - Coronación y Reglas Oficiales</title>
+    <title>Ajedrez Pro - Mate y Enroque Corregido</title>
     <style>
         :root {
             --primary: #2ecc71; --dark: #1a1a1a; --panel: #2c3e50;
@@ -12,86 +12,64 @@
             --danger: #e74c3c;
         }
         body { background: var(--dark); color: white; margin: 0; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; overflow: hidden; }
-
-        /* PANEL LATERAL */
         .sidebar { width: 350px; background: var(--panel); padding: 20px; display: flex; flex-direction: column; box-shadow: 4px 0 10px rgba(0,0,0,0.5); z-index: 100; }
         .score-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center; }
         .score-row { display: flex; justify-content: space-between; font-size: 1.2rem; margin: 5px 0; }
         .points { font-weight: bold; color: var(--primary); font-size: 1.5rem; }
-
         #turn-display { font-size: 1.5rem; text-align: center; padding: 15px; border-radius: 8px; margin-bottom: 10px; font-weight: bold; }
         .white-turn { background: #fff; color: #333; }
         .black-turn { background: #333; color: #fff; border: 2px solid #000; }
-
-        #check-status { 
-            background: var(--danger); color: white; text-align: center; padding: 10px; 
-            border-radius: 8px; font-weight: bold; margin-bottom: 20px; 
-            display: none; animation: pulse 0.8s infinite;
-        }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-
-        /* TABLERO */
+        #check-status { background: var(--danger); color: white; text-align: center; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 20px; display: none; }
         #game-container { flex-grow: 1; display: flex; justify-content: center; align-items: center; background: #333; }
         #board { display: grid; grid-template-columns: repeat(8, 75px); grid-template-rows: repeat(8, 75px); border: 10px solid #222; }
         .sq { width: 75px; height: 75px; display: flex; align-items: center; justify-content: center; font-size: 50px; cursor: pointer; position: relative; user-select: none; }
         .white-sq { background: var(--light-sq); }
         .dark-sq { background: var(--dark-sq); }
-        
         .piece.black { color: #000; filter: drop-shadow(0 0 1px #fff); }
         .piece.white { color: #fff; filter: drop-shadow(0 0 2px #000); }
         .selected { background: var(--highlight) !important; }
-        .legal-dot::after { content: ''; width: 22px; height: 22px; background: var(--legal); border-radius: 50%; position: absolute; z-index: 2; }
-
-        /* MODALES */
+        .legal-dot::after { content: ''; width: 20px; height: 20px; background: var(--legal); border-radius: 50%; position: absolute; }
         #setup-modal, #status-overlay, #promo-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; }
         .modal-content { background: white; color: #333; padding: 30px; border-radius: 15px; text-align: center; width: 350px; }
-        .promo-options { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
-        .promo-btn { font-size: 40px; cursor: pointer; background: #eee; border: 2px solid #ccc; border-radius: 8px; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; }
-        .promo-btn:hover { background: var(--primary); color: white; }
-        
-        .btn-send { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: auto; }
+        .btn-send { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; width: 100%; }
     </style>
 </head>
 <body>
 
 <div id="setup-modal">
     <div class="modal-content">
-        <h2>AJEDREZ: MODO COMPETICIÓN</h2>
-        <input type="text" id="p1-name" placeholder="Nombre Jugador Blanco" style="width:90%; padding:10px; margin:10px 0;">
-        <input type="text" id="p2-name" placeholder="Nombre Jugador Negro" style="width:90%; padding:10px; margin:10px 0;">
-        <button class="btn-send" style="width: 100%" onclick="initGame()">COMENZAR</button>
+        <h2>AJEDREZ: COMPETICIÓN</h2>
+        <input type="text" id="p1-name" placeholder="Jugador Blanco" style="width:90%; padding:10px; margin:10px 0;">
+        <input type="text" id="p2-name" placeholder="Jugador Negro" style="width:90%; padding:10px; margin:10px 0;">
+        <button class="btn-send" onclick="initGame()">COMENZAR</button>
+    </div>
+</div>
+
+<div id="status-overlay" style="display: none;">
+    <div class="modal-content">
+        <h1 id="win-msg">¡JAQUE MATE!</h1>
+        <button class="btn-send" onclick="location.reload()">NUEVA PARTIDA</button>
     </div>
 </div>
 
 <div id="promo-overlay" style="display: none;">
     <div class="modal-content">
-        <h3>¡EL PEÓN HA CORONADO!</h3>
-        <p>Elige una pieza para transformar tu peón:</p>
-        <div class="promo-options" id="promo-choices"></div>
+        <h3>CORONACIÓN</h3>
+        <div id="promo-choices" style="display:flex; justify-content:center; gap:10px;"></div>
     </div>
 </div>
 
 <div class="sidebar">
     <div id="turn-display" class="white-turn">TURNO: BLANCAS</div>
-    <div id="check-status">¡ESTÁS EN JAQUE!</div>
-
+    <div id="check-status">¡JAQUE!</div>
     <div class="score-box">
-        <div class="score-row"> <span id="name-w">Blancas</span> <span class="points" id="score-w">0</span> </div>
-        <div class="score-row"> <span id="name-b">Negras</span> <span class="points" id="score-b">0</span> </div>
+        <div class="score-row"><span id="name-w">Blanco</span> <span class="points" id="score-w">0</span></div>
+        <div class="score-row"><span id="name-b">Negro</span> <span class="points" id="score-b">0</span></div>
     </div>
-
-    <button class="btn-send" onclick="enviarResultadosManual()">ENVIAR PUNTUACIÓN</button>
+    <button class="btn-send" onclick="location.reload()">REINICIAR</button>
 </div>
 
 <div id="game-container"><div id="board"></div></div>
-
-<div id="status-overlay" style="display: none;">
-    <div class="modal-content">
-        <h1 id="win-msg">¡JAQUE MATE!</h1>
-        <p id="points-msg">Tramitando puntos...</p>
-        <button class="btn-send" onclick="location.reload()">NUEVA PARTIDA</button>
-    </div>
-</div>
 
 <script>
     let board = [
@@ -106,8 +84,13 @@
     ];
 
     const symbols = { 'k':'♚','q':'♛','r':'♜','b':'♝','n':'♞','p':'♟','K':'♔','Q':'♕','R':'♖','B':'♗','N':'♘','P':'♙' };
-    let state = { turn: 'white', selected: null, legalMoves: [], gameActive: false, names: {}, scores: {white:0, black:0} };
-    let pendingPromotion = null;
+    const values = { 'p':1, 'n':3, 'b':3, 'r':5, 'q':9, 'k':0, 'P':1, 'N':3, 'B':3, 'R':5, 'Q':9, 'K':0 };
+    
+    let state = { 
+        turn: 'white', selected: null, legalMoves: [], gameActive: false, 
+        names: {white: "Blanco", black: "Negro"}, scores: {white:0, black:0},
+        moved: { K: false, k: false, R0: false, R7: false, r0: false, r7: false }
+    };
 
     function initGame() {
         state.names.white = document.getElementById('p1-name').value || "Blanco";
@@ -141,14 +124,16 @@
     }
 
     function handleSqClick(r, c) {
-        if (!state.gameActive || pendingPromotion) return;
+        if (!state.gameActive) return;
+        const p = board[r][c];
+        const isWhite = p !== '.' && p === p.toUpperCase();
+
         if (state.selected && state.legalMoves.some(m => m.r === r && m.c === c)) {
             movePiece(state.selected.r, state.selected.c, r, c);
             return;
         }
-        const p = board[r][c];
-        const isWhite = p !== '.' && p === p.toUpperCase();
-        if ((state.turn === 'white' && isWhite) || (state.turn === 'black' && p !== '.' && !isWhite)) {
+
+        if (p !== '.' && ((state.turn === 'white' && isWhite) || (state.turn === 'black' && !isWhite))) {
             state.selected = {r, c};
             state.legalMoves = getSafeMoves(r, c);
             updateHighlights();
@@ -156,14 +141,18 @@
     }
 
     function getSafeMoves(r, c) {
-        const rawMoves = getRawMoves(r, c, board);
-        const isWhite = board[r][c] === board[r][c].toUpperCase();
-        return rawMoves.filter(m => {
-            const tempT = board[m.r][m.c]; const tempS = board[r][c];
-            board[m.r][m.c] = tempS; board[r][c] = '.';
-            const inCheck = isKingInCheck(isWhite ? 'white' : 'black', board);
-            board[r][c] = tempS; board[m.r][m.c] = tempT;
-            return !inCheck;
+        const p = board[r][c];
+        if (p === '.') return [];
+        const isW = p === p.toUpperCase();
+        return getRawMoves(r, c, board).filter(m => {
+            const tempTarget = board[m.r][m.c];
+            const tempStart = board[r][c];
+            board[m.r][m.c] = tempStart;
+            board[r][c] = '.';
+            const safe = !isKingInCheck(isW ? 'white' : 'black', board);
+            board[r][c] = tempStart;
+            board[m.r][m.c] = tempTarget;
+            return safe;
         });
     }
 
@@ -174,17 +163,17 @@
         const dirs = {
             'r': [[0,1],[0,-1],[1,0],[-1,0]], 'b': [[1,1],[1,-1],[-1,1],[-1,-1]],
             'q': [[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]],
-            'k': [[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]],
-            'n': [[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]]
+            'n': [[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]],
+            'k': [[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]]
         };
 
         if (['r','b','q'].includes(p)) {
             dirs[p].forEach(d => {
-                let nr = r + d[0], nc = c + d[1];
-                while (nr>=0 && nr<8 && nc>=0 && nc<8) {
+                let nr = r+d[0], nc = c+d[1];
+                while(nr>=0 && nr<8 && nc>=0 && nc<8) {
                     if (b[nr][nc] === '.') moves.push({r:nr, c:nc});
                     else {
-                        if ((isW && b[nr][nc] === b[nr][nc].toLowerCase()) || (!isW && b[nr][nc] === b[nr][nc].toUpperCase())) moves.push({r:nr, c:nc});
+                        if (isW !== (b[nr][nc] === b[nr][nc].toUpperCase())) moves.push({r:nr, c:nc});
                         break;
                     }
                     nr+=d[0]; nc+=d[1];
@@ -194,20 +183,26 @@
             dirs[p].forEach(d => {
                 let nr = r+d[0], nc = c+d[1];
                 if (nr>=0 && nr<8 && nc>=0 && nc<8) {
-                    if (b[nr][nc] === '.' || (isW && b[nr][nc] === b[nr][nc].toLowerCase()) || (!isW && b[nr][nc] === b[nr][nc].toUpperCase())) moves.push({r:nr, c:nc});
+                    if (b[nr][nc] === '.' || isW !== (b[nr][nc] === b[nr][nc].toUpperCase())) moves.push({r:nr, c:nc});
                 }
             });
+            if (p === 'k') {
+                if (isW && !state.moved.K) {
+                    if (!state.moved.R7 && b[7][5]==='.' && b[7][6]==='.') moves.push({r:7, c:6, castle:true});
+                    if (!state.moved.R0 && b[7][1]==='.' && b[7][2]==='.' && b[7][3]==='.') moves.push({r:7, c:2, castle:true});
+                } else if (!isW && !state.moved.k) {
+                    if (!state.moved.r7 && b[0][5]==='.' && b[0][6]==='.') moves.push({r:0, c:6, castle:true});
+                    if (!state.moved.r0 && b[0][1]==='.' && b[0][2]==='.' && b[0][3]==='.') moves.push({r:0, c:2, castle:true});
+                }
+            }
         } else if (p === 'p') {
-            let step = isW ? -1 : 1;
-            if (b[r+step] && b[r+step][c] === '.') {
-                moves.push({r:r+step, c:c});
-                if (((isW && r===6) || (!isW && r===1)) && b[r+2*step] && b[r+2*step][c] === '.') moves.push({r:r+2*step, c:c});
+            let s = isW ? -1 : 1;
+            if (b[r+s] && b[r+s][c] === '.') {
+                moves.push({r:r+s, c:c});
+                if (((isW && r===6) || (!isW && r===1)) && b[r+2*s] && b[r+2*s][c] === '.') moves.push({r:r+2*s, c:c});
             }
             [1,-1].forEach(side => {
-                let nr = r+step, nc = c+side;
-                if (nr>=0 && nr<8 && nc>=0 && nc<8 && b[nr][nc] !== '.') {
-                    if ((isW && b[nr][nc] === b[nr][nc].toLowerCase()) || (!isW && b[nr][nc] === b[nr][nc].toUpperCase())) moves.push({r:nr, c:nc});
-                }
+                if (b[r+s] && b[r+s][c+side] && b[r+s][c+side] !== '.' && (isW !== (b[r+s][c+side] === b[r+s][c+side].toUpperCase()))) moves.push({r:r+s, c:c+side});
             });
         }
         return moves;
@@ -216,64 +211,99 @@
     function isKingInCheck(color, b) {
         let kr, kc; const kChar = color === 'white' ? 'K' : 'k';
         for(let r=0; r<8; r++) for(let c=0; c<8; c++) if(b[r][c] === kChar) {kr=r; kc=c;}
-        if(kr===undefined) return false;
+        if(kr === undefined) return false;
         for(let r=0; r<8; r++) for(let c=0; c<8; c++) {
             const p = b[r][c];
-            if(p!=='.' && ((color==='white' && p===p.toLowerCase()) || (color==='black' && p===p.toUpperCase()))) {
-                if(getRawMoves(r, c, b).some(m => m.r === kr && m.c === kc)) return true;
+            if(p !== '.' && (color === 'white' ? p === p.toLowerCase() : p === p.toUpperCase())) {
+                const moves = getRawMoves(r, c, b);
+                if (moves.some(m => m.r === kr && m.c === kc)) return true;
             }
         }
         return false;
     }
 
     function movePiece(r1, c1, r2, c2) {
-        if (board[r2][c2] !== '.') state.scores[state.turn]++;
-        board[r2][c2] = board[r1][c1]; board[r1][c1] = '.';
+        const p = board[r1][c1];
+        const target = board[r2][c2];
+        const moveData = state.legalMoves.find(m => m.r === r2 && m.c === c2);
 
-        // Verificamos Coronación
-        const piece = board[r2][c2];
-        if ((piece === 'P' && r2 === 0) || (piece === 'p' && r2 === 7)) {
-            handlePromotion(r2, c2);
-            return; // Detenemos el flujo hasta elegir pieza
+        if (target !== '.') state.scores[state.turn] += values[target];
+        
+        if (moveData.castle) {
+            if (c2 === 6) { board[r2][5] = board[r2][7]; board[r2][7] = '.'; }
+            if (c2 === 2) { board[r2][3] = board[r2][0]; board[r2][0] = '.'; }
         }
 
-        finalizeTurn();
+        if (p === 'K') state.moved.K = true; if (p === 'k') state.moved.k = true;
+        if (r1 === 7 && c1 === 0) state.moved.R0 = true; if (r1 === 7 && c1 === 7) state.moved.R7 = true;
+        if (r1 === 0 && c1 === 0) state.moved.r0 = true; if (r1 === 0 && c1 === 7) state.moved.r7 = true;
+
+        board[r2][c2] = p; board[r1][c1] = '.';
+        
+        if ((p === 'P' && r2 === 0) || (p === 'p' && r2 === 7)) {
+            handlePromo(r2, c2);
+        } else {
+            finalizeTurn();
+        }
     }
 
-    function handlePromotion(r, c) {
-        pendingPromotion = {r, c};
+    function handlePromo(r, c) {
         const overlay = document.getElementById('promo-overlay');
-        const choices = document.getElementById('promo-choices');
-        choices.innerHTML = '';
-        const options = state.turn === 'white' ? ['Q','R','B','N'] : ['q','r','b','n'];
-        
-        options.forEach(opt => {
-            const btn = document.createElement('div');
-            btn.className = 'promo-btn';
-            btn.innerText = symbols[opt];
-            btn.onclick = () => {
-                board[r][c] = opt;
-                overlay.style.display = 'none';
-                pendingPromotion = null;
-                finalizeTurn();
-            };
-            choices.appendChild(btn);
+        const box = document.getElementById('promo-choices');
+        box.innerHTML = '';
+        const opts = state.turn === 'white' ? ['Q','R','B','N'] : ['q','r','b','n'];
+        opts.forEach(o => {
+            const b = document.createElement('button');
+            b.innerText = symbols[o];
+            b.style.fontSize = '30px';
+            b.onclick = () => { board[r][c] = o; overlay.style.display='none'; finalizeTurn(); };
+            box.appendChild(b);
         });
         overlay.style.display = 'flex';
     }
 
     function finalizeTurn() {
-        state.selected = null; state.legalMoves = [];
         state.turn = state.turn === 'white' ? 'black' : 'white';
+        state.selected = null; state.legalMoves = [];
         
         document.getElementById('score-w').innerText = state.scores.white;
         document.getElementById('score-b').innerText = state.scores.black;
         document.getElementById('turn-display').innerText = `TURNO: ${state.turn.toUpperCase()}`;
         document.getElementById('turn-display').className = state.turn === 'white' ? 'white-turn' : 'black-turn';
-        document.getElementById('check-status').style.display = isKingInCheck(state.turn, board) ? 'block' : 'none';
-
+        
         createBoard();
         checkGameEnd();
+    }
+
+    function checkGameEnd() {
+        let canMove = false;
+        for(let r=0; r<8; r++) {
+            for(let c=0; c<8; c++) {
+                const p = board[r][c];
+                if(p !== '.' && ((state.turn === 'white' && p === p.toUpperCase()) || (state.turn === 'black' && p === p.toLowerCase()))) {
+                    if(getSafeMoves(r, c).length > 0) { canMove = true; break; }
+                }
+            }
+            if(canMove) break;
+        }
+
+        const checkStatus = document.getElementById('check-status');
+        const inCheck = isKingInCheck(state.turn, board);
+
+        if(!canMove) {
+            state.gameActive = false;
+            checkStatus.style.display = 'none'; // Ocultar jaque si es mate
+            const winMsg = document.getElementById('win-msg');
+            if(inCheck) {
+                const winner = state.turn === 'white' ? state.names.black : state.names.white;
+                winMsg.innerText = `¡JAQUE MATE! GANA ${winner.toUpperCase()}`;
+            } else {
+                winMsg.innerText = "¡TABLAS POR AHOGADO!";
+            }
+            document.getElementById('status-overlay').style.display = 'flex';
+        } else {
+            checkStatus.style.display = inCheck ? 'block' : 'none';
+        }
     }
 
     function updateHighlights() {
@@ -281,46 +311,11 @@
         const sqs = document.getElementsByClassName('sq');
         for(let s of sqs) {
             const r = parseInt(s.dataset.r), c = parseInt(s.dataset.c);
-            if(state.selected && state.selected.r === r && state.selected.c === c) s.classList.add('selected');
-            if(state.legalMoves.some(m => m.r === r && m.c === c)) {
-                const d = document.createElement('div'); d.className = 'legal-dot'; s.appendChild(d);
+            if (state.selected?.r === r && state.selected?.c === c) s.classList.add('selected');
+            if (state.legalMoves.some(m => m.r === r && m.c === c)) {
+                const dot = document.createElement('div'); dot.className = 'legal-dot'; s.appendChild(dot);
             }
         }
-    }
-
-    function checkGameEnd() {
-        let hasMoves = false;
-        for(let r=0; r<8; r++) for(let c=0; c<8; c++) {
-            const p = board[r][c];
-            if(p!=='.' && ((state.turn==='white' && p===p.toUpperCase()) || (state.turn==='black' && p===p.toLowerCase()))) {
-                if(getSafeMoves(r,c).length > 0) hasMoves = true;
-            }
-        }
-        if(!hasMoves) {
-            state.gameActive = false;
-            const check = isKingInCheck(state.turn, board);
-            if(check) {
-                const winner = state.turn === 'white' ? 'black' : 'white';
-                state.scores[winner] += 20;
-                document.getElementById('win-msg').innerText = `¡JAQUE MATE! GANA ${state.names[winner].toUpperCase()}`;
-                document.getElementById('status-overlay').style.display = 'flex';
-                enviarPuntos(state.names[winner], state.scores[winner], 20);
-            } else {
-                document.getElementById('win-msg').innerText = "¡TABLAS!";
-                document.getElementById('status-overlay').style.display = 'flex';
-            }
-        }
-    }
-
-    function enviarPuntos(n, total, g) {
-        const url = "https://script.google.com/macros/s/AKfycbwVPttSZrhwfWwSZpFo7KWjJ39vldQm3MPGykMWEPWOoF4UsZ24mC8YhgiaE-0xm_7G/exec";
-        fetch(url, { method: "POST", mode: "no-cors", body: JSON.stringify({ player1: "Chess "+n, score1: g, player2: "Acumulado", score2: total, timestamp: new Date().toLocaleString() })});
-    }
-
-    function enviarResultadosManual() {
-        enviarPuntos(state.names.white, state.scores.white, state.scores.white);
-        enviarPuntos(state.names.black, state.scores.black, state.scores.black);
-        alert("Puntuaciones enviadas.");
     }
 </script>
 </body>
