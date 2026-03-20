@@ -1,996 +1,433 @@
 <!DOCTYPE html>
-<!-- saved from url=(0045)https://delatj.github.io/web/creadorweb2.html -->
-<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de Páginas HTML</title>
-    <style>
-        body { font-family: Arial, sans-serif; transition: all 0.3s ease; }
-        #sidebar { 
-            width: 333px; /* Aumentado de 250px a 333px (33.33% más) */
-            position: fixed; 
-            left: 0; 
-            top: 0; 
-            bottom: 0; 
-            padding: 15px; /* Aumentado padding */
-            overflow-y: auto; 
-            font-size: 1.1em; /* Aumentar tamaño de fuente */
-        }
-        #content { 
-            margin-left: 370px; /* Aumentado de 270px a 370px */
-            padding: 20px; 
-            font-size: 0.9em; /* Reducir tamaño de fuente */
-        }
-        .theme-selector { margin: 15px 0; }
-        .input-group { margin: 15px 0; }
-        .input-group label { display: block; margin-bottom: 8px; font-size: 1.1em; }
-        .input-group input { width: 100%; padding: 10px; font-size: 1em; }
-        .image-preview { 
-            max-width: 100%; 
-            max-height: 300px; 
-            margin: 15px 0; 
-            border: 1px solid #ddd;
-            box-shadow: 0 0 5px rgba(0,0,0,0.1);
-        }
-        .audio-preview { width: 100%; margin: 15px 0; }
-        .file-type { font-size: 0.9em; margin-left: 5px; color: #777; }
-        .file-controls { margin-top: 8px; }
-        .sidebar-title { 
-            font-size: 1.8em; /* Aumentado de 1.5em */
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
-        }
-        .creator-title {
-            color: red;
-            font-size: 2em;
-            text-align: center;
-            margin: 20px 0;
-        }
-        .blank-lines {
-            height: 60em;
-            margin: 20px 0;
-        }
-        .pdf-thumbnail {
-            max-width: 100%;
-            max-height: 300px;
-            border: 1px solid #ddd;
-            box-shadow: 0 0 5px rgba(0,0,0,0.1);
-            margin-bottom: 15px;
-        }
-        
-        /* Estilos base para los temas */
-        .theme-white {
-            background-color: white;
-        }
-        .theme-white #sidebar {
-            background-color: #1e88e5;
-            color: black;
-        }
-        .theme-white #sidebar a {
-            color: black;
-        }
-        .theme-white .sidebar-title {
-            border-bottom-color: rgba(0,0,0,0.2);
-        }
-        
-        .theme-gray {
-            background-color: #f5f5f5;
-        }
-        .theme-gray #sidebar {
-            background-color: #4caf50;
-            color: #1976d2;
-        }
-        .theme-gray #sidebar a {
-            color: #1976d2;
-        }
-        .theme-gray .sidebar-title {
-            border-bottom-color: rgba(25,118,210,0.2);
-        }
-        
-        .theme-yellow {
-            background-color: #fff9c4;
-        }
-        .theme-yellow #sidebar {
-            background-color: #9e9e9e;
-            color: #e65100;
-        }
-        .theme-yellow #sidebar a {
-            color: #e65100;
-        }
-        .theme-yellow .sidebar-title {
-            border-bottom-color: rgba(230,81,0,0.2);
-        }
-
-        /* Estilos para el editor de texto */
-        #editorModal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.7);
-        }
-        #editorContent {
-            background-color: #fefefe;
-            margin: 5% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            height: 80%;
-            display: flex;
-            flex-direction: column;
-        }
-        #editorToolbar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            padding: 10px;
-            background: #f0f0f0;
-            border-bottom: 1px solid #ddd;
-        }
-        #editorToolbar button, #editorToolbar select {
-            padding: 5px 10px;
-            font-size: 14px;
-        }
-        #textEditor {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
-            overflow-y: auto;
-            background: white;
-        }
-        .editor-buttons {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            padding: 10px;
-            background: #f0f0f0;
-            border-top: 1px solid #ddd;
-        }
-        .remove-file-btn {
-            background-color: #ff4444;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            margin-left: 10px;
-            cursor: pointer;
-            border-radius: 3px;
-        }
-        .remove-file-btn:hover {
-            background-color: #cc0000;
-        }
-        /* Nuevos estilos para los botones de proyecto */
-        .project-buttons {
-            margin: 15px 0;
-            display: flex;
-            gap: 10px;
-        }
-        .project-buttons button {
-            padding: 10px 15px;
-            font-size: 1em;
-            cursor: pointer;
-        }
-        #projectFileInput {
-            display: none;
-        }
-    </style>
-</head>
-<body class="theme-white">
-    <div id="sidebar">
-        <div class="sidebar-title" id="sidebarTitle">Mi Página Web</div>
-        <h3>Archivos</h3>
-        <ul id="fileList"></ul>
-        <h3>Tema</h3>
-        <select id="themeSelector" class="theme-selector">
-            <option value="white">Blanco (Azul/Negro)</option>
-            <option value="gray">Gris (Verde/Azul)</option>
-            <option value="yellow">Amarillo (Gris/Naranja)</option>
-        </select>
-    </div>
-    <div id="content">
-        <div class="input-group">
-            <label for="pageTitle">Título de la página principal:</label>
-            <input type="text" id="pageTitle" placeholder="Mi Página Web" oninput="updateSidebarTitle()">
-        </div>
-        <h2>Generador de Página HTML</h2>
-        <div class="input-group">
-            <label for="fileInput">Seleccionar archivo (imágenes, PDF, HTML o audio):</label>
-            <input type="file" id="fileInput" accept=".jpg,.jpeg,.png,.gif,.pdf,.html,.mp3,.wav,.ogg">
-        </div>
-        <div class="input-group">
-            <label for="imageQuality">Calidad de imagen (1-100):</label>
-            <input type="range" id="imageQuality" min="1" max="100" value="60">
-            <span id="qualityValue">60%</span>
-        </div>
-        <div class="input-group">
-            <label for="maxWidth">Ancho máximo (px):</label>
-            <input type="number" id="maxWidth" value="800" min="100" max="2000">
-        </div>
-        <div class="input-group">
-            <label for="description">Descripción:</label>
-            <input type="text" id="description" placeholder="Descripción del archivo">
-        </div>
-        <button onclick="addFile()">Añadir Archivo</button>
-        <button onclick="openEditor()">Abrir Editor de Texto</button>
-        
-        <div class="project-buttons">
-            <button onclick="saveProject()">Guardar Proyecto</button>
-            <button onclick="document.getElementById('projectFileInput').click()">Cargar Proyecto</button>
-            <input type="file" id="projectFileInput" accept=".webproj" onchange="loadProject(this.files[0])">
-        </div>
-        
-        <button onclick="downloadMergedFile()">Descargar Página</button>
-        <hr>
-        <div id="displayArea"></div>
-    </div>
-
-    <!-- Modal del Editor de Texto -->
-    <div id="editorModal">
-        <div id="editorContent">
-            <div id="editorToolbar">
-                <select id="formatBlock">
-                    <option value="p">Párrafo</option>
-                    <option value="h1">Título 1</option>
-                    <option value="h2">Título 2</option>
-                    <option value="h3">Título 3</option>
-                    <option value="h4">Título 4</option>
-                    <option value="h5">Título 5</option>
-                    <option value="h6">Título 6</option>
-                    <option value="pre">Preformateado</option>
-                </select>
-                <select id="fontFamily">
-                    <option value="">Fuente</option>
-                    <option value="Arial, sans-serif">Arial</option>
-                    <option value="'Times New Roman', serif">Times New Roman</option>
-                    <option value="'Courier New', monospace">Courier New</option>
-                    <option value="Georgia, serif">Georgia</option>
-                    <option value="Verdana, sans-serif">Verdana</option>
-                </select>
-                <select id="fontSize">
-                    <option value="">Tamaño</option>
-                    <option value="1">Pequeño</option>
-                    <option value="3">Normal</option>
-                    <option value="5">Grande</option>
-                    <option value="7">Muy grande</option>
-                </select>
-                <select id="fontColor">
-                    <option value="">Color</option>
-                    <option value="red">Rojo</option>
-                    <option value="blue">Azul</option>
-                    <option value="green">Verde</option>
-                    <option value="black">Negro</option>
-                    <option value="purple">Morado</option>
-                    <option value="orange">Naranja</option>
-                </select>
-                <button onclick="execCommand('bold')"><b>N</b></button>
-                <button onclick="execCommand('italic')"><i>I</i></button>
-                <button onclick="execCommand('underline')"><u>S</u></button>
-                <button onclick="execCommand('justifyLeft')">Alinear izquierda</button>
-                <button onclick="execCommand('justifyCenter')">Centrar</button>
-                <button onclick="execCommand('justifyRight')">Alinear derecha</button>
-                <button onclick="execCommand('insertUnorderedList')">Lista</button>
-                <button onclick="execCommand('insertOrderedList')">Lista numerada</button>
-                <button onclick="insertLink()">Enlace</button>
-                <button onclick="insertTable()">Tabla</button>
-                <button onclick="execCommand('undo')">Deshacer</button>
-                <button onclick="execCommand('redo')">Rehacer</button>
-            </div>
-            <div id="textEditor" contenteditable="true"></div>
-            <div class="editor-buttons">
-                <button onclick="closeEditor()">Cancelar</button>
-                <button onclick="addTextContent()">Añadir Texto</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- PDF.js para procesar PDFs -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.min.js"></script>
-    <script>
-        // Configurar PDF.js
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.worker.min.js';
-        
-        let files = [];
-        const imageQuality = document.getElementById('imageQuality');
-        const qualityValue = document.getElementById('qualityValue');
-        const maxWidthInput = document.getElementById('maxWidth');
-        
-        // Actualizar valor de calidad
-        imageQuality.addEventListener('input', function() {
-            qualityValue.textContent = this.value + '%';
-        });
-        
-        // Actualizar el título en la barra lateral
-        function updateSidebarTitle() {
-            const title = document.getElementById('pageTitle').value || 'Mi Página Web';
-            document.getElementById('sidebarTitle').textContent = title;
-        }
-        
-        function addFile() {
-            let fileInput = document.getElementById('fileInput');
-            let description = document.getElementById('description').value;
-            let quality = parseInt(imageQuality.value) / 100;
-            let maxWidth = parseInt(maxWidthInput.value);
-            if (fileInput.files.length === 0) return;
-            
-            let file = fileInput.files[0];
-            let reader = new FileReader();
-            
-            // Verificar el tipo de archivo
-            let isImage = file.type.match('image.*');
-            let isPDF = file.type === 'application/pdf';
-            let isAudio = file.type.match('audio.*');
-            
-            if (isImage) {
-                reader.onload = function(e) {
-                    // Optimizar imagen antes de mostrarla
-                    optimizeImage(e.target.result, quality, maxWidth, (optimizedImage) => {
-                        let preview = `<div class="image-container">
-                            <h4>${description}</h4>
-                            <img src="${optimizedImage}" class="image-preview" alt="${description}">
-                            <div class="file-controls">
-                                <span class="file-type">${file.type.replace('image/', '').toUpperCase()} (optimizado)</span>
-                            </div>
-                        </div>`;
-                        
-                        files.push({ 
-                            name: file.name, 
-                            content: preview, 
-                            description: description,
-                            isImage: true,
-                            isPDF: false,
-                            isAudio: false,
-                            fileData: optimizedImage, // Solo guardamos la versión optimizada
-                            type: file.type
-                        });
-                        
-                        updateFileList();
-                    });
-                };
-                reader.readAsDataURL(file);
-            } else if (isPDF) {
-                reader.onload = function(e) {
-                    // Procesar PDF para obtener una vista previa de la primera página
-                    processPDF(e.target.result, quality, maxWidth, (pdfThumbnail) => {
-                        let preview = `<div class="pdf-container">
-                            <h4>${description}</h4>
-                            <img src="${pdfThumbnail}" class="pdf-thumbnail" alt="Vista previa del PDF">
-                            <div class="file-controls">
-                                <span class="file-type">PDF (primera página)</span>
-                            </div>
-                        </div>`;
-                        
-                        files.push({ 
-                            name: file.name, 
-                            content: preview, 
-                            description: description,
-                            isImage: false,
-                            isPDF: true,
-                            isAudio: false,
-                            fileData: pdfThumbnail, // Solo guardamos la miniatura
-                            type: file.type
-                        });
-                        
-                        updateFileList();
-                    });
-                };
-                reader.readAsDataURL(file);
-            } else if (isAudio) {
-                reader.onload = function(e) {
-                    // Crear vista previa del audio (no optimizamos audio)
-                    let preview = `<div class="audio-container">
-                        <h4>${description}</h4>
-                        <audio controls class="audio-preview">
-                            <source src="${e.target.result}" type="${file.type}">
-                            Tu navegador no soporta el elemento de audio.
-                        </audio>
-                        <div class="file-controls">
-                            <span class="file-type">${file.type.replace('audio/', '').toUpperCase()}</span>
-                        </div>
-                    </div>`;
-                    
-                    files.push({ 
-                        name: file.name, 
-                        content: preview, 
-                        description: description,
-                        isImage: false,
-                        isPDF: false,
-                        isAudio: true,
-                        fileData: e.target.result,
-                        type: file.type
-                    });
-                    
-                    updateFileList();
-                };
-                reader.readAsDataURL(file);
-            } else {
-                // Procesar HTML normal
-                reader.onload = function(e) {
-                    files.push({ 
-                        name: file.name, 
-                        content: e.target.result, 
-                        description: description,
-                        isImage: false,
-                        isPDF: false,
-                        isAudio: false,
-                        type: 'text/html'
-                    });
-                    updateFileList();
-                };
-                reader.readAsText(file);
-            }
-        }
-        
-        // Función para optimizar imágenes
-        function optimizeImage(imageData, quality, maxWidth, callback) {
-            let img = new Image();
-            img.onload = function() {
-                let canvas = document.createElement('canvas');
-                let ctx = canvas.getContext('2d');
-                
-                // Calcular nuevo tamaño manteniendo relación de aspecto
-                let width = Math.min(img.width, maxWidth);
-                let height = (width * img.height) / img.width;
-                
-                // Reducir aún más para pantallas pequeñas
-                if (width > 800) {
-                    width = 800;
-                    height = (width * img.height) / img.width;
-                }
-                
-                canvas.width = width;
-                canvas.height = height;
-                ctx.drawImage(img, 0, 0, width, height);
-                
-                // Convertir a JPEG con calidad ajustable (formato más ligero)
-                let optimizedData = canvas.toDataURL('image/jpeg', quality);
-                callback(optimizedData);
-            };
-            img.src = imageData;
-        }
-        
-        // Función para procesar PDF y obtener una imagen de la primera página
-        function processPDF(pdfData, quality, maxWidth, callback) {
-            // Cargar el PDF
-            pdfjsLib.getDocument({data: atob(pdfData.split(',')[1])}).promise.then(function(pdf) {
-                // Obtener la primera página
-                return pdf.getPage(1);
-            }).then(function(page) {
-                let viewport = page.getViewport({scale: 1.0});
-                
-                // Reducir la escala para la vista previa
-                let scale = Math.min(maxWidth / viewport.width, 600 / viewport.height);
-                viewport = page.getViewport({scale: scale});
-                
-                let canvas = document.createElement('canvas');
-                let context = canvas.getContext('2d');
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
-                
-                // Renderizar la página del PDF en el canvas
-                let renderContext = {
-                    canvasContext: context,
-                    viewport: viewport
-                };
-                
-                return page.render(renderContext).promise.then(function() {
-                    // Convertir a JPEG con calidad ajustable
-                    let thumbnail = canvas.toDataURL('image/jpeg', quality);
-                    callback(thumbnail);
-                });
-            }).catch(function(error) {
-                console.error('Error al procesar PDF:', error);
-                // Si falla, mostrar un placeholder
-                callback('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iNjAwIiB2aWV3Qm94PSIwIDAgODAwIDYwMCIgZmlsbD0iI2VlZWVlZSI+PHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSI2MDAiIGZpbGw9IiNlZWVlZWUiLz48dGV4dCB4PSI0MDAiIHk9IjMwMCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjI0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOTk5OTk5Ij5QcmV2aXN1YWwgZGVsIFBERjwvdGV4dD48L3N2Zz4=');
-            });
-        }
-        
-        function updateFileList() {
-            let fileList = document.getElementById('fileList');
-            fileList.innerHTML = '';
-            files.forEach((file, index) => {
-                let li = document.createElement('li');
-                let typeLabel = '';
-                
-                if (file.isImage) {
-                    typeLabel = `<span class="file-type">(${file.type.replace('image/', '').toUpperCase()} optimizado)</span>`;
-                } else if (file.isPDF) {
-                    typeLabel = '<span class="file-type">(PDF miniatura)</span>';
-                } else if (file.isAudio) {
-                    typeLabel = `<span class="file-type">(${file.type.replace('audio/', '').toUpperCase()})</span>`;
-                } else {
-                    typeLabel = '<span class="file-type">(HTML)</span>';
-                }
-                
-                li.innerHTML = `
-                    <a href="#" onclick="showFileInNewTab(${index})">${file.description}</a> 
-                    ${typeLabel}
-                    <button class="remove-file-btn" onclick="removeFile(${index})">×</button>
-                `;
-                fileList.appendChild(li);
-            });
-        }
-        
-        // Función para eliminar un archivo
-        function removeFile(index) {
-            if (confirm('¿Estás seguro de que quieres eliminar este archivo?')) {
-                files.splice(index, 1);
-                updateFileList();
-            }
-        }
-        
-        // Funciones para el editor de texto
-        function openEditor() {
-            document.getElementById('editorModal').style.display = 'block';
-            document.getElementById('textEditor').focus();
-        }
-        
-        function closeEditor() {
-            document.getElementById('editorModal').style.display = 'none';
-            document.getElementById('textEditor').innerHTML = '';
-        }
-        
-        function execCommand(command, value = null) {
-            document.execCommand(command, false, value);
-            document.getElementById('textEditor').focus();
-        }
-        
-        function insertLink() {
-            let url = prompt('Introduce la URL del enlace:', 'http://');
-            if (url) {
-                execCommand('createLink', url);
-            }
-        }
-        
-        function insertTable() {
-            let rows = prompt('Número de filas:', '3');
-            let cols = prompt('Número de columnas:', '3');
-            
-            if (rows && cols) {
-                let table = '<table border="1" style="width:100%; border-collapse: collapse;">';
-                for (let i = 0; i < rows; i++) {
-                    table += '<tr>';
-                    for (let j = 0; j < cols; j++) {
-                        table += `<td style="padding: 5px;">Celda ${i+1}-${j+1}</td>`;
-                    }
-                    table += '</tr>';
-                }
-                table += '</table>';
-                
-                execCommand('insertHTML', table);
-            }
-        }
-        
-        // Manejar cambios en los selectores del editor
-        document.getElementById('formatBlock').addEventListener('change', function() {
-            execCommand('formatBlock', '<' + this.value + '>');
-            this.selectedIndex = 0;
-        });
-        
-        document.getElementById('fontFamily').addEventListener('change', function() {
-            execCommand('fontName', this.value);
-            this.selectedIndex = 0;
-        });
-        
-        document.getElementById('fontSize').addEventListener('change', function() {
-            execCommand('fontSize', this.value);
-            this.selectedIndex = 0;
-        });
-        
-        document.getElementById('fontColor').addEventListener('change', function() {
-            execCommand('foreColor', this.value);
-            this.selectedIndex = 0;
-        });
-        
-        // Añadir el texto editado como un nuevo archivo
-        function addTextContent() {
-            let description = prompt('Introduce un título para este texto:', 'Texto personalizado');
-            if (!description) return;
-            
-            let content = document.getElementById('textEditor').innerHTML;
-            if (!content.trim()) {
-                alert('El editor está vacío. Escribe algo primero.');
-                return;
-            }
-            
-            let preview = `<div class="text-container">
-                <h4>${description}</h4>
-                <div class="text-content">${content}</div>
-                <div class="file-type">(Texto enriquecido)</div>
-            </div>`;
-            
-            files.push({ 
-                name: 'texto-personalizado.html', 
-                content: preview, 
-                description: description,
-                isImage: false,
-                isPDF: false,
-                isAudio: false,
-                type: 'text/html'
-            });
-            
-            updateFileList();
-            closeEditor();
-        }
-        
-        function showFileInNewTab(index) {
-            let newWindow = window.open('', '_blank');
-            let file = files[index];
-            
-            let content = `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>${file.description}</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; padding: 20px; }
-                        .content-container { max-width: 800px; margin: 0 auto; }
-                        img { 
-                            max-width: 100%; 
-                            height: auto; 
-                            border: 1px solid #ddd; 
-                            margin: 20px 0; 
-                        }
-                        audio { width: 100%; margin: 20px 0; }
-                        .blank-space {
-                            height: 100vh;
-                            background: white;
-                            margin-top: 20px;
-                        }
-                        .close-link {
-                            text-align: right;
-                            margin-bottom: 20px;
-                        }
-                        .file-type { 
-                            color: #777; 
-                            font-size: 0.9em; 
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="content-container">
-                        <div class="close-link"><a href="#" onclick="window.close()">Cerrar ventana</a></div>
-                        <h1>${file.description}</h1>
-                        ${file.content}
-                        <div class="blank-space"></div>
-                    </div>
-                </body>
-                </html>
-            `;
-            
-            newWindow.document.write(content);
-            newWindow.document.close();
-        }
-        
-        // Función para guardar el proyecto actual
-        function saveProject() {
-            const projectData = {
-                pageTitle: document.getElementById('pageTitle').value,
-                theme: document.getElementById('themeSelector').value,
-                imageQuality: imageQuality.value,
-                maxWidth: maxWidthInput.value,
-                files: files
-            };
-            
-            const blob = new Blob([JSON.stringify(projectData)], { type: 'application/json' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'proyecto_web.webproj';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        }
-        
-        // Función para cargar un proyecto guardado
-        function loadProject(file) {
-            if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const projectData = JSON.parse(e.target.result);
-                    
-                    // Restaurar configuración
-                    document.getElementById('pageTitle').value = projectData.pageTitle || '';
-                    document.getElementById('themeSelector').value = projectData.theme || 'white';
-                    imageQuality.value = projectData.imageQuality || 60;
-                    maxWidthInput.value = projectData.maxWidth || 800;
-                    qualityValue.textContent = (projectData.imageQuality || 60) + '%';
-                    
-                    // Cambiar tema
-                    document.body.classList.remove('theme-white', 'theme-gray', 'theme-yellow');
-                    document.body.classList.add('theme-' + (projectData.theme || 'white'));
-                    
-                    // Restaurar archivos
-                    files = projectData.files || [];
-                    updateFileList();
-                    updateSidebarTitle();
-                    
-                    alert('Proyecto cargado correctamente');
-                } catch (error) {
-                    console.error('Error al cargar el proyecto:', error);
-                    alert('Error al cargar el proyecto. El archivo puede estar corrupto.');
-                }
-            };
-            reader.readAsText(file);
-        }
-        
-        function downloadMergedFile() {
-            let pageTitle = document.getElementById('pageTitle').value || 'Mi Página Web';
-            let selectedTheme = document.getElementById('themeSelector').value;
-            
-            let themeStyles = {
-                white: {
-                    body: 'white',
-                    sidebar: '#1e88e5',
-                    text: 'black',
-                    link: 'black',
-                    titleBorder: 'rgba(0,0,0,0.2)'
-                },
-                gray: {
-                    body: '#f5f5f5',
-                    sidebar: '#4caf50',
-                    text: '#1976d2',
-                    link: '#1976d2',
-                    titleBorder: 'rgba(25,118,210,0.2)'
-                },
-                yellow: {
-                    body: '#fff9c4',
-                    sidebar: '#9e9e9e',
-                    text: '#e65100',
-                    link: '#e65100',
-                    titleBorder: 'rgba(230,81,0,0.2)'
-                }
-            };
-            
-            let currentTheme = themeStyles[selectedTheme];
-            
-            let mergedContent = `<!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${pageTitle}</title>
-    <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            margin: 0; 
-            padding: 0; 
-            background-color: ${currentTheme.body};
-            transition: all 0.3s ease;
-            font-size: 0.9em; /* Reducir tamaño de fuente general */
-        }
-        #sidebar { 
-            width: 333px; /* Aumentado de 250px */
-            position: fixed; 
-            left: 0; 
-            top: 0; 
-            bottom: 0; 
-            background-color: ${currentTheme.sidebar}; 
-            color: ${currentTheme.text}; 
-            padding: 15px; 
-            overflow-y: auto; 
-            font-size: 1.1em; /* Aumentar tamaño de fuente */
-        }
-        #sidebar a {
-            color: ${currentTheme.link};
-            text-decoration: none;
-            font-size: 1.5em; /* Aumentar tamaño de enlaces */
-        }
-        #sidebar a:hover {
-            text-decoration: underline;
-        }
-        .sidebar-title {
-            font-size: 1.8em; /* Aumentado de 1.5em */
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid ${currentTheme.titleBorder};
-        }
-        #content { 
-            margin-left: 370px; /* Aumentado de 270px */
-            padding: 20px; 
-        }
-        .creator-title {
-            color: red;
-            font-size: 2em;
-            text-align: center;
-            margin: 20px 0;
-        }
-        .blank-lines {
-            height: 60em;
-            margin: 20px 0;
-        }
-        .image-container, .pdf-container { 
-            margin: 20px 0; 
-            text-align: center; 
-        }
-        .image-container img, .pdf-thumbnail { 
-            max-width: 100%; 
-            max-height: 500px;
-            border: 1px solid #ddd; 
-            box-shadow: 0 0 5px rgba(0,0,0,0.1); 
-        }
-        .audio-container { 
-            margin: 20px 0; 
-        }
-        audio { 
-            width: 100%; 
-        }
-        .file-type { 
-            color: #777; 
-            font-size: 0.9em; 
-        }
-        hr { 
-            margin: 30px 0; 
-            border: 0; 
-            border-top: 1px solid #eee; 
-        }
-        .close-link {
-            text-align: right;
-            margin-bottom: 20px;
-        }
-        .text-container {
-            margin: 20px 0;
-        }
-        .text-content {
-            padding: 15px;
-            border: 1px solid #eee;
-            background-color: white;
-        }
-        .text-content table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 10px 0;
-        }
-        .text-content table, .text-content th, .text-content td {
-            border: 1px solid #ddd;
-            padding: 8px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editor Web Pro - Tablas y Formato</title>
+  <style>
+    * { box-sizing: border-box; font-size: 1.1rem; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 10px; background-color: #e9ecef; }
+    h2 { text-align: center; color: #1a73e8; margin: 10px 0; }
+
+    /* Barra de herramientas organizada */
+    #toolbar {
+      position: sticky; top: 0; z-index: 1000;
+      background: white; padding: 15px; border-bottom: 4px solid #1a73e8;
+      border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 20px;
+    }
+    .tool-group { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 0; border-bottom: 1px solid #eee; align-items: center; }
+    .tool-group:last-child { border-bottom: none; }
+    .label-text { font-weight: bold; min-width: 140px; color: #444; font-size: 0.95rem; }
+
+    button, select { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; font-weight: 600; cursor: pointer; background: white; }
+    button:hover { background: #f1f3f4; border-color: #1a73e8; }
+    
+    .color-btn { width: 32px; height: 32px; border-radius: 6px; border: 1px solid #999; cursor: pointer; transition: 0.2s; }
+    .color-btn:hover { transform: scale(1.1); }
+
+    /* Pestañas */
+    #tab-container { display: flex; flex-wrap: wrap; gap: 5px; }
+    .tab { 
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 20px; background: #dee2e6; border: 2px solid #ced4da; 
+      border-bottom: none; border-radius: 10px 10px 0 0; cursor: pointer; 
+    }
+    .tab.active { background: #fff; border-color: #1a73e8; color: #1a73e8; font-weight: bold; }
+    .close-tab { background: #ffcdd2; color: #b71c1c; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; font-size: 0.8rem; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+
+    /* Área de Edición Fija */
+    .editor-pane {
+      display: none; border: 3px solid #1a73e8; padding: 40px; min-height: 500px;
+      background: #ffffff; border-radius: 0 0 15px 15px; outline: none; font-size: 1.5rem; line-height: 1.6;
+    }
+    
+    /* Contenedores Multimedia y Tablas */
+    .img-wrap, .audio-wrap, .table-wrap { display: block; margin: 15px 0; border: 2px solid #ddd; padding: 10px; background: #fff; width: fit-content; border-radius: 8px;}
+    .img-wrap img { max-width: 100%; height: auto; display: block; }
+    .table-wrap { width: 100%; max-width: 100%; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    table td { padding: 8px; border: 1px solid #ccc; min-width: 50px; }
+
+    .btn-clear { background: #fce4ec; color: #c2185b; border: 1px solid #f06292; }
+    .btn-link { background: #e8eaf6; color: #3f51b5; border: 1px solid #7986cb; }
+  </style>
 </head>
 <body>
-    <div id="sidebar">
-        <div class="sidebar-title">${pageTitle}</div>
-        <h3>Archivos</h3>
-        <ul id="fileList">`;
-            
-            files.forEach((file, index) => {
-                let typeLabel = '';
-                
-                if (file.isImage) {
-                    typeLabel = `<span class="file-type">(${file.type.replace('image/', '').toUpperCase()} optimizado)</span>`;
-                } else if (file.isPDF) {
-                    typeLabel = '<span class="file-type">(PDF miniatura)</span>';
-                } else if (file.isAudio) {
-                    typeLabel = `<span class="file-type">(${file.type.replace('audio/', '').toUpperCase()})</span>`;
-                } else {
-                    typeLabel = '<span class="file-type">(HTML)</span>';
-                }
-                
-                mergedContent += `<li><a href="#file${index}" target="_blank">${file.description}</a> ${typeLabel}</li>`;
-            });
-            
-            mergedContent += `</ul>
-        <h3>Tema</h3>
-        <p>${document.getElementById('themeSelector').options[document.getElementById('themeSelector').selectedIndex].text}</p>
+
+  <h2>Editor Web Profesional Completo</h2>
+
+  <div id="toolbar">
+    <div class="tool-group">
+      <button onclick="addTab()" style="background: #e6f4ea; color: #1b5e20;">➕ Nueva Pestaña</button>
+      <button onclick="saveFile()" style="background: #fff3e0;">💾 Guardar Proyecto</button>
+      <button onclick="loadFile()" style="background: #e3f2fd;">📂 Abrir Proyecto</button>
+      <button onclick="formatText('undo')">↩️ Deshacer</button>
+      <button class="btn-clear" onclick="superClearFormat()">🧽 Borrar Formato</button>
     </div>
-    <div id="content">
-        <h1 class="creator-title"> Web</h1>
-        <div class="blank-lines"></div>
-        <h1>${pageTitle}</h1>`;
-            
-            files.forEach((file, index) => {
-                if (file.isImage) {
-                    mergedContent += `<div id="file${index}" class="image-container">
-                        <h2>${file.description}</h2>
-                        <img src="${file.fileData}" alt="${file.description}">
-                        <div class="file-type">${file.type.replace('image/', '').toUpperCase()} (optimizado)</div>
-                    </div><hr>`;
-                } else if (file.isPDF) {
-                    mergedContent += `<div id="file${index}" class="pdf-container">
-                        <h2>${file.description}</h2>
-                        <img src="${file.fileData}" class="pdf-thumbnail" alt="Vista previa del PDF">
-                        <div class="file-type">PDF (primera página)</div>
-                    </div><hr>`;
-                } else if (file.isAudio) {
-                    mergedContent += `<div id="file${index}" class="audio-container">
-                        <h2>${file.description}</h2>
-                        <audio controls>
-                            <source src="${file.fileData}" type="${file.type}">
-                            Tu navegador no soporta el elemento de audio.
-                        </audio>
-                        <div class="file-type">${file.type.replace('audio/', '').toUpperCase()}</div>
-                    </div><hr>`;
-                } else {
-                    mergedContent += `<div id="file${index}"><h2>${file.description}</h2>${file.content}</div><hr>`;
-                }
-            });
-            
-            mergedContent += `</div>
-    <script>
-        // Pausar otros audios cuando se reproduce uno
-        document.querySelectorAll('audio').forEach(audio => {
-            audio.addEventListener('play', function() {
-                document.querySelectorAll('audio').forEach(otherAudio => {
-                    if (otherAudio !== audio) {
-                        otherAudio.pause();
-                    }
-                });
-            });
-        });
-        
-        // Configurar enlaces para abrir en pestaña nueva con espacio en blanco
-        document.querySelectorAll('#sidebar a').forEach(link => {
-            if(link.getAttribute('href').startsWith('#file')) {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const index = this.getAttribute('href').replace('#file', '');
-                    const fileContent = document.getElementById('file'+index).outerHTML;
-                    
-                    const newWindow = window.open('', '_blank');
-                    newWindow.document.write(\`
-                        <!DOCTYPE html>
-                        <html>
-                        <head>
-                            <title>\${document.getElementById('file'+index).querySelector('h2').textContent}</title>
-                            <style>
-                                body { font-family: Arial, sans-serif; padding: 20px; }
-                                .content-container { max-width: 800px; margin: 0 auto; }
-                                img { 
-                                    max-width: 100%; 
-                                    height: auto; 
-                                    border: 1px solid #ddd; 
-                                    margin: 20px 0; 
-                                }
-                                audio { width: 100%; margin: 20px 0; }
-                                .blank-space {
-                                    height: 100vh;
-                                    background: white;
-                                    margin-top: 20px;
-                                }
-                                .close-link {
-                                    text-align: right;
-                                    margin-bottom: 20px;
-                                }
-                            </style>
-                        </head>
-                        <body>
-                            <div class="content-container">
-                                <div class="close-link"><a href="#" onclick="window.close()">Cerrar ventana</a></div>
-                                \${fileContent}
-                                <div class="blank-space"></div>
-                            </div>
-                        </body>
-                        </html>
-                    \`);
-                    newWindow.document.close();
-                });
-            }
-        });
-    <\/script>
-</body>
-</html>`;
-            
-            let blob = new Blob([mergedContent], { type: 'text/html' });
-            let a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'pagina_unida.html';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+
+    <div class="tool-group">
+      <span class="label-text">Estilo y Alineación:</span>
+      <select onchange="formatText('fontName', this.value)">
+        <option value="Arial">Arial</option>
+        <option value="Verdana">Verdana</option>
+        <option value="Times New Roman">Times</option>
+        <option value="Comic Sans MS">Comic Sans</option>
+      </select>
+      <select id="fontSizeSelector" onchange="changeFontSize(this.value)">
+        <option value="">Tamaño...</option>
+        <option value="20px">Pequeña</option>
+        <option value="30px">Normal</option>
+        <option value="45px">Grande</option>
+        <option value="65px">Gigante</option>
+      </select>
+      <button onclick="formatText('bold')"><b>N</b></button>
+      <button onclick="formatText('italic')"><i>K</i></button>
+      <button onclick="formatText('underline')"><u>S</u></button>
+      <button class="btn-link" onclick="insertLink()">🔗 Crear Link</button>
+      <span style="margin: 0 10px; color: #ccc;">|</span>
+      <button onclick="formatText('justifyLeft')">⬅️ Izq</button>
+      <button onclick="formatText('justifyCenter')">Centro</button>
+      <button onclick="formatText('justifyRight')">Der ➡️</button>
+      <button onclick="formatText('justifyFull')">↔️ Justificado</button>
+    </div>
+
+    <div class="tool-group">
+      <span class="label-text">Color Letra:</span>
+      <button class="color-btn" style="background: #000000;" onclick="formatText('foreColor', '#000000')"></button>
+      <button class="color-btn" style="background: #d32f2f;" onclick="formatText('foreColor', '#d32f2f')"></button>
+      <button class="color-btn" style="background: #1976d2;" onclick="formatText('foreColor', '#1976d2')"></button>
+      <button class="color-btn" style="background: #388e3c;" onclick="formatText('foreColor', '#388e3c')"></button>
+      <button class="color-btn" style="background: #fbc02d;" onclick="formatText('foreColor', '#fbc02d')"></button>
+      <button class="color-btn" style="background: #8e24aa;" onclick="formatText('foreColor', '#8e24aa')"></button>
+      <button class="color-btn" style="background: #e64a19;" onclick="formatText('foreColor', '#e64a19')"></button>
+      
+      <span class="label-text" style="margin-left: 20px;">Resaltador (Fondo):</span>
+      <button class="color-btn" style="background: #ffff00;" onclick="highlightText('#ffff00')" title="Amarillo"></button>
+      <button class="color-btn" style="background: #00ff00;" onclick="highlightText('#00ff00')" title="Verde"></button>
+      <button class="color-btn" style="background: #00ffff;" onclick="highlightText('#00ffff')" title="Cian"></button>
+      <button class="color-btn" style="background: #ff00ff;" onclick="highlightText('#ff00ff')" title="Magenta"></button>
+      <button class="color-btn" style="background: #ffc107;" onclick="highlightText('#ffc107')" title="Naranja"></button>
+      <button class="color-btn" style="background: #cfd8dc;" onclick="highlightText('#cfd8dc')" title="Gris"></button>
+      <button class="color-btn" style="background: #ffffff; border: 2px dashed #000;" onclick="highlightText('transparent')" title="Sin Fondo">🚫</button>
+    </div>
+
+    <div class="tool-group">
+      <span class="label-text">Fondo de Página:</span>
+      <button class="color-btn" style="background: #ffffff;" onclick="changeBg('#ffffff')" title="Blanco"></button>
+      <button class="color-btn" style="background: #f8f9fa;" onclick="changeBg('#f8f9fa')" title="Gris"></button>
+      <button class="color-btn" style="background: #e3f2fd;" onclick="changeBg('#e3f2fd')" title="Azul"></button>
+      <button class="color-btn" style="background: #e8f5e9;" onclick="changeBg('#e8f5e9')" title="Verde"></button>
+      <button class="color-btn" style="background: #fff9c4;" onclick="changeBg('#fff9c4')" title="Amarillo"></button>
+      <button class="color-btn" style="background: #ffebee;" onclick="changeBg('#ffebee')" title="Rosa"></button>
+      <span style="margin: 0 10px; color: #ccc;">|</span>
+      <button onclick="insertImage()" style="background: #f3e5f5;">🖼️ Insertar Foto</button>
+      <button onclick="insertTable()" style="background: #e3f2fd;">📊 Insertar Tabla</button>
+      <button onclick="startRecording()" style="background: #e8f5e9;">🎙️ Grabar Audio</button>
+    </div>
+
+    <div class="tool-group">
+      <input type="text" id="pageTitle" placeholder="Escribe el Título de tu Página Web..." style="flex-grow: 1; padding: 10px; font-size: 1.2rem;">
+      <button onclick="downloadHTML()" style="background: #1a73e8; color: white; padding: 10px 25px; font-size: 1.2rem;">🚀 DESCARGAR WEB FINAL</button>
+    </div>
+  </div>
+
+  <div id="tab-container"></div>
+  <div id="editor-container"></div>
+
+  <div id="recordingModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:3000; justify-content:center; align-items:center;">
+    <div style="background: white; padding: 50px; border-radius: 20px; text-align: center;">
+      <h3 style="font-size: 2rem;">🎙️ Grabando voz...</h3>
+      <div id="recordingTime" style="font-size: 4rem; color: red; margin: 20px;">00:00</div>
+      <button onclick="stopRecording()" style="background: #d32f2f; color: white; padding: 20px 40px; font-size: 1.5rem; border-radius: 10px; cursor: pointer;">⏹️ DETENER Y GUARDAR</button>
+    </div>
+  </div>
+
+  <script>
+    let tabCount = 0;
+    let pageBgColor = "#ffffff";
+    let mediaRecorder, audioChunks = [], audioStream, timer;
+
+    // Inicialización a prueba de fallos
+    window.onload = function() {
+      if(tabCount === 0) addTab("Inicio");
+    };
+
+    function addTab(name = null) {
+      tabCount++;
+      const id = `p-${tabCount}`;
+      const tabName = name || prompt("Nombre de la sección:") || "Sección " + tabCount;
+      
+      const btn = document.createElement("div");
+      btn.className = "tab"; btn.id = "btn-"+id;
+      btn.innerHTML = `<span>${tabName}</span><button class="close-tab" onclick="event.stopPropagation(); removeTab('${id}')">X</button>`;
+      btn.onclick = () => switchTab(id);
+      document.getElementById("tab-container").appendChild(btn);
+
+      const pane = document.createElement("div");
+      pane.className = "editor-pane"; pane.id = id;
+      pane.contentEditable = "true";
+      pane.style.backgroundColor = pageBgColor;
+      pane.innerHTML = `<h3 style="margin-top:0;">${tabName}</h3><p>Empieza a escribir aquí...</p>`;
+      document.getElementById("editor-container").appendChild(pane);
+      
+      switchTab(id);
+    }
+
+    function switchTab(id) {
+      document.querySelectorAll(".tab").forEach(el => el.classList.remove("active"));
+      document.querySelectorAll(".editor-pane").forEach(el => {
+        el.classList.remove("active");
+        el.style.display = "none";
+      });
+      
+      if(document.getElementById("btn-"+id)) {
+        document.getElementById("btn-"+id).classList.add("active");
+        const activePane = document.getElementById(id);
+        activePane.classList.add("active");
+        activePane.style.display = "block";
+      }
+    }
+
+    function removeTab(id) {
+      if(document.querySelectorAll(".tab").length <= 1) return alert("Debe quedar al menos una pestaña.");
+      if(confirm("¿Seguro que quieres borrar esta sección completa?")) {
+        document.getElementById("btn-"+id).remove();
+        document.getElementById(id).remove();
+        switchTab(document.querySelector(".tab").id.replace("btn-", ""));
+      }
+    }
+
+    function formatText(cmd, val) {
+      const activeEditor = document.querySelector(".editor-pane.active");
+      if(activeEditor) {
+        activeEditor.focus();
+        document.execCommand(cmd, false, val);
+      }
+    }
+
+    function highlightText(color) {
+      const activeEditor = document.querySelector(".editor-pane.active");
+      if(!activeEditor) return;
+      activeEditor.focus();
+      if (!document.execCommand('hiliteColor', false, color)) {
+        document.execCommand('backColor', false, color);
+      }
+    }
+
+    function changeBg(color) {
+      pageBgColor = color;
+      document.querySelectorAll(".editor-pane").forEach(pane => {
+        pane.style.backgroundColor = color;
+      });
+    }
+
+    function insertLink() {
+      const url = prompt("Pega el enlace web (ej: https://www.google.com):");
+      if(url) formatText('createLink', url);
+    }
+
+    function changeFontSize(size) {
+      if(!size) return;
+      const activeEditor = document.querySelector(".editor-pane.active");
+      if(!activeEditor) return;
+      activeEditor.focus();
+      
+      document.execCommand('fontSize', false, '7'); 
+      const fonts = activeEditor.querySelectorAll('font[size="7"]');
+      fonts.forEach(f => {
+        f.removeAttribute('size');
+        f.style.fontSize = size;
+      });
+      document.getElementById('fontSizeSelector').value = "";
+    }
+
+    function superClearFormat() {
+      const activeEditor = document.querySelector(".editor-pane.active");
+      if(!activeEditor) return;
+      activeEditor.focus();
+      document.execCommand('removeFormat', false, null);
+      document.execCommand('unlink', false, null); 
+      highlightText('transparent');
+    }
+
+    // --- MULTIMEDIA Y TABLAS ---
+
+    function insertTable() {
+      const rows = parseInt(prompt("Número de filas:", "3"));
+      const cols = parseInt(prompt("Número de columnas:", "3"));
+      
+      if (!rows || !cols || isNaN(rows) || isNaN(cols)) return;
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "table-wrap"; 
+      wrapper.contentEditable = "false"; // Protege la estructura externa
+
+      let tableHTML = '<table contenteditable="true" border="1">';
+      for (let i = 0; i < rows; i++) {
+        tableHTML += '<tr>';
+        for (let j = 0; j < cols; j++) {
+          tableHTML += '<td><br></td>'; // <br> permite hacer clic fácilmente en la celda vacía
         }
-        
-        // Cambiar tema en la interfaz
-        document.getElementById('themeSelector').addEventListener('change', function() {
-            document.body.classList.remove('theme-white', 'theme-gray', 'theme-yellow');
-            document.body.classList.add('theme-' + this.value);
-        });
-        
-        // Actualizar el título de la barra lateral al cargar la página
-        updateSidebarTitle();
-    </script>
+        tableHTML += '</tr>';
+      }
+      tableHTML += '</table>';
+      tableHTML += `<button onclick="this.parentElement.remove()" style="margin-top:10px; background:#ffcdd2; color:#b71c1c; border:none; padding:5px 10px; cursor:pointer; border-radius:4px;">❌ Borrar Tabla</button>`;
+      
+      wrapper.innerHTML = tableHTML;
 
+      const activeEditor = document.querySelector(".editor-pane.active");
+      if(activeEditor) {
+        activeEditor.focus();
+        const sel = window.getSelection();
+        if (sel.rangeCount) {
+          sel.getRangeAt(0).insertNode(wrapper);
+          const p = document.createElement("p"); p.innerHTML = "&#8203;"; wrapper.after(p);
+        }
+      }
+    }
 
-</body></html>
+    function insertImage() {
+      const input = document.createElement('input');
+      input.type = 'file'; input.accept = 'image/*';
+      input.onchange = e => {
+        const reader = new FileReader();
+        reader.onload = evt => {
+          const wrapper = document.createElement("div");
+          wrapper.className = "img-wrap"; wrapper.contentEditable = "false";
+          wrapper.innerHTML = `<img src="${evt.target.result}"><button onclick="this.parentElement.remove()" style="margin-top:5px; background:#ffcdd2; color:#b71c1c; border:none; padding:5px 10px; cursor:pointer; border-radius:4px;">❌ Borrar Foto</button>`;
+          const activeEditor = document.querySelector(".editor-pane.active");
+          activeEditor.focus();
+          const sel = window.getSelection();
+          if (sel.rangeCount) {
+            sel.getRangeAt(0).insertNode(wrapper);
+            const p = document.createElement("p"); p.innerHTML = "&#8203;"; wrapper.after(p);
+          }
+        };
+        reader.readAsDataURL(e.target.files[0]);
+      };
+      input.click();
+    }
+
+    async function startRecording() {
+      try {
+        audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(audioStream);
+        audioChunks = [];
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        mediaRecorder.onstop = () => {
+          const url = URL.createObjectURL(new Blob(audioChunks, { type: 'audio/webm' }));
+          const wrapper = document.createElement("div");
+          wrapper.className = "audio-wrap"; wrapper.contentEditable = "false";
+          wrapper.innerHTML = `<audio controls src="${url}" style="width:300px; display:block;"></audio><button onclick="this.parentElement.remove()" style="margin-top:10px; background:#ffcdd2; color:#b71c1c; border:none; padding:5px 10px; cursor:pointer; border-radius:4px;">❌ Borrar Audio</button>`;
+          
+          const activeEditor = document.querySelector(".editor-pane.active");
+          activeEditor.focus();
+          const sel = window.getSelection();
+          if(sel.rangeCount) {
+            sel.getRangeAt(0).insertNode(wrapper);
+            const p = document.createElement("p"); p.innerHTML = "&#8203;"; wrapper.after(p);
+          }
+        };
+        mediaRecorder.start();
+        document.getElementById("recordingModal").style.display = "flex";
+        let s = 0;
+        timer = setInterval(() => { 
+          s++; 
+          let mins = Math.floor(s/60).toString().padStart(2, '0');
+          let secs = (s%60).toString().padStart(2, '0');
+          document.getElementById("recordingTime").innerText = `${mins}:${secs}`; 
+        }, 1000);
+      } catch(e) { alert("Micrófono no disponible."); }
+    }
+
+    function stopRecording() {
+      if(mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
+      if(audioStream) audioStream.getTracks().forEach(t => t.stop());
+      clearInterval(timer);
+      document.getElementById("recordingTime").innerText = "00:00";
+      document.getElementById("recordingModal").style.display = "none";
+    }
+
+    // --- GUARDAR Y PUBLICAR ---
+
+    function saveFile() {
+      const data = {
+        tabs: Array.from(document.querySelectorAll(".tab span")).map(s => s.innerText),
+        content: Array.from(document.querySelectorAll(".editor-pane")).map(p => p.innerHTML),
+        title: document.getElementById("pageTitle").value,
+        bgColor: pageBgColor
+      };
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], {type:'text/plain'}));
+      a.download = (data.title || 'proyecto') + '.wpage';
+      a.click();
+    }
+
+    function loadFile() {
+      const input = document.createElement('input');
+      input.type = 'file'; input.accept = '.wpage';
+      input.onchange = e => {
+        const reader = new FileReader();
+        reader.onload = evt => {
+          const d = JSON.parse(evt.target.result);
+          document.getElementById("tab-container").innerHTML = "";
+          document.getElementById("editor-container").innerHTML = "";
+          tabCount = 0;
+          d.tabs.forEach((name, i) => {
+            addTab(name);
+            document.querySelectorAll(".editor-pane")[i].innerHTML = d.content[i];
+          });
+          document.getElementById("pageTitle").value = d.title || "";
+          changeBg(d.bgColor || "#ffffff");
+        };
+        reader.readAsText(e.target.files[0]);
+      };
+      input.click();
+    }
+
+    function downloadHTML() {
+      const title = document.getElementById("pageTitle").value || "Mi Página Web";
+      const tabs = Array.from(document.querySelectorAll(".tab span"));
+      const panes = Array.from(document.querySelectorAll(".editor-pane"));
+      
+      let nav = ""; let secs = "";
+      tabs.forEach((t, i) => {
+        nav += `<button class="n-btn" onclick="showSec(${i})">${t.innerText}</button>`;
+        secs += `<div id="s${i}" class="sec" style="display:${i==0?'block':'none'}">${panes[i].innerHTML}</div>`;
+      });
+      
+      const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title>
+      <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: ${pageBgColor}; padding: 30px; margin: 0; }
+        .nav { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; justify-content: center; }
+        .n-btn { padding: 15px 30px; font-size: 1.3rem; background: #1a73e8; color: white; border: none; border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: bold; }
+        .n-btn:hover { background: #1557b0; }
+        .sec { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 1200px; margin: auto; font-size: 1.3rem; line-height: 1.6; overflow-x: auto; }
+        img, canvas { max-width: 100%; height: auto; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+        table td { padding: 8px; border: 1px solid #ccc; }
+        h1 { text-align: center; color: #333; font-size: 2.5rem; margin-bottom: 30px; }
+        a { color: #1a73e8; text-decoration: underline; }
+        button { display: none; } /* Ocultar botones de borrar (X) en la versión final */
+        .n-btn { display: inline-block; } /* Mantener los botones del menú de navegación */
+      </style>
+      <script>
+        function showSec(i){ 
+          document.querySelectorAll('.sec').forEach(s=>s.style.display='none'); 
+          document.getElementById('s'+i).style.display='block'; 
+        }
+      <\/script>
+      </head><body>
+      <h1>${title}</h1>
+      <div class="nav">${nav}</div>
+      ${secs}
+      </body></html>`;
+      
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([html], {type:'text/html'}));
+      a.download = title.replace(/\s+/g, '_') + '.html'; 
+      a.click();
+    }
+  </script>
+</body>
+</html>
