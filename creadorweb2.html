@@ -3,53 +3,86 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Editor Web Pro - Tablas y Formato</title>
+  <title>Editor Web Pro - Info Tarea</title>
   <style>
     * { box-sizing: border-box; font-size: 1.1rem; }
     body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 10px; background-color: #e9ecef; }
-    h2 { text-align: center; color: #1a73e8; margin: 10px 0; }
+    h2 { text-align: center; color: #1a73e8; margin: 5px 0 10px 0; font-size: 1.5rem; }
 
-    /* Barra de herramientas organizada */
+    /* --- Barra de herramientas ULTRA COMPACTA --- */
     #toolbar {
       position: sticky; top: 0; z-index: 1000;
-      background: white; padding: 15px; border-bottom: 4px solid #1a73e8;
-      border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 20px;
+      background: white; padding: 8px 12px; border-bottom: 3px solid #1a73e8;
+      border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); margin-bottom: 15px;
     }
-    .tool-group { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 0; border-bottom: 1px solid #eee; align-items: center; }
-    .tool-group:last-child { border-bottom: none; }
-    .label-text { font-weight: bold; min-width: 140px; color: #444; font-size: 0.95rem; }
+    #toolbar * { font-size: 0.85rem; } /* Forzar letra pequeña solo en el menú */
+    
+    .tool-group { display: flex; flex-wrap: wrap; gap: 5px; padding: 4px 0; border-bottom: 1px solid #eee; align-items: center; }
+    .tool-group:last-child { border-bottom: none; padding-bottom: 0; }
+    .label-text { font-weight: bold; min-width: 80px; color: #444; }
 
-    button, select { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; font-weight: 600; cursor: pointer; background: white; }
+    button, select { padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc; font-weight: 600; cursor: pointer; background: white; }
     button:hover { background: #f1f3f4; border-color: #1a73e8; }
     
-    .color-btn { width: 32px; height: 32px; border-radius: 6px; border: 1px solid #999; cursor: pointer; transition: 0.2s; }
-    .color-btn:hover { transform: scale(1.1); }
+    .color-btn { width: 24px; height: 24px; border-radius: 4px; border: 1px solid #777; cursor: pointer; transition: 0.2s; padding: 0; }
+    .color-btn:hover { transform: scale(1.15); border-color: #000; }
 
     /* Pestañas */
-    #tab-container { display: flex; flex-wrap: wrap; gap: 5px; }
+    #tab-container { display: flex; flex-wrap: wrap; gap: 4px; }
     .tab { 
-      display: flex; align-items: center; gap: 10px;
-      padding: 12px 20px; background: #dee2e6; border: 2px solid #ced4da; 
-      border-bottom: none; border-radius: 10px 10px 0 0; cursor: pointer; 
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 15px; background: #dee2e6; border: 2px solid #ced4da; 
+      border-bottom: none; border-radius: 8px 8px 0 0; cursor: pointer; 
+      font-size: 1rem;
     }
     .tab.active { background: #fff; border-color: #1a73e8; color: #1a73e8; font-weight: bold; }
-    .close-tab { background: #ffcdd2; color: #b71c1c; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; font-size: 0.8rem; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+    .close-tab { background: #ffcdd2; color: #b71c1c; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-size: 0.75rem; font-weight: bold; display: flex; align-items: center; justify-content: center; padding: 0; }
 
     /* Área de Edición Fija */
     .editor-pane {
-      display: none; border: 3px solid #1a73e8; padding: 40px; min-height: 500px;
-      background: #ffffff; border-radius: 0 0 15px 15px; outline: none; font-size: 1.5rem; line-height: 1.6;
+      display: none; border: 3px solid #1a73e8; padding: 30px; min-height: 450px;
+      background: #ffffff; border-radius: 0 0 10px 10px; outline: none; font-size: 1.2rem; line-height: 1.6;
     }
     
     /* Contenedores Multimedia y Tablas */
-    .img-wrap, .audio-wrap, .table-wrap { display: block; margin: 15px 0; border: 2px solid #ddd; padding: 10px; background: #fff; width: fit-content; border-radius: 8px;}
-    .img-wrap img { max-width: 100%; height: auto; display: block; }
-    .table-wrap { width: 100%; max-width: 100%; overflow-x: auto; }
+    .table-wrap { display: block; margin: 15px 0; border: 2px solid #ddd; padding: 10px; background: #fff; width: fit-content; border-radius: 8px; max-width: 100%; overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; }
-    table td { padding: 8px; border: 1px solid #ccc; min-width: 50px; }
+    table td { padding: 8px; border: 1px solid #555; min-width: 50px; }
+
+    /* Galería de Imágenes */
+    .img-wrap { display: block; margin: 15px 0; border: 2px solid #ddd; padding: 10px; background: #fff; border-radius: 8px; width: 100%; }
+    .img-row-container { display: flex; gap: 10px; width: 100%; justify-content: center; }
+    .img-row-container img { flex: 1 1 0; min-width: 0; max-height: 400px; object-fit: contain; border-radius: 4px; border: 1px solid #eee; background: #fafafa; }
 
     .btn-clear { background: #fce4ec; color: #c2185b; border: 1px solid #f06292; }
     .btn-link { background: #e8eaf6; color: #3f51b5; border: 1px solid #7986cb; }
+
+    /* Modal Info Tarea */
+    .info-modal-content {
+      background: white; padding: 30px; border-radius: 15px; text-align: left; 
+      max-width: 800px; width: 90%; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      max-height: 90vh; overflow-y: auto;
+    }
+    .info-modal-content * { font-size: 1rem; }
+    .btn-close-modal {
+      position: absolute; top: 15px; right: 15px; background: #ffcdd2; color: #b71c1c; 
+      border: none; border-radius: 50%; width: 30px; height: 30px; font-weight: bold; 
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .btn-close-modal:hover { background: #d32f2f; color: white; }
+
+    /* Mejoras de Tablas */
+    .table-wrap table { font-family: inherit; }
+    .table-controls {
+      display: flex; gap: 5px; justify-content: flex-end;
+      background: #f1f3f4; padding: 4px; border-bottom: 2px solid #ddd;
+      border-radius: 6px 6px 0 0; margin-bottom: 0;
+    }
+    .table-controls button {
+      padding: 3px 6px; font-size: 0.75rem; background: #fff;
+      border: 1px solid #ccc; border-radius: 3px; cursor: pointer;
+    }
+    .table-controls button:hover { background: #e8eaed; border-color: #1a73e8; }
   </style>
 </head>
 <body>
@@ -58,15 +91,16 @@
 
   <div id="toolbar">
     <div class="tool-group">
-      <button onclick="addTab()" style="background: #e6f4ea; color: #1b5e20;">➕ Nueva Pestaña</button>
-      <button onclick="saveFile()" style="background: #fff3e0;">💾 Guardar Proyecto</button>
-      <button onclick="loadFile()" style="background: #e3f2fd;">📂 Abrir Proyecto</button>
+      <button onclick="addTab()" style="background: #e6f4ea; color: #1b5e20;">➕ Pestaña</button>
+      <button onclick="saveFile()" style="background: #fff3e0;">💾 Guardar</button>
+      <button onclick="loadFile()" style="background: #e3f2fd;">📂 Abrir</button>
       <button onclick="formatText('undo')">↩️ Deshacer</button>
-      <button class="btn-clear" onclick="superClearFormat()">🧽 Borrar Formato</button>
+      <button class="btn-clear" onclick="superClearFormat()">🧽 Limpiar</button>
+      <button onclick="showTaskInfo()" style="background: #e1bee7; color: #4a148c; font-weight: bold; margin-left: auto;">📝 Tarea</button>
     </div>
 
     <div class="tool-group">
-      <span class="label-text">Estilo y Alineación:</span>
+      <span class="label-text">Texto:</span>
       <select onchange="formatText('fontName', this.value)">
         <option value="Arial">Arial</option>
         <option value="Verdana">Verdana</option>
@@ -83,16 +117,16 @@
       <button onclick="formatText('bold')"><b>N</b></button>
       <button onclick="formatText('italic')"><i>K</i></button>
       <button onclick="formatText('underline')"><u>S</u></button>
-      <button class="btn-link" onclick="insertLink()">🔗 Crear Link</button>
-      <span style="margin: 0 10px; color: #ccc;">|</span>
-      <button onclick="formatText('justifyLeft')">⬅️ Izq</button>
-      <button onclick="formatText('justifyCenter')">Centro</button>
-      <button onclick="formatText('justifyRight')">Der ➡️</button>
-      <button onclick="formatText('justifyFull')">↔️ Justificado</button>
+      <button class="btn-link" onclick="insertLink()">🔗 Link</button>
+      <span style="margin: 0 5px; color: #ccc;">|</span>
+      <button onclick="formatText('justifyLeft')">⬅️</button>
+      <button onclick="formatText('justifyCenter')">↔️</button>
+      <button onclick="formatText('justifyRight')">➡️</button>
+      <button onclick="formatText('justifyFull')">≡</button>
     </div>
 
     <div class="tool-group">
-      <span class="label-text">Color Letra:</span>
+      <span class="label-text">Letra:</span>
       <button class="color-btn" style="background: #000000;" onclick="formatText('foreColor', '#000000')"></button>
       <button class="color-btn" style="background: #d32f2f;" onclick="formatText('foreColor', '#d32f2f')"></button>
       <button class="color-btn" style="background: #1976d2;" onclick="formatText('foreColor', '#1976d2')"></button>
@@ -101,7 +135,7 @@
       <button class="color-btn" style="background: #8e24aa;" onclick="formatText('foreColor', '#8e24aa')"></button>
       <button class="color-btn" style="background: #e64a19;" onclick="formatText('foreColor', '#e64a19')"></button>
       
-      <span class="label-text" style="margin-left: 20px;">Resaltador (Fondo):</span>
+      <span class="label-text" style="margin-left: 10px;">Fondo Txt:</span>
       <button class="color-btn" style="background: #ffff00;" onclick="highlightText('#ffff00')" title="Amarillo"></button>
       <button class="color-btn" style="background: #00ff00;" onclick="highlightText('#00ff00')" title="Verde"></button>
       <button class="color-btn" style="background: #00ffff;" onclick="highlightText('#00ffff')" title="Cian"></button>
@@ -112,45 +146,63 @@
     </div>
 
     <div class="tool-group">
-      <span class="label-text">Fondo de Página:</span>
+      <span class="label-text">Fondo Web:</span>
       <button class="color-btn" style="background: #ffffff;" onclick="changeBg('#ffffff')" title="Blanco"></button>
-      <button class="color-btn" style="background: #f8f9fa;" onclick="changeBg('#f8f9fa')" title="Gris"></button>
-      <button class="color-btn" style="background: #e3f2fd;" onclick="changeBg('#e3f2fd')" title="Azul"></button>
-      <button class="color-btn" style="background: #e8f5e9;" onclick="changeBg('#e8f5e9')" title="Verde"></button>
-      <button class="color-btn" style="background: #fff9c4;" onclick="changeBg('#fff9c4')" title="Amarillo"></button>
-      <button class="color-btn" style="background: #ffebee;" onclick="changeBg('#ffebee')" title="Rosa"></button>
+      <button class="color-btn" style="background: #cccccc;" onclick="changeBg('#cccccc')" title="Gris"></button>
+      <button class="color-btn" style="background: #90caf9;" onclick="changeBg('#90caf9')" title="Azul"></button>
+      <button class="color-btn" style="background: #a5d6a7;" onclick="changeBg('#a5d6a7')" title="Verde"></button>
+      <button class="color-btn" style="background: #fff59d;" onclick="changeBg('#fff59d')" title="Amarillo"></button>
+      <button class="color-btn" style="background: #ffcc80;" onclick="changeBg('#ffcc80')" title="Naranja"></button>
+      <button class="color-btn" style="background: #ef9a9a;" onclick="changeBg('#ef9a9a')" title="Rosa"></button>
+      <button class="color-btn" style="background: #ce93d8;" onclick="changeBg('#ce93d8')" title="Morado"></button>
+      <button class="color-btn" style="background: #bcaaa4;" onclick="changeBg('#bcaaa4')" title="Arena"></button>
+
       <span style="margin: 0 10px; color: #ccc;">|</span>
-      <button onclick="insertImage()" style="background: #f3e5f5;">🖼️ Insertar Foto</button>
-      <button onclick="insertTable()" style="background: #e3f2fd;">📊 Insertar Tabla</button>
-      <button onclick="startRecording()" style="background: #e8f5e9;">🎙️ Grabar Audio</button>
+      <button onclick="insertImage()" style="background: #f3e5f5;" title="Inserta 1, 2 o 3 imágenes">🖼️ Fotos</button>
+      <button onclick="insertTable()" style="background: #e3f2fd;">📊 Tabla</button>
     </div>
 
     <div class="tool-group">
-      <input type="text" id="pageTitle" placeholder="Escribe el Título de tu Página Web..." style="flex-grow: 1; padding: 10px; font-size: 1.2rem;">
-      <button onclick="downloadHTML()" style="background: #1a73e8; color: white; padding: 10px 25px; font-size: 1.2rem;">🚀 DESCARGAR WEB FINAL</button>
+      <input type="text" id="pageTitle" placeholder="Título Web..." style="flex-grow: 1; padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
+      <button onclick="downloadHTML()" style="background: #1a73e8; color: white; padding: 6px 15px; font-weight: bold;">🚀 DESCARGAR</button>
     </div>
   </div>
 
   <div id="tab-container"></div>
   <div id="editor-container"></div>
 
-  <div id="recordingModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:3000; justify-content:center; align-items:center;">
-    <div style="background: white; padding: 50px; border-radius: 20px; text-align: center;">
-      <h3 style="font-size: 2rem;">🎙️ Grabando voz...</h3>
-      <div id="recordingTime" style="font-size: 4rem; color: red; margin: 20px;">00:00</div>
-      <button onclick="stopRecording()" style="background: #d32f2f; color: white; padding: 20px 40px; font-size: 1.5rem; border-radius: 10px; cursor: pointer;">⏹️ DETENER Y GUARDAR</button>
+  <div id="taskModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:4000; justify-content:center; align-items:center;">
+    <div class="info-modal-content">
+      <button class="btn-close-modal" onclick="closeTaskInfo()">X</button>
+      <h3 style="color: #1a73e8; font-size: 1.5rem; margin-top: 0; text-align: center;">Descripción de la Tarea</h3>
+      
+      <div style="color: #333; line-height: 1.5; padding-right: 15px;">
+        <p>Para modificar el texto primero cambia si debes a negrita, cursiva y subrayado, luego el tamaño de letra y luego el resto.</p>
+        
+        <p>En una pestaña pega un punto de la teoría del tema, las letras del título tienen que ir en color rojo, negrita y subrayado, centrado con letra comic sans y tamaño grande, también cambia el color de fondo de la web... <strong>1 puntos</strong>, después inserta 3 imágenes al mismo tiempo relacionadas con el tema de teoría (deja pulsada la tecla control para seleccionarlas al mismo tiempo)... <strong>1 puntos</strong></p>
+        
+        <p>Repite el punto anterior dos veces más en otras dos pestañas... <strong>2 puntos cada una</strong>.</p>
+        
+        <p>En otra pestaña pega las preguntas de test (con las respuestas FUERA DE LOS RECUADROS) y cámbialas a letra times a tamaño pequeño, color azul y negrita... <strong>2 puntos</strong></p>
+        
+        <p>En otra pestaña crea una tabla con 2 columna y 2 filas, en la primera fila pon en una celda tu nombre y en otra tus apellidos, en la segunda fila en una ceda pon tu curso y en otra la fecha... <strong>1 punto</strong>.</p>
+        
+        <p>En la última pestaña de la tabla pon debajo un link al pdf de teoría y otro al test de la unidad... <strong>1 punto</strong>.</p>
+      </div>
+
     </div>
   </div>
 
   <script>
     let tabCount = 0;
     let pageBgColor = "#ffffff";
-    let mediaRecorder, audioChunks = [], audioStream, timer;
 
-    // Inicialización a prueba de fallos
     window.onload = function() {
       if(tabCount === 0) addTab("Inicio");
     };
+
+    function showTaskInfo() { document.getElementById('taskModal').style.display = 'flex'; }
+    function closeTaskInfo() { document.getElementById('taskModal').style.display = 'none'; }
 
     function addTab(name = null) {
       tabCount++;
@@ -216,9 +268,7 @@
 
     function changeBg(color) {
       pageBgColor = color;
-      document.querySelectorAll(".editor-pane").forEach(pane => {
-        pane.style.backgroundColor = color;
-      });
+      document.querySelectorAll(".editor-pane").forEach(pane => { pane.style.backgroundColor = color; });
     }
 
     function insertLink() {
@@ -231,13 +281,9 @@
       const activeEditor = document.querySelector(".editor-pane.active");
       if(!activeEditor) return;
       activeEditor.focus();
-      
       document.execCommand('fontSize', false, '7'); 
       const fonts = activeEditor.querySelectorAll('font[size="7"]');
-      fonts.forEach(f => {
-        f.removeAttribute('size');
-        f.style.fontSize = size;
-      });
+      fonts.forEach(f => { f.removeAttribute('size'); f.style.fontSize = size; });
       document.getElementById('fontSizeSelector').value = "";
     }
 
@@ -250,31 +296,60 @@
       highlightText('transparent');
     }
 
-    // --- MULTIMEDIA Y TABLAS ---
-
     function insertTable() {
       const rows = parseInt(prompt("Número de filas:", "3"));
       const cols = parseInt(prompt("Número de columnas:", "3"));
-      
       if (!rows || !cols || isNaN(rows) || isNaN(cols)) return;
 
       const wrapper = document.createElement("div");
-      wrapper.className = "table-wrap"; 
-      wrapper.contentEditable = "false"; // Protege la estructura externa
+      wrapper.className = "table-wrap"; wrapper.contentEditable = "false"; 
 
-      let tableHTML = '<table contenteditable="true" border="1">';
+      const controls = document.createElement("div");
+      controls.className = "table-controls";
+      controls.innerHTML = `
+        <button onclick="addRow(this)" title="Añadir Fila">➕ Fila</button>
+        <button onclick="removeRow(this)" title="Borrar Fila">➖ Fila</button>
+        <button onclick="addCol(this)" title="Añadir Columna">➕ Col</button>
+        <button onclick="removeCol(this)" title="Borrar Columna">➖ Col</button>
+        <button onclick="this.closest('.table-wrap').remove()" style="background:#ffcdd2; color:#b71c1c; margin-left: 10px;">❌</button>
+      `;
+      wrapper.appendChild(controls);
+
+      const table = document.createElement("table");
+      table.contentEditable = "true"; table.setAttribute("border", "1");
+
       for (let i = 0; i < rows; i++) {
-        tableHTML += '<tr>';
+        const tr = document.createElement("tr");
         for (let j = 0; j < cols; j++) {
-          tableHTML += '<td><br></td>'; // <br> permite hacer clic fácilmente en la celda vacía
+          const td = document.createElement("td");
+          td.innerHTML = "<br>"; tr.appendChild(td);
         }
-        tableHTML += '</tr>';
+        table.appendChild(tr);
       }
-      tableHTML += '</table>';
-      tableHTML += `<button onclick="this.parentElement.remove()" style="margin-top:10px; background:#ffcdd2; color:#b71c1c; border:none; padding:5px 10px; cursor:pointer; border-radius:4px;">❌ Borrar Tabla</button>`;
-      
-      wrapper.innerHTML = tableHTML;
 
+      table.addEventListener('keydown', function(e) {
+        if (e.key === 'Tab') {
+          const node = window.getSelection().anchorNode;
+          if (!node) return;
+          const currentTd = node.nodeType === 3 ? node.parentNode.closest('td') : node.closest('td');
+          if (!currentTd) return;
+          const tr = currentTd.parentElement;
+          const tbody = tr.parentElement;
+          if (tr === tbody.lastElementChild && currentTd === tr.lastElementChild) {
+            e.preventDefault(); addRow(this);
+            setTimeout(() => {
+               const newRow = tbody.lastElementChild;
+               const firstCell = newRow.firstElementChild;
+               const range = document.createRange();
+               const sel = window.getSelection();
+               range.setStart(firstCell, 0); range.collapse(true);
+               sel.removeAllRanges(); sel.addRange(range);
+            }, 10);
+          }
+        }
+      });
+
+      wrapper.appendChild(table);
       const activeEditor = document.querySelector(".editor-pane.active");
       if(activeEditor) {
         activeEditor.focus();
@@ -286,69 +361,68 @@
       }
     }
 
+    function addRow(element) {
+      const table = element.tagName === 'TABLE' ? element : element.closest('.table-wrap').querySelector('table');
+      const cols = table.rows[0].cells.length;
+      const tr = table.insertRow();
+      for (let i = 0; i < cols; i++) { const td = tr.insertCell(); td.innerHTML = "<br>"; }
+    }
+    function removeRow(btn) {
+      const table = btn.closest('.table-wrap').querySelector('table');
+      if (table.rows.length > 1) table.deleteRow(-1); else alert("Mínimo una fila.");
+    }
+    function addCol(btn) {
+      const table = btn.closest('.table-wrap').querySelector('table');
+      for (let i = 0; i < table.rows.length; i++) { const td = table.rows[i].insertCell(); td.innerHTML = "<br>"; }
+    }
+    function removeCol(btn) {
+      const table = btn.closest('.table-wrap').querySelector('table');
+      if (table.rows[0].cells.length > 1) {
+        for (let i = 0; i < table.rows.length; i++) table.rows[i].deleteCell(-1); 
+      } else alert("Mínimo una columna.");
+    }
+
     function insertImage() {
       const input = document.createElement('input');
-      input.type = 'file'; input.accept = 'image/*';
-      input.onchange = e => {
-        const reader = new FileReader();
-        reader.onload = evt => {
-          const wrapper = document.createElement("div");
-          wrapper.className = "img-wrap"; wrapper.contentEditable = "false";
-          wrapper.innerHTML = `<img src="${evt.target.result}"><button onclick="this.parentElement.remove()" style="margin-top:5px; background:#ffcdd2; color:#b71c1c; border:none; padding:5px 10px; cursor:pointer; border-radius:4px;">❌ Borrar Foto</button>`;
-          const activeEditor = document.querySelector(".editor-pane.active");
+      input.type = 'file'; input.accept = 'image/*'; input.multiple = true; 
+
+      input.onchange = async e => {
+        let files = Array.from(e.target.files);
+        if(files.length === 0) return;
+        if(files.length > 3) {
+          alert("Máximo 3 imágenes."); files = files.slice(0, 3);
+        }
+
+        const readAsDataURL = (file) => new Promise(resolve => {
+          const reader = new FileReader();
+          reader.onload = evt => resolve(evt.target.result);
+          reader.readAsDataURL(file);
+        });
+
+        const imagesData = await Promise.all(files.map(f => readAsDataURL(f)));
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "img-wrap"; wrapper.contentEditable = "false"; 
+
+        let imagesHTML = '<div class="img-row-container">';
+        imagesData.forEach(src => { imagesHTML += `<img src="${src}">`; });
+        imagesHTML += '</div>';
+
+        const btnText = files.length > 1 ? "❌ Borrar Fotos" : "❌ Borrar Foto";
+        wrapper.innerHTML = `${imagesHTML}<button onclick="this.parentElement.remove()" style="margin-top:10px; background:#ffcdd2; color:#b71c1c; border:none; padding:4px 8px; cursor:pointer; border-radius:4px;">${btnText}</button>`;
+        
+        const activeEditor = document.querySelector(".editor-pane.active");
+        if(activeEditor) {
           activeEditor.focus();
           const sel = window.getSelection();
           if (sel.rangeCount) {
             sel.getRangeAt(0).insertNode(wrapper);
             const p = document.createElement("p"); p.innerHTML = "&#8203;"; wrapper.after(p);
           }
-        };
-        reader.readAsDataURL(e.target.files[0]);
+        }
       };
       input.click();
     }
-
-    async function startRecording() {
-      try {
-        audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(audioStream);
-        audioChunks = [];
-        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-        mediaRecorder.onstop = () => {
-          const url = URL.createObjectURL(new Blob(audioChunks, { type: 'audio/webm' }));
-          const wrapper = document.createElement("div");
-          wrapper.className = "audio-wrap"; wrapper.contentEditable = "false";
-          wrapper.innerHTML = `<audio controls src="${url}" style="width:300px; display:block;"></audio><button onclick="this.parentElement.remove()" style="margin-top:10px; background:#ffcdd2; color:#b71c1c; border:none; padding:5px 10px; cursor:pointer; border-radius:4px;">❌ Borrar Audio</button>`;
-          
-          const activeEditor = document.querySelector(".editor-pane.active");
-          activeEditor.focus();
-          const sel = window.getSelection();
-          if(sel.rangeCount) {
-            sel.getRangeAt(0).insertNode(wrapper);
-            const p = document.createElement("p"); p.innerHTML = "&#8203;"; wrapper.after(p);
-          }
-        };
-        mediaRecorder.start();
-        document.getElementById("recordingModal").style.display = "flex";
-        let s = 0;
-        timer = setInterval(() => { 
-          s++; 
-          let mins = Math.floor(s/60).toString().padStart(2, '0');
-          let secs = (s%60).toString().padStart(2, '0');
-          document.getElementById("recordingTime").innerText = `${mins}:${secs}`; 
-        }, 1000);
-      } catch(e) { alert("Micrófono no disponible."); }
-    }
-
-    function stopRecording() {
-      if(mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
-      if(audioStream) audioStream.getTracks().forEach(t => t.stop());
-      clearInterval(timer);
-      document.getElementById("recordingTime").innerText = "00:00";
-      document.getElementById("recordingModal").style.display = "none";
-    }
-
-    // --- GUARDAR Y PUBLICAR ---
 
     function saveFile() {
       const data = {
@@ -403,13 +477,17 @@
         .n-btn { padding: 15px 30px; font-size: 1.3rem; background: #1a73e8; color: white; border: none; border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: bold; }
         .n-btn:hover { background: #1557b0; }
         .sec { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 1200px; margin: auto; font-size: 1.3rem; line-height: 1.6; overflow-x: auto; }
-        img, canvas { max-width: 100%; height: auto; border-radius: 8px; }
+        
+        .img-wrap { margin: 20px 0; border: 2px solid #ddd; padding: 15px; background: #fff; border-radius: 8px; }
+        .img-row-container { display: flex; gap: 15px; width: 100%; justify-content: center; }
+        .img-row-container img { flex: 1 1 0; min-width: 0; max-height: 500px; object-fit: contain; border-radius: 6px; }
+        
         table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-        table td { padding: 8px; border: 1px solid #ccc; }
+        table td { padding: 8px; border: 1px solid #555; }
         h1 { text-align: center; color: #333; font-size: 2.5rem; margin-bottom: 30px; }
         a { color: #1a73e8; text-decoration: underline; }
-        button { display: none; } /* Ocultar botones de borrar (X) en la versión final */
-        .n-btn { display: inline-block; } /* Mantener los botones del menú de navegación */
+        button { display: none; } 
+        .n-btn { display: inline-block; } 
       </style>
       <script>
         function showSec(i){ 
