@@ -2,99 +2,125 @@
 <html lang="es">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>Dron Pilot - Niveles de Dificultad</title>
+    <title>Dron Pilot: El Bucle Infinito de Programación</title>
     <style>
         :root {
             --primary: #2ecc71;
             --danger: #e74c3c;
             --dark: #1a1a1a;
             --panel: #2c3e50;
-            --dron-front: #e74c3c;
-            --base-color: #3498db;
+            --dron-front: #ff0000;
+            --grid-color: rgba(0, 0, 0, 0.1);
         }
-        body { background: var(--dark); color: white; margin: 0; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; overflow: hidden; transition: background 1s ease; }
+        body { background: var(--dark); color: white; margin: 0; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; overflow: hidden; transition: background 0.8s ease; }
 
-        /* --- PANEL LATERAL --- */
-        .sidebar { width: 320px; background: var(--panel); padding: 15px; display: flex; flex-direction: column; box-shadow: 5px 0 15px rgba(0,0,0,0.3); z-index: 10; overflow-y: auto; }
+        /* --- PANEL IZQUIERDO --- */
+        .sidebar { width: 320px; background: var(--panel); padding: 15px; display: flex; flex-direction: column; box-shadow: 5px 0 15px rgba(0,0,0,0.3); z-index: 100; overflow-y: auto; }
+        #timer-container { font-size: 1.8rem; text-align: center; background: #c0392b; color: white; padding: 10px; border-radius: 6px; margin-bottom: 5px; font-family: monospace; border: 2px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
         #score-container { font-size: 1.2rem; font-weight: bold; text-align: center; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px; margin-bottom: 10px; border-bottom: 3px solid var(--primary); }
+        textarea { height: 180px; width: 100%; background: #111; color: #00ff00; border: 1px solid #444; border-radius: 6px; padding: 10px; font-family: 'Courier New', monospace; resize: none; box-sizing: border-box; font-size: 1rem; }
         
-        textarea { height: 160px; width: 100%; background: #111; color: #00ff00; border: 1px solid #444; border-radius: 6px; padding: 10px; font-family: 'Courier New', monospace; resize: none; outline: none; box-sizing: border-box; font-size: 0.9rem; }
+        .button-group { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+        .btn { border: none; padding: 12px; border-radius: 4px; color: white; font-weight: bold; cursor: pointer; font-size: 0.9rem; transition: 0.3s; width: 100%; text-transform: uppercase; }
+        .btn-run { background: var(--primary); }
+        .btn-flow { background: #9b59b6; }
+        .btn-send { background: #3498db; }
+
+        /* --- ÁREA DE VUELO --- */
+        .viewport { flex-grow: 1; position: relative; perspective: 1200px; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        #mundo { width: 600px; height: 500px; position: relative; transform-style: preserve-3d; transform: rotateX(50deg) rotateZ(-15deg); }
+        .suelo { 
+            position: absolute; width: 1000px; height: 1000px; background: #bdc3c7; top: -250px; left: -200px; 
+            background-image: linear-gradient(var(--grid-color) 2px, transparent 2px), linear-gradient(90deg, var(--grid-color) 2px, transparent 2px);
+            background-size: 50px 50px; border: 5px solid #7f8c8d; 
+        }
+
+        /* --- PANEL DE DIAGRAMA ENSANCHADO --- */
+        #flow-overlay { 
+            position: absolute; right: 20px; top: 20px; bottom: 20px; width: 650px; 
+            background: rgba(25, 35, 45, 0.98); backdrop-filter: blur(15px);
+            border: 2px solid rgba(255,255,255,0.2); border-radius: 15px;
+            padding: 20px; display: flex; flex-direction: column; z-index: 50; 
+            transition: transform 0.5s ease; box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+        }
+        #flow-overlay.hidden { transform: translateX(700px); }
+        .flow-container-split { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 25px; height: 100%; }
+        .flow-column { overflow-y: auto; padding: 10px; position: relative; border-radius: 10px; background: rgba(0,0,0,0.2); }
+
+        /* --- ESTILOS DEL DIAGRAMA --- */
+        #flow-content { position: relative; padding-left: 40px; } /* Espacio para el bucle */
+        .flow-node { width: 150px; padding: 10px; border: 2px solid #ecf0f1; text-align: center; font-size: 0.7rem; font-weight: bold; margin: 0 auto; color: white; position: relative; z-index: 10; background: #34495e; }
+        .node-terminal { border-radius: 20px; background: #7f8c8d; } 
+        .node-action { border-left: 5px solid var(--primary); }
         
-        .button-group { display: flex; gap: 8px; margin: 10px 0; }
-        .btn-run { flex: 2; background: var(--primary); border: none; padding: 10px; border-radius: 4px; color: white; font-weight: bold; cursor: pointer; }
-        .btn-clear { flex: 1; background: var(--danger); border: none; padding: 10px; border-radius: 4px; color: white; font-weight: bold; cursor: pointer; }
-
-        .guia-comandos { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 6px; font-size: 0.75rem; line-height: 1.3; margin-top: 10px;}
-
-        /* --- MUNDO 3D --- */
-        .viewport { flex-grow: 1; position: relative; perspective: 1200px; display: flex; justify-content: center; align-items: center; }
-        #mundo { width: 600px; height: 500px; position: relative; transform-style: preserve-3d; transform: rotateX(55deg) rotateZ(-20deg); }
-        .suelo { position: absolute; width: 800px; height: 800px; background: rgba(238, 238, 238, 0.9); top: -150px; left: -100px; background-image: radial-gradient(#ccc 1px, transparent 1px); background-size: 40px 40px; border: 2px solid #ddd; }
+        .node-decision { width: 85px; height: 85px; display: flex; align-items: center; justify-content: center; transform: rotate(45deg); margin: 30px auto; border: 2px solid #f1c40f; }
+        .node-decision span { transform: rotate(-45deg); font-size: 0.6rem; text-align: center; }
         
-        #meta { position: absolute; width: 80px; height: 80px; border: 5px solid var(--primary); border-radius: 50%; background: rgba(46, 204, 113, 0.2); box-shadow: 0 0 15px var(--primary); transition: all 0.5s ease; }
-        #base-home { position: absolute; width: 50px; height: 50px; border: 2px solid var(--base-color); display: flex; align-items: center; justify-content: center; color: var(--base-color); font-weight: bold; font-size: 9px; }
+        /* FLECHAS */
+        .arrow-v { width: 2px; height: 25px; background: #ecf0f1; margin: 0 auto; position: relative; }
+        .arrow-v::after { content: '▼'; position: absolute; bottom: -8px; left: -5px; font-size: 10px; color: #ecf0f1; }
 
-        /* DRON */
-        #dron-container { position: absolute; transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; }
-        #dron-modelo { width: 40px; height: 40px; background: #3498db; border-radius: 8px; position: relative; transform-style: preserve-3d; }
-        #dron-modelo::before { content: ""; position: absolute; top: 0; left: 10px; width: 20px; height: 8px; background: var(--dron-front); border-radius: 3px 3px 0 0; }
+        /* LÍNEA DE RETORNO (BUCLE AL INICIO) */
+        .bucle-line {
+            position: absolute;
+            top: 25px; /* Altura del primer nodo */
+            bottom: 120px; /* Altura del rombo */
+            left: 15px;
+            width: 80px;
+            border: 3px solid var(--danger);
+            border-right: none;
+            border-radius: 15px 0 0 15px;
+            z-index: 1;
+        }
+        .bucle-arrow-in { position: absolute; left: 95px; top: 18px; color: var(--danger); font-size: 18px; z-index: 11; }
+        .path-label-no { position: absolute; left: 15px; bottom: 130px; color: var(--danger); font-weight: bold; font-size: 0.8rem; background: #19232d; padding: 2px; }
+
+        /* GUÍA DIDÁCTICA DETALLADA */
+        .guia-card { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #3498db; }
+        .guia-card b { color: #3498db; display: block; margin-bottom: 5px; font-size: 0.85rem; }
+        .guia-card p { margin: 0; font-size: 0.75rem; color: #bdc3c7; line-height: 1.4; }
+
+        /* DRON Y ESCENA */
+        #dron-container { position: absolute; transition: all 0.6s ease-out; transform-style: preserve-3d; width: 40px; height: 40px; }
+        #dron-modelo { width: 100%; height: 100%; background: #3498db; border-radius: 8px; position: relative; transform-style: preserve-3d; }
+        #dron-modelo::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 12px; background: var(--dron-front); border-radius: 8px 8px 0 0; }
         .helice { position: absolute; width: 30px; height: 2px; background: #000; top: 50%; left: 50%; margin-left: -15px; animation: spin 0.1s infinite linear; display: none; }
         @keyframes spin { to { transform: rotateZ(360deg); } }
+        #meta { position: absolute; width: 80px; height: 80px; border: 5px solid var(--primary); border-radius: 50%; background: rgba(46, 204, 113, 0.2); box-shadow: 0 0 15px var(--primary); }
 
-        /* MODALES E IDENTIFICACIÓN */
-        #player-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); display: flex; justify-content: center; align-items: center; z-index: 2000; }
-        .modal-content { background: white; padding: 40px; border-radius: 15px; text-align: center; color: #333; }
-        .modal-content input { padding: 12px; width: 250px; font-size: 16px; border: 2px solid #ddd; border-radius: 5px; margin-bottom: 20px; }
-        
-        #status-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 2001; }
-        #status-message { background: white; padding: 30px; border-radius: 10px; color: #155724; font-weight: bold; font-size: 20px; border: 4px solid var(--primary); }
-        
-        #btn-send { margin-top: 15px; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        #status-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 3000; }
     </style>
 </head>
 <body>
 
-    <div id="player-modal">
-        <div class="modal-content">
-            <h2>Dron Pilot - Misión de Vuelo</h2>
-            <p>Introduce tu nombre para iniciar los motores:</p>
-            <input type="text" id="nombre-alumno" placeholder="Nombre del Alumno">
-            <br>
-            <button onclick="iniciarMisionPiloto()" style="background:var(--primary); color:white; padding:12px 30px; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">DESPEGAR</button>
-        </div>
-    </div>
+    <div id="status-overlay"><div style="background:white; padding:30px; border-radius:10px; color:black; text-align:center;" id="status-message"></div></div>
 
-    <div id="status-overlay">
-        <div id="status-message"></div>
+    <div id="modal-inicio" style="position:fixed; inset:0; background:rgba(0,0,0,0.9); display:flex; justify-content:center; align-items:center; z-index:2000;">
+        <div style="background:white; padding:30px; border-radius:15px; text-align:center; color:#333; max-width: 420px;">
+            <h2>Misión: El Bucle de Control</h2>
+            <p>Tienes <b>4 minutos</b> para aterrizar. Si fallas, el rombo te hará repetir el camino.</p>
+            <input type="text" id="nombre-input" placeholder="Nombre del Alumno" style="padding:10px; width:80%;">
+            <br><br>
+            <button onclick="comenzar()" class="btn btn-run">EMPEZAR ENTRENAMIENTO</button>
+        </div>
     </div>
 
     <div class="sidebar">
-        <div id="score-container">SCORE: <span id="val-puntos">0</span></div>
-        <div id="piloto-info" style="text-align:center; font-size:0.8rem; color:#bdc3c7; margin-bottom:10px;">Piloto: ---</div>
-        
-        <textarea id="consola" placeholder="Ejemplo:&#10;despegar&#10;avanzar 150&#10;girar derecha&#10;aterrizar"></textarea>
-
+        <div id="timer-container">04:00</div>
+        <div id="score-container">PUNTOS: <span id="val-puntos">0</span></div>
+        <div id="piloto-tag" style="text-align:center; font-size:0.8rem; margin-bottom:10px; opacity:0.8;">Piloto: ---</div>
+        <textarea id="consola" placeholder="despegar&#10;avanzar 150&#10;girar derecha&#10;aterrizar"></textarea>
         <div class="button-group">
-            <button class="btn-run" onclick="procesarComandos()">EJECUTAR</button>
-            <button class="btn-clear" onclick="document.getElementById('consola').value=''">BORRAR</button>
+            <button class="btn btn-run" onclick="ejecutarMision()">EJECUTAR MISIÓN</button>
+            <button class="btn btn-flow" id="btn-toggle-flow" onclick="toggleFlowchart()">ESTUDIAR DIAGRAMA</button>
+            <button class="btn btn-send" onclick="enviarResultados()">ENVIAR NOTA</button>
         </div>
-
-        <div class="guia-comandos">
-            <b>Comandos:</b><br>
-            - despegar / aterrizar<br>
-            - avanzar [px]<br>
-            - girar derecha / izquierda
-        </div>
-
-        <button id="btn-send" onclick="enviarResultados()">ENVIAR A SHEETS</button>
     </div>
 
     <div class="viewport">
         <div id="mundo">
             <div class="suelo"></div>
-            <div id="base-home" style="left: 45px; top: 45px;">HOME</div>
             <div id="meta" style="left: 250px; top: 250px;"></div>
-            
             <div id="dron-container" style="left: 50px; top: 50px;">
                 <div id="dron-modelo">
                     <div class="helice" style="top:0; left:0"></div>
@@ -104,131 +130,211 @@
                 </div>
             </div>
         </div>
+
+        <div id="flow-overlay" class="hidden">
+            <div class="flow-container-split">
+                <div class="flow-column">
+                    <div style="text-align:center; font-weight:bold; margin-bottom:15px; font-size:0.9rem;">TU LÓGICA DE PROGRAMACIÓN</div>
+                    <div id="flow-content"></div>
+                </div>
+
+                <div class="flow-column">
+                    <div style="text-align:center; font-weight:bold; margin-bottom:15px; font-size:0.9rem;">ESCUELA DE DIAGRAMAS</div>
+                    
+                    <div class="guia-card">
+                        <b>1. Terminal (Óvalo)</b>
+                        <p>Es el botón de Encendido y Apagado. Todo algoritmo debe tener un principio y un final claro.</p>
+                    </div>
+
+                    <div class="guia-card">
+                        <b>2. Proceso (Rectángulo)</b>
+                        <p>Son las órdenes que el motor ejecuta. Si escribes "avanzar", el ordenador crea este bloque de acción.</p>
+                    </div>
+
+                    <div class="guia-card">
+                        <b>3. Decisión (Rombo)</b>
+                        <p>Es la pregunta lógica. Tiene dos salidas: Si es <b>SÍ</b>, avanzamos. Si es <b>NO</b>, activamos el bucle de retorno.</p>
+                    </div>
+
+                    <div class="guia-card" style="border-left-color: var(--danger);">
+                        <b>4. Bucle (Línea Roja)</b>
+                        <p>Es una repetición. Si no aterrizas en la meta, esta línea te obliga a volver al INICIO para intentarlo otra vez.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
-        let posX = 50, posY = 50, posZ = 0, angulo = 0, puntos = 0;
-        let lastBaseX = 50, lastBaseY = 50, metaX = 250, metaY = 250;
-        let alumnoNombre = "";
-        let resultadosEnviados = false;
+        let posX = 50, posY = 50, lastBaseX = 50, lastBaseY = 50;
+        let posZ = 0, angulo = 0, puntos = 0;
+        let metaX = 250, metaY = 250, alumnoNombre = "";
+        const GRID = 50;
+        let timeLeft = 240; // 4 MINUTOS
+        let timerInterval;
 
-        function iniciarMisionPiloto() {
-            const nom = document.getElementById('nombre-alumno').value.trim();
-            if(!nom) return alert("Escribe tu nombre.");
-            alumnoNombre = nom;
-            document.getElementById('piloto-info').innerText = "Piloto: " + nom;
-            document.getElementById('player-modal').style.display = 'none';
-        }
-
-        async function procesarComandos() {
-            const lineas = document.getElementById('consola').value.toLowerCase().split('\n');
-            for(let cmd of lineas) {
-                if(cmd.trim()) await ejecutar(cmd.trim());
+        function comenzar() {
+            alumnoNombre = document.getElementById('nombre-input').value.trim();
+            if(alumnoNombre) {
+                document.getElementById('piloto-tag').innerText = "Piloto: " + alumnoNombre;
+                document.getElementById('modal-inicio').style.display = 'none';
+                startTimer();
             }
         }
 
-        function ejecutar(cmd) {
-            return new Promise(resolve => {
-                const partes = cmd.split(" ");
-                const accion = partes[0];
-                const valor = parseInt(partes[1]) || 0;
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeLeft = 240; 
+            actualizarReloj();
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                actualizarReloj();
+                if(timeLeft <= 0) penalizar();
+            }, 1000);
+        }
 
-                if(accion === "despegar") {
-                    posZ = 80;
-                    document.querySelectorAll('.helice').forEach(h => h.style.display = 'block');
-                } else if(accion === "aterrizar") {
-                    posZ = 0;
-                    actualizarDron();
-                    setTimeout(async () => {
-                        const exito = verificarAterrizaje();
-                        if(!exito) await volverABase();
-                        resolve();
-                    }, 800);
-                    return;
-                } else if(accion === "girar") {
-                    if(partes[1] === "derecha") angulo += 90;
-                    if(partes[1] === "izquierda") angulo -= 90;
-                } else if(accion === "avanzar") {
-                    const rad = (angulo - 90) * (Math.PI / 180); 
-                    posX += Math.cos(rad) * valor;
-                    posY += Math.sin(rad) * valor;
+        function actualizarReloj() {
+            const min = Math.floor(timeLeft / 60);
+            const sec = timeLeft % 60;
+            document.getElementById('timer-container').innerText = `${min.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
+        }
+
+        function penalizar() {
+            if(puntos > 0) puntos--;
+            document.getElementById('val-puntos').innerText = puntos;
+            actualizarFondo();
+            alert("¡TIEMPO AGOTADO! Se resta un punto. Inténtalo más rápido.");
+            startTimer();
+        }
+
+        function toggleFlowchart() {
+            const panel = document.getElementById('flow-overlay');
+            const btn = document.getElementById('btn-toggle-flow');
+            if(panel.classList.contains('hidden')) {
+                construirDiagrama();
+                panel.classList.remove('hidden');
+                btn.innerText = "CERRAR ESTUDIO";
+            } else {
+                panel.classList.add('hidden');
+                btn.innerText = "ESTUDIAR DIAGRAMA";
+            }
+        }
+
+        function construirDiagrama() {
+            const lines = document.getElementById('consola').value.toLowerCase().split('\n');
+            const container = document.getElementById('flow-content');
+            container.innerHTML = "";
+            if(!lines[0].trim()) return;
+
+            // Elementos de Bucle Fijos
+            container.innerHTML += `<div class="bucle-line"></div>`;
+            container.innerHTML += `<div class="bucle-arrow-in">▶</div>`;
+
+            // INICIO
+            container.appendChild(crearNodo("INICIO DE PROGRAMA", "node-terminal"));
+
+            lines.forEach(l => {
+                let t = l.trim();
+                if(!t) return;
+                container.appendChild(crearFlecha());
+                if(t.includes("despegar")) container.appendChild(crearNodo("ACCIÓN: Despegar", "node-action"));
+                else if(t.includes("avanzar")) container.appendChild(crearNodo("ACCIÓN: Avanzar " + (t.split(" ")[1]||"0"), "node-action"));
+                else if(t.includes("girar")) container.appendChild(crearNodo("ACCIÓN: Girar a la " + (t.includes("der")?"DER":"IZQ"), "node-action"));
+                else if(t.includes("aterrizar")) {
+                    container.appendChild(crearNodo("ACCIÓN: Aterrizar", "node-action"));
+                    container.appendChild(crearFlecha());
+                    
+                    // ROMBO CON LÓGICA DE BIFURCACIÓN
+                    const rombo = document.createElement('div');
+                    rombo.style.position = "relative";
+                    rombo.innerHTML = `
+                        <div class="flow-node node-decision"><span>¿ATERRIZAJE EN META?</span></div>
+                        <div class="path-label-no">NO (Repetir)</div>
+                        <div style="color:var(--primary); font-weight:bold; font-size:0.7rem; text-align:center; margin-top:5px;">SÍ (Continuar)</div>
+                    `;
+                    container.appendChild(rombo);
+                    container.appendChild(crearFlecha('var(--primary)'));
                 }
-                actualizarDron();
-                setTimeout(resolve, 800); 
+            });
+
+            container.appendChild(crearNodo("FIN: MISIÓN LOGRADA", "node-terminal"));
+        }
+
+        function crearNodo(t, c) {
+            const d = document.createElement('div'); d.className = 'flow-node '+c; d.innerHTML = t; return d;
+        }
+        function crearFlecha(color = "#ecf0f1") {
+            const a = document.createElement('div'); a.className = 'arrow-v'; 
+            a.style.background = color;
+            return a;
+        }
+
+        async function ejecutarMision() {
+            posX = lastBaseX; posY = lastBaseY; angulo = 0; posZ = 0;
+            actualizarVisual();
+            const lines = document.getElementById('consola').value.toLowerCase().split('\n');
+            for(let cmd of lines) { if(cmd.trim()) await ejecutarAccion(cmd.trim()); }
+        }
+
+        function ejecutarAccion(cmd) {
+            return new Promise(resolve => {
+                const p = cmd.split(" ");
+                if(p[0] === "despegar") { posZ = 80; document.querySelectorAll('.helice').forEach(h => h.style.display = 'block'); }
+                else if(p[0] === "avanzar") { let v = parseInt(p[1]) || 0; const r = (angulo - 90) * (Math.PI / 180); posX += Math.cos(r) * v; posY += Math.sin(r) * v; }
+                else if(p[0] === "girar") { angulo += (p[1] === "derecha") ? 90 : -90; }
+                else if(p[0] === "aterrizar") { posZ = 0; document.querySelectorAll('.helice').forEach(h => h.style.display = 'none'); setTimeout(verificarAterrizaje, 600); }
+                actualizarVisual();
+                setTimeout(resolve, 800);
             });
         }
 
-        function actualizarDron() {
+        function actualizarVisual() {
             const c = document.getElementById('dron-container');
-            c.style.left = posX + "px";
-            c.style.top = posY + "px";
+            c.style.left = posX + "px"; c.style.top = posY + "px";
             c.style.transform = `translate3d(0, 0, ${posZ}px)`;
             document.getElementById('dron-modelo').style.transform = `rotateZ(${angulo}deg)`;
         }
 
         function verificarAterrizaje() {
-            const dist = Math.sqrt(Math.pow(posX - metaX, 2) + Math.pow(posY - metaY, 2));
-            if(dist < 55) {
+            const d = Math.sqrt(Math.pow(posX - metaX, 2) + Math.pow(posY - metaY, 2));
+            if(d < 45) {
                 puntos++;
                 document.getElementById('val-puntos').innerText = puntos;
                 lastBaseX = posX; lastBaseY = posY;
-                actualizarDificultad();
                 moverMeta();
-                document.querySelectorAll('.helice').forEach(h => h.style.display = 'none');
-                return true;
+                startTimer(); // Reiniciar a 4:00 tras éxito
+                actualizarFondo();
+            } else {
+                alert("¡FALLO! Según el diagrama, la respuesta es 'NO', así que volvemos al inicio.");
+                posX = lastBaseX; posY = lastBaseY; angulo = 0; actualizarVisual();
             }
-            return false;
-        }
-
-        // --- SISTEMA DE CLASIFICACIÓN POR COLORES ---
-        function actualizarDificultad() {
-            let bg = "#1a1a1a"; // Color por defecto (Negro/Oscuro)
-            
-            if (puntos >= 1 && puntos <= 5) bg = "#005a9e";   // Azul
-            if (puntos >= 6 && puntos <= 10) bg = "#107c10";  // Verde
-            if (puntos >= 11 && puntos <= 15) bg = "#d29200"; // Amarillo
-            if (puntos >= 16 && puntos <= 20) bg = "#d35400"; // Naranja
-            if (puntos >= 21) bg = "#a4262c";                 // Rojo (Experto)
-
-            document.body.style.backgroundColor = bg;
-        }
-
-        async function volverABase() {
-            posZ = 100; actualizarDron();
-            await new Promise(r => setTimeout(r, 600));
-            posX = lastBaseX; posY = lastBaseY; angulo = 0;
-            actualizarDron();
-            await new Promise(r => setTimeout(r, 800));
-            posZ = 0; actualizarDron();
-            document.querySelectorAll('.helice').forEach(h => h.style.display = 'none');
         }
 
         function moverMeta() {
-            do {
-                metaX = Math.floor(Math.random() * 400) + 50;
-                metaY = Math.floor(Math.random() * 350) + 50;
-            } while (Math.sqrt(Math.pow(metaX - lastBaseX, 2) + Math.pow(metaY - lastBaseY, 2)) < 120);
+            metaX = (Math.floor(Math.random() * 8) + 2) * GRID;
+            metaY = (Math.floor(Math.random() * 6) + 2) * GRID;
             const m = document.getElementById('meta');
-            m.style.left = metaX + "px";
-            m.style.top = metaY + "px";
+            m.style.left = metaX + "px"; m.style.top = metaY + "px";
+        }
+
+        function actualizarFondo() {
+            let bg = "#1a1a1a"; 
+            if (puntos >= 1 && puntos < 6) bg = "#005a9e"; 
+            if (puntos >= 6 && puntos < 11) bg = "#107c10"; 
+            if (puntos >= 11) bg = "#d29200"; 
+            document.body.style.backgroundColor = bg;
         }
 
         function enviarResultados() {
-            if (resultadosEnviados) return;
             const scriptUrl = "https://script.google.com/macros/s/AKfycbwVPttSZrhwfWwSZpFo7KWjJ39vldQm3MPGykMWEPWOoF4UsZ24mC8YhgiaE-0xm_7G/exec";
-            
-            resultadosEnviados = true;
-            document.getElementById('btn-send').disabled = true;
             document.getElementById('status-overlay').style.display = 'flex';
-            document.getElementById('status-message').innerText = "ENVIANDO DATOS AL PROFESOR...";
-
+            document.getElementById('status-message').innerText = "ENVIANDO DATOS AL SERVIDOR...";
             fetch(scriptUrl, {
-                method: "POST",
-                mode: "no-cors",
-                body: JSON.stringify({ player1: "Dron " + alumnoNombre, score1: puntos, player2: "---", score2: 0, timestamp: new Date().toLocaleString() })
+                method: "POST", mode: "no-cors",
+                body: JSON.stringify({ player1: "Dron " + alumnoNombre, score1: puntos, timestamp: new Date().toLocaleString() })
             }).then(() => {
-                document.getElementById('status-message').innerText = "¡RESULTADOS REGISTRADOS!";
-                setTimeout(() => { document.getElementById('status-overlay').style.display = 'none'; }, 3000);
+                document.getElementById('status-message').innerText = "¡PUNTUACIÓN REGISTRADA!";
+                setTimeout(() => { document.getElementById('status-overlay').style.display = 'none'; }, 1500);
             });
         }
     </script>
