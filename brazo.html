@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Robot Game - Versión Tapa de Seguridad</title>
+    <title>Robot Game - Alcance Corregido</title>
     <style>
         :root {
             --dark: #1a1a1a; --panel: #2c3e50; --accent: #f1c40f;
@@ -37,6 +37,7 @@
 
         .pos-list { flex-grow: 1; background: #111; border-radius: 6px; padding: 10px; overflow-y: auto; border: 1px solid #444; }
         .pos-card { background: #222; margin-bottom: 5px; padding: 8px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid var(--accent); }
+        .pos-actions { display: flex; gap: 5px; }
 
         #player-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 2000; }
         .modal-box { background: white; padding: 35px; border-radius: 12px; text-align: center; color: #333; width: 320px; }
@@ -48,7 +49,7 @@
         .viewport { flex-grow: 1; position: relative; overflow: hidden; }
         .conveyor { position: absolute; bottom: 0; width: 100%; height: 90px; background: var(--belt); border-top: 8px solid #222; z-index: 10; }
         
-        #robot-system { position: absolute; bottom: 215px; left: 50%; z-index: 100; }
+        #robot-system { position: absolute; bottom: 225px; left: 50%; z-index: 100; }
         .link { position: absolute; bottom: 0; left: -16px; width: 32px; background: var(--robot); border: 3px solid #7f8c8d; border-radius: 16px; transform-origin: bottom center; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
         .link-main { height: 140px; } 
         .link-sub { height: 130px; bottom: 125px; left: -2px; }
@@ -59,7 +60,7 @@
         
         .piece { position: absolute; width: 40px; height: 40px; border-radius: 6px; z-index: 50; }
         
-        .box { position: absolute; bottom: 90px; width: 110px; height: 80px; border: 5px solid #fff; background: rgba(255,255,255,0.1); border-top: none; z-index: 20; }
+        .box { position: absolute; bottom: 90px; width: 110px; height: 80px; border: 5px solid #fff; background: rgba(255,255,255,0.1); border-top: none; z-index: 20; transition: left 0.5s ease-out; }
         .box-lid { position: absolute; top: -10px; left: -5px; width: 110px; height: 10px; background: rgba(255,255,255,0.5); border: 2px solid white; border-radius: 5px; }
         .box-label { background: white; color: black; font-size: 0.7rem; font-weight: bold; width: 100%; text-align: center; position: absolute; top: 5px; }
     </style>
@@ -138,24 +139,32 @@
             document.getElementById('label-user').innerText = "OP: " + nom.split(" ")[0];
             document.getElementById('player-modal').style.display = 'none';
             updateBackground();
-            setMision();
+            setMision(true);
             manualMove(); 
         }
 
-        function setMision() {
-            document.querySelectorAll('.box').forEach(b => b.remove());
-            misionesActivas = [];
-            const safeX = () => (Math.random() * 220) - 110; 
+        function setMision(forceNewPosition = false) {
+            const shouldChangePos = forceNewPosition || (puntos > 0 && puntos % 2 === 0);
+            const keys = Object.keys(colors);
+            const nextColor = keys[Math.floor(Math.random()*keys.length)];
 
-            if (puntos < 6) {
-                const c = Object.keys(colors)[Math.floor(Math.random()*5)];
-                createBox(safeX(), c); 
-                document.getElementById('mision-txt').innerText = `NIVEL 1: Entrega piezas ${c.toUpperCase()}.`;
+            if (shouldChangePos) {
+                document.querySelectorAll('.box').forEach(b => b.remove());
+                misionesActivas = [];
+                // ALCANCE LIMITADO: La caja ahora solo aparece entre -140 y 140 para que el brazo llegue siempre.
+                const safeX = (Math.random() * 280) - 140; 
+                createBox(safeX, nextColor);
             } else {
-                createBox(-110, 'rojo');
-                createBox(110, 'azul');
-                document.getElementById('mision-txt').innerText = `NIVEL EXPERTO: Clasificación Dual (Rojo/Azul).`;
+                if (misionesActivas.length > 0) {
+                    const m = misionesActivas[0];
+                    m.color = nextColor;
+                    m.el.style.borderColor = colors[nextColor];
+                    m.el.querySelector('.box-label').innerText = nextColor.toUpperCase();
+                }
             }
+
+            const targetColorName = misionesActivas[0].color.toUpperCase();
+            document.getElementById('mision-txt').innerText = `MISIÓN: ¡Caja movida! Clasifica piezas de color ${targetColorName}.`;
         }
 
         function createBox(x, colorTarget) {
@@ -180,9 +189,9 @@
 
         function updateBackground() {
             let bg = "#333";
-            if (puntos >= 5) bg = "#107c10";  
-            if (puntos >= 10) bg = "#d29200"; 
-            if (puntos >= 15) bg = "#a4262c";                 
+            if (puntos >= 4) bg = "#1b4d3e";  
+            if (puntos >= 8) bg = "#7d6608";  
+            if (puntos >= 12) bg = "#78281f"; 
             document.body.style.backgroundColor = bg;
         }
 
@@ -204,10 +213,9 @@
                 if (!itemHeld) {
                     const gripRect = cL.getBoundingClientRect();
                     document.querySelectorAll('.piece').forEach(p => {
-                        // Solo capturar piezas que no han sido "puntuadas"
                         if (!p.dataset.scored) {
                             const pR = p.getBoundingClientRect();
-                            if (Math.abs(gripRect.x - pR.x) < 50 && Math.abs(gripRect.y - pR.y) < 50) {
+                            if (Math.abs(gripRect.x - pR.x) < 55 && Math.abs(gripRect.y - pR.y) < 55) {
                                 itemHeld = p;
                             }
                         }
@@ -231,25 +239,23 @@
                 y += 8; 
                 p.style.top = y + "px";
 
-                // DETECCIÓN DE "TAPA" DE LA CAJA
                 misionesActivas.forEach(m => {
-                    // Si atraviesa la altura de la tapa Y está alineado en X
-                    if (!p.dataset.scored && Math.abs(y - m.yTop) < 15 && Math.abs((x + 20) - m.xCenter) < 50) {
+                    // Detección de colisión más permisiva (65px de ancho)
+                    if (!p.dataset.scored && Math.abs(y - m.yTop) < 30 && Math.abs((x + 20) - m.xCenter) < 65) {
                         if (p.getAttribute('data-color') === m.color) {
-                            p.dataset.scored = "true"; // Marcamos que esta pieza ya dio su punto
+                            p.dataset.scored = "true";
                             puntos++;
                             document.getElementById('puntos').innerText = puntos;
-                            p.style.opacity = "0.4";
+                            p.style.opacity = "0";
                             updateBackground();
-                            if(puntos % 2 === 0) setTimeout(setMision, 600);
+                            setTimeout(() => setMision(), 500);
                         }
                     }
                 });
 
-                // Tocar el suelo o fondo
                 if (y > window.innerHeight - 130) { 
                     clearInterval(gravity); 
-                    setTimeout(() => p.remove(), 1000); 
+                    setTimeout(() => p.remove(), 500); 
                 }
             }, 20);
         }
@@ -257,7 +263,7 @@
         function createPiece() {
             if (!operarioNombre) return;
             const keys = Object.keys(colors);
-            const c = keys[Math.floor(Math.random()*5)];
+            const c = keys[Math.floor(Math.random()*keys.length)];
             const p = document.createElement('div');
             p.className = 'piece';
             p.style.backgroundColor = colors[c];
@@ -269,7 +275,7 @@
             let xPos = -50;
             const belt = setInterval(() => {
                 if (itemHeld === p) { clearInterval(belt); return; }
-                xPos += 2; 
+                xPos += 2.5; // Un pelín más rápido para dar dinamismo
                 p.style.left = xPos + "px";
                 if (xPos > window.innerWidth) { p.remove(); clearInterval(belt); }
             }, 30);
@@ -280,11 +286,19 @@
             renderList();
         }
 
+        function deletePos(index) {
+            savedPositions.splice(index, 1);
+            renderList();
+        }
+
         function renderList() {
             document.getElementById('posList').innerHTML = savedPositions.map((p, i) => `
                 <div class="pos-card">
-                    <span>P${i+1}: ${p.a1}°, ${p.a2}°</span>
-                    <button onclick="goTo(${p.a1}, ${p.a2})" style="background:var(--primary); color:white; padding:4px 8px;">IR</button>
+                    <span style="font-size:0.8rem">P${i+1}: ${p.a1}°, ${p.a2}°</span>
+                    <div class="pos-actions">
+                        <button onclick="goTo(${p.a1}, ${p.a2})" style="background:var(--primary); color:white; padding:4px 8px; font-size:0.7rem;">IR</button>
+                        <button onclick="deletePos(${i})" style="background:var(--danger); color:white; padding:4px 8px; font-size:0.7rem;">X</button>
+                    </div>
                 </div>
             `).join('');
         }
@@ -306,7 +320,6 @@
             }, 1500);
         }
 
-        // Actualización de posición de pieza en mano
         setInterval(() => {
             if (itemHeld) {
                 const g = document.getElementById('cL').getBoundingClientRect();
