@@ -1,261 +1,299 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>Juego de Snake Modificado V3</title>
+    <meta charset="UTF-8">
+    <title>Cyber Snake - Certificado de Captura</title>
     <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            overflow: hidden;
+        :root { --p1: #00f2ff; --p2: #ff007f; }
+        body { display: flex; margin: 0; height: 100vh; background: #eee; font-family: 'Segoe UI', sans-serif; overflow: hidden; color: #333; }
+
+        #lobby {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 3000;
         }
-        #gameCanvas {
-            background-color: #333;
-            border: 2px solid #444;
+
+        .player-section {
+            flex: 1; display: flex; flex-direction: column; align-items: center;
+            justify-content: center; position: relative; border: 2px solid #ccc;
+            background-color: white;
+            transition: background-color 0.6s ease;
         }
-        #score {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 50px;
-            color: #61dafb;
-            transition: all 0.5s ease-in-out; 
+
+        .overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.05); 
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 100;
         }
-        #gameOverMessage {
-            display: none;
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 30px;
-            color: #f54242;
-            text-align: center;
-            background-color: rgba(255, 255, 255, 0.9);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            z-index: 10;
+
+        .quiz-card {
+            background: white; color: #333; padding: 25px; border-radius: 15px;
+            width: 85%; max-width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: 4px solid #3498db;
         }
-        #restartButton {
-            display: block;
-            margin-top: 20px;
-            padding: 10px 20px;
-            font-size: 20px;
-            background-color: #61dafb;
-            color: #fff;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
+
+        .opt-btn {
+            display: block; width: 100%; padding: 12px; margin: 10px 0;
+            border: 2px solid #ddd; border-radius: 8px; background: #fdfdfd;
+            cursor: pointer; text-align: left; font-size: 15px;
         }
-        /* Clase especial para la puntuación al perder */
-        .penalty-style {
-            font-size: 200px !important; /* 50px * 4 = 200px */
-            color: #f54242 !important;
+
+        .hud { position: absolute; top: 20px; text-align: center; z-index: 50; width: 100%; }
+        .score-num { font-size: 70px; font-weight: 900; margin: 0; color: #444; }
+        .name-tag { font-size: 20px; font-weight: bold; color: #555; background: rgba(255,255,255,0.8); padding: 5px 15px; border-radius: 20px; }
+
+        canvas { background: #f9f9f9; border: 3px solid #555; border-radius: 10px; }
+
+        .death-msg {
+            background: #fff; padding: 20px; border-radius: 15px;
+            border: 4px solid #e74c3c; text-align: center; color: #c0392b;
+            font-weight: bold; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        button.start-btn {
+            padding: 15px 35px; font-size: 18px; font-weight: bold;
+            cursor: pointer; border: none; border-radius: 50px;
+            text-transform: uppercase; color: white; background: #333;
         }
     </style>
 </head>
 <body>
 
-<div id="score">Puntuación: 0</div>
-<div id="gameOverMessage">
-    ¡Juego terminado!
-    <button id="restartButton">Seguir Jugando</button>
-</div>
-<canvas id="gameCanvas" width="400" height="400"></canvas>
+    <div id="lobby">
+        <h1 style="font-size: 2.5rem; color:#2c3e50;">SNAKE <span style="color:var(--p1)">CYBER</span> TEST</h1>
+        <p>Retos cada 10 pts | Penalización 50% al morir | Puntuación x4 para captura</p>
+        <div style="display: flex; gap: 20px; margin-bottom: 25px;">
+            <input type="text" id="in-n1" value="ALUMNO 1" style="padding:12px; border:1px solid #ccc; border-radius:5px;">
+            <input type="text" id="in-n2" value="ALUMNO 2" style="padding:12px; border:1px solid #ccc; border-radius:5px;">
+        </div>
+        <button onclick="setupPlayers()" style="padding:15px 40px; cursor:pointer; background:var(--p1); border:none; border-radius:8px; font-weight:bold;">CONFIGURAR DUELO</button>
+    </div>
+
+    <div id="area-1" class="player-section">
+        <div class="hud">
+            <div id="name-1" class="name-tag">---</div>
+            <p id="score-1" class="score-num">0</p>
+        </div>
+        <canvas id="can-1"></canvas>
+        <div id="overlay-1" class="overlay">
+            <button class="start-btn" onclick="games[0].start()">INICIAR P1</button>
+        </div>
+    </div>
+
+    <div id="area-2" class="player-section">
+        <div class="hud">
+            <div id="name-2" class="name-tag">---</div>
+            <p id="score-2" class="score-num">0</p>
+        </div>
+        <canvas id="can-2"></canvas>
+        <div id="overlay-2" class="overlay">
+            <button class="start-btn" onclick="games[1].start()">INICIAR P2</button>
+        </div>
+    </div>
 
 <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-    const scoreDisplay = document.getElementById("score");
-    const gameOverMessage = document.getElementById("gameOverMessage");
-    const restartButton = document.getElementById("restartButton");
+    const QUESTIONS = [
+        { q: "¿Qué es una contraseña segura?", a: ["Tu nombre", "Letras, números y símbolos", "12345"], c: 1 },
+        { q: "Link de un desconocido:", a: ["Lo abro", "Lo borro", "Se lo mando a un amigo"], c: 1 },
+        { q: "No compartir en redes:", a: ["Dirección de casa", "Comida favorita", "Música"], c: 0 },
+        { q: "HTTPS significa:", a: ["Web Segura", "Web Rápida", "Web Gratis"], c: 0 },
+        { q: "Ciberacoso es:", a: ["Un juego", "Humillar/insultar online", "Tener fans"], c: 1 },
+        { q: "Actualizar el móvil sirve para:", a: ["Tener juegos", "Tapar fallos de seguridad", "Que brille"], c: 1 }
+    ];
 
-    const boxSize = 20;
-    let direction = 0; 
-    let snake = [{ x: 200, y: 200 }];
-    let food = spawnFood();
-    let score = 0;
-    let speed = 200;
-    let gameInterval;
-    let autoMove = false; 
+    const GRID = 20;
+    const SIZE = 400;
+    let games = [];
 
-    // --- Funciones de Dibujo ---
-
-    function drawBoard() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // Dibujar el cuerpo de la serpiente
-        for (let i = 1; i < snake.length; i++) {
-            const part = snake[i];
-            ctx.fillStyle = "#61dafb";
-            ctx.fillRect(part.x, part.y, boxSize, boxSize);
+    class SnakeGame {
+        constructor(index, canvasId, scoreId, overlayId, areaId, nameId, color, startPos, dir) {
+            this.index = index;
+            this.canvas = document.getElementById(canvasId);
+            this.ctx = this.canvas.getContext('2d');
+            this.scoreEl = document.getElementById(scoreId);
+            this.overlayEl = document.getElementById(overlayId);
+            this.areaEl = document.getElementById(areaId);
+            this.nameEl = document.getElementById(nameId);
+            this.originalName = ""; 
+            this.color = color;
+            this.startPos = startPos;
+            this.startDir = dir;
+            this.canvas.width = SIZE;
+            this.canvas.height = SIZE;
+            this.score = 0;
+            this.nextQuizAt = 10;
+            this.active = false;
+            this.reset(true);
         }
-        
-        // Dibujar la cabeza como un triángulo
-        drawSnakeHead(snake[0].x, snake[0].y, direction);
 
-        // Dibujar la comida
-        ctx.fillStyle = "#f54242";
-        ctx.fillRect(food.x, food.y, boxSize, boxSize);
-    }
-
-    function drawSnakeHead(x, y, angle) {
-        ctx.save();
-        ctx.translate(x + boxSize / 2, y + boxSize / 2);
-        ctx.rotate(angle);
-
-        ctx.beginPath();
-        ctx.fillStyle = "#3498db"; 
-        
-        ctx.moveTo(boxSize / 2, 0); 
-        ctx.lineTo(-boxSize / 2, -boxSize / 2);
-        ctx.lineTo(-boxSize / 2, boxSize / 2);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.restore();
-    }
-
-    // --- Funciones de Juego ---
-
-    function spawnFood() {
-        let x, y;
-        do {
-            x = Math.floor(Math.random() * (canvas.width / boxSize)) * boxSize;
-            y = Math.floor(Math.random() * (canvas.height / boxSize)) * boxSize;
-        } while (snake.some(part => part.x === x && part.y === y));
-        return { x, y };
-    }
-
-    function moveSnake() {
-        if (!autoMove) return;
-
-        const head = { ...snake[0] };
-        
-        head.x += Math.round(Math.cos(direction)) * boxSize;
-        head.y += Math.round(Math.sin(direction)) * boxSize;
-
-        snake.unshift(head);
-
-        if (head.x === food.x && head.y === food.y) {
-            score += 1;
-            updateScore();
-
-            food = spawnFood();
-            if (score % 10 === 0 && score > 0) {
-                increaseSpeed();
+        reset(full) {
+            this.snake = [{...this.startPos}];
+            this.dir = {...this.startDir};
+            this.nextDir = {...this.startDir};
+            this.obstacles = [];
+            if(full) { 
+                this.score = 0; 
+                this.nextQuizAt = 10; 
+                this.nameEl.innerText = this.originalName; // Restaurar nombre al empezar de cero
             }
-        } else {
-            snake.pop();
+            for(let i=0; i<Math.floor(this.score/15); i++) this.addObstacle();
+            this.spawnFood();
+            this.lastTick = 0;
+            this.updateUI();
         }
 
-        if (isGameOver(head)) {
-            handleGameOver();
+        start() { 
+            this.active = true; 
+            this.overlayEl.style.display = 'none'; 
+            this.nameEl.innerText = this.originalName; // Limpiar el x4 al empezar a jugar
         }
-    }
 
-    function isGameOver(head) {
-        // Colisión con la pared
-        if (head.x < 0 || head.y < 0 || head.x >= canvas.width || head.y >= canvas.height) {
-            return true;
+        spawnFood() {
+            this.food = { x: Math.floor(Math.random()*20), y: Math.floor(Math.random()*20) };
+            if(this.obstacles.some(o=>o.x===this.food.x && o.y===this.food.y)) this.spawnFood();
         }
-        
-        // Colisión consigo mismo
-        for (let i = 1; i < snake.length; i++) {
-            if (snake[i].x === head.x && snake[i].y === head.y) {
-                return true;
+
+        addObstacle() {
+            let o = { x: Math.floor(Math.random()*20), y: Math.floor(Math.random()*20) };
+            if(!this.snake.some(s=>s.x===o.x && s.y===o.y)) this.obstacles.push(o);
+        }
+
+        updateUI() {
+            this.scoreEl.innerText = this.score;
+            if(this.score === 0) {
+                this.areaEl.style.backgroundColor = "white";
+            } else {
+                let colors = ["#f4f6f7","#d6eaf8","#d5f5e3","#fcf3cf","#fadbd8","#f2d7d5"];
+                let idx = Math.min(5, Math.floor(this.score/10));
+                this.areaEl.style.backgroundColor = colors[idx];
             }
         }
-        return false;
-    }
-    
-    function handleGameOver() {
-        // *** CAMBIO: Lógica de penalización (dividir por 3) ***
-        score = Math.floor(score / 3); 
-        updateScore();
-        
-        // Aplicar estilo de penalización
-        scoreDisplay.classList.add("penalty-style");
-        
-        showGameOverMessage();
-    }
 
-    function resetGame() {
-        snake = [{ x: 200, y: 200 }];
-        direction = 0;
-        autoMove = false;
-        clearInterval(gameInterval);
-        speed = 200;
-        
-        // Remover estilo de penalización al reiniciar
-        scoreDisplay.classList.remove("penalty-style");
-        
-        gameInterval = setInterval(gameLoop, speed);
-    }
-
-    function updateScore() {
-        scoreDisplay.textContent = `Puntuación: ${score.toFixed(0)}`;
-    }
-
-    function increaseSpeed() {
-        speed *= 0.9;
-        clearInterval(gameInterval);
-        gameInterval = setInterval(gameLoop, speed);
-    }
-
-    function showGameOverMessage() {
-        clearInterval(gameInterval);
-        gameOverMessage.style.display = "block";
-    }
-
-    restartButton.addEventListener("click", () => {
-        gameOverMessage.style.display = "none";
-        resetGame();
-    });
-
-    function gameLoop() {
-        moveSnake();
-        drawBoard();
-    }
-    
-    // --- Control de Teclado (Movimiento Relativo) ---
-    
-    document.addEventListener("keydown", event => {
-        let newDirection = direction;
-        
-        switch (event.key) {
-            case "ArrowUp": 
-                autoMove = true;
-                break;
-                
-            case "ArrowLeft": 
-                newDirection -= Math.PI / 2;
-                break;
-                
-            case "ArrowRight": 
-                newDirection += Math.PI / 2;
-                break;
+        showQuiz() {
+            this.active = false;
+            const q = QUESTIONS[Math.floor(Math.random()*QUESTIONS.length)];
+            this.overlayEl.style.display = 'flex';
+            this.overlayEl.innerHTML = `
+                <div class="quiz-card">
+                    <h3 style="margin-bottom:10px">🛡️ RETO: ${q.q}</h3>
+                    ${q.a.map((opt, i) => `<button class="opt-btn" onclick="games[${this.index}].handleAnswer(${i}, ${q.c})">${opt}</button>`).join('')}
+                </div>`;
         }
 
-        newDirection = newDirection % (2 * Math.PI); 
-
-        const isOpposite = Math.abs(direction - newDirection) % (2 * Math.PI) === Math.PI;
-
-        if (!isOpposite || !autoMove) {
-            direction = newDirection;
+        handleAnswer(chosen, correct) {
+            if(chosen !== correct) { this.score = Math.max(0, this.score - 2); }
+            this.updateUI();
+            this.nextQuizAt += 10;
+            this.overlayEl.style.display = 'none';
+            this.active = true;
         }
+
+        die() {
+            this.active = false;
+            // Lógica: Tenía 20, muere, se queda en 10.
+            const puntosAntesDeMorir = this.score;
+            this.score = Math.floor(this.score / 2); // Penalización 50%
+            const puntosFinales = this.score;
+            
+            this.updateUI();
+            
+            this.overlayEl.style.display = 'flex';
+            this.overlayEl.innerHTML = `
+                <div class="death-msg">
+                    ¡COLISIÓN!<br>
+                    <span style="font-size:14px">Calculando puntuación final...</span><br>
+                    <span id="countdown-${this.index}">5</span>s
+                </div>`;
+            
+            let time = 5;
+            let timer = setInterval(() => {
+                time--;
+                if(document.getElementById(`countdown-${this.index}`))
+                    document.getElementById(`countdown-${this.index}`).innerText = time;
+                
+                if(time <= 0) {
+                    clearInterval(timer);
+                    // AQUÍ APARECE EL MARCADOR x4 JUNTO AL NOMBRE
+                    this.nameEl.innerHTML = `${this.originalName} <span style="color:#e67e22; margin-left:10px;">[ ${puntosFinales} x 4 = ${puntosFinales * 4} ]</span>`;
+                    
+                    this.overlayEl.innerHTML = `<button class="start-btn" onclick="games[${this.index}].start()">REINTENTAR</button>`;
+                }
+            }, 1000);
+        }
+
+        getInterval() {
+            if (this.score < 10) return 260;
+            let v = 130;
+            for(let i=0; i<Math.floor((this.score-10)/15); i++) v *= 0.67;
+            return Math.max(40, v);
+        }
+
+        update(t) {
+            if(!this.active) return;
+            if(t - this.lastTick < this.getInterval()) return;
+            this.lastTick = t;
+            this.dir = this.nextDir;
+            let head = { x: this.snake[0].x + this.dir.x, y: this.snake[0].y + this.dir.y };
+            if(head.x<0 || head.x>=20 || head.y<0 || head.y>=20 || 
+               this.snake.some(s=>s.x===head.x && s.y===head.y) ||
+               this.obstacles.some(o=>o.x===head.x && o.y===head.y)) {
+                this.die(); return;
+            }
+            this.snake.unshift(head);
+            if(head.x === this.food.x && head.y === this.food.y) {
+                this.score++;
+                this.updateUI();
+                if(this.score % 15 === 0) this.addObstacle();
+                if(this.score >= this.nextQuizAt) { this.showQuiz(); return; }
+                this.spawnFood();
+            } else { this.snake.pop(); }
+        }
+
+        draw() {
+            this.ctx.clearRect(0,0,SIZE,SIZE);
+            this.ctx.fillStyle = "#e74c3c";
+            this.obstacles.forEach(o => this.ctx.fillRect(o.x*20, o.y*20, 19, 19));
+            this.ctx.fillStyle = "#2ecc71";
+            this.ctx.fillRect(this.food.x*20+4, this.food.y*20+4, 12, 12);
+            this.snake.forEach((s, i) => {
+                this.ctx.fillStyle = i===0 ? "#333" : this.color;
+                this.ctx.fillRect(s.x*20, s.y*20, 19, 19);
+            });
+        }
+    }
+
+    function setupPlayers() {
+        const n1 = document.getElementById('in-n1').value;
+        const n2 = document.getElementById('in-n2').value;
+        document.getElementById('lobby').style.display = 'none';
         
+        games = [
+            new SnakeGame(0, 'can-1', 'score-1', 'overlay-1', 'area-1', 'name-1', '#3498db', {x:2,y:10}, {x:1,y:0}),
+            new SnakeGame(1, 'can-2', 'score-2', 'overlay-2', 'area-2', 'name-2', '#e91e63', {x:17,y:10}, {x:-1,y:0})
+        ];
+        
+        games[0].originalName = n1;
+        games[1].originalName = n2;
+        games[0].nameEl.innerText = n1;
+        games[1].nameEl.innerText = n2;
+        
+        requestAnimationFrame(loop);
+    }
+
+    function loop(t) { games.forEach(g => { g.update(t); g.draw(); }); requestAnimationFrame(loop); }
+
+    window.addEventListener('keydown', e => {
+        const k = e.key.toLowerCase();
+        if(k==='w' && games[0].dir.y===0) games[0].nextDir = {x:0, y:-1};
+        if(k==='s' && games[0].dir.y===0) games[0].nextDir = {x:0, y:1};
+        if(k==='a' && games[0].dir.x===0) games[0].nextDir = {x:-1, y:0};
+        if(k==='d' && games[0].dir.x===0) games[0].nextDir = {x:1, y:0};
+        if(e.key==='ArrowUp' && games[1].dir.y===0) games[1].nextDir = {x:0, y:-1};
+        if(e.key==='ArrowDown' && games[1].dir.y===0) games[1].nextDir = {x:0, y:1};
+        if(e.key==='ArrowLeft' && games[1].dir.x===0) games[1].nextDir = {x:-1, y:0};
+        if(e.key==='ArrowRight' && games[1].dir.x===0) games[1].nextDir = {x:1, y:0};
     });
-
-    // Inicializa el juego
-    gameOverMessage.style.display = "none";
-    gameInterval = setInterval(gameLoop, speed);
-
 </script>
-
 </body>
 </html>

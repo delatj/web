@@ -1,508 +1,303 @@
 <!DOCTYPE html>
-<!-- saved from url=(0041)https://delatj.github.io/web/tetris2.html -->
 <html lang="es">
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>Tetris para Dos Jugadores</title>
+    <meta charset="UTF-8">
+    <title>Cyber Tetris - Edición Captura</title>
     <style>
-        body {
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-            height: 100vh;
-            margin: 0;
-            font-family: Arial, sans-serif;
-            overflow: hidden;
+        :root { --p1-color: #3498db; --p2-color: #e91e63; }
+        body { display: flex; margin: 0; height: 100vh; font-family: 'Segoe UI', sans-serif; background-color: #eee; overflow: hidden; }
+
+        .player-section {
+            flex: 1; display: flex; flex-direction: column; align-items: center;
+            justify-content: center; position: relative; border: 1px solid #ccc;
+            background-color: white; transition: background-color 0.8s ease;
         }
-        .game-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background-color: #f0f0f0;
-            transition: background-color 0.5s ease;
-            border: 2px solid #444;
+
+        .hud { position: absolute; top: 10px; text-align: center; width: 100%; z-index: 10; }
+        .name-tag { font-size: 1rem; font-weight: bold; padding: 5px 15px; background: white; border-radius: 20px; border: 1px solid #ddd; display: inline-block; }
+        .score-val { font-size: 3.5rem; font-weight: 900; margin: 5px 0; color: #333; }
+
+        .tetris-board {
+            display: grid; grid-template-columns: repeat(10, 25px);
+            grid-template-rows: repeat(20, 25px); gap: 1px;
+            background-color: #444; border: 4px solid #333;
         }
-        .game {
-            display: grid;
-            grid-template-columns: repeat(10, 20px);
-            grid-template-rows: repeat(20, 20px);
-            gap: 1px;
-            background-color: #333;
+        .cell { width: 25px; height: 25px; background-color: #f9f9f9; }
+        .occupied { background-color: #777 !important; border: 0.5px solid #555; }
+
+        #lobby, .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.8); display: flex; justify-content: center; align-items: center; z-index: 1000;
         }
-        .cell {
-            width: 20px;
-            height: 20px;
-            background-color: #222;
+        
+        /* Overlay específico de cada mitad */
+        .local-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.7); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 50;
         }
-        .active {
-            background-color: #61dafb;
+
+        .quiz-card, .death-card {
+            background: white; padding: 25px; border-radius: 15px; text-align: center;
+            width: 80%; max-width: 350px; border: 4px solid #3498db; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
-        .occupied {
-            background-color: #777;
+        
+        .death-card { border-color: #e74c3c; }
+
+        .opt-btn, .retry-btn {
+            display: block; width: 100%; padding: 12px; margin: 8px 0;
+            border: 2px solid #eee; border-radius: 8px; cursor: pointer; font-weight: bold;
         }
-        .score, .clock {
-            font-size: 20px;
-            margin: 10px 0;
-        }
-        #player-names-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        #player-names-form {
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-        }
-        #player-names-form h2 {
-            margin-top: 0;
-        }
-        #player-names-form input {
-            margin: 10px;
-            padding: 8px;
-            width: 200px;
-        }
-        #player-names-form button {
-            margin-top: 10px;
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        #send-results {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            z-index: 100;
-        }
-        #send-results:hover {
-            background-color: #45a049;
-        }
-        #send-results:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-        #status-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1001;
-            display: none;
-        }
-        #status-message {
-            background-color: white;
-            padding: 40px;
-            border-radius: 15px;
-            text-align: center;
-            font-size: 36px;
-            font-weight: bold;
-            color: #155724;
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
-            min-width: 500px;
-            border: 5px solid #4CAF50;
-        }
-        #status-message.error {
-            color: #721c24;
-            border-color: #f44336;
-        }
-        #status-message.info {
-            color: #0c5460;
-            border-color: #2196F3;
-        }
+        .retry-btn { background: #2ecc71; color: white; border: none; font-size: 1.1rem; }
     </style>
 </head>
 <body>
 
-<div id="player-names-modal" style="display: flex;">
-    <div id="player-names-form">
-        <h2>Ingresa los nombres de los jugadores</h2>
-        <input type="text" id="player1-name" placeholder="Nombre del Jugador 1" required="">
-        <input type="text" id="player2-name" placeholder="Nombre del Jugador 2" required="">
-        <button id="start-game">Comenzar Juego</button>
+<div id="lobby">
+    <div style="text-align:center; background:white; padding:40px; border-radius:20px; border: 2px solid #ccc;">
+        <h2>🎮 TETRIS CYBER-DUELO</h2>
+        <p>1 punto por línea | Cada 10 pts: TEST | Morir: -25% puntos</p>
+        <input type="text" id="p1-in" value="ALUMNO 1" style="padding:10px; margin:5px;"><br>
+        <input type="text" id="p2-in" value="ALUMNO 2" style="padding:10px; margin:5px;"><br>
+        <button onclick="initGames()" style="padding:12px 40px; margin-top:15px; cursor:pointer; background:#3498db; color:white; border:none; border-radius:5px; font-weight:bold;">EMPEZAR JUEGO</button>
     </div>
 </div>
 
-<div id="status-overlay">
-    <div id="status-message"></div>
-</div>
-
-<div class="game-container" id="container1">
-    <div class="clock" id="clock1">Tiempo: 0s</div>
-    <div class="game" id="game1">
-        <!-- Las celdas se generarán dinámicamente -->
+<div class="player-section" id="section-0">
+    <div class="hud">
+        <div id="name-0" class="name-tag">---</div>
+        <div id="score-0" class="score-val">0</div>
     </div>
-    <div class="score" id="score1">Jugador 1: 0 puntos</div>
+    <div id="board-0" class="tetris-board"></div>
+    <div id="overlay-0" class="local-overlay" style="display:none"></div>
 </div>
 
-<div class="game-container" id="container2">
-    <div class="clock" id="clock2">Tiempo: 0s</div>
-    <div class="game" id="game2">
-        <!-- Las celdas se generarán dinámicamente -->
+<div class="player-section" id="section-1">
+    <div class="hud">
+        <div id="name-1" class="name-tag">---</div>
+        <div id="score-1" class="score-val">0</div>
     </div>
-    <div class="score" id="score2">Jugador 2: 0 puntos</div>
+    <div id="board-1" class="tetris-board"></div>
+    <div id="overlay-1" class="local-overlay" style="display:none"></div>
 </div>
-
-<button id="send-results">Enviar resultados a Google Sheets</button>
 
 <script>
-    let player1Name = "";
-    let player2Name = "";
-    let resultsSent = false;
-    let tetrisGame1 = null;
-    let tetrisGame2 = null;
+    const QUESTIONS = [
+        { q: "¿Contraseña segura?", a: ["1234", "Letras, números y símbolos", "Mi nombre"], c: 1 },
+        { q: "¿Phishing?", a: ["Deporte", "Engaño para robar claves", "Un pez"], c: 1 },
+        { q: "¿Link desconocido?", a: ["Abrir", "Borrar", "Reenviar"], c: 1 },
+        { q: "¿Wi-Fi pública?", a: ["Segura", "Peligrosa para datos", "Solo para juegos"], c: 1 },
+        { q: "¿Web sin candado?", a: ["Es mejor", "Riesgo de robo de datos", "Es gratis"], c: 1 }
+    ];
 
-    document.getElementById('start-game').addEventListener('click', startGame);
-    document.getElementById('send-results').addEventListener('click', sendResultsToGoogleSheets);
+    const PIECES = [
+        [[1, 1, 1, 1]], [[1, 1], [1, 1]], [[1, 1, 0], [0, 1, 1]],
+        [[0, 1, 1], [1, 1, 0]], [[1, 0, 0], [1, 1, 1]], [[0, 1, 0], [1, 1, 1]]
+    ];
 
-    function startGame() {
-        player1Name = document.getElementById('player1-name').value.trim();
-        player2Name = document.getElementById('player2-name').value.trim();
-        
-        if (!player1Name || !player2Name) {
-            alert("Por favor ingresa nombres para ambos jugadores");
-            return;
-        }
-        
-        document.getElementById('player-names-modal').style.display = 'none';
-        
-        // Actualizar los nombres en los marcadores
-        document.getElementById('score1').textContent = `${player1Name}: 0 puntos`;
-        document.getElementById('score2').textContent = `${player2Name}: 0 puntos`;
-        
-        // Iniciar los juegos
-        const player1Controls = { left: "a", right: "d", down: "s", rotate: "w" };
-        const player2Controls = { left: "ArrowLeft", right: "ArrowRight", down: "ArrowDown", rotate: "ArrowUp" };
+    let games = [];
 
-        // Limpiar juegos anteriores si existen
-        if (tetrisGame1) {
-            document.getElementById('game1').innerHTML = '';
-        }
-        if (tetrisGame2) {
-            document.getElementById('game2').innerHTML = '';
-        }
-
-        tetrisGame1 = new Tetris("game1", "clock1", "score1", "container1", player1Controls, player1Name);
-        tetrisGame2 = new Tetris("game2", "clock2", "score2", "container2", player2Controls, player2Name);
-        
-        // Resetear el estado de envío de resultados
-        resultsSent = false;
-        document.getElementById('send-results').disabled = false;
-        document.getElementById('send-results').textContent = "Enviar resultados a Google Sheets";
-        document.getElementById('status-overlay').style.display = 'none';
-    }
-
-    class Tetris {
-        constructor(gameId, clockId, scoreId, containerId, controls, playerName) {
-            this.game = document.getElementById(gameId);
-            this.clockDisplay = document.getElementById(clockId);
-            this.scoreDisplay = document.getElementById(scoreId);
-            this.container = document.getElementById(containerId);
-            this.rows = 20;
-            this.cols = 10;
-            this.grid = Array.from({ length: this.rows }, () => Array(this.cols).fill(0));
+    class TetrisGame {
+        constructor(id, name, color) {
+            this.id = id;
+            this.playerName = name;
+            this.color = color;
             this.score = 0;
-            this.currentPiece = null;
-            this.piecePosition = null;
-            this.startTime = Date.now();
-            this.controls = controls;
-            this.playerName = playerName;
+            this.nextQuizAt = 10;
+            this.grid = Array.from({ length: 20 }, () => Array(10).fill(0));
+            this.boardEl = document.getElementById(`board-${id}`);
+            this.scoreEl = document.getElementById(`score-${id}`);
+            this.nameEl = document.getElementById(`name-${id}`);
+            this.sectionEl = document.getElementById(`section-${id}`);
+            this.overlayEl = document.getElementById(`overlay-${id}`);
+            this.paused = false;
 
-            this.pieces = [
-                [[1, 1, 1, 1]], // I
-                [[1, 1], [1, 1]], // O
-                [[1, 1, 0], [0, 1, 1]], // Z
-                [[0, 1, 1], [1, 1, 0]], // S
-                [[1, 0, 0], [1, 1, 1]], // J
-                [[0, 0, 1], [1, 1, 1]], // L
-                [[0, 1, 0], [1, 1, 1]]  // T
-            ];
-
-            this.createBoard();
-            this.resetPiece();
-            this.updateClock();
-            this.gameLoop();
-
-            document.addEventListener("keydown", (event) => this.handleInput(event));
+            this.initCells();
+            this.spawnPiece();
+            this.updateUI();
+            this.run();
         }
 
-        createBoard() {
-            for (let i = 0; i < this.rows * this.cols; i++) {
-                const cell = document.createElement("div");
-                cell.classList.add("cell");
-                this.game.appendChild(cell);
+        initCells() {
+            this.boardEl.innerHTML = '';
+            for (let i = 0; i < 200; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                this.boardEl.appendChild(cell);
             }
         }
 
-        drawPiece() {
-            this.currentPiece.forEach((row, y) => {
-                row.forEach((cell, x) => {
-                    if (cell) {
-                        const index = (this.piecePosition.y + y) * this.cols + this.piecePosition.x + x;
-                        if (index >= 0 && index < this.rows * this.cols) {
-                            this.game.children[index].classList.add("active");
-                        }
-                    }
-                });
-            });
+        spawnPiece() {
+            this.current = PIECES[Math.floor(Math.random() * PIECES.length)];
+            this.pos = { x: 3, y: 0 };
+            if (this.collide()) this.gameOver();
         }
 
-        erasePiece() {
-            this.currentPiece.forEach((row, y) => {
-                row.forEach((cell, x) => {
-                    if (cell) {
-                        const index = (this.piecePosition.y + y) * this.cols + this.piecePosition.x + x;
-                        if (index >= 0 && index < this.rows * this.cols) {
-                            this.game.children[index].classList.remove("active");
-                        }
-                    }
-                });
-            });
+        collide(piece = this.current, pos = this.pos) {
+            return piece.some((row, y) => row.some((cell, x) => {
+                let nX = pos.x + x;
+                let nY = pos.y + y;
+                return cell && (nY >= 20 || nX < 0 || nX >= 10 || (nY >= 0 && this.grid[nY][nX]));
+            }));
         }
 
-        collides(piece, position) {
-            return piece.some((row, y) => {
-                return row.some((cell, x) => {
-                    if (cell) {
-                        const newX = position.x + x;
-                        const newY = position.y + y;
-                        if (newX < 0 || newX >= this.cols || newY >= this.rows || (newY >= 0 && this.grid[newY][newX])) {
-                            return true;
-                        }
-                    }
-                    return false;
-                });
-            });
+        merge() {
+            this.current.forEach((row, y) => row.forEach((cell, x) => {
+                if (cell) this.grid[this.pos.y + y][this.pos.x + x] = 1;
+            }));
         }
 
-        mergePiece() {
-            this.currentPiece.forEach((row, y) => {
-                row.forEach((cell, x) => {
-                    if (cell) {
-                        const posY = this.piecePosition.y + y;
-                        const posX = this.piecePosition.x + x;
-                        if (posY >= 0 && posY < this.rows && posX >= 0 && posX < this.cols) {
-                            this.grid[posY][posX] = cell;
-                        }
-                    }
-                });
-            });
-            this.updateGridDisplay();
-        }
-
-        updateGridDisplay() {
-            for (let y = 0; y < this.rows; y++) {
-                for (let x = 0; x < this.cols; x++) {
-                    const index = y * this.cols + x;
-                    this.game.children[index].classList.toggle("occupied", this.grid[y][x] === 1);
-                }
-            }
-        }
-
-        removeFullLines() {
-            let linesRemoved = 0;
-
+        clearLines() {
+            let lines = 0;
             this.grid = this.grid.filter(row => {
-                if (row.every(cell => cell)) {
-                    linesRemoved++;
-                    return false;
-                }
+                if (row.every(c => c)) { lines++; return false; }
                 return true;
             });
-
-            while (this.grid.length < this.rows) {
-                this.grid.unshift(Array(this.cols).fill(0));
-            }
-
-            if (linesRemoved > 0) {
-                setTimeout(() => {
-                    this.score += linesRemoved;
-                    this.updateScore();
-                }, 100);
+            while (this.grid.length < 20) this.grid.unshift(Array(10).fill(0));
+            
+            if (lines > 0) {
+                this.score += lines; // 1 PUNTO POR LÍNEA
+                this.updateUI();
+                if (this.score >= this.nextQuizAt) this.triggerQuiz();
             }
         }
 
-        updateScore() {
-            this.scoreDisplay.textContent = `${this.playerName}: ${this.score} puntos`;
-            if (this.score >= 60) {
-                this.container.style.backgroundColor = "darkyellow";
-            } else if (this.score >= 40) {
-                this.container.style.backgroundColor = "darkgreen";
-            } else if (this.score >= 20) {
-                this.container.style.backgroundColor = "darkblue";
-            } else {
-                this.container.style.backgroundColor = "#f0f0f0";
+        updateUI() {
+            this.scoreEl.innerText = this.score;
+            this.nameEl.innerHTML = `${this.playerName} <span style="color:#e67e22">[ ${this.score} x 4 = ${this.score * 4} ]</span>`;
+            
+            const colors = ["white", "#d6eaf8", "#d5f5e3", "#fcf3cf", "#fadbd8"];
+            let idx = Math.min(4, Math.floor(this.score/10));
+            this.sectionEl.style.backgroundColor = colors[idx];
+        }
+
+        triggerQuiz() {
+            this.paused = true;
+            this.nextQuizAt += 10;
+            const q = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
+            this.overlayEl.style.display = 'flex';
+            this.overlayEl.innerHTML = `
+                <div class="quiz-card">
+                    <h3>🛡️ RETO: ${q.q}</h3>
+                    ${q.a.map((opt, i) => `<button class="opt-btn" onclick="games[${this.id}].answer(${i}, ${q.c})">${opt}</button>`).join('')}
+                </div>`;
+        }
+
+        answer(idx, correct) {
+            if (idx !== correct) this.score = Math.max(0, this.score - 2);
+            this.overlayEl.style.display = 'none';
+            this.updateUI();
+            this.paused = false;
+        }
+
+        draw() {
+            const cells = this.boardEl.children;
+            for (let i = 0; i < 200; i++) {
+                let y = Math.floor(i / 10);
+                let x = i % 10;
+                cells[i].className = 'cell';
+                cells[i].style.backgroundColor = '';
+                if (this.grid[y][x]) cells[i].classList.add('occupied');
             }
+            this.current.forEach((row, y) => row.forEach((cell, x) => {
+                if (cell && this.pos.y + y >= 0) {
+                    const idx = (this.pos.y + y) * 10 + (this.pos.x + x);
+                    cells[idx].style.backgroundColor = this.color;
+                }
+            }));
         }
 
-        resetPiece() {
-            this.currentPiece = this.pieces[Math.floor(Math.random() * this.pieces.length)];
-            this.piecePosition = { x: Math.floor(this.cols / 2) - 1, y: 0 };
-
-            if (this.collides(this.currentPiece, this.piecePosition)) {
-                alert(`¡Juego terminado para ${this.playerName}!`);
-                this.score = Math.max(0, this.score - 2);
-                this.updateScore();
-                this.grid = Array.from({ length: this.rows }, () => Array(this.cols).fill(0));
-                this.updateGridDisplay();
-            }
-        }
-
-        updateClock() {
-            const elapsedTime = Math.floor((Date.now() - this.startTime) / 1000);
-            this.clockDisplay.textContent = `Tiempo: ${elapsedTime}s`;
-            requestAnimationFrame(() => this.updateClock());
-        }
-
-        gameLoop() {
-            this.erasePiece();
-            this.piecePosition.y++;
-
-            if (this.collides(this.currentPiece, this.piecePosition)) {
-                this.piecePosition.y--;
-                this.mergePiece();
-                this.removeFullLines();
-                this.resetPiece();
-            }
-
-            this.drawPiece();
-            setTimeout(() => this.gameLoop(), 500);
-        }
-
-        handleInput(event) {
-            const { left, right, down, rotate } = this.controls;
-
-            this.erasePiece();
-
-            if (event.key === left && !this.collides(this.currentPiece, { x: this.piecePosition.x - 1, y: this.piecePosition.y })) {
-                this.piecePosition.x--;
-            } else if (event.key === right && !this.collides(this.currentPiece, { x: this.piecePosition.x + 1, y: this.piecePosition.y })) {
-                this.piecePosition.x++;
-            } else if (event.key === down && !this.collides(this.currentPiece, { x: this.piecePosition.x, y: this.piecePosition.y + 1 })) {
-                this.piecePosition.y++;
-            } else if (event.key === rotate) {
-                const rotatedPiece = this.currentPiece[0].map((_, i) => this.currentPiece.map(row => row[i])).reverse();
-                if (!this.collides(rotatedPiece, this.piecePosition)) {
-                    this.currentPiece = rotatedPiece;
+        move(dx, dy) {
+            if (this.paused) return;
+            this.pos.x += dx;
+            this.pos.y += dy;
+            if (this.collide()) {
+                this.pos.x -= dx;
+                this.pos.y -= dy;
+                if (dy > 0) {
+                    this.merge();
+                    this.clearLines();
+                    this.spawnPiece();
                 }
             }
-
-            this.drawPiece();
+            this.draw();
         }
-        
-        getScore() {
-            return this.score;
+
+        rotate() {
+            if (this.paused) return;
+            const prev = this.current;
+            this.current = this.current[0].map((_, i) => this.current.map(row => row[i]).reverse());
+            if (this.collide()) this.current = prev;
+            this.draw();
+        }
+
+        gameOver() {
+            this.paused = true;
+            // Quitar el 25% de los puntos (se queda con el 75%)
+            this.score = Math.floor(this.score * 0.75);
+            this.updateUI();
+
+            this.overlayEl.style.display = 'flex';
+            let countdown = 5;
+            
+            const updateDeathUI = () => {
+                this.overlayEl.innerHTML = `
+                    <div class="death-card">
+                        <h2>¡BLOQUEADO!</h2>
+                        <p>Penalización: -25% puntos</p>
+                        <p style="font-size:20px">Espera: <b>${countdown}s</b></p>
+                    </div>`;
+            };
+
+            updateDeathUI();
+
+            const timer = setInterval(() => {
+                countdown--;
+                updateDeathUI();
+                if (countdown <= 0) {
+                    clearInterval(timer);
+                    this.overlayEl.innerHTML = `
+                        <div class="death-card">
+                            <h2>¿LISTO?</h2>
+                            <p>Tu puntuación actual es ${this.score}</p>
+                            <button class="retry-btn" onclick="games[${this.id}].retry()">SEGUIR JUGANDO</button>
+                        </div>`;
+                }
+            }, 1000);
+        }
+
+        retry() {
+            this.grid = Array.from({ length: 20 }, () => Array(10).fill(0));
+            this.overlayEl.style.display = 'none';
+            this.spawnPiece();
+            this.paused = false;
+            this.updateUI();
+        }
+
+        run() {
+            setInterval(() => { if(!this.paused) this.move(0, 1); }, 800);
         }
     }
 
-    function sendResultsToGoogleSheets() {
-        const sendButton = document.getElementById('send-results');
-        const statusMessage = document.getElementById('status-message');
-        const statusOverlay = document.getElementById('status-overlay');
-        
-        // Verificar si ya se enviaron los resultados
-        if (resultsSent) {
-            statusMessage.textContent = "¡Los resultados ya fueron enviados!";
-            statusMessage.className = "info";
-            statusOverlay.style.display = 'flex';
-            setTimeout(() => {
-                statusOverlay.style.display = 'none';
-            }, 3000);
-            return;
-        }
-        
-        if (!player1Name || !player2Name) {
-            statusMessage.textContent = "Error: No se han definido los nombres de los jugadores";
-            statusMessage.className = "error";
-            statusOverlay.style.display = 'flex';
-            setTimeout(() => {
-                statusOverlay.style.display = 'none';
-            }, 3000);
-            return;
-        }
-
-        const score1 = tetrisGame1 ? tetrisGame1.getScore() : 0;
-        const score2 = tetrisGame2 ? tetrisGame2.getScore() : 0;
-        const timestamp = new Date().toLocaleString();
-
-        const data = {
-            player1: "Tetris " + player1Name,
-            score1: score1,
-            player2: "Tetris " + player2Name,
-            score2: score2,
-            timestamp: timestamp
-        };
-
-        // Deshabilitar el botón inmediatamente y marcar como enviado
-        resultsSent = true;
-        sendButton.disabled = true;
-        sendButton.textContent = "Resultados enviados";
-        
-        // Mostrar mensaje de "enviando" en el centro de la pantalla
-        statusMessage.textContent = "ENVIANDO RESULTADOS...";
-        statusMessage.className = "info";
-        statusOverlay.style.display = 'flex';
-
-        // URL del Web App de Google Apps Script
-        const scriptUrl = "https://script.google.com/macros/s/AKfycbwVPttSZrhwfWwSZpFo7KWjJ39vldQm3MPGykMWEPWOoF4UsZ24mC8YhgiaE-0xm_7G/exec";
-
-        fetch(scriptUrl, {
-            method: "POST",
-            mode: "no-cors",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data)
-        })
-        .then(() => {
-            statusMessage.textContent = "¡RESULTADOS ENVIADOS CORRECTAMENTE!";
-            statusMessage.className = "success";
-            // Mantener el mensaje visible por 5 segundos
-            setTimeout(() => {
-                statusOverlay.style.display = 'none';
-            }, 5000);
-        })
-        .catch(error => {
-            statusMessage.textContent = "ERROR AL ENVIAR RESULTADOS";
-            statusMessage.className = "error";
-            console.error("Error:", error);
-            
-            // Rehabilitar el botón en caso de error
-            resultsSent = false;
-            sendButton.disabled = false;
-            sendButton.textContent = "Enviar resultados a Google Sheets";
-            
-            // Ocultar el mensaje después de 3 segundos
-            setTimeout(() => {
-                statusOverlay.style.display = 'none';
-            }, 3000);
-        });
+    function initGames() {
+        const p1 = document.getElementById('p1-in').value;
+        const p2 = document.getElementById('p2-in').value;
+        document.getElementById('lobby').style.display = 'none';
+        games[0] = new TetrisGame(0, p1, '#3498db');
+        games[1] = new TetrisGame(1, p2, '#e91e63');
     }
+
+    window.addEventListener('keydown', e => {
+        const k = e.key.toLowerCase();
+        if (k === 'a') games[0].move(-1, 0);
+        if (k === 'd') games[0].move(1, 0);
+        if (k === 's') games[0].move(0, 1);
+        if (k === 'w') games[0].rotate();
+        if (k === 'arrowleft') games[1].move(-1, 0);
+        if (k === 'arrowright') games[1].move(1, 0);
+        if (k === 'arrowdown') games[1].move(0, 1);
+        if (k === 'arrowup') games[1].rotate();
+    });
 </script>
 </body>
 </html>
