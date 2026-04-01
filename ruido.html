@@ -69,8 +69,8 @@
         }
         button:disabled { background-color: #444; cursor: not-allowed; }
         
-        #punishmentBtn { background-color: #9c27b0; }
-        #resetPunishmentBtn { background-color: #f44336; display: none; }
+        #correctionBtn { background-color: #9c27b0; }
+        #resetCorrectionBtn { background-color: #f44336; display: none; }
 
         .status-container { text-align: center; margin-top: 10px; }
         #db-display { font-size: 1.2rem; font-weight: bold; display: block; margin-bottom: 5px; }
@@ -130,14 +130,9 @@
             </div>
         </div>
 
-        <div class="control-group">
-            <label>Minutos de Silencio (Castigo):</label>
-            <input type="number" id="punishMinutes" value="5" min="1">
-        </div>
-
         <button id="startBtn">Iniciar Monitor Normal</button>
-        <button id="punishmentBtn">Iniciar Modo Silencio (Castigo)</button>
-        <button id="resetPunishmentBtn">Reiniciar Temporizador de Castigo</button>
+        <button id="correctionBtn">Iniciar Modo Silencio (Corrección)</button>
+        <button id="resetCorrectionBtn">Reiniciar Temporizador de Corrección</button>
 
         <div id="visualizer">
             <div id="bar"></div>
@@ -173,8 +168,8 @@
                 <p>Cada vez que suena la alarma, sube el contador y el vaso se va llenando. Si se alcanza el "Avisos para límite" (ej. 10 veces), saltará un mensaje parpadeante en pantalla.</p>
             </details>
             <details>
-                <summary>Modo Silencio (Castigo)</summary>
-                <p>Activa una cuenta atrás según los "Minutos de Silencio". Durante este tiempo la clase debe estar callada. Si hacen ruido (superan el umbral) durante más de 2 segundos, el temporizador se detiene, avisa del fallo y te obliga a reiniciarlo desde cero con el botón rojo.</p>
+                <summary>Modo Silencio (Corrección)</summary>
+                <p>Al pulsarlo, te preguntará cuántos minutos de corrección quieres aplicar y activará una cuenta atrás. Durante este tiempo la clase debe estar callada. Si hacen ruido (superan el umbral) durante más de 2 segundos, el temporizador se detiene, avisa del fallo y te obliga a reiniciarlo desde cero con el botón rojo.</p>
             </details>
             <button class="close-btn" onclick="document.getElementById('helpModal').style.display='none'">Cerrar</button>
         </div>
@@ -182,8 +177,8 @@
 
     <script>
         const startBtn = document.getElementById('startBtn');
-        const punishmentBtn = document.getElementById('punishmentBtn');
-        const resetPunishmentBtn = document.getElementById('resetPunishmentBtn');
+        const correctionBtn = document.getElementById('correctionBtn');
+        const resetCorrectionBtn = document.getElementById('resetCorrectionBtn');
         const dbDisplay = document.getElementById('db-display');
         const timerDisplay = document.getElementById('timer-display');
         const bar = document.getElementById('bar');
@@ -196,7 +191,6 @@
         const persistInput = document.getElementById('persistSeconds');
         const durationInput = document.getElementById('alarmDuration');
         const maxWarningsInput = document.getElementById('maxWarnings');
-        const punishMinutesInput = document.getElementById('punishMinutes');
 
         let audioContext, analyser, microphone;
         let isRunning = false;
@@ -205,10 +199,11 @@
         
         // Variables nuevas
         let warnings = 0;
-        let isPunishmentMode = false;
-        let punishmentSecondsLeft = 0;
-        let punishmentInterval = null;
-        let punishmentNoiseStartTime = null;
+        let isCorrectionMode = false;
+        let correctionSecondsLeft = 0;
+        let correctionInterval = null;
+        let correctionNoiseStartTime = null;
+        let currentCorrectionMinutes = 5; // Variable para guardar el tiempo elegido
 
         async function initAudio() {
             if (audioContext) return true;
@@ -231,7 +226,6 @@
             persistInput.disabled = locked;
             durationInput.disabled = locked;
             maxWarningsInput.disabled = locked;
-            punishMinutesInput.disabled = locked;
         }
 
         // --- MODO NORMAL ---
@@ -239,16 +233,16 @@
             if (!await initAudio()) return;
             
             isRunning = true;
-            isPunishmentMode = false;
+            isCorrectionMode = false;
             lockInputs(true);
             startBtn.disabled = true;
             startBtn.innerText = "Escuchando...";
-            punishmentBtn.disabled = true;
+            correctionBtn.disabled = true;
 
             monitorNormal();
         });
 
-        const dataArray = new Uint8Array(256); // analyser.frequencyBinCount = 128
+        const dataArray = new Uint8Array(256);
 
         function getVolume() {
             analyser.getByteFrequencyData(dataArray);
@@ -262,7 +256,7 @@
         }
 
         function monitorNormal() {
-            if (!isRunning || isPunishmentMode) return;
+            if (!isRunning || isCorrectionMode) return;
             
             let volume = getVolume();
             updateUI(volume);
@@ -297,7 +291,6 @@
             warningCountDisplay.innerText = warnings;
             let maxW = parseInt(maxWarningsInput.value);
             
-            // Llenar vaso
             let percentage = Math.min((warnings / maxW) * 100, 100);
             liquidBar.style.height = percentage + "%";
 
@@ -306,59 +299,69 @@
             }
         }
 
-        // --- MODO SILENCIO (CASTIGO) ---
-        punishmentBtn.addEventListener('click', async () => {
+        // --- MODO SILENCIO (CORRECCIÓN) ---
+        correctionBtn.addEventListener('click', async () => {
             if (!await initAudio()) return;
-            startPunishment();
+            
+            // Preguntar al usuario los minutos cuando pulsa el botón
+            let userInput = prompt("Introduce los minutos para el modo corrección:", "5");
+            
+            if (userInput === null || userInput.trim() === "" || isNaN(userInput) || userInput <= 0) {
+                alert("Valor no válido o cancelado. No se iniciará el modo corrección.");
+                return; // Cancelar si el usuario no pone un número válido
+            }
+
+            currentCorrectionMinutes = parseFloat(userInput);
+            startCorrection();
         });
 
-        resetPunishmentBtn.addEventListener('click', () => {
-            startPunishment();
+        resetCorrectionBtn.addEventListener('click', () => {
+            startCorrection(); // Reinicia usando el tiempo guardado en currentCorrectionMinutes
         });
 
-        function startPunishment() {
+        function startCorrection() {
             isRunning = true;
-            isPunishmentMode = true;
+            isCorrectionMode = true;
             isAlarmPlaying = false;
-            punishmentNoiseStartTime = null;
+            correctionNoiseStartTime = null;
             
             lockInputs(true);
             startBtn.style.display = 'none';
-            punishmentBtn.style.display = 'none';
-            resetPunishmentBtn.style.display = 'block';
+            correctionBtn.style.display = 'none';
+            resetCorrectionBtn.style.display = 'block';
             
-            punishmentSecondsLeft = parseInt(punishMinutesInput.value) * 60;
+            correctionSecondsLeft = Math.floor(currentCorrectionMinutes * 60);
             
-            clearInterval(punishmentInterval);
-            punishmentInterval = setInterval(updatePunishmentTimer, 1000);
+            clearInterval(correctionInterval);
+            correctionInterval = setInterval(updateCorrectionTimer, 1000);
             
-            monitorPunishment();
+            monitorCorrection();
         }
 
-        function updatePunishmentTimer() {
-            if (punishmentSecondsLeft <= 0) {
-                clearInterval(punishmentInterval);
-                timerDisplay.innerText = "🎉 ¡Castigo superado! Silencio conseguido.";
+        function updateCorrectionTimer() {
+            if (correctionSecondsLeft <= 0) {
+                clearInterval(correctionInterval);
+                timerDisplay.innerText = "🎉 ¡Corrección superada! Silencio conseguido.";
                 timerDisplay.style.color = "#4caf50";
                 isRunning = false;
-                resetPunishmentBtn.style.display = 'none';
+                resetCorrectionBtn.style.display = 'none';
                 startBtn.style.display = 'block';
-                punishmentBtn.style.display = 'block';
+                correctionBtn.style.display = 'block';
                 startBtn.disabled = false;
                 startBtn.innerText = "Iniciar Monitor Normal";
-                punishmentBtn.disabled = false;
+                correctionBtn.disabled = false;
                 lockInputs(false);
                 return;
             }
-            punishmentSecondsLeft--;
-            let mins = Math.floor(punishmentSecondsLeft / 60);
-            let secs = punishmentSecondsLeft % 60;
+            correctionSecondsLeft--;
+            let mins = Math.floor(correctionSecondsLeft / 60);
+            let secs = correctionSecondsLeft % 60;
             timerDisplay.innerText = `🤫 MODO SILENCIO: ${mins}m ${secs}s restantes`;
             timerDisplay.style.color = "#ffeb3b";
         }
 
-        function monitorPunishment() {
-            if (!isRunning || !isPunishmentMode) return;
+        function monitorCorrection() {
+            if (!isRunning || !isCorrectionMode) return;
 
             let volume = getVolume();
             updateUI(volume);
@@ -366,27 +369,25 @@
             const limit = parseInt(thresholdInput.value);
 
             if (volume > limit && !isAlarmPlaying) {
-                if (!punishmentNoiseStartTime) punishmentNoiseStartTime = Date.now();
+                if (!correctionNoiseStartTime) correctionNoiseStartTime = Date.now();
                 
-                let elapsed = Date.now() - punishmentNoiseStartTime;
+                let elapsed = Date.now() - correctionNoiseStartTime;
                 bar.style.backgroundColor = "#ff9800"; 
                 
-                // Si llevan más de 2 segundos de ruido continuo en modo castigo
                 if (elapsed >= 2000) {
-                    clearInterval(punishmentInterval); // Detenemos el tiempo
-                    timerDisplay.innerText = "❌ ¡Castigo roto por ruido! Pulsa Reiniciar.";
+                    clearInterval(correctionInterval); 
+                    timerDisplay.innerText = "❌ ¡Corrección rota por ruido! Pulsa Reiniciar.";
                     timerDisplay.style.color = "#f44336";
-                    isRunning = false; // Paramos de monitorizar hasta que el profe reinicie
+                    isRunning = false; 
                     playWarningBeep();
                 }
             } else {
-                punishmentNoiseStartTime = null;
+                correctionNoiseStartTime = null;
                 bar.style.backgroundColor = "#9c27b0";
             }
 
-            if(isRunning) requestAnimationFrame(monitorPunishment);
+            if(isRunning) requestAnimationFrame(monitorCorrection);
         }
-
 
         // --- SONIDOS ---
         function playAlarm() {
@@ -399,7 +400,7 @@
             const gain = audioContext.createGain();
 
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(3000, audioContext.currentTime); // Agudo molesto
+            osc.frequency.setValueAtTime(3000, audioContext.currentTime); 
             
             osc.connect(gain);
             gain.connect(audioContext.destination);
@@ -418,12 +419,12 @@
             const gain = audioContext.createGain();
 
             osc.type = 'square';
-            osc.frequency.setValueAtTime(500, audioContext.currentTime); // Sonido más grave de error
+            osc.frequency.setValueAtTime(500, audioContext.currentTime); 
             
             osc.connect(gain);
             gain.connect(audioContext.destination);
             osc.start();
-            setTimeout(() => osc.stop(), 1500); // 1.5 segundos de aviso de fallo
+            setTimeout(() => osc.stop(), 1500); 
         }
     </script>
 </body>
