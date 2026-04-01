@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detector Pro Personalizable</title>
+    <title>Detector de Ruido Pro - Modo Aula</title>
     <style>
         body {
             font-family: 'Segoe UI', sans-serif;
@@ -12,53 +12,132 @@
         }
         .card {
             background: #1e1e1e; padding: 25px; border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5); width: 100%; max-width: 400px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); width: 100%; max-width: 450px;
+            position: relative;
         }
         h2 { margin-top: 0; color: #007bff; text-align: center; }
-        .control-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; color: #bbb; font-size: 0.9rem; }
+        
+        /* Botón de Ayuda */
+        #helpBtn {
+            position: absolute; top: 15px; right: 15px;
+            background: #ffc107; color: #000; border: none;
+            border-radius: 50%; width: 30px; height: 30px;
+            font-weight: bold; cursor: pointer; font-size: 1.1rem;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        /* Modal de Ayuda */
+        #helpModal {
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; background: rgba(0,0,0,0.8);
+            z-index: 1000; justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background: #2d2d2d; padding: 20px; border-radius: 10px;
+            max-width: 400px; width: 90%; max-height: 80vh; overflow-y: auto;
+        }
+        .close-btn {
+            background: #dc3545; color: white; border: none; padding: 8px 15px;
+            border-radius: 5px; cursor: pointer; float: right; margin-top: 10px;
+        }
+        .modal-content details {
+            background: #1e1e1e; margin-bottom: 5px; padding: 10px; border-radius: 5px;
+        }
+        .modal-content summary { font-weight: bold; cursor: pointer; color: #007bff; }
+
+        .control-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 5px; color: #bbb; font-size: 0.85rem; }
         input {
-            width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #333;
+            width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #333;
             background: #2d2d2d; color: white; box-sizing: border-box; font-size: 1rem;
         }
+        
+        .flex-row { display: flex; gap: 10px; }
+        .flex-row .control-group { flex: 1; }
+
         #visualizer {
             width: 100%; height: 25px; background: #333;
-            border-radius: 12px; overflow: hidden; margin: 20px 0;
+            border-radius: 12px; overflow: hidden; margin: 15px 0;
             border: 1px solid #444;
         }
-        #bar { width: 0%; height: 100%; background: #4caf50; transition: width 0.1s; }
+        #bar { width: 0%; height: 100%; background: #4caf50; transition: width 0.1s, background-color 0.3s; }
+        
         button {
-            width: 100%; padding: 15px; font-size: 1.1rem; font-weight: bold;
+            width: 100%; padding: 12px; font-size: 1rem; font-weight: bold;
             background-color: #007bff; color: white; border: none;
-            border-radius: 8px; cursor: pointer; transition: background 0.3s;
+            border-radius: 8px; cursor: pointer; transition: background 0.3s; margin-top: 5px;
         }
         button:disabled { background-color: #444; cursor: not-allowed; }
-        #db-display { font-size: 1.2rem; font-weight: bold; display: block; margin-bottom: 5px; }
-        #timer-display { font-size: 1rem; color: #ffeb3b; min-height: 1.2rem; }
+        
+        #punishmentBtn { background-color: #9c27b0; }
+        #resetPunishmentBtn { background-color: #f44336; display: none; }
+
         .status-container { text-align: center; margin-top: 10px; }
+        #db-display { font-size: 1.2rem; font-weight: bold; display: block; margin-bottom: 5px; }
+        #timer-display { font-size: 1rem; color: #ffeb3b; min-height: 1.2rem; font-weight: bold;}
+
+        /* Zona del Contador y Vaso */
+        .counter-section {
+            display: flex; justify-content: space-around; align-items: center;
+            background: #252525; padding: 15px; border-radius: 10px; margin-top: 15px;
+        }
+        .counter-text { text-align: center; }
+        .counter-number { font-size: 3rem; font-weight: bold; color: #f44336; line-height: 1; }
+        
+        .glass-container {
+            width: 40px; height: 100px; border: 3px solid #ccc;
+            border-radius: 0 0 10px 10px; border-top: none;
+            position: relative; overflow: hidden; background: #111;
+        }
+        .liquid {
+            position: absolute; bottom: 0; width: 100%; height: 0%;
+            background-color: #f44336; transition: height 0.5s ease-in-out;
+        }
+
+        #final-message {
+            color: #ff5252; font-size: 1.2rem; font-weight: bold; text-align: center;
+            margin-top: 15px; text-transform: uppercase; display: none; animation: blink 1s infinite;
+        }
+
+        @keyframes blink { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h2>Configuración</h2>
+        <button id="helpBtn" onclick="document.getElementById('helpModal').style.display='flex'">?</button>
+        <h2>Control de Aula</h2>
         
-        <div class="control-group">
-            <label>Umbral de Activación (0-100):</label>
-            <input type="number" id="threshold" value="70" min="1" max="100">
+        <div class="flex-row">
+            <div class="control-group">
+                <label>Umbral Ruido (0-100):</label>
+                <input type="number" id="threshold" value="70" min="1" max="100">
+            </div>
+            <div class="control-group">
+                <label>Avisos para límite:</label>
+                <input type="number" id="maxWarnings" value="10" min="1">
+            </div>
+        </div>
+
+        <div class="flex-row">
+            <div class="control-group">
+                <label>Segundos para pitar:</label>
+                <input type="number" id="persistSeconds" value="3" min="1">
+            </div>
+            <div class="control-group">
+                <label>Duración pitido (s):</label>
+                <input type="number" id="alarmDuration" value="3" min="1">
+            </div>
         </div>
 
         <div class="control-group">
-            <label>Segundos de ruido constante:</label>
-            <input type="number" id="persistSeconds" value="3" min="1">
+            <label>Minutos de Silencio (Castigo):</label>
+            <input type="number" id="punishMinutes" value="5" min="1">
         </div>
 
-        <div class="control-group">
-            <label>Duración de la alarma (segundos):</label>
-            <input type="number" id="alarmDuration" value="20" min="1">
-        </div>
-
-        <button id="startBtn">Iniciar Monitor</button>
+        <button id="startBtn">Iniciar Monitor Normal</button>
+        <button id="punishmentBtn">Iniciar Modo Silencio (Castigo)</button>
+        <button id="resetPunishmentBtn">Reiniciar Temporizador de Castigo</button>
 
         <div id="visualizer">
             <div id="bar"></div>
@@ -66,82 +145,250 @@
         
         <div class="status-container">
             <span id="db-display">Nivel: 0</span>
-            <div id="timer-display"></div>
+            <div id="timer-display">✅ Sistema inactivo</div>
+        </div>
+
+        <div class="counter-section">
+            <div class="counter-text">
+                <div>Avisos Alcanzados</div>
+                <div class="counter-number" id="warningCount">0</div>
+            </div>
+            <div class="glass-container">
+                <div class="liquid" id="liquidBar"></div>
+            </div>
+        </div>
+
+        <div id="final-message">¡EL LÍMITE DE RUIDO EN CLASE SE HA SUPERADO!</div>
+    </div>
+
+    <div id="helpModal">
+        <div class="modal-content">
+            <h3 style="margin-top:0; color:#007bff;">Cómo funciona el programa</h3>
+            <details>
+                <summary>Umbral y Segundos para pitar</summary>
+                <p>Define el nivel de ruido máximo permitido (0 a 100). Si la clase supera este nivel de forma constante durante los "Segundos para pitar", sonará la alarma.</p>
+            </details>
+            <details>
+                <summary>Avisos para límite y Contador</summary>
+                <p>Cada vez que suena la alarma, sube el contador y el vaso se va llenando. Si se alcanza el "Avisos para límite" (ej. 10 veces), saltará un mensaje parpadeante en pantalla.</p>
+            </details>
+            <details>
+                <summary>Modo Silencio (Castigo)</summary>
+                <p>Activa una cuenta atrás según los "Minutos de Silencio". Durante este tiempo la clase debe estar callada. Si hacen ruido (superan el umbral) durante más de 2 segundos, el temporizador se detiene, avisa del fallo y te obliga a reiniciarlo desde cero con el botón rojo.</p>
+            </details>
+            <button class="close-btn" onclick="document.getElementById('helpModal').style.display='none'">Cerrar</button>
         </div>
     </div>
 
     <script>
         const startBtn = document.getElementById('startBtn');
+        const punishmentBtn = document.getElementById('punishmentBtn');
+        const resetPunishmentBtn = document.getElementById('resetPunishmentBtn');
         const dbDisplay = document.getElementById('db-display');
         const timerDisplay = document.getElementById('timer-display');
         const bar = document.getElementById('bar');
+        const warningCountDisplay = document.getElementById('warningCount');
+        const liquidBar = document.getElementById('liquidBar');
+        const finalMessage = document.getElementById('final-message');
         
         // Inputs
         const thresholdInput = document.getElementById('threshold');
         const persistInput = document.getElementById('persistSeconds');
         const durationInput = document.getElementById('alarmDuration');
+        const maxWarningsInput = document.getElementById('maxWarnings');
+        const punishMinutesInput = document.getElementById('punishMinutes');
 
         let audioContext, analyser, microphone;
+        let isRunning = false;
         let isAlarmPlaying = false;
         let highLevelStartTime = null;
+        
+        // Variables nuevas
+        let warnings = 0;
+        let isPunishmentMode = false;
+        let punishmentSecondsLeft = 0;
+        let punishmentInterval = null;
+        let punishmentNoiseStartTime = null;
 
-        startBtn.addEventListener('click', async () => {
+        async function initAudio() {
+            if (audioContext) return true;
             try {
-                // Inicializar audio tras interacción del usuario
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                
-                // Bloquear inputs para evitar cambios durante el funcionamiento
-                startBtn.disabled = true;
-                startBtn.innerText = "Escuchando...";
-                thresholdInput.disabled = true;
-                persistInput.disabled = true;
-                durationInput.disabled = true;
-
                 analyser = audioContext.createAnalyser();
                 analyser.fftSize = 256;
                 microphone = audioContext.createMediaStreamSource(stream);
                 microphone.connect(analyser);
-
-                const dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-                function monitor() {
-                    analyser.getByteFrequencyData(dataArray);
-                    let average = dataArray.reduce((a, b) => a + b) / dataArray.length;
-                    let volume = Math.round(average);
-                    
-                    dbDisplay.innerText = "Nivel Actual: " + volume;
-                    bar.style.width = Math.min(volume, 100) + "%";
-
-                    const limit = parseInt(thresholdInput.value);
-                    const waitTime = parseInt(persistInput.value) * 1000;
-
-                    if (volume > limit && !isAlarmPlaying) {
-                        if (!highLevelStartTime) highLevelStartTime = Date.now();
-                        
-                        let elapsed = Date.now() - highLevelStartTime;
-                        let remaining = Math.max(0, (waitTime - elapsed) / 1000);
-                        
-                        timerDisplay.innerText = `⚠️ Nivel alto... (${remaining.toFixed(1)}s)`;
-                        bar.style.backgroundColor = "#ff9800"; 
-
-                        if (elapsed >= waitTime) {
-                            playAlarm();
-                        }
-                    } else if (!isAlarmPlaying) {
-                        highLevelStartTime = null;
-                        timerDisplay.innerText = "✅ Ambiente normal";
-                        bar.style.backgroundColor = "#4caf50";
-                    }
-
-                    requestAnimationFrame(monitor);
-                }
-                monitor();
+                return true;
             } catch (err) {
                 alert("Error de acceso al micrófono: " + err);
+                return false;
             }
+        }
+
+        function lockInputs(locked) {
+            thresholdInput.disabled = locked;
+            persistInput.disabled = locked;
+            durationInput.disabled = locked;
+            maxWarningsInput.disabled = locked;
+            punishMinutesInput.disabled = locked;
+        }
+
+        // --- MODO NORMAL ---
+        startBtn.addEventListener('click', async () => {
+            if (!await initAudio()) return;
+            
+            isRunning = true;
+            isPunishmentMode = false;
+            lockInputs(true);
+            startBtn.disabled = true;
+            startBtn.innerText = "Escuchando...";
+            punishmentBtn.disabled = true;
+
+            monitorNormal();
         });
 
+        const dataArray = new Uint8Array(256); // analyser.frequencyBinCount = 128
+
+        function getVolume() {
+            analyser.getByteFrequencyData(dataArray);
+            let average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+            return Math.round(average);
+        }
+
+        function updateUI(volume) {
+            dbDisplay.innerText = "Nivel Actual: " + volume;
+            bar.style.width = Math.min(volume, 100) + "%";
+        }
+
+        function monitorNormal() {
+            if (!isRunning || isPunishmentMode) return;
+            
+            let volume = getVolume();
+            updateUI(volume);
+
+            const limit = parseInt(thresholdInput.value);
+            const waitTime = parseInt(persistInput.value) * 1000;
+
+            if (volume > limit && !isAlarmPlaying) {
+                if (!highLevelStartTime) highLevelStartTime = Date.now();
+                
+                let elapsed = Date.now() - highLevelStartTime;
+                let remaining = Math.max(0, (waitTime - elapsed) / 1000);
+                
+                timerDisplay.innerText = `⚠️ Nivel alto... (${remaining.toFixed(1)}s)`;
+                bar.style.backgroundColor = "#ff9800"; 
+
+                if (elapsed >= waitTime) {
+                    playAlarm();
+                    addWarning();
+                }
+            } else if (!isAlarmPlaying) {
+                highLevelStartTime = null;
+                timerDisplay.innerText = "✅ Ambiente normal";
+                bar.style.backgroundColor = "#4caf50";
+            }
+
+            requestAnimationFrame(monitorNormal);
+        }
+
+        function addWarning() {
+            warnings++;
+            warningCountDisplay.innerText = warnings;
+            let maxW = parseInt(maxWarningsInput.value);
+            
+            // Llenar vaso
+            let percentage = Math.min((warnings / maxW) * 100, 100);
+            liquidBar.style.height = percentage + "%";
+
+            if (warnings >= maxW) {
+                finalMessage.style.display = "block";
+            }
+        }
+
+        // --- MODO SILENCIO (CASTIGO) ---
+        punishmentBtn.addEventListener('click', async () => {
+            if (!await initAudio()) return;
+            startPunishment();
+        });
+
+        resetPunishmentBtn.addEventListener('click', () => {
+            startPunishment();
+        });
+
+        function startPunishment() {
+            isRunning = true;
+            isPunishmentMode = true;
+            isAlarmPlaying = false;
+            punishmentNoiseStartTime = null;
+            
+            lockInputs(true);
+            startBtn.style.display = 'none';
+            punishmentBtn.style.display = 'none';
+            resetPunishmentBtn.style.display = 'block';
+            
+            punishmentSecondsLeft = parseInt(punishMinutesInput.value) * 60;
+            
+            clearInterval(punishmentInterval);
+            punishmentInterval = setInterval(updatePunishmentTimer, 1000);
+            
+            monitorPunishment();
+        }
+
+        function updatePunishmentTimer() {
+            if (punishmentSecondsLeft <= 0) {
+                clearInterval(punishmentInterval);
+                timerDisplay.innerText = "🎉 ¡Castigo superado! Silencio conseguido.";
+                timerDisplay.style.color = "#4caf50";
+                isRunning = false;
+                resetPunishmentBtn.style.display = 'none';
+                startBtn.style.display = 'block';
+                punishmentBtn.style.display = 'block';
+                startBtn.disabled = false;
+                startBtn.innerText = "Iniciar Monitor Normal";
+                punishmentBtn.disabled = false;
+                lockInputs(false);
+                return;
+            }
+            punishmentSecondsLeft--;
+            let mins = Math.floor(punishmentSecondsLeft / 60);
+            let secs = punishmentSecondsLeft % 60;
+            timerDisplay.innerText = `🤫 MODO SILENCIO: ${mins}m ${secs}s restantes`;
+            timerDisplay.style.color = "#ffeb3b";
+        }
+
+        function monitorPunishment() {
+            if (!isRunning || !isPunishmentMode) return;
+
+            let volume = getVolume();
+            updateUI(volume);
+
+            const limit = parseInt(thresholdInput.value);
+
+            if (volume > limit && !isAlarmPlaying) {
+                if (!punishmentNoiseStartTime) punishmentNoiseStartTime = Date.now();
+                
+                let elapsed = Date.now() - punishmentNoiseStartTime;
+                bar.style.backgroundColor = "#ff9800"; 
+                
+                // Si llevan más de 2 segundos de ruido continuo en modo castigo
+                if (elapsed >= 2000) {
+                    clearInterval(punishmentInterval); // Detenemos el tiempo
+                    timerDisplay.innerText = "❌ ¡Castigo roto por ruido! Pulsa Reiniciar.";
+                    timerDisplay.style.color = "#f44336";
+                    isRunning = false; // Paramos de monitorizar hasta que el profe reinicie
+                    playWarningBeep();
+                }
+            } else {
+                punishmentNoiseStartTime = null;
+                bar.style.backgroundColor = "#9c27b0";
+            }
+
+            if(isRunning) requestAnimationFrame(monitorPunishment);
+        }
+
+
+        // --- SONIDOS ---
         function playAlarm() {
             isAlarmPlaying = true;
             const alarmSecs = parseInt(durationInput.value);
@@ -152,11 +399,10 @@
             const gain = audioContext.createGain();
 
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(3000, audioContext.currentTime);
+            osc.frequency.setValueAtTime(3000, audioContext.currentTime); // Agudo molesto
             
             osc.connect(gain);
             gain.connect(audioContext.destination);
-
             osc.start();
             
             setTimeout(() => {
@@ -165,6 +411,19 @@
                 highLevelStartTime = null;
                 timerDisplay.innerText = "Alarma terminada. Reanudando...";
             }, alarmSecs * 1000);
+        }
+
+        function playWarningBeep() {
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(500, audioContext.currentTime); // Sonido más grave de error
+            
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            osc.start();
+            setTimeout(() => osc.stop(), 1500); // 1.5 segundos de aviso de fallo
         }
     </script>
 </body>
