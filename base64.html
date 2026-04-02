@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor y Unión de Imágenes a Base64</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 30px;
+        }
+        .container {
+            background-color: #34495e;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 800px;
+            margin: 0 auto;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        input[type="file"] {
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #16a085;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 2px solid #16a085;
+            font-family: monospace;
+            font-size: 12px;
+            resize: vertical;
+        }
+        button {
+            background-color: #e67e22;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        button:hover { background-color: #d35400; }
+        img#preview {
+            max-width: 100%;
+            margin-top: 20px;
+            border: 3px solid #16a085;
+            border-radius: 5px;
+            display: none;
+        }
+        canvas { display: none; } /* Oculto, solo se usa para procesar */
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🛠️ Creador de Base64 para tus Planos</h1>
+        <p>Selecciona tus imágenes (puedes seleccionar varias a la vez). El programa las unirá verticalmente y te dará el código listo para tu proyecto.</p>
+
+        <input type="file" id="imageInput" multiple accept="image/jpeg, image/png, image/webp">
+        
+        <canvas id="canvas"></canvas>
+
+        <textarea id="base64Output" placeholder="Aquí aparecerá tu código Base64..." readonly></textarea>
+        
+        <button onclick="copiarTexto()">📋 Copiar Código Base64</button>
+
+        <h3>Vista Previa de la imagen unida:</h3>
+        <img id="preview" alt="Vista previa">
+    </div>
+
+    <script>
+        const imageInput = document.getElementById('imageInput');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const base64Output = document.getElementById('base64Output');
+        const preview = document.getElementById('preview');
+
+        imageInput.addEventListener('change', async (event) => {
+            const files = Array.from(event.target.files);
+            if (files.length === 0) return;
+
+            base64Output.value = "Procesando imágenes, por favor espera...";
+
+            // Leer todas las imágenes y convertirlas en objetos Image de JavaScript
+            const images = await Promise.all(files.map(file => {
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const img = new Image();
+                        img.onload = () => resolve(img);
+                        img.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }));
+
+            // Calcular el tamaño total del lienzo (ancho máximo y la suma de las alturas)
+            let maxWidth = 0;
+            let totalHeight = 0;
+            
+            images.forEach(img => {
+                if (img.width > maxWidth) maxWidth = img.width;
+                totalHeight += img.height;
+            });
+
+            // Ajustar el tamaño del lienzo
+            canvas.width = maxWidth;
+            canvas.height = totalHeight;
+
+            // Dibujar las imágenes una debajo de otra
+            let currentY = 0;
+            images.forEach(img => {
+                // Centrar la imagen si es más estrecha que el lienzo
+                let x = (maxWidth - img.width) / 2;
+                ctx.drawImage(img, x, currentY);
+                currentY += img.height;
+            });
+
+            // Convertir el lienzo a código Base64 (formato JPEG con calidad 0.7 para que el código no sea infinitamente largo)
+            const finalBase64 = canvas.toDataURL('image/jpeg', 0.7);
+
+            // Mostrar el resultado
+            base64Output.value = finalBase64;
+            preview.src = finalBase64;
+            preview.style.display = 'block';
+        });
+
+        function copiarTexto() {
+            base64Output.select();
+            document.execCommand("copy");
+            alert("¡Código copiado al portapapeles! Ya puedes pegarlo en el proyecto principal.");
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Proyecto Almuerzo Saludable - Rúbrica Integrada</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #fff59d; padding: 30px; margin: 0; }
+    .nav { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; justify-content: center; }
+    .n-btn { padding: 15px 30px; font-size: 1.3rem; background: #1a73e8; color: white; border: none; border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: bold; }
+    .n-btn:hover { background: #1557b0; }
+    /* Añadido position: relative a .sec para poder colocar el botón absoluto */
+    .sec { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 1200px; margin: auto; font-size: 1.3rem; line-height: 1.6; position: relative; }
+    
+    .img-wrap { margin: 20px 0; border: 2px solid #ddd; padding: 15px; background: #fff; border-radius: 8px; text-align: center;}
+    .img-row-container { display: flex; gap: 15px; width: 100%; justify-content: center; }
+    .img-row-container img { flex: 0 1 auto; max-width: 100%; height: auto; border-radius: 6px; }
+    
+    table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+    table td { padding: 8px; border: 1px solid #555; }
+    h1 { text-align: center; color: #333; font-size: 2.5rem; margin-bottom: 30px; }
+    h3 { margin-top: 0; padding-right: 120px; /* Para que el texto no pise el botón */ }
+    a { color: #1a73e8; text-decoration: underline; }
+    button { display: none; } 
+    .n-btn { display: inline-block; } 
+
+    /* Estilos de la tabla del ticket */
+    .ticket-table { font-family: 'Courier New', Courier, monospace; font-size: 1.1rem; border: none;}
+    .ticket-table td { border: none; padding: 4px; }
+    .ticket-table .total { font-weight: bold; border-top: 2px solid black;}
+
+    /* --- ESTILOS DEL NUEVO BOTÓN DE NOTA Y RÚBRICA --- */
+    .btn-info-nota {
+      display: flex; align-items: center; gap: 6px;
+      position: absolute; top: 30px; right: 30px;
+      background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9;
+      padding: 8px 15px; border-radius: 20px; font-weight: bold;
+      cursor: pointer; font-size: 1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: all 0.2s; z-index: 10;
+    }
+    .btn-info-nota:hover { background: #bbdefb; transform: scale(1.05); }
+    
+    .rubrica-box {
+      display: none; position: absolute; top: 75px; right: 30px;
+      background: white; border: 2px solid #1565c0; border-radius: 8px;
+      padding: 15px; width: 320px; box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+      z-index: 100; font-size: 0.95rem; color: #333; text-align: left;
+    }
+    .rubrica-box h4 { margin: 0 0 10px 0; color: #1565c0; border-bottom: 1px solid #eee; padding-bottom: 5px; font-size: 1.1rem;}
+    .rubrica-box ul { padding-left: 20px; margin: 0; }
+    .rubrica-box li { margin-bottom: 6px; }
+    .rubrica-box .excelente { color: #2e7d32; font-weight: bold; }
+  </style>
+  <script>
+    function showSec(i){ 
+      document.querySelectorAll('.sec').forEach(s=>s.style.display='none'); 
+      document.getElementById('s'+i).style.display='block'; 
+      // Ocultar todas las rúbricas al cambiar de pestaña
+      document.querySelectorAll('.rubrica-box').forEach(b=>b.style.display='none');
+    }
+    function toggleRubrica(id) {
+      const box = document.getElementById(id);
+      box.style.display = (box.style.display === 'none' || box.style.display === '') ? 'block' : 'none';
+    }
+  </script>
+</head>
+<body>
+
+  <h1>Proyecto Almuerzo Saludable</h1>
+  
+  <div class="nav">
+    <button class="n-btn" onclick="showSec(0)">Inicio / El Proyecto</button>
+    <button class="n-btn" onclick="showSec(1)">Nuestro Almuerzo</button>
+    <button class="n-btn" onclick="showSec(2)">Análisis Nutricional</button>
+    <button class="n-btn" onclick="showSec(3)">Presupuesto y Compra</button>
+  </div>
+
+  <div id="s0" class="sec" style="display:block">
+    <button class="btn-info-nota" onclick="toggleRubrica('rub0')">ℹ️ Rúbrica (10%)</button>
+    <div id="rub0" class="rubrica-box">
+      <h4>Calidad de la Web (1 Punto)</h4>
+      <ul>
+        <li><span class="excelente">Sobresaliente:</span> Diseño intuitivo, sin errores, bien organizada.</li>
+        <li><b>Notable:</b> Funcional, aunque con detalles mejorables.</li>
+        <li><b>Suficiente:</b> Web muy básica.</li>
+        <li><b>Insuficiente:</b> No funciona o faltan datos clave.</li>
+      </ul>
+    </div>
+
+    <h3 style="color: #1976d2;"><font face="Comic Sans MS">Bienvenidos a nuestro proyecto</font></h3>
+    <p><b>Integrantes del grupo:</b> María, Juan y Lucía.</p>
+    <p>En este proyecto de Tecnología Social hemos diseñado un almuerzo que cumple con tres objetivos principales para ayudar a la comunidad:</p>
+    <ul>
+      <li>Es <font color="#d32f2f"><b>económico</b></font> y accesible para familias con presupuestos ajustados.</li>
+      <li>Es <font color="#388e3c"><b>saludable</b></font> y sigue la regla nutricional del Plato de Harvard.</li>
+      <li>Está documentado utilizando herramientas digitales aprendidas en clase.</li>
+    </ul>
+  </div>
+
+  <div id="s1" class="sec" style="display:none">
+    <button class="btn-info-nota" onclick="toggleRubrica('rub1')">ℹ️ Rúbrica (30%)</button>
+    <div id="rub1" class="rubrica-box">
+      <h4>Equilibrio Nutricional (3 Puntos)</h4>
+      <ul>
+        <li><span class="excelente">Sobresaliente:</span> Foto real con papel con el nombre del alumno y cumple regla: 50% verdura, 25% proteína, 25% hidratos.</li>
+        <li><b>Notable:</b> Foto real con papel con el nombre del alumno y tiene los grupos, pero proporciones inexactas.</li>
+        <li><b>Suficiente:</b> Foto real con papel con el nombre del alumno y falta un grupo nutricional principal.</li>
+        <li><b>Insuficiente:</b> sin foto real con papel con el nombre del alumno o el plato no es equilibrado.</li>
+      </ul>
+    </div>
+
+    <h3 style="color: #388e3c;">Lentejas guisadas con arroz y verduras</h3>
+    
+    <div class="img-wrap" contenteditable="false">
+       <div class="img-row-container">
+         <img src="des.jpeg" alt="Plato hondo de guiso de lentejas con arroz integral y trozos de verduras mixtas">
+       </div>
+       <p style="font-size: 0.9rem; color: #777;"><em>Foto de nuestro plato: Lentejas, arroz y un sofrito completo de verduras visible.</em></p>
+    </div>
+
+    <p><b>Ingredientes utilizados en el guiso:</b></p>
+    <ul>
+      <li>Lentejas pardinas</li>
+      <li>Arroz integral</li>
+      <li>Zanahoria, calabacín y pimiento rojo</li>
+      <li>Cebolla y ajo para el sofrito</li>
+      <li>Aceite de Oliva (solo una cucharada)</li>
+    </ul>
+    <p><b>Postre:</b> Una mandarina de temporada.</p>
+
+    <p><b>¿Cumple el Plato Saludable?</b> Sí, nuestro almuerzo completo cumple la regla visual:</p>
+    <ul>
+      <li><b>50% Verduras y frutas:</b> Cubierto por el abundante sofrito de verduras y la mandarina de postre.</li>
+      <li><b>25% Proteína:</b> Aportada por las lentejas.</li>
+      <li><b>25% Hidratos de carbono:</b> Aportados por el arroz integral y las lentejas.</li>
+    </ul>
+  </div>
+
+  <div id="s2" class="sec" style="display:none">
+    <button class="btn-info-nota" onclick="toggleRubrica('rub2')">ℹ️ Rúbrica (30%)</button>
+    <div id="rub2" class="rubrica-box">
+      <h4>Justificación Nutricional (3 Puntos)</h4>
+      <ul>
+        <li><span class="excelente">Sobresaliente:</span> Identifica macronutrientes, vitaminas/minerales y sus funciones.</li>
+        <li><b>Notable:</b> Identifica la mayoría, pero con alguna imprecisión.</li>
+        <li><b>Suficiente:</b> Solo nombra nutrientes sin explicar su función.</li>
+        <li><b>Insuficiente:</b> No identifica los nutrientes.</li>
+      </ul>
+    </div>
+
+    <h3 style="color: #8e24aa;">¿Qué nutrientes aporta este almuerzo?</h3>
+    <p>Este plato es un ejemplo perfecto de cómo comer de forma nutritiva sin necesidad de comprar carnes caras.</p>
+    
+    <div class="table-wrap" contenteditable="false">
+      <table border="1">
+        <tbody>
+          <tr>
+            <td style="background-color: #cfd8dc;"><b>Nutriente</b></td>
+            <td style="background-color: #cfd8dc;"><b>Alimento que lo aporta</b></td>
+            <td style="background-color: #cfd8dc;"><b>¿Para qué sirve?</b></td>
+          </tr>
+          <tr>
+            <td>Proteínas completas</td>
+            <td>Lentejas + Arroz</td>
+            <td>Ayudan a construir y reparar músculos.</td>
+          </tr>
+          <tr>
+            <td>Hidratos de Carbono</td>
+            <td>Arroz integral y lentejas</td>
+            <td>Nos dan energía duradera para estudiar.</td>
+          </tr>
+          <tr>
+            <td>Vitamina C</td>
+            <td>Mandarina y verduras</td>
+            <td>Mejora las defensas y <b>ayuda a absorber el hierro</b>.</td>
+          </tr>
+          <tr>
+            <td>Hierro y Minerales</td>
+            <td>Lentejas y verduras</td>
+            <td>El hierro previene la anemia y oxigena la sangre.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="s3" class="sec" style="display:none">
+    <button class="btn-info-nota" onclick="toggleRubrica('rub3')">ℹ️ Rúbrica (30%)</button>
+    <div id="rub3" class="rubrica-box">
+      <h4>Economía y Evidencia (3 Puntos)</h4>
+      <ul>
+        <li><span class="excelente">Sobresaliente:</span> Ahorro excelente (marcas blancas/temporada) + Ticket claro y remarcado.</li>
+        <li><b>Notable:</b> Precio razonable + Ticket legible.</li>
+        <li><b>Suficiente:</b> Coste elevado o ticket difícil de leer.</li>
+        <li><b>Insuficiente:</b> No hay ahorro o falta el ticket.</li>
+      </ul>
+    </div>
+
+    <h3 style="color: #e64a19;">Nuestra Compra Inteligente (Simulación Ticket)</h3>
+    <p>Para conseguir el precio más bajo, compramos a granel, marcas blancas y fruta de temporada.</p>
+    
+    <div class="table-wrap" contenteditable="false" style="border: 2px solid black; background-color: #fcfcfc; width: fit-content; margin: 20px auto; padding: 15px;">
+      <table class="ticket-table">
+        <tbody>
+          <tr>
+            <td>LENTEJAS PARDINAS (500g)</td>
+            <td style="text-align: right;">1,20 €</td>
+          </tr>
+          <tr>
+            <td>ARROZ INTEGRAL (200g)</td>
+            <td style="text-align: right;">0,35 €</td>
+          </tr>
+          <tr>
+            <td>VERDURAS MIXTAS (Sofrito)</td>
+            <td style="text-align: right;">0,80 €</td>
+          </tr>
+          <tr>
+            <td>MANDARINAS (4 uds)</td>
+            <td style="text-align: right;">1,10 €</td>
+          </tr>
+          <tr class="total">
+            <td>COSTE TOTAL (4 PAX)</td>
+            <td style="text-align: right;"><font size="5" color="#d32f2f">3,45 €</font></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</body>
+</html>
