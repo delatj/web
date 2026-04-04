@@ -1,12 +1,27 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generador de Proyecto</title>
     <style>
         body { background-color: #E6F0FA; font-family: Arial, sans-serif; padding: 20px; }
-        h1 { text-align: center; color: #003366; }
+        h1 { text-align: center; color: #003366; margin-bottom: 5px; }
+        
+        /* Estilos del botón de ayuda */
+        .btn-ayuda-container { text-align: center; margin-bottom: 25px; }
+        .btn-ayuda { background-color: #28a745; color: white; padding: 10px 20px; border: none; cursor: pointer; border-radius: 5px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: background-color 0.3s; }
+        .btn-ayuda:hover { background-color: #218838; }
+
+        /* Estilos de la ventana emergente (Modal) */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(3px); }
+        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 30px; border: 1px solid #888; width: 80%; max-width: 800px; border-radius: 10px; max-height: 80vh; overflow-y: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close-btn:hover, .close-btn:focus { color: black; text-decoration: none; }
+        .modal-content h2 { color: #003366; border-bottom: 2px solid #003366; padding-bottom: 10px; margin-top: 0; }
+        .modal-content h3 { color: #0059b3; margin-top: 20px; }
+        .modal-content ul { line-height: 1.6; }
+        .destacado { background-color: #FFFFCC; padding: 2px 5px; border-radius: 3px; font-weight: bold; }
+
         table { background-color: #FFFFCC; width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #333; padding: 10px; text-align: left; vertical-align: top; }
         ul { padding-left: 20px; margin: 0; }
@@ -37,6 +52,44 @@
 </head>
 <body>
     <h1>Generador de Informe de Proyecto</h1>
+    
+    <div class="btn-ayuda-container">
+        <button id="btnAbrirAyuda" class="btn-ayuda">ℹ️ Guía de Uso</button>
+    </div>
+
+    <div id="modalAyuda" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="btnCerrarAyuda">&times;</span>
+            <h2>Cómo utilizar el Generador de Memorias</h2>
+            <p>Bienvenido/a. Esta herramienta te permite crear y documentar la memoria de tu proyecto de forma sencilla. Sigue estos pasos para no perder tu trabajo:</p>
+            
+            <h3>1. Rellenar los apartados con botón "Añadir"</h3>
+            <ul>
+                <li>En secciones como <i>Materiales</i>, <i>Planos</i>, <i>Construcción</i> y <i>Comprobación</i>, <b>escanear o rellenar las casillas de texto no es suficiente</b>.</li>
+                <li>Una vez escribas los datos (ej: Nombre del material y Precio), <b><span class="destacado">tienes que pulsar obligatoriamente el botón "Añadir"</span></b>.</li>
+                <li>Sabrás que lo has hecho bien cuando el texto aparezca escrito justo arriba de las casillas en forma de lista.</li>
+            </ul>
+
+            <h3>2. Grabar o Subir el Audio</h3>
+            <ul>
+                <li>Puedes grabarte directamente desde el navegador pulsando <b>"🎤 Grabar Audio"</b> (te pedirá permisos de micrófono). Para finalizar, pulsa <b>"⏹️ Detener"</b>.</li>
+                <li>Si prefieres grabar el audio con el móvil (suele escucharse mejor) o lo tienes en formato MP3/WAV, puedes usar el botón <b>"Seleccionar archivo"</b> para subirlo desde tu dispositivo.</li>
+            </ul>
+
+            <h3>3. Pausar el trabajo: Guardar y Cargar Proyecto</h3>
+            <ul>
+                <li>Si la clase termina y no has acabado tu memoria, ¡no te preocupes! Pulsa el botón <b>"💾 Guardar Proyecto"</b>.</li>
+                <li>Esto descargará un archivo <span class="destacado">.json</span> a tu ordenador/tablet. <b>Guarda este archivo a buen recaudo</b> (en tu Drive o pendrive).</li>
+                <li>El próximo día que abras esta web, pulsa <b>"📂 Cargar Proyecto"</b>, selecciona tu archivo <code>.json</code> y todo volverá a aparecer tal y como lo dejaste, ¡incluso el audio!</li>
+            </ul>
+
+            <h3>4. Entrega Final</h3>
+            <ul>
+                <li>Cuando esté todo 100% terminado y revisado, pulsa el botón gris de abajo del todo: <b>"Generar HTML y Descargar"</b>.</li>
+                <li>Esto creará el documento final (un archivo <code>.html</code>) bonito, con formato de tablas y con el reproductor de audio integrado, que es lo que le entregarás a tu profesor/a.</li>
+            </ul>
+        </div>
+    </div>
 
     <label for="title">Título del Proyecto:</label>
     <textarea id="title"></textarea>
@@ -52,7 +105,7 @@
         <button onclick="agregarMaterial()">Añadir</button>
     </div>
 
-    <label>Responsable de Planos y horas invertidas (usa el botón añadir para día de creaciónn de planos):</label>
+    <label>Responsable de Planos y horas invertidas (usa el botón añadir para día de creación de planos):</label>
     <div id="planosContainer"></div>
     <div class="entry-group">
         <input type="text" id="nuevoPlano" placeholder="Nombre del responsable">
@@ -87,10 +140,10 @@
     
     <div>
         <button id="startRecording">🎤 Grabar Audio</button>
-        <button id="stopRecording" disabled>⏹️ Detener Grabación</button>
-        <button id="playRecording" disabled>▶️ Reproducir</button>
+        <button id="stopRecording" disabled="">⏹️ Detener Grabación</button>
+        <button id="playRecording" disabled="">▶️ Reproducir</button>
         <div id="recordingStatus" class="audio-status"></div>
-        <audio id="recordedAudio" controls style="width: 100%; margin-top: 10px;"></audio>
+        <audio id="recordedAudio" controls="" style="width: 100%; margin-top: 10px;"></audio>
     </div>
     
     <label for="audioInput">O sube un audio existente:</label>
@@ -102,9 +155,28 @@
         <input type="file" id="projectFileInput" accept=".json" style="display: none;">
     </div>
 
-    <button onclick="generateHtml()">Generar HTML y Descargar</button>
+    <button onclick="generateHtml()" style="background-color: #555; font-size: 1.1em; padding: 15px 30px; display: block; margin: 30px auto 10px auto;">Generar HTML y Descargar</button>
 
     <script>
+        // Lógica de la ventana modal de ayuda
+        const modalAyuda = document.getElementById('modalAyuda');
+        const btnAbrirAyuda = document.getElementById('btnAbrirAyuda');
+        const btnCerrarAyuda = document.getElementById('btnCerrarAyuda');
+
+        btnAbrirAyuda.onclick = function() {
+            modalAyuda.style.display = "block";
+        }
+        btnCerrarAyuda.onclick = function() {
+            modalAyuda.style.display = "none";
+        }
+        // Cerrar haciendo clic fuera de la ventana
+        window.onclick = function(event) {
+            if (event.target == modalAyuda) {
+                modalAyuda.style.display = "none";
+            }
+        }
+
+        // --- CÓDIGO ORIGINAL INTACTO ---
         let audioDataUrl = '';
         let mediaRecorder;
         let audioChunks = [];
@@ -131,7 +203,7 @@
                     const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
                     const reader = new FileReader();
                     reader.onloadend = () => {
-                        audioDataUrl = reader.result; // ✅ ahora queda en Base64
+                        audioDataUrl = reader.result; 
                         recordedAudio.src = audioDataUrl;
                         playButton.disabled = false;
                         recordingStatus.textContent = 'Grabación completada. Puedes reproducirla o continuar.';
@@ -279,13 +351,12 @@
                 const rows = Array.from(document.getElementById(container).children)
                     .map(div => {
                         const partes = div.textContent.split(' - ');
-let fechaFormateada = '';
-if (partes[2]) {
-    const [yyyy, mm, dd] = partes[2].split('-');
-    fechaFormateada = `${dd}/${mm}/${yyyy}`;
-}
-return `<tr><td>${partes[0]}</td><td>${partes[1]}</td><td>${fechaFormateada}</td></tr>`;
-
+                        let fechaFormateada = '';
+                        if (partes[2]) {
+                            const [yyyy, mm, dd] = partes[2].split('-');
+                            fechaFormateada = `${dd}/${mm}/${yyyy}`;
+                        }
+                        return `<tr><td>${partes[0]}</td><td>${partes[1]}</td><td>${fechaFormateada}</td></tr>`;
                     }).join('');
                 return rows ? `<table class="data-table"><thead><tr><th>Responsable</th><th>Horas</th><th>Fecha</th></tr></thead><tbody>${rows}</tbody></table>` : `No se añadieron ${titulo}`;
             }
@@ -332,5 +403,4 @@ audio{margin-top:15px;width:100%;}
             link.click();
         }
     </script>
-</body>
-</html>
+</body></html>
