@@ -1,7 +1,6 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Editor Web Pro - Info Tarea</title>
   <style>
@@ -84,6 +83,9 @@
     }
     .table-controls button:hover { background: #e8eaed; border-color: #1a73e8; }
   </style>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
 </head>
 <body>
 
@@ -160,6 +162,10 @@
       <span style="margin: 0 10px; color: #ccc;">|</span>
       <button onclick="insertImage()" style="background: #f3e5f5;" title="Inserta 1, 2 o 3 imágenes">🖼️ Fotos</button>
       <button onclick="insertTable()" style="background: #e3f2fd;">📊 Tabla</button>
+      
+      <button type="button" class="n-btn" onclick="document.getElementById('pdf-input').click()" style="background-color: #e74c3c; color: white; border: none; padding: 4px 10px; cursor: pointer;">📄 PDF a Fotos</button>
+      <input type="file" id="pdf-input" accept="application/pdf" style="display: none;" onchange="handlePDFUpload(event)">
+
     </div>
 
     <div class="tool-group">
@@ -168,8 +174,8 @@
     </div>
   </div>
 
-  <div id="tab-container"></div>
-  <div id="editor-container"></div>
+  <div id="tab-container"><div class="tab active" id="btn-p-1"><span>Inicio</span><button class="close-tab" onclick="event.stopPropagation(); removeTab('p-1')">X</button></div></div>
+  <div id="editor-container"><div class="editor-pane active" id="p-1" contenteditable="true" style="background-color: rgb(255, 255, 255); display: block;"><h3 style="margin-top:0;">Inicio</h3><p>Empieza a escribir aquí...</p></div></div>
 
   <div id="taskModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:4000; justify-content:center; align-items:center;">
     <div class="info-modal-content">
@@ -506,6 +512,60 @@
       a.download = title.replace(/\s+/g, '_') + '.html'; 
       a.click();
     }
+
+    // --- LÓGICA DE PDF A IMÁGENES INYECTADA ---
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+    async function handlePDFUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const fileReader = new FileReader();
+        fileReader.onload = async function() {
+            const typedarray = new Uint8Array(this.result);
+            
+            try {
+                // Forzar el enfoque en el editor activo
+                const activeEditor = document.querySelector(".editor-pane.active");
+                if(activeEditor) activeEditor.focus();
+
+                // Cargar el documento PDF
+                const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                
+                // Recorrer el PDF página por página
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    
+                    // Escala a 2.0 para alta resolución
+                    const viewport = page.getViewport({ scale: 2.0 }); 
+                    
+                    // Crear un lienzo temporal
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    
+                    // Renderizar la página en el canvas
+                    await page.render({ canvasContext: context, viewport: viewport }).promise;
+                    
+                    // Convertir el canvas a una imagen (Base64)
+                    const imgData = canvas.toDataURL('image/png');
+                    
+                    // Insertar la imagen
+                    document.execCommand('insertImage', false, imgData);
+                    document.execCommand('insertHTML', false, '<br><br>');
+                }
+            } catch (error) {
+                console.error("Error al procesar el PDF:", error);
+                alert("Hubo un error al convertir el PDF a imágenes. Revisa la consola para más detalles.");
+            }
+        };
+        // Iniciar la lectura del archivo
+        fileReader.readAsArrayBuffer(file);
+        
+        // Limpiar el input para permitir volver a subir el mismo archivo si es necesario
+        event.target.value = '';
+    }
   </script>
-</body>
-</html>
+
+</body></html>
