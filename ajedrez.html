@@ -1,8 +1,7 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Ajedrez Pro - Mate y Enroque Corregido</title>
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <title>Ajedrez Pro - Mate, Enroque y Máquina Inteligente</title>
     <style>
         :root {
             --primary: #2ecc71; --dark: #1a1a1a; --panel: #2c3e50;
@@ -32,6 +31,7 @@
         #setup-modal, #status-overlay, #promo-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; }
         .modal-content { background: white; color: #333; padding: 30px; border-radius: 15px; text-align: center; width: 350px; }
         .btn-send { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; width: 100%; }
+        select { font-size: 1.1rem; border-radius: 5px; border: 1px solid #ccc; }
     </style>
 </head>
 <body>
@@ -39,6 +39,20 @@
 <div id="setup-modal">
     <div class="modal-content">
         <h2>AJEDREZ: COMPETICIÓN</h2>
+        
+        <select id="game-mode" style="width:90%; padding:10px; margin:10px 0;" onchange="toggleAiOptions()">
+            <option value="pvp">Jugador vs Jugador</option>
+            <option value="pve">Jugador vs Máquina</option>
+        </select>
+
+        <div id="ai-options" style="display:none;">
+            <select id="ai-difficulty" style="width:90%; padding:10px; margin:10px 0;">
+                <option value="1">Nivel 1 (Fácil)</option>
+                <option value="2" selected>Nivel 2 (Medio)</option>
+                <option value="3">Nivel 3 (Difícil)</option>
+            </select>
+        </div>
+
         <input type="text" id="p1-name" placeholder="Jugador Blanco" style="width:90%; padding:10px; margin:10px 0;">
         <input type="text" id="p2-name" placeholder="Jugador Negro" style="width:90%; padding:10px; margin:10px 0;">
         <button class="btn-send" onclick="initGame()">COMENZAR</button>
@@ -88,13 +102,24 @@
     
     let state = { 
         turn: 'white', selected: null, legalMoves: [], gameActive: false, 
+        gameMode: 'pvp', aiDifficulty: 2,
         names: {white: "Blanco", black: "Negro"}, scores: {white:0, black:0},
         moved: { K: false, k: false, R0: false, R7: false, r0: false, r7: false }
     };
 
+    function toggleAiOptions() {
+        const mode = document.getElementById('game-mode').value;
+        document.getElementById('ai-options').style.display = mode === 'pve' ? 'block' : 'none';
+        const p2Input = document.getElementById('p2-name');
+        p2Input.value = mode === 'pve' ? 'Máquina' : '';
+        p2Input.disabled = mode === 'pve';
+    }
+
     function initGame() {
+        state.gameMode = document.getElementById('game-mode').value;
+        state.aiDifficulty = parseInt(document.getElementById('ai-difficulty').value);
         state.names.white = document.getElementById('p1-name').value || "Blanco";
-        state.names.black = document.getElementById('p2-name').value || "Negro";
+        state.names.black = document.getElementById('p2-name').value || (state.gameMode === 'pve' ? "Máquina" : "Negro");
         document.getElementById('name-w').innerText = state.names.white;
         document.getElementById('name-b').innerText = state.names.black;
         document.getElementById('setup-modal').style.display = 'none';
@@ -125,6 +150,8 @@
 
     function handleSqClick(r, c) {
         if (!state.gameActive) return;
+        if (state.gameMode === 'pve' && state.turn === 'black') return; // Bloquea clics durante el turno de la IA
+
         const p = board[r][c];
         const isWhite = p !== '.' && p === p.toUpperCase();
 
@@ -135,23 +162,23 @@
 
         if (p !== '.' && ((state.turn === 'white' && isWhite) || (state.turn === 'black' && !isWhite))) {
             state.selected = {r, c};
-            state.legalMoves = getSafeMoves(r, c);
+            state.legalMoves = getSafeMoves(r, c, board);
             updateHighlights();
         }
     }
 
-    function getSafeMoves(r, c) {
-        const p = board[r][c];
+    function getSafeMoves(r, c, b = board) {
+        const p = b[r][c];
         if (p === '.') return [];
         const isW = p === p.toUpperCase();
-        return getRawMoves(r, c, board).filter(m => {
-            const tempTarget = board[m.r][m.c];
-            const tempStart = board[r][c];
-            board[m.r][m.c] = tempStart;
-            board[r][c] = '.';
-            const safe = !isKingInCheck(isW ? 'white' : 'black', board);
-            board[r][c] = tempStart;
-            board[m.r][m.c] = tempTarget;
+        return getRawMoves(r, c, b).filter(m => {
+            const tempTarget = b[m.r][m.c];
+            const tempStart = b[r][c];
+            b[m.r][m.c] = tempStart;
+            b[r][c] = '.';
+            const safe = !isKingInCheck(isW ? 'white' : 'black', b);
+            b[r][c] = tempStart;
+            b[m.r][m.c] = tempTarget;
             return safe;
         });
     }
@@ -229,7 +256,7 @@
 
         if (target !== '.') state.scores[state.turn] += values[target];
         
-        if (moveData.castle) {
+        if (moveData && moveData.castle) {
             if (c2 === 6) { board[r2][5] = board[r2][7]; board[r2][7] = '.'; }
             if (c2 === 2) { board[r2][3] = board[r2][0]; board[r2][0] = '.'; }
         }
@@ -241,7 +268,12 @@
         board[r2][c2] = p; board[r1][c1] = '.';
         
         if ((p === 'P' && r2 === 0) || (p === 'p' && r2 === 7)) {
-            handlePromo(r2, c2);
+            if (state.turn === 'black' && state.gameMode === 'pve') {
+                board[r2][c2] = 'q'; // La máquina siempre corona Reina automáticamente
+                finalizeTurn();
+            } else {
+                handlePromo(r2, c2);
+            }
         } else {
             finalizeTurn();
         }
@@ -272,7 +304,16 @@
         document.getElementById('turn-display').className = state.turn === 'white' ? 'white-turn' : 'black-turn';
         
         createBoard();
-        checkGameEnd();
+        const isGameOver = checkGameEnd();
+
+        // Lanzar el movimiento de la máquina si aplica
+        if (!isGameOver && state.gameMode === 'pve' && state.turn === 'black') {
+            document.getElementById('game-container').style.pointerEvents = 'none';
+            setTimeout(() => {
+                hacerMovimientoIA();
+                document.getElementById('game-container').style.pointerEvents = 'auto';
+            }, 50); // Pequeño retraso para que la UI se actualice
+        }
     }
 
     function checkGameEnd() {
@@ -281,7 +322,7 @@
             for(let c=0; c<8; c++) {
                 const p = board[r][c];
                 if(p !== '.' && ((state.turn === 'white' && p === p.toUpperCase()) || (state.turn === 'black' && p === p.toLowerCase()))) {
-                    if(getSafeMoves(r, c).length > 0) { canMove = true; break; }
+                    if(getSafeMoves(r, c, board).length > 0) { canMove = true; break; }
                 }
             }
             if(canMove) break;
@@ -292,7 +333,7 @@
 
         if(!canMove) {
             state.gameActive = false;
-            checkStatus.style.display = 'none'; // Ocultar jaque si es mate
+            checkStatus.style.display = 'none';
             const winMsg = document.getElementById('win-msg');
             if(inCheck) {
                 const winner = state.turn === 'white' ? state.names.black : state.names.white;
@@ -301,8 +342,10 @@
                 winMsg.innerText = "¡TABLAS POR AHOGADO!";
             }
             document.getElementById('status-overlay').style.display = 'flex';
+            return true;
         } else {
             checkStatus.style.display = inCheck ? 'block' : 'none';
+            return false;
         }
     }
 
@@ -317,6 +360,135 @@
             }
         }
     }
+
+    // --- LÓGICA DE LA INTELIGENCIA ARTIFICIAL (IA) ---
+    
+    function clonarTablero(b) {
+        return b.map(row => [...row]);
+    }
+
+    function evaluarTablero(b) {
+        let score = 0;
+        for(let r=0; r<8; r++) {
+            for(let c=0; c<8; c++) {
+                const p = b[r][c];
+                if(p !== '.') {
+                    let val = values[p];
+                    let isWhite = p === p.toUpperCase();
+                    let posVal = 0;
+                    
+                    // Evaluación posicional para que no juegue solo a comer
+                    // Caballos y Alfiles prefieren el centro
+                    if (p.toLowerCase() === 'n' || p.toLowerCase() === 'b') {
+                        posVal = (3.5 - Math.abs(r - 3.5)) * 0.1 + (3.5 - Math.abs(c - 3.5)) * 0.1;
+                    }
+                    // Peones prefieren avanzar hacia la coronación
+                    if (p.toLowerCase() === 'p') {
+                        posVal = isWhite ? (6 - r) * 0.1 : (r - 1) * 0.1;
+                    }
+                    // Control de las columnas centrales en general
+                    posVal += (3.5 - Math.abs(c - 3.5)) * 0.05;
+
+                    let pieceScore = val + posVal;
+                    if (isWhite) score += pieceScore;
+                    else score -= pieceScore;
+                }
+            }
+        }
+        return score; // Positivo significa ventaja blanca, Negativo ventaja negra
+    }
+
+    function obtenerTodosLosMovimientos(color, b) {
+        let moves = [];
+        for(let r=0; r<8; r++) {
+            for(let c=0; c<8; c++) {
+                const p = b[r][c];
+                if(p !== '.' && (color === 'white' ? p === p.toUpperCase() : p === p.toLowerCase())) {
+                    let pieceMoves = getSafeMoves(r, c, b);
+                    pieceMoves.forEach(m => moves.push({r1: r, c1: c, r2: m.r, c2: m.c, castle: m.castle}));
+                }
+            }
+        }
+        return moves;
+    }
+
+    function aplicarMovimientoVirtual(b, move, color) {
+        let p = b[move.r1][move.c1];
+        if (move.castle) {
+            if (move.c2 === 6) { b[move.r2][5] = b[move.r2][7]; b[move.r2][7] = '.'; }
+            if (move.c2 === 2) { b[move.r2][3] = b[move.r2][0]; b[move.r2][0] = '.'; }
+        }
+        b[move.r2][move.c2] = p;
+        b[move.r1][move.c1] = '.';
+        if ((p === 'P' && move.r2 === 0) || (p === 'p' && move.r2 === 7)) {
+            b[move.r2][move.c2] = color === 'white' ? 'Q' : 'q';
+        }
+    }
+
+    function minimax(b, depth, alpha, beta, isMax) {
+        if (depth === 0) return evaluarTablero(b);
+        let color = isMax ? 'white' : 'black';
+        let moves = obtenerTodosLosMovimientos(color, b);
+        
+        if (moves.length === 0) {
+            if (isKingInCheck(color, b)) return isMax ? -9999 : 9999; // Jaque mate (valor muy alto)
+            return 0; // Tablas (ahogado)
+        }
+        
+        if (isMax) { // Turno de las blancas (quieren número positivo alto)
+            let maxEv = -Infinity;
+            for (let m of moves) {
+                let bc = clonarTablero(b);
+                aplicarMovimientoVirtual(bc, m, color);
+                let ev = minimax(bc, depth - 1, alpha, beta, false);
+                maxEv = Math.max(maxEv, ev);
+                alpha = Math.max(alpha, ev);
+                if (beta <= alpha) break; // Poda Alfa-Beta para velocidad
+            }
+            return maxEv;
+        } else { // Turno de las negras (IA quiere número negativo alto)
+            let minEv = Infinity;
+            for (let m of moves) {
+                let bc = clonarTablero(b);
+                aplicarMovimientoVirtual(bc, m, color);
+                let ev = minimax(bc, depth - 1, alpha, beta, true);
+                minEv = Math.min(minEv, ev);
+                beta = Math.min(beta, ev);
+                if (beta <= alpha) break;
+            }
+            return minEv;
+        }
+    }
+
+    function hacerMovimientoIA() {
+        let depth = state.aiDifficulty; 
+        let moves = obtenerTodosLosMovimientos('black', board);
+        if (moves.length === 0) return;
+        
+        // Mezclar aleatoriamente para añadir variedad si dos movimientos tienen misma puntuación
+        moves.sort(() => Math.random() - 0.5);
+
+        let bestMove = null;
+        let bestScore = Infinity; // La máquina (Negras) busca la puntuación más baja/negativa
+        
+        for (let m of moves) {
+            let bClone = clonarTablero(board);
+            aplicarMovimientoVirtual(bClone, m, 'black');
+            let score = minimax(bClone, depth - 1, -Infinity, Infinity, true); // Siguiente turno es Blanco (isMax)
+            
+            if (score < bestScore) {
+                bestScore = score;
+                bestMove = m;
+            }
+        }
+        
+        if (!bestMove) bestMove = moves[0];
+        
+        // Ejecutar el movimiento encontrado en el tablero real
+        state.selected = {r: bestMove.r1, c: bestMove.c1};
+        state.legalMoves = getSafeMoves(bestMove.r1, bestMove.c1, board);
+        movePiece(bestMove.r1, bestMove.c1, bestMove.r2, bestMove.c2);
+    }
 </script>
-</body>
-</html>
+
+</body></html>
