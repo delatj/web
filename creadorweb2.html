@@ -43,6 +43,9 @@
       background: #ffffff; border-radius: 0 0 10px 10px; outline: none; font-size: 1.2rem; line-height: 1.6;
     }
     
+    /* REGLA NUEVA: Ajuste automático de PDFs e Imágenes sueltas para que no se salgan de la pantalla */
+    .editor-pane img { max-width: 100%; height: auto; }
+
     /* Contenedores Multimedia y Tablas */
     .table-wrap { display: block; margin: 15px 0; border: 2px solid #ddd; padding: 10px; background: #fff; width: fit-content; border-radius: 8px; max-width: 100%; overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; }
@@ -84,7 +87,7 @@
     .table-controls button:hover { background: #e8eaed; border-color: #1a73e8; }
   </style>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <script src="./web2_files/pdf.min.js"></script>
 
 </head>
 <body>
@@ -162,8 +165,9 @@
       <span style="margin: 0 10px; color: #ccc;">|</span>
       <button onclick="insertImage()" style="background: #f3e5f5;" title="Inserta 1, 2 o 3 imágenes">🖼️ Fotos</button>
       <button onclick="insertTable()" style="background: #e3f2fd;">📊 Tabla</button>
+      <button onclick="insertRawHTML()" style="background: #e0f2f1; color: #004d40; border-color: #009688;" title="Incrustar código HTML"><b>&lt;/&gt; HTML</b></button>
       
-      <button type="button" class="n-btn" onclick="document.getElementById('pdf-input').click()" style="background-color: #e74c3c; color: white; border: none; padding: 4px 10px; cursor: pointer;">📄 PDF a Fotos</button>
+      <button type="button" class="n-btn" onclick="document.getElementById('pdf-input').click()" style="background-color: #e74c3c; color: white; border: none; padding: 4px 10px; cursor: pointer; margin-left: 10px;">📄 PDF a Fotos</button>
       <input type="file" id="pdf-input" accept="application/pdf" style="display: none;" onchange="handlePDFUpload(event)">
 
     </div>
@@ -430,6 +434,67 @@
       input.click();
     }
 
+    // --- FUNCIÓN PARA INCRUSTAR HTML COMPLETAMENTE AISLADO (AHORA CON EL DOBLE DE ALTURA) ---
+    function insertRawHTML() {
+      const htmlCode = prompt("Pega aquí tu código HTML (se insertará aislado para no romper el editor):");
+      if(htmlCode) {
+        const activeEditor = document.querySelector(".editor-pane.active");
+        if(activeEditor) {
+          activeEditor.focus();
+          
+          const sel = window.getSelection();
+          if (sel.rangeCount) {
+            // Creamos un contenedor protector que NO se puede editar
+            const wrapper = document.createElement("div");
+            wrapper.style.margin = "15px 0";
+            wrapper.contentEditable = "false"; 
+
+            // Creamos un iframe: esto aísla el código.
+            const iframe = document.createElement("iframe");
+            iframe.style.width = "100%";
+            iframe.style.minHeight = "800px"; // <-- ¡AQUÍ ESTÁ LA ALTURA DUPLICADA!
+            iframe.style.border = "2px dashed #1a73e8";
+            iframe.style.borderRadius = "8px";
+            iframe.style.backgroundColor = "transparent";
+            iframe.srcdoc = htmlCode; 
+            
+            // Botón para borrarlo si ya no lo quieres
+            const delBtn = document.createElement("button");
+            delBtn.innerHTML = "❌ Borrar este HTML";
+            delBtn.style.display = "block";
+            delBtn.style.marginTop = "5px";
+            delBtn.style.background = "#ffcdd2";
+            delBtn.style.color = "#b71c1c";
+            delBtn.style.border = "none";
+            delBtn.style.padding = "6px 12px";
+            delBtn.style.cursor = "pointer";
+            delBtn.style.borderRadius = "4px";
+            delBtn.onclick = function() { wrapper.remove(); };
+
+            // Juntamos las piezas
+            wrapper.appendChild(iframe);
+            wrapper.appendChild(delBtn);
+            
+            // Lo insertamos en el editor
+            const range = sel.getRangeAt(0);
+            range.deleteContents(); 
+            range.insertNode(wrapper);
+            
+            // Creamos un hueco debajo para que puedas seguir escribiendo
+            const p = document.createElement("p"); 
+            p.innerHTML = "&#8203;"; 
+            wrapper.after(p);
+            
+            // Movemos el cursor ahí
+            range.setStart(p, 0);
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
+        }
+      }
+    }
+
     function saveFile() {
       const data = {
         tabs: Array.from(document.querySelectorAll(".tab span")).map(s => s.innerText),
@@ -488,6 +553,9 @@
         .img-row-container { display: flex; gap: 15px; width: 100%; justify-content: center; }
         .img-row-container img { flex: 1 1 0; min-width: 0; max-height: 500px; object-fit: contain; border-radius: 6px; }
         
+        /* Ajuste de PDF e imágenes en la web descargada */
+        .sec img { max-width: 100%; height: auto; }
+
         table { width: 100%; border-collapse: collapse; margin: 15px 0; }
         table td { padding: 8px; border: 1px solid #555; }
         h1 { text-align: center; color: #333; font-size: 2.5rem; margin-bottom: 30px; }
@@ -525,33 +593,24 @@
             const typedarray = new Uint8Array(this.result);
             
             try {
-                // Forzar el enfoque en el editor activo
                 const activeEditor = document.querySelector(".editor-pane.active");
                 if(activeEditor) activeEditor.focus();
 
-                // Cargar el documento PDF
                 const pdf = await pdfjsLib.getDocument(typedarray).promise;
                 
-                // Recorrer el PDF página por página
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const page = await pdf.getPage(i);
-                    
-                    // Escala a 2.0 para alta resolución
                     const viewport = page.getViewport({ scale: 2.0 }); 
                     
-                    // Crear un lienzo temporal
                     const canvas = document.createElement('canvas');
                     const context = canvas.getContext('2d');
                     canvas.height = viewport.height;
                     canvas.width = viewport.width;
                     
-                    // Renderizar la página en el canvas
                     await page.render({ canvasContext: context, viewport: viewport }).promise;
                     
-                    // Convertir el canvas a una imagen (Base64)
                     const imgData = canvas.toDataURL('image/png');
                     
-                    // Insertar la imagen
                     document.execCommand('insertImage', false, imgData);
                     document.execCommand('insertHTML', false, '<br><br>');
                 }
@@ -560,10 +619,7 @@
                 alert("Hubo un error al convertir el PDF a imágenes. Revisa la consola para más detalles.");
             }
         };
-        // Iniciar la lectura del archivo
         fileReader.readAsArrayBuffer(file);
-        
-        // Limpiar el input para permitir volver a subir el mismo archivo si es necesario
         event.target.value = '';
     }
   </script>
