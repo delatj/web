@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creador de Web de Notas (Súper Fácil)</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #eef2f5; color: #333; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .app-container { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); max-width: 550px; text-align: center; width: 100%; }
+        h1 { color: #0056b3; font-size: 24px; margin-bottom: 10px; }
+        p { color: #666; margin-bottom: 20px; font-size: 15px; }
+        
+        /* Nueva zona para arrastrar y soltar */
+        .drop-zone { border: 3px dashed #007BFF; padding: 40px 20px; border-radius: 10px; background: #f8faff; cursor: pointer; transition: 0.3s; margin-bottom: 15px; display: block; }
+        .drop-zone:hover { background: #e2edff; border-color: #0056b3; }
+        .drop-zone span { font-size: 50px; display: block; margin-bottom: 10px; }
+        
+        /* Ocultamos el botón por defecto de subir archivo porque ahora usamos el recuadro gigante */
+        input[type="file"] { display: none; }
+        
+        #file-status { color: #28a745; font-weight: bold; font-size: 16px; min-height: 45px; margin-bottom: 10px;}
+        
+        button { background-color: #28a745; color: white; border: none; padding: 15px 25px; font-size: 18px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; transition: background 0.3s; display: none; /* Oculto hasta que haya archivos */ }
+        button:hover { background-color: #218838; transform: scale(1.02); }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <h1>Generador de Web de Notas</h1>
+    <p>Añade todos los archivos CSV de tus cursos a la vez.</p>
+    
+    <label class="drop-zone" for="csvFiles" id="dropArea">
+        <span>📁</span>
+        Haz clic aquí para seleccionar los archivos <br>o <b>arrástralos y suéltalos dentro de este recuadro</b>.
+    </label>
+    
+    <input type="file" id="csvFiles" multiple accept=".csv">
+    
+    <div id="file-status"></div>
+    
+    <button id="btnGenerar" onclick="generarYDescargar()">✅ ¡Generar Web de Notas!</button>
+</div>
+
+<script>
+    // Variables para la interfaz
+    const fileInput = document.getElementById('csvFiles');
+    const fileStatus = document.getElementById('file-status');
+    const btnGenerar = document.getElementById('btnGenerar');
+    const dropArea = document.getElementById('dropArea');
+
+    // 1. Efectos visuales al arrastrar archivos por encima
+    dropArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropArea.style.backgroundColor = '#d0e3ff';
+    });
+    dropArea.addEventListener('dragleave', () => {
+        dropArea.style.backgroundColor = '#f8faff';
+    });
+
+    // 2. Al soltar los archivos dentro del recuadro
+    dropArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropArea.style.backgroundColor = '#f8faff';
+        fileInput.files = e.dataTransfer.files; // Copia los archivos soltados al input
+        actualizarEstado();
+    });
+
+    // 3. Al seleccionar los archivos haciendo clic y usando la ventana de "Abrir"
+    fileInput.addEventListener('change', actualizarEstado);
+
+    // Función que avisa al usuario y muestra el botón verde
+    function actualizarEstado() {
+        if (fileInput.files.length > 0) {
+            fileStatus.innerHTML = "✅ ¡Listo! Has cargado <b>" + fileInput.files.length + " archivo(s)</b>.<br>Haz clic en el botón verde de abajo.";
+            btnGenerar.style.display = "block"; // Hace aparecer el botón
+        } else {
+            fileStatus.innerHTML = "";
+            btnGenerar.style.display = "none";
+        }
+    }
+
+    // --- EL CÓDIGO QUE GENERA LA WEB (Se mantiene el buscador global y formato vertical) ---
+    async function generarYDescargar() {
+        if (fileInput.files.length === 0) return;
+
+        const files = Array.from(fileInput.files);
+        let tabsHTML = "";
+        let tablesHTML = "";
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const text = await file.text();
+            
+            const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
+            const tabName = file.name.replace('.csv', '').toUpperCase();
+            const activeClass = i === 0 ? "active" : "";
+            
+            tabsHTML += `<div class="tab ${activeClass}" id="tab-btn-${i}" onclick="cambiarPestana(${i})">${tabName}</div>\n`;
+            tablesHTML += `<div class="tab-content ${activeClass}" id="tab-content-${i}">\n<table>\n`;
+
+            let columnColors = [];
+            let columnHeaders = [];
+            let noteCounter = 1; 
+
+            lines.forEach((line, rowIndex) => {
+                const columns = line.split(';');
+                
+                if (columns.length > 1) {
+                    const anonymousColumns = columns.slice(1);
+                    
+                    if (rowIndex === 0) {
+                        tablesHTML += "<thead><tr>";
+                        anonymousColumns.forEach((col, colIndex) => {
+                            let valorCelda = col.trim();
+                            
+                            if (colIndex === 0) {
+                                columnHeaders.push("CÓDIGO DEL ALUMNO");
+                                columnColors.push("#ffffff");
+                                tablesHTML += `<th>Código</th>`;
+                            } else {
+                                let headerName = `${noteCounter}. ${valorCelda}`;
+                                columnHeaders.push(headerName);
+                                noteCounter++;
+                                
+                                let inicial = valorCelda.charAt(0).toUpperCase();
+                                let colorFondo = "#ffe5b4"; 
+                                
+                                if (inicial === 'T') colorFondo = "#cce5ff"; 
+                                else if (inicial === 'M') colorFondo = "#e2d9f3"; 
+                                else if (inicial === 'C') colorFondo = "#f8d7da"; 
+                                else if (inicial === 'P') colorFondo = "#d4edda"; 
+                                
+                                columnColors.push(colorFondo);
+                                tablesHTML += `<th>${headerName}</th>`;
+                            }
+                        });
+                        tablesHTML += "</tr></thead>\n<tbody>\n";
+                    } 
+                    else {
+                        tablesHTML += `<tr class="student-card">`;
+                        anonymousColumns.forEach((col, colIndex) => {
+                            let valorCelda = col.trim();
+                            let headerName = columnHeaders[colIndex];
+                            let colorFondo = columnColors[colIndex];
+                            
+                            tablesHTML += `<td data-label="${headerName}" style="background-color: ${colorFondo};"><span class="grade-val">${valorCelda}</span></td>`;
+                        });
+                        tablesHTML += "</tr>\n";
+                    }
+                }
+            });
+
+            tablesHTML += `</tbody>\n</table>\n</div>\n`;
+        }
+
+        const finalHTML = `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Consulta de Notas</title>
+<style>
+  body { font-family: 'Segoe UI', sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; background-color: #f4f7f6; }
+  .container { background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; }
+  h2 { color: #333; margin-bottom: 5px; }
+  .instruccion { color: #666; margin-bottom: 20px; }
+  .search-box { padding: 12px; width: 100%; max-width: 350px; font-size: 16px; border: 2px solid #ddd; border-radius: 8px; margin-bottom: 20px; outline: none; }
+  .search-box:focus { border-color: #007BFF; }
+  
+  .leyenda { display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; flex-wrap: wrap; font-size: 14px; background-color: #fdfdfd; padding: 15px; border-radius: 8px; border: 1px solid #eee; }
+  .leyenda-item { display: flex; align-items: center; gap: 8px; color: #555; font-weight: 500; }
+  .caja-color { width: 18px; height: 18px; border-radius: 4px; border: 1px solid #ccc; }
+
+  .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .tab { padding: 10px 25px; background-color: #e9ecef; border-radius: 8px; cursor: pointer; font-weight: bold; color: #495057; transition: 0.2s; }
+  .tab.active { background-color: #007BFF; color: white; }
+  .tab:hover:not(.active) { background-color: #dee2e6; }
+  
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  
+  table { width: 100%; border-collapse: collapse; }
+  thead { display: none; } 
+  
+  .student-card { display: none; flex-direction: column; background: #fafafa; padding: 20px; border-radius: 12px; border: 3px solid #343a40; margin-top: 15px; gap: 8px; }
+  
+  td { display: flex; justify-content: space-between; align-items: center; border: 2px solid black !important; padding: 12px 18px; border-radius: 6px; font-size: 16px; color: #000; gap: 15px; }
+  td::before { content: attr(data-label); font-weight: 800; color: #222; text-transform: uppercase; font-size: 14px; text-align: left; }
+  
+  .grade-val { font-weight: bold; font-size: 18px; background: rgba(255,255,255,0.7); padding: 6px 12px; border-radius: 5px; border: 1px solid black; min-width: 40px; text-align: center; }
+
+  .aviso { color: #dc3545; font-size: 14px; margin-top: 15px; display: none; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h2>Consulta tus Notas</h2>
+    <p class="instruccion">Introduce tu código personal para ver tus calificaciones.</p>
+    
+    <input type="text" id="searchInput" class="search-box" placeholder="Introduce tu código..." onkeyup="filtrarNotas()">
+    
+    <div class="leyenda">
+        <div class="leyenda-item"><div class="caja-color" style="background-color: #cce5ff;"></div> T - Tarea</div>
+        <div class="leyenda-item"><div class="caja-color" style="background-color: #d4edda;"></div> P - Proyecto</div>
+        <div class="leyenda-item"><div class="caja-color" style="background-color: #f8d7da;"></div> C - Controles o Pruebas</div>
+        <div class="leyenda-item"><div class="caja-color" style="background-color: #e2d9f3;"></div> M - Media</div>
+        <div class="leyenda-item"><div class="caja-color" style="background-color: #ffe5b4;"></div> Otros</div>
+    </div>
+    
+    <div class="tabs">
+      ${tabsHTML}
+    </div>
+    
+    <div id="tablesContainer">
+      ${tablesHTML}
+    </div>
+    
+    <p class="aviso" id="avisoNoEncontrado">Código no encontrado en ninguna pestaña. Por favor, revisa que esté bien escrito.</p>
+  </div>
+
+  <script>
+    function cambiarPestana(index) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      
+      document.getElementById('tab-btn-' + index).classList.add('active');
+      document.getElementById('tab-content-' + index).classList.add('active');
+    }
+
+    function filtrarNotas() {
+      const input = document.getElementById("searchInput").value.trim().toLowerCase();
+      
+      if (input === "") {
+         document.querySelectorAll('.student-card').forEach(tr => tr.style.display = "none");
+         document.getElementById('avisoNoEncontrado').style.display = "none";
+         return;
+      }
+
+      let encontrado = false;
+      let pestanaDestino = -1; 
+
+      const tabsContents = document.querySelectorAll('.tab-content');
+      
+      tabsContents.forEach((content, index) => {
+          const trs = content.querySelectorAll("tbody tr.student-card");
+          
+          trs.forEach(tr => {
+              let tdCodigo = tr.getElementsByTagName("td")[0];
+              if (tdCodigo) {
+                  let spanValor = tdCodigo.querySelector('.grade-val');
+                  let valorCodigo = spanValor ? spanValor.innerText.trim().toLowerCase() : "";
+                  
+                  if (valorCodigo === input) {
+                      tr.style.display = "flex";
+                      encontrado = true;
+                      if (pestanaDestino === -1) pestanaDestino = index; 
+                  } else {
+                      tr.style.display = "none";
+                  }
+              }
+          });
+      });
+      
+      if (encontrado && pestanaDestino !== -1) {
+          cambiarPestana(pestanaDestino);
+      }
+      
+      document.getElementById('avisoNoEncontrado').style.display = encontrado ? "none" : "block";
+    }
+
+    window.onload = function() {
+       document.querySelectorAll('.student-card').forEach(tr => {
+           tr.style.display = "none";
+       });
+    }
+  <\/script>
+</body>
+</html>`;
+
+        const blob = new Blob([finalHTML], { type: "text/html;charset=utf-8" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "Notas_Alumnos.html";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+</script>
+
+</body>
+</html>
