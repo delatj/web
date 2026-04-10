@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Educativo - 4º Primaria</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        
+        /* Estilos de las pestañas */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #e0e0e0;
+            color: #333;
+            transition: 0.3s;
+        }
+        .tab-btn:hover { background-color: #d5d5d5; }
+        .tab-btn.active.ingles { background-color: #e74c3c; color: white; }
+        .tab-btn.active.mates { background-color: #3498db; color: white; }
+        .tab-btn.active.lengua { background-color: #f1c40f; color: black; }
+        .tab-btn.active.ciencias { background-color: #2ecc71; color: white; }
+        .tab-btn.active.tecno { background-color: #9b59b6; color: white; }
+        .tab-btn.active.sudokus { background-color: #e67e22; color: white; }
+
+        /* Contenido de las pestañas */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        /* Tabla de botones del menú */
+        .grid-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            padding: 20px;
+        }
+        .game-btn {
+            padding: 15px;
+            font-size: 16px;
+            background-color: #f8f9fa;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .game-btn:hover { background-color: #ecf0f1; border-color: #7f8c8d; }
+
+        /* Estilos del juego en general */
+        #game-view { display: none; }
+        .btn-back {
+            background-color: #34495e;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+
+        /* --- ESTILOS SOPA DE LETRAS --- */
+        table.sopa-table {
+            margin: 0 auto 20px auto;
+            border-collapse: collapse;
+            background-color: #fff;
+        }
+        table.sopa-table td {
+            width: 35px;
+            height: 35px;
+            border: 1px solid #bdc3c7;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .word-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            background: #fdfefe;
+            padding: 15px;
+            border: 2px dashed #bdc3c7;
+            border-radius: 10px;
+        }
+        .word-item {
+            padding: 5px 15px;
+            background: #ecf0f1;
+            border-radius: 15px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .hard-word { color: #c0392b; }
+
+        /* --- ESTILOS SUDOKU --- */
+        table.sudoku-table {
+            border: 3px solid #2c3e50;
+            margin: 0 auto 20px auto;
+            border-collapse: collapse;
+            background-color: #fff;
+        }
+        table.sudoku-table td {
+            width: 45px;
+            height: 45px;
+            border: 1px solid #bdc3c7;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        table.sudoku-table td.thick-right { border-right: 3px solid #2c3e50; }
+        table.sudoku-table td.thick-bottom { border-bottom: 3px solid #2c3e50; }
+        
+        .sudoku-input {
+            width: 100%;
+            height: 100%;
+            border: none;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            color: #d35400; 
+            background-color: #fcfcfc;
+            outline: none;
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+        .sudoku-input:focus { background-color: #e8f6f3; }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="menu-view">
+        <h1>📚 Portal Educativo: 4º Primaria</h1>
+        <p style="text-align: center; color: #666;">Selecciona una asignatura o pasatiempo y elige el nivel.</p>
+        
+        <div class="tabs">
+            <button class="tab-btn active ingles" onclick="openTab('ingles')">🇬🇧 Inglés</button>
+            <button class="tab-btn mates" onclick="openTab('mates')">📐 Matemáticas</button>
+            <button class="tab-btn lengua" onclick="openTab('lengua')">📖 Lengua</button>
+            <button class="tab-btn ciencias" onclick="openTab('ciencias')">🔬 Ciencias</button>
+            <button class="tab-btn tecno" onclick="openTab('tecno')">💻 Tecnología</button>
+            <button class="tab-btn sudokus" onclick="openTab('sudokus')">🧩 Sudokus</button>
+        </div>
+
+        <div id="tab-ingles" class="tab-content active"></div>
+        <div id="tab-mates" class="tab-content"></div>
+        <div id="tab-lengua" class="tab-content"></div>
+        <div id="tab-ciencias" class="tab-content"></div>
+        <div id="tab-tecno" class="tab-content"></div>
+        <div id="tab-sudokus" class="tab-content"></div>
+    </div>
+
+    <div id="game-view">
+        <button class="btn-back" onclick="goBack()">⬅ Volver al Menú</button>
+        <h2 id="game-title" style="text-align: center; color: #2c3e50;">Cargando...</h2>
+        <p id="game-instructions" style="text-align: center;">Instrucciones aquí.</p>
+        <div id="grid-container"></div>
+        
+        <h3 id="words-title" style="text-align: center;">Palabras a buscar:</h3>
+        <div id="word-list-container" class="word-list"></div>
+    </div>
+</div>
+
+<script>
+    // BASE DE DATOS COMPLETA
+    const database = {
+        ingles: [
+            ["APPLE", "BANANA", "ORANGE", "CHERRY", "GRAPE", "MELON", "LEMON", "MANGO", "PEACH", "PLUM", "STRAWBERRY", "WATERMELON", "PINEAPPLE", "BLUEBERRY", "RASPBERRY"],
+            ["DOCTOR", "TEACHER", "POLICE", "NURSE", "SINGER", "ACTOR", "DRIVER", "PILOT", "FARMER", "BAKER", "ENGINEER", "SCIENTIST", "ARCHITECT", "MECHANIC", "ASTRONAUT"],
+            ["CAT", "DOG", "BIRD", "FISH", "MOUSE", "HORSE", "SHEEP", "COW", "PIG", "DUCK", "ELEPHANT", "GIRAFFE", "MONKEY", "PENGUIN", "KANGAROO"],
+            ["RED", "BLUE", "GREEN", "YELLOW", "PINK", "BLACK", "WHITE", "BROWN", "GREY", "PURPLE", "TRIANGLE", "SQUARE", "CIRCLE", "RECTANGLE", "DIAMOND"],
+            ["SHIRT", "PANTS", "SHOES", "SOCKS", "HAT", "COAT", "DRESS", "SKIRT", "JEANS", "SCARF", "SWEATER", "JACKET", "SNEAKERS", "GLOVES", "SHORTS"],
+            ["HEAD", "HAIR", "EYES", "NOSE", "MOUTH", "EARS", "NECK", "HAND", "FOOT", "KNEE", "SHOULDER", "STOMACH", "FINGER", "ELBOW", "ANKLE"],
+            ["MOTHER", "FATHER", "SISTER", "BROTHER", "BABY", "UNCLE", "AUNT", "COUSIN", "BOY", "GIRL", "GRANDMA", "GRANDPA", "PARENT", "CHILD", "FRIEND"],
+            ["DOOR", "WINDOW", "BED", "SOFA", "TABLE", "CHAIR", "LAMP", "DESK", "BATH", "RUG", "KITCHEN", "BEDROOM", "BATHROOM", "GARAGE", "GARDEN"],
+            ["WATER", "MILK", "JUICE", "BREAD", "CHEESE", "MEAT", "EGG", "FISH", "RICE", "SOUP", "BURGER", "PIZZA", "PASTA", "SALAD", "CHICKEN"],
+            ["TREE", "FLOWER", "GRASS", "LEAF", "SUN", "MOON", "STAR", "SKY", "CLOUD", "RAIN", "MOUNTAIN", "RIVER", "OCEAN", "FOREST", "DESERT"]
+        ],
+        mates: [
+            ["SUMA", "RESTA", "NUMERO", "ANGULO", "LADO", "VERTICE", "RADIO", "CURVA", "RECTA", "PLANO", "MULTIPLICAR", "FRACCIONES", "PORCENTAJE", "GEOMETRIA", "PERIMETRO"],
+            ["METRO", "LITRO", "GRAMO", "KILO", "TIEMPO", "HORA", "MINUTO", "SIGLO", "DECADA", "MESES", "CENTIMETRO", "KILOMETRO", "MILILITRO", "CAPACIDAD", "VOLUMEN"],
+            ["CERO", "UNO", "DOS", "TRES", "CUATRO", "CINCO", "SEIS", "SIETE", "OCHO", "NUEVE", "DECENA", "CENTENA", "MILLAR", "MILLON", "UNIDAD"],
+            ["CIRCULO", "CUADRADO", "ROMBO", "ESFERA", "CUBO", "CONO", "PRISMA", "BASE", "ALTURA", "AREA", "TRIANGULO", "RECTANGULO", "CILINDRO", "PIRAMIDE", "POLIGONO"],
+            ["MITAD", "TERCIO", "CUARTO", "COCIENTE", "RESTO", "DIVISOR", "FACTOR", "PRODUCTO", "IGUAL", "SERIE", "FRACCION", "DENOMINADOR", "DECIMAL", "DIVIDENDO", "MULTIPLO"],
+            ["EURO", "CENTIMO", "BILLETE", "MONEDA", "PRECIO", "COMPRA", "VENTA", "GASTO", "PAGO", "DEUDA", "AHORRO", "DESCUENTO", "INTERES", "CAPITAL", "INGRESO"],
+            ["LUNES", "MARTES", "JUEVES", "VIERNES", "SABADO", "ENERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "MIERCOLES", "DOMINGO", "FEBRERO", "OCTUBRE", "DICIEMBRE"],
+            ["PESO", "MASA", "TALLA", "ANCHO", "LARGO", "FONDO", "MEDIDA", "ESCALA", "REGLA", "CINTA", "DISTANCIA", "LONGITUD", "SUPERFICIE", "TEMPERATURA", "VELOCIDAD"],
+            ["DATOS", "TABLA", "GRAFICO", "MEDIA", "MODA", "AZAR", "PROBE", "SEGURO", "BARRA", "CURVA", "ESTADISTICA", "FRECUENCIA", "PROBABILIDAD", "SUCESO", "MEDIANA"],
+            ["PAR", "IMPAR", "PRIMO", "DOBLE", "TRIPLE", "MITADES", "PATRON", "REGLA", "ORDEN", "CALCULO", "PROBLEMA", "SOLUCION", "FORMULA", "ECUACION", "ALGEBRA"]
+        ],
+        lengua: [
+            ["NOMBRE", "VERBO", "COMA", "PUNTO", "LETRA", "FRASE", "SUJETO", "TEXTO", "CUENTO", "POEMA", "ADJETIVO", "ADVERBIO", "PREDICADO", "ORTOGRAFIA", "DICCIONARIO"],
+            ["AGUDA", "LLANA", "TILDE", "VOCAL", "SILABA", "GUION", "VERSO", "RIMA", "PROSA", "AUTOR", "ESDRUJULA", "SINONIMO", "ANTONIMO", "LITERATURA", "GENTILICIO"],
+            ["CARTA", "DIARIO", "NOTICIA", "AVISO", "EMAIL", "CORTOS", "GUION", "REFRAN", "COMIC", "CHISTE", "ENTREVISTA", "REPORTAJE", "ARTICULO", "ENSAYO", "RESUMEN"],
+            ["HABLAR", "COMER", "VIVIR", "SALTAR", "LEER", "ESCRIBIR", "JUGAR", "REIR", "LLORAR", "CANTAR", "ESTUDIAR", "TRABAJAR", "ESCUCHAR", "ENTENDER", "APRENDER"],
+            ["FELIZ", "TRISTE", "RAPIDO", "LENTO", "BUENO", "MALO", "ALTO", "BAJO", "GRANDE", "CHICO", "HERMOSO", "HORRIBLE", "ENORME", "DIMINUTO", "GIGANTE"],
+            ["HOY", "AYER", "MANANA", "SIEMPRE", "NUNCA", "AQUI", "ALLA", "CERCA", "LEJOS", "MUCHO", "TAMBIEN", "TAMPOCO", "QUIZAS", "DESPUES", "ENTONCES"],
+            ["LIBRO", "PAGINA", "INDICE", "PORTADA", "TITULO", "HOJA", "LETRA", "PAPEL", "LAPIZ", "GOMA", "CAPITULO", "PARRAFO", "MARGEN", "ILUSTRACION", "PROLOGO"],
+            ["ACTOR", "ESCENA", "TEATRO", "OBRA", "PUBLICO", "TELON", "DRAMA", "COMEDIA", "SALA", "VOZ", "ESCENARIO", "PERSONAJE", "DIRECTOR", "TRAGEDIA", "ENSAYO"],
+            ["PUNTO", "COMA", "GUION", "RAYA", "COMILLA", "DOS", "SIGNO", "PAUSA", "CIERRE", "TEXTO", "EXCLAMACION", "INTERROGACION", "PARENTESIS", "CORCHETE", "ASTERISCO"],
+            ["RAIZ", "PREFIJO", "SUFIJO", "FAMILIA", "PALABRA", "ORIGEN", "FORMA", "TIPO", "CLASE", "GRUPO", "DERIVADA", "COMPUESTA", "PRIMITIVA", "LEXEMA", "MORFEMA"]
+        ],
+        ciencias: [
+            ["PLANETA", "SOL", "LUNA", "TIERRA", "MAR", "ROCA", "AGUA", "AIRE", "FAUNA", "FLORA", "ATMOSFERA", "GRAVEDAD", "ECOSISTEMA", "MAMIFERO", "VERTEBRADO"],
+            ["HUESO", "SANGRE", "PIEL", "BOCA", "NARIZ", "OJO", "MANO", "PIE", "PELO", "CARA", "CORAZON", "CEREBRO", "PULMONES", "DIGESTION", "MUSCULOS"],
+            ["ARBOL", "HOJA", "TALLO", "RAIZ", "FLOR", "FRUTO", "SEMILLA", "HIERBA", "BOSQUE", "SELVA", "FOTOSINTESIS", "CLOROFILA", "POLEN", "HELECHO", "MUSGO"],
+            ["LEON", "TIGRE", "OSO", "LOBO", "ZORRO", "MONO", "RANA", "SAPO", "PEZ", "AVE", "INVERTEBRADO", "REPTIL", "ANFIBIO", "INSECTO", "ARACNIDO"],
+            ["AGUA", "HIELO", "VAPOR", "NUBE", "LLUVIA", "NIEVE", "RIO", "LAGO", "MAR", "COSTA", "EVAPORACION", "CONDENSACION", "PRECIPITACION", "ACUIFERO", "CORRIENTE"],
+            ["FUEGO", "CALOR", "LUZ", "SONIDO", "FUERZA", "PESO", "IMAN", "MOTOR", "CABLE", "RAYO", "ENERGIA", "ELECTRICIDAD", "MAGNETISMO", "GRAVEDAD", "FRICCION"],
+            ["NORTE", "SUR", "ESTE", "OESTE", "MAPA", "GLOBO", "PAIS", "CIUDAD", "PUEBLO", "CALLE", "BRUJULA", "COORDENADA", "LATITUD", "LONGITUD", "CONTINENTE"],
+            ["CELULA", "NUCLEO", "TEJIDO", "ORGANO", "SISTEMA", "VIRUS", "VACUNA", "SALUD", "DIETA", "SUEÑO", "MICROSCOPIO", "BACTERIA", "INFECCION", "VITAMINA", "NUTRIENTE"],
+            ["HIERRO", "COBRE", "ORO", "PLATA", "PLOMO", "ZINC", "GAS", "AIRE", "OZONO", "HUMO", "OXIGENO", "HIDROGENO", "CARBONO", "NITROGENO", "METANO"],
+            ["VALLE", "MONTE", "SIERRA", "VOLCAN", "ISLA", "CABO", "GOLFO", "BAHIA", "PLAYA", "CUEVA", "MONTAÑA", "CORDILLERA", "PENINSULA", "ESTRECHO", "ACANTILADO"]
+        ],
+        tecno: [
+            ["RATON", "CABLE", "PANTALLA", "TECLA", "RED", "WIFI", "NUBE", "DATO", "WEB", "APP", "ORDENADOR", "TECLADO", "INTERNET", "SOFTWARE", "HARDWARE"],
+            ["FOTO", "VIDEO", "AUDIO", "EMAIL", "CHAT", "LINK", "PIXEL", "VIRUS", "SPAM", "ROBOT", "PROGRAMA", "IMPRESORA", "MEGABYTE", "CONTRASENA", "ALGORITMO"],
+            ["JUEGO", "NIVEL", "PUNTO", "VIDA", "MANDO", "BOTON", "FLECHA", "SALTO", "FASE", "META", "CONSOLA", "PARTIDA", "JUGADOR", "PANTALLA", "AVATAR"],
+            ["MOVIL", "TABLET", "RELOJ", "GAFAS", "LENTE", "FOCO", "PILA", "CARGA", "MOTOR", "PLACA", "BATERIA", "ENCHUFE", "PANTALLA", "ANTENA", "SENSOR"],
+            ["TEXTO", "FUENTE", "COLOR", "FONDO", "MARCO", "ICONO", "MENU", "BARRA", "PANEL", "CLICK", "FORMATO", "DISEÑO", "CURSIVA", "NEGRITA", "SUBRAYADO"],
+            ["BLOG", "FORO", "MURO", "PERFIL", "RED", "LIKE", "POST", "TWEET", "FOTO", "CLIP", "SEGUIDOR", "CONTACTO", "MENSAJE", "COMENTARIO", "USUARIO"],
+            ["CARPETA", "ARCHIVO", "COPIA", "CLAVE", "LOGIN", "DATOS", "MEMORIA", "DISCO", "USB", "CHIP", "DOCUMENTO", "SISTEMA", "SEGURIDAD", "RESPALDO", "REGISTRO"],
+            ["DRON", "BRAZO", "RUEDA", "LASER", "RADAR", "SONAR", "MOTOR", "PIEZA", "METAL", "TUERCA", "ROBOTICA", "AUTOMATA", "MECANISMO", "INTELIGENCIA", "ENGRANAJE"],
+            ["BUSCAR", "FILTRO", "ZOOM", "VISTA", "AYUDA", "ERROR", "FALLO", "TEST", "BETA", "CODIGO", "NAVEGADOR", "BUSCADOR", "HISTORIAL", "PESTAÑA", "MARCADOR"],
+            ["LUCES", "AUDIO", "MICRO", "CASCOS", "CABLE", "TORRE", "CAJA", "PLACA", "RAM", "CPU", "PROCESADOR", "VENTILADOR", "TARJETA", "FUENTE", "PUERTO"]
+        ],
+        // Nuevos Sudokus Nivel "Cuarto de Primaria" (Muy Fáciles - 57 números descubiertos)
+        sudokus: [
+            "530608910602195048098302507859061403020853090703920856901507280280419605045206079",
+            "670105340504678012098302507859061403020853090703920856901507280280419605045206079",
+            "530608910602195048098302507426053701050761020703920856901507280280419605045206079",
+            "350608910702195048018302507589061403040853090103920856601507280820419605035206079",
+            "530708910602915048098402507859071403020583090703290856901307280280149605045806079",
+            "640709120703216059019403608961072504030964010804130967102608390390521706056307081",
+            "640709120703216059019403608961072504030964010804130967308501740170648305056307081",
+            "640709210703216049019403708961072304030964080804130697102608930390521406056307021",
+            "750801230804327061021504709172083605040175020905240178203709410410632807067408092",
+            "890307560706891034021504709172083605040175020905240178203709410410632807067408092"
+        ]
+    };
+
+    window.openTab = function(tabName) {
+        const contents = document.querySelectorAll('.tab-content');
+        contents.forEach(tab => tab.style.display = 'none');
+        
+        const btns = document.querySelectorAll('.tab-btn');
+        btns.forEach(btn => btn.classList.remove('active'));
+        
+        document.getElementById('tab-' + tabName).style.display = 'block';
+        
+        const activeBtn = document.querySelector('.tab-btn.' + tabName);
+        if(activeBtn) activeBtn.classList.add('active');
+    };
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const asignaturas = ['ingles', 'mates', 'lengua', 'ciencias', 'tecno', 'sudokus'];
+        
+        asignaturas.forEach(asig => {
+            const container = document.getElementById('tab-' + asig);
+            if (!container) return; 
+            
+            let html = '<div class="grid-buttons">';
+            for(let i = 0; i < 10; i++) {
+                const isSudoku = asig === 'sudokus';
+                const label = isSudoku ? 'Sudoku ' : 'Sopa ';
+                html += '<button class="game-btn" onclick="playGame(\'' + asig + '\', ' + i + ')">' + label + (i+1) + '</button>';
+            }
+            html += '</div>';
+            container.innerHTML = html;
+        });
+
+        openTab('ingles');
+    });
+
+    window.playGame = function(asig, index) {
+        document.getElementById('menu-view').style.display = 'none';
+        document.getElementById('game-view').style.display = 'block';
+        
+        const nombres = { 
+            ingles: "Inglés", mates: "Matemáticas", lengua: "Lengua", 
+            ciencias: "Ciencias", tecno: "Tecnología", sudokus: "Lógica" 
+        };
+        
+        const isSudoku = (asig === 'sudokus');
+        const titleText = isSudoku ? '🧩 Sudoku - ' : 'Sopa de Letras - ';
+        document.getElementById('game-title').innerText = titleText + nombres[asig] + ' (Nivel ' + (index+1) + ')';
+        
+        if (isSudoku) {
+            document.getElementById('game-instructions').innerText = "Rellena los huecos vacíos con números del 1 al 9 sin repetir en ninguna fila, columna o cuadrado pequeño.";
+            document.getElementById('words-title').style.display = 'none';
+            document.getElementById('word-list-container').style.display = 'none';
+            generateSudoku(database.sudokus[index]);
+        } else {
+            document.getElementById('game-instructions').innerText = "¡Busca las 15 palabras! Las rojas son nivel difícil (escritas de derecha a izquierda o de abajo a arriba).";
+            document.getElementById('words-title').style.display = 'block';
+            document.getElementById('word-list-container').style.display = 'flex';
+            generateWordSearch(database[asig][index]);
+        }
+    };
+
+    window.goBack = function() {
+        document.getElementById('menu-view').style.display = 'block';
+        document.getElementById('game-view').style.display = 'none';
+    };
+
+    function generateSudoku(sudokuString) {
+        let tableHtml = '<table class="sudoku-table">';
+        let charIndex = 0;
+        
+        for (let r = 0; r < 9; r++) {
+            tableHtml += "<tr>";
+            for (let c = 0; c < 9; c++) {
+                let val = sudokuString[charIndex];
+                let tdClass = "";
+                
+                if (c === 2 || c === 5) tdClass += " thick-right";
+                if (r === 2 || r === 5) tdClass += " thick-bottom";
+                
+                tableHtml += `<td class="${tdClass.trim()}">`;
+                
+                if (val !== '0') {
+                    tableHtml += val;
+                } else {
+                    tableHtml += `<input class="sudoku-input" type="text" maxlength="1" oninput="this.value=this.value.replace(/[^1-9]/g,'');">`;
+                }
+                
+                tableHtml += `</td>`;
+                charIndex++;
+            }
+            tableHtml += "</tr>";
+        }
+        tableHtml += "</table>";
+        document.getElementById('grid-container').innerHTML = tableHtml;
+    }
+
+    function generateWordSearch(wordsObj) {
+        const size = 15;
+        let grid = Array.from({ length: size }, () => Array(size).fill(''));
+        
+        const normalDirs = [ [1,0], [0,1], [1,1] ]; 
+        const reverseDirs = [ [-1,0], [0,-1], [-1,-1] ]; 
+        
+        let wordsList = wordsObj.map((w, index) => ({
+            word: w.toUpperCase(),
+            isHard: index >= 10 
+        }));
+
+        wordsList.sort((a, b) => b.word.length - a.word.length);
+
+        wordsList.forEach(item => {
+            let placed = false;
+            let attempts = 0;
+            const dirs = item.isHard ? reverseDirs : normalDirs;
+
+            while (!placed && attempts < 200) {
+                let dir = dirs[Math.floor(Math.random() * dirs.length)];
+                let dx = dir[0], dy = dir[1];
+                
+                let startX = Math.floor(Math.random() * size);
+                let startY = Math.floor(Math.random() * size);
+                
+                let endX = startX + dx * (item.word.length - 1);
+                let endY = startY + dy * (item.word.length - 1);
+                
+                if (endX >= 0 && endX < size && endY >= 0 && endY < size) {
+                    let canPlace = true;
+                    for (let i = 0; i < item.word.length; i++) {
+                        let cx = startX + dx * i;
+                        let cy = startY + dy * i;
+                        if (grid[cy][cx] !== '' && grid[cy][cx] !== item.word[i]) {
+                            canPlace = false;
+                            break;
+                        }
+                    }
+                    
+                    if (canPlace) {
+                        for (let i = 0; i < item.word.length; i++) {
+                            grid[startY + dy * i][startX + dx * i] = item.word[i];
+                        }
+                        placed = true;
+                    }
+                }
+                attempts++;
+            }
+        });
+
+        const alphabet = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
+        for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+                if (grid[y][x] === '') {
+                    grid[y][x] = alphabet[Math.floor(Math.random() * alphabet.length)];
+                }
+            }
+        }
+
+        let tableHtml = "<table class='sopa-table'>";
+        for (let y = 0; y < size; y++) {
+            tableHtml += "<tr>";
+            for (let x = 0; x < size; x++) {
+                tableHtml += `<td>${grid[y][x]}</td>`;
+            }
+            tableHtml += "</tr>";
+        }
+        tableHtml += "</table>";
+        document.getElementById('grid-container').innerHTML = tableHtml;
+
+        let listHtml = "";
+        wordsObj.forEach((w, index) => {
+            const isHard = index >= 10;
+            listHtml += `<div class="word-item ${isHard ? 'hard-word' : ''}"><input type="checkbox"> ${w.toUpperCase()}</div>`;
+        });
+        document.getElementById('word-list-container').innerHTML = listHtml;
+    }
+</script>
+
+</body>
+</html>
