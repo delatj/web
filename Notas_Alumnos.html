@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Consulta de Notas</title>
+<style>
+  body { font-family: 'Segoe UI', sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; background-color: #f4f7f6; }
+  .container { background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; }
+  h2 { color: #333; margin-bottom: 5px; }
+  .instruccion { color: #666; margin-bottom: 20px; }
+  .search-box { padding: 12px; width: 100%; max-width: 350px; font-size: 16px; border: 2px solid #ddd; border-radius: 8px; margin-bottom: 20px; outline: none; }
+  .search-box:focus { border-color: #007BFF; }
+  
+  .leyenda { display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; flex-wrap: wrap; font-size: 14px; background-color: #fdfdfd; padding: 15px; border-radius: 8px; border: 1px solid #eee; }
+  .leyenda-item { display: flex; align-items: center; gap: 8px; color: #555; font-weight: 500; }
+  .caja-color { width: 18px; height: 18px; border-radius: 4px; border: 1px solid #ccc; }
+
+  .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .tab { padding: 10px 25px; background-color: #e9ecef; border-radius: 8px; cursor: pointer; font-weight: bold; color: #495057; transition: 0.2s; }
+  .tab.active { background-color: #007BFF; color: white; }
+  .tab:hover:not(.active) { background-color: #dee2e6; }
+  
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  
+  table { width: 100%; border-collapse: collapse; }
+  thead { display: none; } 
+  
+  .student-card { display: none; flex-direction: column; background: #fafafa; padding: 20px; border-radius: 12px; border: 3px solid #343a40; margin-top: 15px; gap: 8px; }
+  
+  td { display: flex; justify-content: space-between; align-items: center; border: 2px solid black !important; padding: 12px 18px; border-radius: 6px; font-size: 16px; color: #000; gap: 15px; }
+  td::before { content: attr(data-label); font-weight: 800; color: #222; text-transform: uppercase; font-size: 14px; text-align: left; }
+  
+  .grade-val { font-weight: bold; font-size: 18px; background: rgba(255,255,255,0.7); padding: 6px 12px; border-radius: 5px; border: 1px solid black; min-width: 40px; text-align: center; }
+
+  .aviso { color: #dc3545; font-size: 14px; margin-top: 15px; display: none; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h2>Consulta tus Notas</h2>
+    <p class="instruccion">Introduce tu código personal para ver tus calificaciones.</p>
+    
+    <input type="text" id="searchInput" class="search-box" placeholder="Introduce tu código..." onkeyup="filtrarNotas()">
+    
+    <div class="leyenda">
+        <div class="leyenda-item"><div class="caja-color" style="background-color: #cce5ff;"></div> T - Tarea</div>
+        <div class="leyenda-item"><div class="caja-color" style="background-color: #d4edda;"></div> P - Proyecto</div>
+        <div class="leyenda-item"><div class="caja-color" style="background-color: #f8d7da;"></div> C - Controles o Pruebas</div>
+        <div class="leyenda-item"><div class="caja-color" style="background-color: #e2d9f3;"></div> M - Media</div>
+        <div class="leyenda-item"><div class="caja-color" style="background-color: #ffe5b4;"></div> Otros</div>
+    </div>
+    
+    <div class="tabs">
+      <div class="tab active" id="tab-btn-0" onclick="cambiarPestana(0)">4TEC</div>
+
+    </div>
+    
+    <div id="tablesContainer">
+      <div class="tab-content active" id="tab-content-0">
+<table>
+<thead><tr><th>Código</th><th>1. t web intr pr</th><th>2. t web robótica</th></tr></thead>
+<tbody>
+<tr class="student-card"><td data-label="CÓDIGO DEL ALUMNO" style="background-color: #ffffff;"><span class="grade-val">433</span></td><td data-label="1. t web intr pr" style="background-color: #cce5ff;"><span class="grade-val">100</span></td><td data-label="2. t web robótica" style="background-color: #cce5ff;"><span class="grade-val"></span></td><td data-label="undefined" style="background-color: undefined;"><span class="grade-val"></span></td></tr>
+<tr class="student-card"><td data-label="CÓDIGO DEL ALUMNO" style="background-color: #ffffff;"><span class="grade-val">1804</span></td><td data-label="1. t web intr pr" style="background-color: #cce5ff;"><span class="grade-val">100</span></td><td data-label="2. t web robótica" style="background-color: #cce5ff;"><span class="grade-val"></span></td><td data-label="undefined" style="background-color: undefined;"><span class="grade-val"></span></td></tr>
+<tr class="student-card"><td data-label="CÓDIGO DEL ALUMNO" style="background-color: #ffffff;"><span class="grade-val">2806</span></td><td data-label="1. t web intr pr" style="background-color: #cce5ff;"><span class="grade-val"></span></td><td data-label="2. t web robótica" style="background-color: #cce5ff;"><span class="grade-val"></span></td><td data-label="undefined" style="background-color: undefined;"><span class="grade-val"></span></td></tr>
+<tr class="student-card"><td data-label="CÓDIGO DEL ALUMNO" style="background-color: #ffffff;"><span class="grade-val">243</span></td><td data-label="1. t web intr pr" style="background-color: #cce5ff;"><span class="grade-val"></span></td><td data-label="2. t web robótica" style="background-color: #cce5ff;"><span class="grade-val"></span></td><td data-label="undefined" style="background-color: undefined;"><span class="grade-val"></span></td></tr>
+<tr class="student-card"><td data-label="CÓDIGO DEL ALUMNO" style="background-color: #ffffff;"><span class="grade-val">1308</span></td><td data-label="1. t web intr pr" style="background-color: #cce5ff;"><span class="grade-val">100</span></td><td data-label="2. t web robótica" style="background-color: #cce5ff;"><span class="grade-val">80</span></td><td data-label="undefined" style="background-color: undefined;"><span class="grade-val"></span></td></tr>
+<tr class="student-card"><td data-label="CÓDIGO DEL ALUMNO" style="background-color: #ffffff;"><span class="grade-val">0106</span></td><td data-label="1. t web intr pr" style="background-color: #cce5ff;"><span class="grade-val">100</span></td><td data-label="2. t web robótica" style="background-color: #cce5ff;"><span class="grade-val"></span></td><td data-label="undefined" style="background-color: undefined;"><span class="grade-val"></span></td></tr>
+<tr class="student-card"><td data-label="CÓDIGO DEL ALUMNO" style="background-color: #ffffff;"><span class="grade-val">2704</span></td><td data-label="1. t web intr pr" style="background-color: #cce5ff;"><span class="grade-val"></span></td><td data-label="2. t web robótica" style="background-color: #cce5ff;"><span class="grade-val"></span></td><td data-label="undefined" style="background-color: undefined;"><span class="grade-val"></span></td></tr>
+<tr class="student-card"><td data-label="CÓDIGO DEL ALUMNO" style="background-color: #ffffff;"><span class="grade-val">2411</span></td><td data-label="1. t web intr pr" style="background-color: #cce5ff;"><span class="grade-val">100</span></td><td data-label="2. t web robótica" style="background-color: #cce5ff;"><span class="grade-val"></span></td><td data-label="undefined" style="background-color: undefined;"><span class="grade-val"></span></td></tr>
+<tr class="student-card"><td data-label="CÓDIGO DEL ALUMNO" style="background-color: #ffffff;"><span class="grade-val">2807</span></td><td data-label="1. t web intr pr" style="background-color: #cce5ff;"><span class="grade-val">50</span></td><td data-label="2. t web robótica" style="background-color: #cce5ff;"><span class="grade-val"></span></td><td data-label="undefined" style="background-color: undefined;"><span class="grade-val"></span></td></tr>
+<tr class="student-card"><td data-label="CÓDIGO DEL ALUMNO" style="background-color: #ffffff;"><span class="grade-val">1234</span></td><td data-label="1. t web intr pr" style="background-color: #cce5ff;"><span class="grade-val">100</span></td><td data-label="2. t web robótica" style="background-color: #cce5ff;"><span class="grade-val"></span></td><td data-label="undefined" style="background-color: undefined;"><span class="grade-val"></span></td></tr>
+<tr class="student-card"><td data-label="CÓDIGO DEL ALUMNO" style="background-color: #ffffff;"><span class="grade-val">1402</span></td><td data-label="1. t web intr pr" style="background-color: #cce5ff;"><span class="grade-val"></span></td><td data-label="2. t web robótica" style="background-color: #cce5ff;"><span class="grade-val"></span></td><td data-label="undefined" style="background-color: undefined;"><span class="grade-val"></span></td></tr>
+<tr class="student-card"><td data-label="CÓDIGO DEL ALUMNO" style="background-color: #ffffff;"><span class="grade-val">1303</span></td><td data-label="1. t web intr pr" style="background-color: #cce5ff;"><span class="grade-val">90</span></td><td data-label="2. t web robótica" style="background-color: #cce5ff;"><span class="grade-val"></span></td><td data-label="undefined" style="background-color: undefined;"><span class="grade-val"></span></td></tr>
+<tr class="student-card"><td data-label="CÓDIGO DEL ALUMNO" style="background-color: #ffffff;"><span class="grade-val">2509</span></td><td data-label="1. t web intr pr" style="background-color: #cce5ff;"><span class="grade-val"></span></td><td data-label="2. t web robótica" style="background-color: #cce5ff;"><span class="grade-val"></span></td><td data-label="undefined" style="background-color: undefined;"><span class="grade-val"></span></td></tr>
+<tr class="student-card"><td data-label="CÓDIGO DEL ALUMNO" style="background-color: #ffffff;"><span class="grade-val">1711</span></td><td data-label="1. t web intr pr" style="background-color: #cce5ff;"><span class="grade-val">100</span></td><td data-label="2. t web robótica" style="background-color: #cce5ff;"><span class="grade-val"></span></td><td data-label="undefined" style="background-color: undefined;"><span class="grade-val"></span></td></tr>
+<tr class="student-card"><td data-label="CÓDIGO DEL ALUMNO" style="background-color: #ffffff;"><span class="grade-val">1411</span></td><td data-label="1. t web intr pr" style="background-color: #cce5ff;"><span class="grade-val">50</span></td><td data-label="2. t web robótica" style="background-color: #cce5ff;"><span class="grade-val"></span></td><td data-label="undefined" style="background-color: undefined;"><span class="grade-val"></span></td></tr>
+<tr class="student-card"><td data-label="CÓDIGO DEL ALUMNO" style="background-color: #ffffff;"><span class="grade-val">1701</span></td><td data-label="1. t web intr pr" style="background-color: #cce5ff;"><span class="grade-val"></span></td><td data-label="2. t web robótica" style="background-color: #cce5ff;"><span class="grade-val"></span></td><td data-label="undefined" style="background-color: undefined;"><span class="grade-val"></span></td></tr>
+<tr class="student-card"><td data-label="CÓDIGO DEL ALUMNO" style="background-color: #ffffff;"><span class="grade-val">0310</span></td><td data-label="1. t web intr pr" style="background-color: #cce5ff;"><span class="grade-val">100</span></td><td data-label="2. t web robótica" style="background-color: #cce5ff;"><span class="grade-val"></span></td><td data-label="undefined" style="background-color: undefined;"><span class="grade-val"></span></td></tr>
+<tr class="student-card"><td data-label="CÓDIGO DEL ALUMNO" style="background-color: #ffffff;"><span class="grade-val">749</span></td><td data-label="1. t web intr pr" style="background-color: #cce5ff;"><span class="grade-val"></span></td><td data-label="2. t web robótica" style="background-color: #cce5ff;"><span class="grade-val"></span></td><td data-label="undefined" style="background-color: undefined;"><span class="grade-val"></span></td></tr>
+<tr class="student-card"><td data-label="CÓDIGO DEL ALUMNO" style="background-color: #ffffff;"><span class="grade-val">0602</span></td><td data-label="1. t web intr pr" style="background-color: #cce5ff;"><span class="grade-val">100</span></td><td data-label="2. t web robótica" style="background-color: #cce5ff;"><span class="grade-val"></span></td><td data-label="undefined" style="background-color: undefined;"><span class="grade-val"></span></td></tr>
+<tr class="student-card"><td data-label="CÓDIGO DEL ALUMNO" style="background-color: #ffffff;"><span class="grade-val">255</span></td><td data-label="1. t web intr pr" style="background-color: #cce5ff;"><span class="grade-val">100</span></td><td data-label="2. t web robótica" style="background-color: #cce5ff;"><span class="grade-val"></span></td><td data-label="undefined" style="background-color: undefined;"><span class="grade-val"></span></td></tr>
+<tr class="student-card"><td data-label="CÓDIGO DEL ALUMNO" style="background-color: #ffffff;"><span class="grade-val">133</span></td><td data-label="1. t web intr pr" style="background-color: #cce5ff;"><span class="grade-val"></span></td><td data-label="2. t web robótica" style="background-color: #cce5ff;"><span class="grade-val"></span></td><td data-label="undefined" style="background-color: undefined;"><span class="grade-val"></span></td></tr>
+<tr class="student-card"><td data-label="CÓDIGO DEL ALUMNO" style="background-color: #ffffff;"><span class="grade-val">0804</span></td><td data-label="1. t web intr pr" style="background-color: #cce5ff;"><span class="grade-val">100</span></td><td data-label="2. t web robótica" style="background-color: #cce5ff;"><span class="grade-val"></span></td><td data-label="undefined" style="background-color: undefined;"><span class="grade-val"></span></td></tr>
+<tr class="student-card"><td data-label="CÓDIGO DEL ALUMNO" style="background-color: #ffffff;"><span class="grade-val">1609</span></td><td data-label="1. t web intr pr" style="background-color: #cce5ff;"><span class="grade-val">100</span></td><td data-label="2. t web robótica" style="background-color: #cce5ff;"><span class="grade-val">100</span></td><td data-label="undefined" style="background-color: undefined;"><span class="grade-val"></span></td></tr>
+</tbody>
+</table>
+</div>
+
+    </div>
+    
+    <p class="aviso" id="avisoNoEncontrado">Código no encontrado en ninguna pestaña. Por favor, revisa que esté bien escrito.</p>
+  </div>
+
+  <script>
+    function cambiarPestana(index) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      
+      document.getElementById('tab-btn-' + index).classList.add('active');
+      document.getElementById('tab-content-' + index).classList.add('active');
+    }
+
+    function filtrarNotas() {
+      const input = document.getElementById("searchInput").value.trim().toLowerCase();
+      
+      if (input === "") {
+         document.querySelectorAll('.student-card').forEach(tr => tr.style.display = "none");
+         document.getElementById('avisoNoEncontrado').style.display = "none";
+         return;
+      }
+
+      let encontrado = false;
+      let pestanaDestino = -1; 
+
+      const tabsContents = document.querySelectorAll('.tab-content');
+      
+      tabsContents.forEach((content, index) => {
+          const trs = content.querySelectorAll("tbody tr.student-card");
+          
+          trs.forEach(tr => {
+              let tdCodigo = tr.getElementsByTagName("td")[0];
+              if (tdCodigo) {
+                  let spanValor = tdCodigo.querySelector('.grade-val');
+                  let valorCodigo = spanValor ? spanValor.innerText.trim().toLowerCase() : "";
+                  
+                  if (valorCodigo === input) {
+                      tr.style.display = "flex";
+                      encontrado = true;
+                      if (pestanaDestino === -1) pestanaDestino = index; 
+                  } else {
+                      tr.style.display = "none";
+                  }
+              }
+          });
+      });
+      
+      if (encontrado && pestanaDestino !== -1) {
+          cambiarPestana(pestanaDestino);
+      }
+      
+      document.getElementById('avisoNoEncontrado').style.display = encontrado ? "none" : "block";
+    }
+
+    window.onload = function() {
+       document.querySelectorAll('.student-card').forEach(tr => {
+           tr.style.display = "none";
+       });
+    }
+  </script>
+</body>
+</html>
