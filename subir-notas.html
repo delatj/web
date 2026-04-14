@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Creador de Web de Notas Pro</title>
     <style>
@@ -102,16 +103,18 @@
                 });
             }
 
+            // MODIFICACIÓN: Cálculo de media dividiendo siempre por el total de tareas, tomando las vacías como 0.
             function calcAvg(cols, indices) {
-                let sum = 0; let count = 0;
+                if (indices.length === 0) return null;
+                let sum = 0; 
                 indices.forEach(idx => {
                     let val = cols[idx];
-                    if(val) {
+                    if(val && val.trim() !== "") {
                         let num = parseFloat(val.replace(',', '.')); 
-                        if (!isNaN(num)) { sum += num; count++; }
+                        if (!isNaN(num)) { sum += num; }
                     }
                 });
-                return count > 0 ? (sum / count) : null;
+                return sum / indices.length; 
             }
 
             let parsedStudents = [];
@@ -136,14 +139,18 @@
                 
                 tablesHTML += `<td data-label="Identificación" style="background-color: #eee;"><span class="grade-val">${stu.cols[0]}</span></td>`;
 
+                // MODIFICACIÓN: Incorporación del cálculo del porcentaje respecto al máximo
                 if (typeCols.T.length > 0 && stu.avgT !== null) {
-                    tablesHTML += `<td data-label="📊 MEDIA TAREAS (Tú / Máx)" style="background-color: #b8d4ff; border: 3px solid #0056b3 !important;"><span class="grade-val">${stu.avgT.toFixed(2)} / ${maxAvgs.T.toFixed(2)}</span></td>`;
+                    let pctT = maxAvgs.T > 0 ? ((stu.avgT / maxAvgs.T) * 100).toFixed(1) : 0;
+                    tablesHTML += `<td data-label="📊 MEDIA TAREAS (Tú / Máx)" style="background-color: #b8d4ff; border: 3px solid #0056b3 !important;"><span class="grade-val">${stu.avgT.toFixed(2)} / ${maxAvgs.T.toFixed(2)} (${pctT}%)</span></td>`;
                 }
                 if (typeCols.C.length > 0 && stu.avgC !== null) {
-                    tablesHTML += `<td data-label="📊 MEDIA PRUEBAS (Tú / Máx)" style="background-color: #f5c6cb; border: 3px solid #b21f2d !important;"><span class="grade-val">${stu.avgC.toFixed(2)} / ${maxAvgs.C.toFixed(2)}</span></td>`;
+                    let pctC = maxAvgs.C > 0 ? ((stu.avgC / maxAvgs.C) * 100).toFixed(1) : 0;
+                    tablesHTML += `<td data-label="📊 MEDIA PRUEBAS (Tú / Máx)" style="background-color: #f5c6cb; border: 3px solid #b21f2d !important;"><span class="grade-val">${stu.avgC.toFixed(2)} / ${maxAvgs.C.toFixed(2)} (${pctC}%)</span></td>`;
                 }
                 if (typeCols.P.length > 0 && stu.avgP !== null) {
-                    tablesHTML += `<td data-label="📊 MEDIA PROYECTOS (Tú / Máx)" style="background-color: #c3e6cb; border: 3px solid #1e7e34 !important;"><span class="grade-val">${stu.avgP.toFixed(2)} / ${maxAvgs.P.toFixed(2)}</span></td>`;
+                    let pctP = maxAvgs.P > 0 ? ((stu.avgP / maxAvgs.P) * 100).toFixed(1) : 0;
+                    tablesHTML += `<td data-label="📊 MEDIA PROYECTOS (Tú / Máx)" style="background-color: #c3e6cb; border: 3px solid #1e7e34 !important;"><span class="grade-val">${stu.avgP.toFixed(2)} / ${maxAvgs.P.toFixed(2)} (${pctP}%)</span></td>`;
                 }
 
                 stu.cols.slice(1).forEach((col, cIdx) => {
@@ -202,7 +209,7 @@
 <body>
   <div class="container">
     <h2>Consulta de Notas</h2>
-    <div class="disclaimer">💡 <b>Aviso:</b> Las notas del trimestre pueden tener valores distintos, ya que todas las notas no valen no mismo (dependen de los criterios). La media se compara con el máximo de la clase.</div>
+    <div class="disclaimer">💡 <b>Aviso:</b> Las notas del trimestre pueden tener valores distintos, ya que todas las notas no valen lo mismo (dependen de los criterios). La media se compara con el máximo de la clase, y las tareas no entregadas cuentan como 0.</div>
     
     <input type="text" id="searchInput" class="search-box" placeholder="Introduce tu código..." onkeyup="filtrarNotas()">
     
@@ -213,6 +220,7 @@
 
     <div class="tabs">${tabsHTML}</div>
     <div id="tablesContainer">${tablesHTML}</div>
+    
     <p class="aviso" id="avisoNoEncontrado">No encontrado.</p>
   </div>
 
@@ -252,7 +260,7 @@
                   encontrado = true;
                   currentStudentIndex = parseInt(tr.getAttribute('data-index'));
                   cambiarPestanaManual(tabIdx);
-                  navTools.style.display = "flex"; // Mostrar los botones de navegación
+                  navTools.style.display = "flex"; 
               } else {
                   tr.style.display = "none";
               }
@@ -268,7 +276,6 @@
       document.getElementById('tab-content-' + index).classList.add('active');
     }
 
-    // Nueva función centralizada para verificar contraseña
     function comprobarPassword() {
         if (!unlocked) {
             let pass = prompt("Introduce la contraseña del profesor para navegar:");
@@ -283,27 +290,22 @@
         return true;
     }
 
-    // Función para avanzar (1) o retroceder (-1)
     function moverAlumno(direccion) {
       if (!comprobarPassword()) return;
 
       const activeContent = document.querySelector('.tab-content.active');
       const allCards = Array.from(activeContent.querySelectorAll('.student-card'));
       
-      // Ocultar actual
       allCards.forEach(c => c.style.display = "none");
       
-      // Cambiar índice dependiendo de la dirección
       currentStudentIndex += direccion;
       
-      // Hacer que la lista sea circular
       if (currentStudentIndex >= allCards.length) currentStudentIndex = 0;
       if (currentStudentIndex < 0) currentStudentIndex = allCards.length - 1;
 
       const nextCard = allCards[currentStudentIndex];
       nextCard.style.display = "flex";
       
-      // Actualizar buscador con el código del nuevo alumno
       document.getElementById("searchInput").value = nextCard.querySelector('td .grade-val').innerText;
     }
 
@@ -323,4 +325,6 @@
         document.body.removeChild(link);
     }
 </script>
-</body></html>
+
+</body>
+</html>
