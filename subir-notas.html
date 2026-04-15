@@ -1,7 +1,6 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Creador de Web de Notas Pro</title>
     <style>
@@ -103,7 +102,6 @@
                 });
             }
 
-            // MODIFICACIÓN: Cálculo de media dividiendo siempre por el total de tareas, tomando las vacías como 0.
             function calcAvg(cols, indices) {
                 if (indices.length === 0) return null;
                 let sum = 0; 
@@ -136,10 +134,8 @@
 
             parsedStudents.forEach((stu, sIndex) => {
                 tablesHTML += `<tr class="student-card" data-index="${sIndex}">`;
-                
                 tablesHTML += `<td data-label="Identificación" style="background-color: #eee;"><span class="grade-val">${stu.cols[0]}</span></td>`;
 
-                // MODIFICACIÓN: Incorporación del cálculo del porcentaje respecto al máximo
                 if (typeCols.T.length > 0 && stu.avgT !== null) {
                     let pctT = maxAvgs.T > 0 ? ((stu.avgT / maxAvgs.T) * 100).toFixed(1) : 0;
                     tablesHTML += `<td data-label="📊 MEDIA TAREAS (Tú / Máx)" style="background-color: #b8d4ff; border: 3px solid #0056b3 !important;"><span class="grade-val">${stu.avgT.toFixed(2)} / ${maxAvgs.T.toFixed(2)} (${pctT}%)</span></td>`;
@@ -157,7 +153,6 @@
                     let realIdx = cIdx + 1;
                     tablesHTML += `<td data-label="${columnHeaders[realIdx]}" style="background-color: ${columnColors[realIdx]};"><span class="grade-val">${col}</span></td>`;
                 });
-
                 tablesHTML += "</tr>\n";
             });
             tablesHTML += `</tbody>\n</table>\n</div>\n`;
@@ -174,28 +169,20 @@
   .container { background-color: white; padding: 30px 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; max-width: 800px; margin: 0 auto; }
   .disclaimer { background-color: #fff3cd; color: #856404; padding: 12px 15px; border-left: 5px solid #ffeeba; border-radius: 6px; margin-bottom: 20px; font-size: 14px; text-align: left; }
   .search-box { padding: 12px; width: 100%; max-width: 350px; font-size: 16px; border: 2px solid #ddd; border-radius: 8px; margin-bottom: 10px; outline: none; box-sizing: border-box; }
-  
   .nav-tools { margin-bottom: 20px; display: none; justify-content: center; gap: 10px; flex-wrap: wrap; }
   .btn-nav { background-color: #007BFF; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; min-width: 130px; transition: 0.2s; }
   .btn-nav:hover { background-color: #0056b3; }
-
   .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
   .tab { padding: 8px 18px; background-color: #e9ecef; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
   .tab.active { background-color: #007BFF; color: white; }
   .tab-content { display: none; }
   .tab-content.active { display: block; }
-  
-  /* CENTRADO DE LA TARJETA */
   table { width: 100%; }
   .student-card { display: none; flex-direction: column; background: #fafafa; padding: 20px; border-radius: 12px; border: 3px solid #343a40; margin: 15px auto; gap: 8px; max-width: 500px; }
-  
   td { display: flex; justify-content: space-between; align-items: center; border: 1px solid #ccc; padding: 12px; border-radius: 6px; }
   td::before { content: attr(data-label); font-weight: bold; font-size: 13px; color: #444; text-align: left; flex: 1; padding-right: 10px; }
   .grade-val { font-weight: bold; font-size: 16px; text-align: right; }
-  
   .aviso { color: #dc3545; font-size: 14px; margin-top: 15px; display: none; }
-
-  /* ADAPTACIÓN MÓVIL (RESPONSIVE) */
   @media (max-width: 480px) {
     .container { padding: 20px 10px; }
     .student-card { padding: 15px; max-width: 100%; box-sizing: border-box; border-width: 2px; }
@@ -211,6 +198,8 @@
     <h2>Consulta de Notas</h2>
     <div class="disclaimer">💡 <b>Aviso:</b> Las notas del trimestre pueden tener valores distintos, ya que todas las notas no valen lo mismo (dependen de los criterios). La media se compara con el máximo de la clase, y las tareas no entregadas cuentan como 0.</div>
     
+    <div class="tabs">${tabsHTML}</div>
+    
     <input type="text" id="searchInput" class="search-box" placeholder="Introduce tu código..." onkeyup="filtrarNotas()">
     
     <div class="nav-tools" id="navTools">
@@ -218,7 +207,6 @@
         <button id="btnNext" class="btn-nav" onclick="moverAlumno(1)">Siguiente ➔</button>
     </div>
 
-    <div class="tabs">${tabsHTML}</div>
     <div id="tablesContainer">${tablesHTML}</div>
     
     <p class="aviso" id="avisoNoEncontrado">No encontrado.</p>
@@ -233,6 +221,7 @@
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       document.getElementById('tab-btn-' + index).classList.add('active');
       document.getElementById('tab-content-' + index).classList.add('active');
+      document.getElementById("searchInput").value = ""; 
       resetBusqueda();
     }
 
@@ -240,72 +229,50 @@
         document.querySelectorAll('.student-card').forEach(tr => tr.style.display = "none");
         currentStudentIndex = -1;
         document.getElementById('navTools').style.display = "none";
+        document.getElementById('avisoNoEncontrado').style.display = "none";
     }
 
     function filtrarNotas() {
       const input = document.getElementById("searchInput").value.trim().toLowerCase();
       const navTools = document.getElementById('navTools');
-      
       if (input === "") { resetBusqueda(); return; }
-
       let encontrado = false;
-      const tabsContents = document.querySelectorAll('.tab-content');
-      
-      tabsContents.forEach((content, tabIdx) => {
-          const trs = content.querySelectorAll(".student-card");
-          trs.forEach(tr => {
-              let valorCodigo = tr.querySelector('td .grade-val').innerText.trim().toLowerCase();
-              if (valorCodigo === input) {
-                  tr.style.display = "flex";
-                  encontrado = true;
-                  currentStudentIndex = parseInt(tr.getAttribute('data-index'));
-                  cambiarPestanaManual(tabIdx);
-                  navTools.style.display = "flex"; 
-              } else {
-                  tr.style.display = "none";
-              }
-          });
+      const activeContent = document.querySelector('.tab-content.active');
+      if (!activeContent) return;
+      const trs = activeContent.querySelectorAll(".student-card");
+      trs.forEach(tr => {
+          let valorCodigo = tr.querySelector('td .grade-val').innerText.trim().toLowerCase();
+          if (valorCodigo === input) {
+              tr.style.display = "flex";
+              encontrado = true;
+              currentStudentIndex = parseInt(tr.getAttribute('data-index'));
+              navTools.style.display = "flex"; 
+          } else {
+              tr.style.display = "none";
+          }
       });
       document.getElementById('avisoNoEncontrado').style.display = encontrado ? "none" : "block";
-    }
-
-    function cambiarPestanaManual(index) {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      document.getElementById('tab-btn-' + index).classList.add('active');
-      document.getElementById('tab-content-' + index).classList.add('active');
     }
 
     function comprobarPassword() {
         if (!unlocked) {
             let pass = prompt("Introduce la contraseña del profesor para navegar:");
-            if (pass === "1979") {
-                unlocked = true;
-                return true;
-            } else {
-                alert("Contraseña incorrecta.");
-                return false;
-            }
+            if (pass === "1979") { unlocked = true; return true; } 
+            else { alert("Contraseña incorrecta."); return false; }
         }
         return true;
     }
 
     function moverAlumno(direccion) {
       if (!comprobarPassword()) return;
-
       const activeContent = document.querySelector('.tab-content.active');
       const allCards = Array.from(activeContent.querySelectorAll('.student-card'));
-      
       allCards.forEach(c => c.style.display = "none");
-      
       currentStudentIndex += direccion;
-      
       if (currentStudentIndex >= allCards.length) currentStudentIndex = 0;
       if (currentStudentIndex < 0) currentStudentIndex = allCards.length - 1;
-
       const nextCard = allCards[currentStudentIndex];
       nextCard.style.display = "flex";
-      
       document.getElementById("searchInput").value = nextCard.querySelector('td .grade-val').innerText;
     }
 
@@ -325,6 +292,4 @@
         document.body.removeChild(link);
     }
 </script>
-
-</body>
-</html>
+</body></html>
