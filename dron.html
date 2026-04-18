@@ -1,551 +1,283 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     
-    <title>Dron Pilot: El Bucle Infinito de Programación</title>
+    <title>Dron Duel - 30 Retos Cyber</title>
     <style>
         :root {
-            --primary: #2ecc71;
-            --danger: #e74c3c;
-            --dark: #1a1a1a;
-            --panel: #2c3e50;
-            --dron-front: #ff0000;
-            --grid-color: rgba(0, 0, 0, 0.1);
+            --primary: #2ecc71; --p1-color: #e74c3c; --p2-color: #3498db; --grid-size: 40px;
         }
-        body { background: var(--dark); color: white; margin: 0; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; overflow: hidden; transition: background 0.8s ease; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; height: 100vh; overflow: hidden; background: #eee; color: #333; }
 
-        /* --- NOTIFICACIONES EN EL JUEGO --- */
-        #notificacion-juego {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            padding: 15px 30px; color: white; font-weight: bold; border-radius: 8px;
-            z-index: 4000; display: none; transition: opacity 0.3s;
-            text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            font-size: 1.1rem; border: 2px solid white;
+        #split-container { position: fixed; inset: 0; display: flex; z-index: 1; }
+        .arena { 
+            flex: 1; position: relative; transition: background 0.8s ease; 
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+            padding-bottom: 50px; perspective: 1000px;
+            background-color: white; border: 1px solid #ccc;
         }
 
-        /* --- PANEL IZQUIERDO --- */
-        .sidebar { width: 320px; background: var(--panel); padding: 15px; display: flex; flex-direction: column; box-shadow: 5px 0 15px rgba(0,0,0,0.3); z-index: 100; overflow-y: auto; }
-        #timer-container { font-size: 1.8rem; text-align: center; background: #c0392b; color: white; padding: 10px; border-radius: 6px; margin-bottom: 5px; font-family: monospace; border: 2px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
-        #score-container { font-size: 1.2rem; font-weight: bold; text-align: center; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px; margin-bottom: 10px; border-bottom: 3px solid var(--primary); }
-        textarea { height: 180px; width: 100%; background: #111; color: #00ff00; border: 1px solid #444; border-radius: 6px; padding: 10px; font-family: 'Courier New', monospace; resize: none; box-sizing: border-box; font-size: 1rem; transition: 0.3s;}
-        textarea:disabled { opacity: 0.5; background: #333; cursor: not-allowed; }
+        /* Se aumentó la altura de la barra superior a 140px para acomodar el nuevo tamaño del texto */
+        .top-bar { position: fixed; top: 0; width: 100%; display: flex; justify-content: space-around; align-items: center; height: 140px; background: white; border-bottom: 3px solid #333; z-index: 200; }
+        .score-card { text-align: center; padding: 10px; min-width: 200px; }
+        .name-display { font-size: 1.1rem; font-weight: bold; color: #555; margin-bottom: 2px; }
+        .score-val { font-size: 2.5rem; font-weight: 900; color: #222; margin: 0; display: none; /* Oculto temporalmente si solo quieres ver el multiplicador, o se puede dejar */ }
         
-        .button-group { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
-        .btn { border: none; padding: 12px; border-radius: 4px; color: white; font-weight: bold; cursor: pointer; font-size: 0.9rem; transition: 0.3s; width: 100%; text-transform: uppercase; }
-        .btn-run { background: var(--primary); }
-        .btn-flow { background: #9b59b6; }
-        .btn-send { background: #3498db; }
+        /* Multiplicador original y nueva clase para el resultado final */
+        .multiplier { color: #e67e22; font-size: 2.5rem; font-weight: 900; margin: 0; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .res-final { color: black; font-weight: bold; font-size: 2em; }
 
-        /* --- ÁREA DE VUELO --- */
-        .viewport { flex-grow: 1; position: relative; perspective: 1200px; display: flex; justify-content: center; align-items: center; overflow: hidden; }
-        #mundo { width: 600px; height: 500px; position: relative; transform-style: preserve-3d; transform: rotateX(50deg) rotateZ(-15deg); }
-        .suelo { 
-            position: absolute; width: 1000px; height: 1000px; background: #bdc3c7; top: -250px; left: -200px; 
-            background-image: linear-gradient(var(--grid-color) 2px, transparent 2px), linear-gradient(90deg, var(--grid-color) 2px, transparent 2px);
-            background-size: 50px 50px; border: 5px solid #7f8c8d; cursor: default;
+        /* Se bajó el panel a 150px para que no choque con la barra superior ampliada */
+        .cmd-panel { 
+            position: absolute; top: 150px; width: 180px; 
+            background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(5px);
+            padding: 10px; border-radius: 12px; border: 2px solid rgba(0,0,0,0.1); 
+            z-index: 100; font-family: monospace; pointer-events: none;
         }
+        .p1-panel { left: 20px; border-left: 5px solid var(--p1-color); }
+        .p2-panel { right: 20px; border-right: 5px solid var(--p2-color); }
+        
+        .cmd-scroll { height: 35px; overflow: hidden; color: #222; font-size: 1.4rem; background: rgba(0,0,0,0.05); padding: 5px; border-radius: 6px; text-align: center; font-weight: bold; }
 
-        /* --- PANEL DE DIAGRAMA --- */
-        #flow-overlay { 
-            position: absolute; right: 20px; top: 20px; bottom: 20px; width: 650px; 
-            background: rgba(25, 35, 45, 0.98); backdrop-filter: blur(15px);
-            border: 2px solid rgba(255,255,255,0.2); border-radius: 15px;
-            padding: 20px; display: flex; flex-direction: column; z-index: 50; 
-            transition: transform 0.5s ease; box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+        .pista { 
+            width: 400px; height: 480px; position: relative; transform-style: preserve-3d; transform: rotateX(35deg);
+            background-image: linear-gradient(black 2px, transparent 2px), linear-gradient(90deg, black 2px, transparent 2px);
+            background-size: var(--grid-size) var(--grid-size); border: 4px solid #333; background-color: rgba(255,255,255,0.5);
         }
-        #flow-overlay.hidden { transform: translateX(700px); }
-        .flow-container-split { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 25px; height: 100%; }
-        .flow-column { overflow-y: auto; padding: 10px; position: relative; border-radius: 10px; background: rgba(0,0,0,0.2); }
-
-        /* --- ESTILOS DEL DIAGRAMA --- */
-        #flow-content { position: relative; padding-left: 40px; }
-        .flow-node { width: 150px; padding: 10px; border: 2px solid #ecf0f1; text-align: center; font-size: 0.7rem; font-weight: bold; margin: 0 auto; color: white; position: relative; z-index: 10; background: #34495e; }
-        .node-terminal { border-radius: 20px; background: #7f8c8d; } 
-        .node-action { border-left: 5px solid var(--primary); }
+        .meta { position: absolute; width: 34px; height: 34px; border: 3px solid #333; border-radius: 50%; z-index: 5; background: rgba(255,255,0,0.4); }
         
-        .node-decision { width: 85px; height: 85px; display: flex; align-items: center; justify-content: center; transform: rotate(45deg); margin: 30px auto; border: 2px solid #f1c40f; transition: border-color 0.3s; }
-        .node-decision span { transform: rotate(-45deg); font-size: 0.6rem; text-align: center; }
-        
-        .arrow-v { width: 2px; height: 25px; background: #ecf0f1; margin: 0 auto; position: relative; }
-        .arrow-v::after { content: '▼'; position: absolute; bottom: -8px; left: -5px; font-size: 10px; color: #ecf0f1; }
-
-        .bucle-line { position: absolute; top: 25px; bottom: 120px; left: 15px; width: 80px; border: 3px solid var(--danger); border-right: none; border-radius: 15px 0 0 15px; z-index: 1; transition: border-color 0.3s; }
-        .bucle-arrow-in { position: absolute; left: 95px; top: 18px; color: var(--danger); font-size: 18px; z-index: 11; transition: color 0.3s; }
-        .path-label-no { position: absolute; left: 15px; bottom: 130px; color: var(--danger); font-weight: bold; font-size: 0.8rem; background: #19232d; padding: 2px; transition: color 0.3s; }
-
-        .guia-card { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #3498db; }
-        .guia-card b { color: #3498db; display: block; margin-bottom: 5px; font-size: 0.85rem; }
-        .guia-card p { margin: 0; font-size: 0.75rem; color: #bdc3c7; line-height: 1.4; }
-
-        /* --- DRON Y ESCENA --- */
-        #dron-container { position: absolute; transition: all 0.6s ease-out; transform-style: preserve-3d; width: 40px; height: 40px; pointer-events: none; z-index: 30; }
-        #dron-modelo { width: 100%; height: 100%; background: #3498db; border-radius: 8px; position: relative; transform-style: preserve-3d; }
-        #dron-modelo::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 12px; background: var(--dron-front); border-radius: 8px 8px 0 0; }
-        .helice { position: absolute; width: 30px; height: 2px; background: #000; top: 50%; left: 50%; margin-left: -15px; animation: spin 0.1s infinite linear; display: none; }
+        .dron-container { position: absolute; width: 40px; height: 40px; transform-style: preserve-3d; transition: all 0.35s; }
+        .dron-body { width: 34px; height: 34px; margin: 3px; border-radius: 6px; position: relative; transform-style: preserve-3d; box-shadow: 0 5px 10px rgba(0,0,0,0.3); }
+        .dron-front { position: absolute; top: 0; left: 50%; width: 14px; height: 8px; background: #222; margin-left: -7px; border-radius: 2px 2px 0 0; }
+        .p1-body { background: var(--p1-color); }
+        .p2-body { background: var(--p2-color); }
+        .helice { position: absolute; width: 30px; height: 2px; background: #fff; top: 50%; left: 50%; margin-left: -15px; animation: spin 0.1s infinite linear; opacity: 0; }
         @keyframes spin { to { transform: rotateZ(360deg); } }
-        
-        #meta { position: absolute; width: 80px; height: 80px; border: 5px solid var(--primary); border-radius: 50%; background: rgba(46, 204, 113, 0.2); box-shadow: 0 0 15px var(--primary); pointer-events: none; z-index: 20; }
-        
-        /* Círculo de solución para cuando fallan */
-        #meta-puzzle { position: absolute; width: 80px; height: 80px; border: 5px solid var(--danger); border-radius: 50%; background: rgba(231, 76, 60, 0.4); box-shadow: 0 0 15px var(--danger); pointer-events: none; display: none; z-index: 25; }
 
-        #status-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 3000; }
-
-        /* --- UI Puzzle Info (Movida a la esquina superior izquierda) --- */
-        #puzzle-info {
-            position: fixed; top: 20px; left: 350px; 
-            background: rgba(230,126,34,0.95); padding: 15px 30px; border-radius: 10px;
-            z-index: 1000; display: none; border: 2px solid white; text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5); backdrop-filter: blur(5px);
-        }
+        #modal, .quiz-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 3000; }
+        .modal-content, .quiz-card { background: white; color: #333; padding: 30px; border-radius: 15px; text-align: center; width: 450px; border: 5px solid #333; }
+        .opt-btn { display: block; width: 100%; padding: 12px; margin: 10px 0; cursor: pointer; border: 2px solid #eee; border-radius: 8px; font-size: 1rem; font-weight: bold; text-align: left; }
+        .opt-btn:hover { background: #f9f9f9; border-color: #3498db; }
     </style>
 </head>
 <body>
 
-    <div id="notificacion-juego"></div>
-
-    <div id="status-overlay"><div style="background:white; padding:30px; border-radius:10px; color:black; text-align:center;" id="status-message"></div></div>
-
-    <div id="modal-inicio" style="position:fixed; inset:0; background:rgba(0,0,0,0.9); display:flex; justify-content:center; align-items:center; z-index:2000;">
-        <div style="background:white; padding:30px; border-radius:15px; text-align:center; color:#333; max-width: 420px;">
-            <h2>Misión: El Bucle de Control</h2>
-            <p>Tienes <b>4 minutos</b> para aterrizar. Si fallas, el rombo te hará repetir el camino.</p>
-            <p style="font-size: 0.85rem; color: #e67e22;"><i>En 1 Pto. y cada 5 Ptos. se activará el Modo Análisis de Diagramas.</i></p>
-            <input type="text" id="nombre-input" placeholder="Nombre del Alumno" style="padding:10px; width:80%;">
-            <br><br>
-            <button onclick="comenzar()" class="btn btn-run">EMPEZAR ENTRENAMIENTO</button>
+    <div id="modal">
+        <div class="modal-content">
+            <h2>🛸 DRON DUEL: EDICIÓN COMPLETA</h2>
+            <p>30 Preguntas aleatorias con 3 opciones cada una.</p>
+            <input type="text" id="name1" value="ALUMNO 1" style="width:80%; padding:10px; margin:5px;">
+            <input type="text" id="name2" value="ALUMNO 2" style="width:80%; padding:10px; margin:5px;">
+            <button onclick="startGame()" style="margin-top:15px; padding:15px 40px; background:var(--primary); color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">INICIAR</button>
         </div>
     </div>
 
-    <div id="puzzle-info">
-        <h3 style="margin:0 0 5px 0;">¡MODO ANÁLISIS!</h3>
-        <p style="margin:0 0 10px 0; font-size: 0.95rem;">Haz clic en la cuadrícula donde aterrizará el dron.</p>
-        <div id="puzzle-intentos" style="font-weight:bold; margin-bottom:10px; font-size: 1.1rem; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 5px;">Intentos: 4</div>
-        <button class="btn btn-run" style="background:#2c3e50; font-size:0.8rem;" onclick="toggleFlowchart()">VER / OCULTAR DIAGRAMA</button>
-    </div>
+    <div id="quiz-p1" class="quiz-overlay" style="display:none"></div>
+    <div id="quiz-p2" class="quiz-overlay" style="display:none"></div>
 
-    <div class="sidebar">
-        <div id="timer-container">04:00</div>
-        <div id="score-container">PUNTOS: <span id="val-puntos">0</span></div>
-        <div id="piloto-tag" style="text-align:center; font-size:0.8rem; margin-bottom:10px; opacity:0.8;">Piloto: ---</div>
-        <textarea id="consola" placeholder="despegar
-avanzar 150
-girar derecha
-aterrizar"></textarea>
-        <div class="button-group">
-            <button class="btn btn-run" onclick="ejecutarMision()">EJECUTAR MISIÓN</button>
-            <button class="btn btn-flow" id="btn-toggle-flow" onclick="toggleFlowchart()">ESTUDIAR DIAGRAMA</button>
-            <button class="btn btn-send" onclick="enviarResultados()">ENVIAR NOTA</button>
+    <div class="top-bar">
+        <div class="score-card">
+            <div id="label-n1" class="name-display">P1</div>
+            <div class="score-val" id="score1" style="display:block;">0</div>
+            <div id="calc-1" class="multiplier">[ 0 x 4 = <span class="res-final">0</span> ]</div>
+        </div>
+        <div style="align-self:center;">
+            <button onclick="enviarResultados()" style="padding:10px 20px; cursor:pointer; background:#333; color:white; border:none; border-radius:5px; font-weight:bold;">ENVIAR DATOS</button>
+        </div>
+        <div class="score-card">
+            <div id="label-n2" class="name-display">P2</div>
+            <div class="score-val" id="score2" style="display:block;">0</div>
+            <div id="calc-2" class="multiplier">[ 0 x 4 = <span class="res-final">0</span> ]</div>
         </div>
     </div>
 
-    <div class="viewport">
-        <div id="mundo">
-            <div class="suelo" id="zona-vuelo"></div>
-            <div id="meta" style="left: 250px; top: 250px;"></div>
-            <div id="meta-puzzle"></div> 
-            
-            <div id="dron-container" style="left: 50px; top: 50px;">
-                <div id="dron-modelo">
-                    <div class="helice" style="top:0; left:0"></div>
-                    <div class="helice" style="top:0; left:100%"></div>
-                    <div class="helice" style="top:100%; left:0"></div>
-                    <div class="helice" style="top:100%; left:100%"></div>
-                </div>
+    <div id="split-container">
+        <div id="arena-p1" class="arena">
+            <div class="cmd-panel p1-panel"><small>P1 COMANDOS:</small><div id="list-p1" class="cmd-scroll"></div></div>
+            <div class="pista">
+                <div id="meta-p1" class="meta" style="border-color:var(--p1-color)"></div>
+                <div id="dron1" class="dron-container"><div class="dron-body p1-body"><div class="dron-front"></div><div class="helice"></div></div></div>
             </div>
         </div>
-
-        <div id="flow-overlay" class="hidden">
-            <div class="flow-container-split">
-                <div class="flow-column">
-                    <div id="flow-title" style="text-align:center; font-weight:bold; margin-bottom:15px; font-size:0.9rem; transition: color 0.3s;">TU LÓGICA DE PROGRAMACIÓN</div>
-                    <div id="flow-content"></div>
-                </div>
-
-                <div class="flow-column">
-                    <div style="text-align:center; font-weight:bold; margin-bottom:15px; font-size:0.9rem;">ESCUELA DE DIAGRAMAS</div>
-                    
-                    <div class="guia-card">
-                        <b>1. Terminal (Óvalo)</b>
-                        <p>Es el botón de Encendido y Apagado. Todo algoritmo debe tener un principio y un final claro.</p>
-                    </div>
-
-                    <div class="guia-card">
-                        <b>2. Proceso (Rectángulo)</b>
-                        <p>Son las órdenes que el motor ejecuta. Si escribes "avanzar", el ordenador crea este bloque.</p>
-                    </div>
-
-                    <div class="guia-card">
-                        <b>3. Decisión (Rombo)</b>
-                        <p>Es la pregunta lógica. Tiene dos salidas: Si es <b>SÍ</b>, avanzamos. Si es <b>NO</b>, activamos el bucle.</p>
-                    </div>
-
-                    <div class="guia-card" style="border-left-color: var(--danger);">
-                        <b>4. Bucle (Línea)</b>
-                        <p>Es una repetición. Si fallas la decisión, esta línea te obliga a volver arriba para intentarlo de nuevo.</p>
-                    </div>
-                </div>
+        <div id="arena-p2" class="arena">
+            <div class="cmd-panel p2-panel"><small>P2 COMANDOS:</small><div id="list-p2" class="cmd-scroll"></div></div>
+            <div class="pista">
+                <div id="meta-p2" class="meta" style="border-color:var(--p2-color)"></div>
+                <div id="dron2" class="dron-container"><div class="dron-body p2-body"><div class="dron-front"></div><div class="helice"></div></div></div>
             </div>
         </div>
     </div>
 
     <script>
-        let posX = 50, posY = 50, lastBaseX = 50, lastBaseY = 50;
-        let posZ = 0, angulo = 0, puntos = 0;
-        let metaX = 250, metaY = 250, alumnoNombre = "";
-        const GRID = 50;
-        let timeLeft = 240;
-        let timerInterval;
+        const GRID = 40;
+        const QUESTIONS = [
+            { q: "¿Qué es el Phishing?", a: ["Un deporte náutico", "Engaño por email para robar claves", "Un tipo de cable de red"], c: 1 },
+            { q: "¿Qué contraseña es más segura?", a: ["12345678", "pAssw0rd!", "D0m1ng0_2024*"], c: 2 },
+            { q: "Si recibes un link sospechoso de un amigo:", a: ["Lo abro porque confío en él", "Le pregunto por otro medio si él lo envió", "Lo borro inmediatamente sin mirar"], c: 1 },
+            { q: "¿Qué indica el candado en la barra de direcciones?", a: ["Que la web es 100% legal", "Que la conexión está cifrada (HTTPS)", "Que no puedes copiar el contenido"], c: 1 },
+            { q: "Sobre las redes Wi-Fi públicas:", a: ["Son totalmente seguras", "Son ideales para entrar al banco", "Son poco seguras para datos privados"], c: 2 },
+            { q: "¿Qué es el Ciberacoso?", a: ["Un juego de rol online", "Acoso u humillación a través de redes", "Tener muchos seguidores"], c: 1 },
+            { q: "La webcam de tu ordenador debería estar:", a: ["Siempre encendida por si acaso", "Tapada físicamente cuando no se usa", "Apuntando siempre a la ventana"], c: 1 },
+            { q: "¿Qué información NO debes compartir?", a: ["Tu música favorita", "Tu dirección y número de teléfono", "Tu color de ojos"], c: 1 },
+            { q: "¿Qué es un Malware?", a: ["Un software para editar fotos", "Cualquier programa malicioso (virus, etc)", "Un componente de la placa base"], c: 1 },
+            { q: "Si recibes un premio por SMS de un sorteo en el que no participaste:", a: ["Reclamo el premio rápido", "Es un intento de estafa", "Llamo al número para preguntar"], c: 1 },
+            { q: "¿Qué es el Grooming?", a: ["Un tipo de peinado moderno", "Adulto que engaña a menor online", "Cuidar a tu mascota virtual"], c: 1 },
+            { q: "Las redes sociales deben usarse para:", a: ["Compartir tus claves con amigos", "Ocio con configuración de privacidad", "Insultar a quien no te cae bien"], c: 1 },
+            { q: "¿Qué significa el 2FA?", a: ["Doble Factor de Autenticación", "Dos Ficheros Adjuntos", "Segunda Fase de Arranque"], c: 0 },
+            { q: "Tu perfil en redes sociales debería ser:", a: ["Público para ser famoso", "Privado (solo para conocidos)", "Con la dirección de tu casa"], c: 1 },
+            { q: "Si alguien te insulta en un videojuego online:", a: ["Le devuelvo el insulto", "Le ignoro, silencio y reporto", "Apago el router"], c: 1 },
+            { q: "¿Qué son las Fake News?", a: ["Noticias muy divertidas", "Noticias falsas para manipular", "Noticias sobre videojuegos"], c: 1 },
+            { q: "Actualizar el sistema operativo sirve para:", a: ["Gastar espacio y batería", "Cerrar agujeros de seguridad", "Que el ordenador vaya más lento"], c: 1 },
+            { q: "Un troyano es:", a: ["Un virus que se disfraza de programa útil", "Un programa para acelerar descargas", "Un antivirus gratuito"], c: 0 },
+            { q: "Si ves algo perturbador en internet:", a: ["No digo nada a nadie", "Se lo cuento a un adulto de confianza", "Lo comparto con todos mis contactos"], c: 1 },
+            { q: "¿Qué es la Huella Digital?", a: ["La marca de tu dedo en el móvil", "El rastro que dejas al navegar", "Un sistema de pago nuevo"], c: 1 },
+            { q: "El antivirus sirve para:", a: ["Limpiar el polvo del PC", "Detectar y eliminar amenazas", "Mejorar la velocidad de internet"], c: 1 },
+            { q: "¿Es seguro dar tu teléfono a desconocidos online?", a: ["Sí, para hacer amigos", "No, nunca", "Solo si me caen bien"], c: 1 },
+            { q: "¿Qué es el Ransomware?", a: ["Virus que secuestra tus archivos", "Un programa de edición de vídeo", "Un tipo de monitor"], c: 0 },
+            { q: "¿Se puede borrar algo de internet para siempre?", a: ["Sí, dándole a borrar", "Es casi imposible borrar el rastro total", "Solo si apagas el servidor"], c: 1 },
+            { q: "Los términos de uso de una App:", a: ["No hace falta leerlos nunca", "Es importante saber qué hacen con tus datos", "Son todos iguales"], c: 1 },
+            { q: "Un 'Hacker' ético es alguien que:", a: ["Roba contraseñas por diversión", "Busca fallos para ayudar a arreglarlos", "Bloquea páginas del gobierno"], c: 1 },
+            { q: "Compartir tu ubicación en tiempo real es:", a: ["Muy seguro en cualquier red", "Peligroso si es público", "Necesario para jugar"], c: 1 },
+            { q: "El Spam es:", a: ["Un virus muy potente", "Correo basura no deseado", "Un comando de programación"], c: 1 },
+            { q: "¿Qué es un Firewall?", a: ["Una pared resistente al fuego", "Un sistema de defensa de red", "Un cable de alta velocidad"], c: 1 },
+            { q: "Cerrar sesión en ordenadores públicos es:", a: ["Opcional si tengo prisa", "Fundamental para proteger mis cuentas", "Malo para el ordenador"], c: 1 }
+        ];
 
-        // Variables Modo Análisis (Puzzle)
-        let puzzleModoActivo = false;
-        let mostrandoSolucion = false;
-        let intentosPuzzle = 4;
-        let puzzleMetaX = 0, puzzleMetaY = 0;
-        let puzzleComandos = [];
+        const state = {
+            p1: { x: 0, y: 0, angle: 0, score: 0, nextQuiz: 10, cmds: [], exec: false, name: "" },
+            p2: { x: 9, y: 11, angle: 180, score: 0, nextQuiz: 10, cmds: [], exec: false, name: "" },
+            metas: { p1: {x: 4, y: 4}, p2: {x: 5, y: 5} }
+        };
 
-        // --- SISTEMA DE NOTIFICACIONES ---
-        function mostrarNotificacion(mensaje, tipo="info", duracion=3000) {
-            const noti = document.getElementById('notificacion-juego');
-            noti.innerHTML = mensaje;
-            noti.style.background = tipo === "error" ? "rgba(231, 76, 60, 0.95)" : (tipo === "exito" ? "rgba(46, 204, 113, 0.95)" : "rgba(52, 152, 219, 0.95)");
-            noti.style.display = "block";
-            noti.style.opacity = 1;
-            if(duracion > 0) {
-                setTimeout(() => {
-                    noti.style.opacity = 0;
-                    setTimeout(() => noti.style.display = "none", 300);
-                }, duracion);
-            }
+        function getColorByScore(score) {
+            const colors = ["white", "#d6eaf8", "#d5f5e3", "#fcf3cf", "#fadbd8"];
+            return colors[Math.min(4, Math.floor(score/10))];
         }
 
-        function comenzar() {
-            alumnoNombre = document.getElementById('nombre-input').value.trim();
-            if(alumnoNombre) {
-                document.getElementById('piloto-tag').innerText = "Piloto: " + alumnoNombre;
-                document.getElementById('modal-inicio').style.display = 'none';
-                startTimer();
-            }
+        function startGame() {
+            state.p1.name = document.getElementById('name1').value || "ALUMNO 1";
+            state.p2.name = document.getElementById('name2').value || "ALUMNO 2";
+            document.getElementById('label-n1').innerText = state.p1.name;
+            document.getElementById('label-n2').innerText = state.p2.name;
+            document.getElementById('modal').style.display = 'none';
+            moverMeta('p1'); moverMeta('p2');
+            updateVisuals('p1'); updateVisuals('p2');
+            updateScoreUI('p1'); updateScoreUI('p2');
         }
 
-        function startTimer() {
-            clearInterval(timerInterval);
-            timeLeft = 240; 
-            actualizarReloj();
-            timerInterval = setInterval(() => {
-                if (puzzleModoActivo || mostrandoSolucion) return; 
-                timeLeft--;
-                actualizarReloj();
-                if(timeLeft <= 0) penalizar();
-            }, 1000);
+        function moverMeta(p) {
+            state.metas[p].x = Math.floor(Math.random() * 10);
+            state.metas[p].y = Math.floor(Math.random() * 12);
+            const m = document.getElementById('meta-' + p);
+            m.style.left = (state.metas[p].x * GRID + 3) + "px";
+            m.style.top = (state.metas[p].y * GRID + 3) + "px";
         }
 
-        function actualizarReloj() {
-            const min = Math.floor(timeLeft / 60);
-            const sec = timeLeft % 60;
-            document.getElementById('timer-container').innerText = `${min.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
-        }
-
-        function penalizar() {
-            if(puntos > 0) puntos--;
-            document.getElementById('val-puntos').innerText = puntos;
-            actualizarFondo();
-            mostrarNotificacion("¡TIEMPO AGOTADO! Se resta un punto.", "error", 3000);
-            startTimer();
-        }
-
-        function toggleFlowchart() {
-            const panel = document.getElementById('flow-overlay');
-            const btn = document.getElementById('btn-toggle-flow');
+        window.onkeydown = (e) => {
+            const k = e.code;
             
-            if (puzzleModoActivo) {
-                panel.classList.toggle('hidden');
-                return;
+            // Controles del Jugador 1: Evaluamos solo el estado de ejecución del P1
+            if(!state.p1.exec) {
+                if(k === 'KeyW') addCmd('p1', '↑'); 
+                if(k === 'KeyA') addCmd('p1', '↶'); 
+                if(k === 'KeyD') addCmd('p1', '↷');
+                if(k === 'Space') ejecutar('p1');
             }
-            
-            if(panel.classList.contains('hidden')) {
-                construirDiagrama();
-                document.getElementById('flow-title').innerText = "TU LÓGICA DE PROGRAMACIÓN";
-                document.getElementById('flow-title').style.color = "white";
-                panel.classList.remove('hidden');
-                btn.innerText = "CERRAR ESTUDIO";
+
+            // Controles del Jugador 2: Evaluamos solo el estado de ejecución del P2
+            if(!state.p2.exec) {
+                if(k === 'ArrowUp') addCmd('p2', '↑'); 
+                if(k === 'ArrowLeft') addCmd('p2', '↶'); 
+                if(k === 'ArrowRight') addCmd('p2', '↷');
+                if(k === 'Enter') ejecutar('p2');
+            }
+        };
+
+        function addCmd(p, type) {
+            state[p].cmds.push(type);
+            document.getElementById('list-' + p).innerText = state[p].cmds.join('');
+        }
+
+        async function ejecutar(p) {
+            if(state[p].cmds.length === 0) return;
+            state[p].exec = true;
+            const dX = state[p].x, dY = state[p].y, dA = state[p].angle;
+            const dEl = document.getElementById(p === 'p1' ? 'dron1' : 'dron2');
+            dEl.querySelector('.helice').style.opacity = 1;
+
+            for(let cmd of state[p].cmds) {
+                await new Promise(r => setTimeout(r, 300));
+                if(cmd === '↶') state[p].angle -= 90;
+                if(cmd === '↷') state[p].angle += 90;
+                if(cmd === '↑') {
+                    const rad = state[p].angle * Math.PI / 180;
+                    state[p].x += Math.round(Math.sin(rad));
+                    state[p].y -= Math.round(Math.cos(rad));
+                }
+                if(state[p].x < 0 || state[p].x > 9 || state[p].y < 0 || state[p].y > 11) {
+                    state[p].x = dX; state[p].y = dY; state[p].angle = dA;
+                    updateVisuals(p); break; 
+                }
+                updateVisuals(p);
+            }
+
+            await new Promise(r => setTimeout(r, 300));
+            dEl.querySelector('.helice').style.opacity = 0;
+
+            if(state[p].x === state.metas[p].x && state[p].y === state.metas[p].y) {
+                state[p].score++;
+                updateScoreUI(p);
+                moverMeta(p);
+                if(state[p].score >= state[p].nextQuiz) launchQuiz(p);
             } else {
-                panel.classList.add('hidden');
-                btn.innerText = "ESTUDIAR DIAGRAMA";
+                state[p].x = dX; state[p].y = dY; state[p].angle = dA;
+                updateVisuals(p);
             }
+            state[p].cmds = []; state[p].exec = false;
+            document.getElementById('list-' + p).innerText = "";
         }
 
-        function construirDiagrama() {
-            const lines = document.getElementById('consola').value.toLowerCase().split('\n');
-            const container = document.getElementById('flow-content');
-            container.innerHTML = "";
-            if(!lines[0].trim()) return;
-
-            container.innerHTML += `<div class="bucle-line" style="border-color: var(--danger);"></div>`;
-            container.innerHTML += `<div class="bucle-arrow-in" style="color: var(--danger);">▶</div>`;
-            container.appendChild(crearNodo("INICIO DE PROGRAMA", "node-terminal"));
-
-            lines.forEach(l => {
-                let t = l.trim();
-                if(!t) return;
-                container.appendChild(crearFlecha());
-                if(t.includes("despegar")) container.appendChild(crearNodo("ACCIÓN: Despegar", "node-action"));
-                else if(t.includes("avanzar")) container.appendChild(crearNodo("ACCIÓN: Avanzar " + (t.split(" ")[1]||"0"), "node-action"));
-                else if(t.includes("girar")) container.appendChild(crearNodo("ACCIÓN: Girar a la " + (t.includes("der")?"DER":"IZQ"), "node-action"));
-                else if(t.includes("aterrizar")) {
-                    container.appendChild(crearNodo("ACCIÓN: Aterrizar", "node-action"));
-                    container.appendChild(crearFlecha());
-                    
-                    const rombo = document.createElement('div');
-                    rombo.style.position = "relative";
-                    rombo.innerHTML = `
-                        <div class="flow-node node-decision" style="border-color: #f1c40f;"><span>¿ATERRIZAJE EN META?</span></div>
-                        <div class="path-label-no" style="color: var(--danger);">NO (Repetir)</div>
-                        <div style="color:var(--primary); font-weight:bold; font-size:0.7rem; text-align:center; margin-top:5px;">SÍ (Continuar)</div>
-                    `;
-                    container.appendChild(rombo);
-                    container.appendChild(crearFlecha('var(--primary)'));
-                }
-            });
-            container.appendChild(crearNodo("FIN: MISIÓN LOGRADA", "node-terminal"));
-        }
-
-        function crearNodo(t, c) {
-            const d = document.createElement('div'); d.className = 'flow-node '+c; d.innerHTML = t; return d;
-        }
-        function crearFlecha(color = "#ecf0f1") {
-            const a = document.createElement('div'); a.className = 'arrow-v'; 
-            a.style.background = color;
-            return a;
-        }
-
-        async function ejecutarMision() {
-            if (puzzleModoActivo || mostrandoSolucion) {
-                mostrarNotificacion("¡Estás en Modo Análisis! Toca la cuadrícula.", "error", 3000);
-                return;
-            }
-            posX = lastBaseX; posY = lastBaseY; angulo = 0; posZ = 0;
-            actualizarVisual();
-            const lines = document.getElementById('consola').value.toLowerCase().split('\n');
-            for(let cmd of lines) { if(cmd.trim()) await ejecutarAccion(cmd.trim()); }
-        }
-
-        function ejecutarAccion(cmd) {
-            return new Promise(resolve => {
-                const p = cmd.split(" ");
-                if(p[0] === "despegar") { posZ = 80; document.querySelectorAll('.helice').forEach(h => h.style.display = 'block'); }
-                else if(p[0] === "avanzar") { let v = parseInt(p[1]) || 0; const r = (angulo - 90) * (Math.PI / 180); posX += Math.cos(r) * v; posY += Math.sin(r) * v; }
-                else if(p[0] === "girar") { angulo += (p[1] === "derecha") ? 90 : -90; }
-                else if(p[0] === "aterrizar") { posZ = 0; document.querySelectorAll('.helice').forEach(h => h.style.display = 'none'); setTimeout(verificarAterrizaje, 600); }
-                actualizarVisual();
-                setTimeout(resolve, 800);
-            });
-        }
-
-        function actualizarVisual() {
-            const c = document.getElementById('dron-container');
-            c.style.left = posX + "px"; c.style.top = posY + "px";
-            c.style.transform = `translate3d(0, 0, ${posZ}px)`;
-            document.getElementById('dron-modelo').style.transform = `rotateZ(${angulo}deg)`;
-        }
-
-        function verificarAterrizaje() {
-            const d = Math.sqrt(Math.pow(posX - metaX, 2) + Math.pow(posY - metaY, 2));
-            if(d < 45) {
-                puntos++;
-                document.getElementById('val-puntos').innerText = puntos;
-                lastBaseX = posX; lastBaseY = posY;
-                
-                // Entrar al puzzle en 1 punto y cada 5
-                if (puntos === 1 || (puntos > 0 && puntos % 5 === 0)) {
-                    mostrarNotificacion("¡Aterrizaje! Generando Análisis de Vuelo...", "info", 2500);
-                    actualizarFondo();
-                    setTimeout(() => iniciarPuzzle(), 2500);
-                } else {
-                    mostrarNotificacion("¡Aterrizaje perfecto! +1 Punto", "exito", 2000);
-                    moverMeta();
-                    startTimer(); 
-                    actualizarFondo();
-                }
-            } else {
-                mostrarNotificacion("¡FALLO! El rombo dice 'NO'. Volvemos al inicio.", "error", 3000);
-                posX = lastBaseX; posY = lastBaseY; angulo = 0; actualizarVisual();
-            }
-        }
-
-        function moverMeta() {
-            metaX = (Math.floor(Math.random() * 8) + 2) * GRID;
-            metaY = (Math.floor(Math.random() * 6) + 2) * GRID;
-            const m = document.getElementById('meta');
-            m.style.left = metaX + "px"; m.style.top = metaY + "px";
-        }
-
-        function actualizarFondo() {
-            let bg = "#1a1a1a"; 
-            if (puntos >= 1 && puntos < 6) bg = "#005a9e"; 
-            if (puntos >= 6 && puntos < 11) bg = "#107c10"; 
-            if (puntos >= 11) bg = "#d29200"; 
-            document.body.style.backgroundColor = bg;
-        }
-
-        // --- FUNCIONES DEL MODO ANÁLISIS ---
-
-        function iniciarPuzzle() {
-            puzzleModoActivo = true;
-            mostrandoSolucion = false;
-            intentosPuzzle = 4;
+        function updateScoreUI(p) {
+            const num = p === 'p1' ? '1' : '2';
+            document.getElementById('score' + num).innerText = state[p].score;
             
-            document.getElementById('meta').style.display = 'none'; 
-            document.getElementById('puzzle-info').style.display = 'block'; 
-            document.getElementById('puzzle-intentos').innerText = "Intentos: " + intentosPuzzle;
-            document.getElementById('consola').disabled = true; 
-            document.querySelector('.suelo').style.cursor = 'crosshair'; 
+            // Inyecta el HTML con la clase especial .res-final para modificar tamaño y color del resultado
+            document.getElementById('calc-' + num).innerHTML = `[ ${state[p].score} x 4 = <span class="res-final">${state[p].score * 4}</span> ]`;
             
-            const panel = document.getElementById('flow-overlay');
-            document.getElementById('flow-title').innerText = "MODO ANÁLISIS: ¿DÓNDE ATERRIZARÁ?";
-            document.getElementById('flow-title').style.color = "#e67e22";
-            panel.classList.remove('hidden');
-
-            generarRutaPuzzle();
+            document.getElementById('arena-' + p).style.backgroundColor = getColorByScore(state[p].score);
         }
 
-        function generarRutaPuzzle() {
-            let valido = false;
-            let iteraciones = 0;
-            
-            while (!valido && iteraciones < 100) {
-                iteraciones++;
-                let tempX = lastBaseX; let tempY = lastBaseY; let tempAngulo = angulo; 
-                
-                puzzleComandos = ["despegar"];
-                const numPasos = Math.floor(Math.random() * 3) + 2; 
-                
-                for(let i=0; i<numPasos; i++) {
-                    if (Math.random() > 0.4) {
-                        let dist = (Math.floor(Math.random() * 3) + 1) * 50; 
-                        puzzleComandos.push("avanzar " + dist);
-                        const r = (tempAngulo - 90) * (Math.PI / 180);
-                        tempX += Math.cos(r) * dist; tempY += Math.sin(r) * dist;
-                    } else {
-                        let dir = Math.random() > 0.5 ? "derecha" : "izquierda";
-                        puzzleComandos.push("girar " + dir);
-                        tempAngulo += (dir === "derecha") ? 90 : -90;
-                    }
-                }
-                puzzleComandos.push("aterrizar");
-                tempX = Math.round(tempX); tempY = Math.round(tempY);
-
-                if (tempX >= 0 && tempX <= 550 && tempY >= 0 && tempY <= 450) {
-                    valido = true; puzzleMetaX = tempX; puzzleMetaY = tempY;
-                }
-            }
-            dibujarDiagramaPuzzle();
+        function launchQuiz(p) {
+            state[p].exec = true;
+            state[p].nextQuiz += 10;
+            const q = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
+            const overlay = document.getElementById('quiz-' + p);
+            overlay.style.display = 'flex';
+            overlay.innerHTML = `
+                <div class="quiz-card">
+                    <h3>🛡️ RETO CIBER: ${q.q}</h3>
+                    ${q.a.map((opt, i) => `<button class="opt-btn" onclick="answerQuiz('${p}', ${i}, ${q.c})">${i+1}. ${opt}</button>`).join('')}
+                </div>`;
         }
 
-        function dibujarDiagramaPuzzle() {
-            const container = document.getElementById('flow-content');
-            container.innerHTML = "";
-            
-            container.innerHTML += `<div class="bucle-line" style="border-color: #e67e22;"></div>`;
-            container.innerHTML += `<div class="bucle-arrow-in" style="color: #e67e22;">▶</div>`;
-            container.appendChild(crearNodo("INICIO ANÁLISIS", "node-terminal"));
-            
-            puzzleComandos.forEach(cmd => {
-                if(cmd === "despegar") {
-                    container.appendChild(crearFlecha()); container.appendChild(crearNodo("ACCIÓN: Despegar", "node-action"));
-                } else if(cmd.includes("avanzar")) {
-                    container.appendChild(crearFlecha()); container.appendChild(crearNodo("ACCIÓN: Avanzar " + cmd.split(" ")[1], "node-action"));
-                } else if(cmd.includes("girar")) {
-                    container.appendChild(crearFlecha()); container.appendChild(crearNodo("ACCIÓN: Girar a la " + (cmd.includes("der")?"DER":"IZQ"), "node-action"));
-                } else if(cmd.includes("aterrizar")) {
-                    container.appendChild(crearFlecha()); container.appendChild(crearNodo("ACCIÓN: Aterrizar", "node-action"));
-                    container.appendChild(crearFlecha());
-                    
-                    const rombo = document.createElement('div');
-                    rombo.style.position = "relative";
-                    rombo.innerHTML = `
-                        <div class="flow-node node-decision" style="border-color:#e67e22;"><span>¿ES LA ZONA CORRECTA?</span></div>
-                        <div class="path-label-no" style="color:#e67e22;">NO (Pierde Intento)</div>
-                        <div style="color:var(--primary); font-weight:bold; font-size:0.7rem; text-align:center; margin-top:5px;">SÍ (¡Punto Extra!)</div>
-                    `;
-                    container.appendChild(rombo);
-                    container.appendChild(crearFlecha('var(--primary)'));
-                }
-            });
-            container.appendChild(crearNodo("FIN DE ANÁLISIS", "node-terminal"));
+        function answerQuiz(p, idx, correct) {
+            if(idx !== correct) state[p].score = Math.max(0, state[p].score - 2);
+            document.getElementById('quiz-' + p).style.display = 'none';
+            state[p].exec = false;
+            updateScoreUI(p);
         }
 
-        // --- SISTEMA DE CLIC MEJORADO (Aumento del área de impacto) ---
-        document.getElementById('zona-vuelo').addEventListener('click', function(e) {
-            if (!puzzleModoActivo || mostrandoSolucion) return;
-            
-            let mundoX = e.offsetX - 200; 
-            let mundoY = e.offsetY - 250;
-            
-            // Calculamos el centro exacto del círculo (tiene 80px de ancho, por tanto +40)
-            let centroMetaX = puzzleMetaX + 40;
-            let centroMetaY = puzzleMetaY + 40;
-            
-            // Usamos distancia geométrica pura en lugar de una cuadrícula matemática
-            let distancia = Math.sqrt(Math.pow(mundoX - centroMetaX, 2) + Math.pow(mundoY - centroMetaY, 2));
-            
-            // AUMENTO DE TOLERANCIA: Le damos un radio de 85 píxeles de margen de acierto
-            // (esto es un área inmensa que abarca todo el círculo e incluso fuera de él)
-            if (distancia < 85) {
-                mostrarNotificacion("¡ANÁLISIS CORRECTO! ¡Ganas 1 Punto Extra!", "exito", 3000);
-                puntos++;
-                document.getElementById('val-puntos').innerText = puntos;
-                terminarPuzzle();
-            } else {
-                intentosPuzzle--;
-                document.getElementById('puzzle-intentos').innerText = "Intentos: " + intentosPuzzle;
-                
-                if (intentosPuzzle <= 0) {
-                    mostrarNotificacion("¡Se agotaron los intentos! Fíjate en el círculo rojo, ahí era el lugar correcto.", "error", 4500);
-                    mostrandoSolucion = true;
-                    
-                    const mPuzzle = document.getElementById('meta-puzzle');
-                    mPuzzle.style.left = puzzleMetaX + "px";
-                    mPuzzle.style.top = puzzleMetaY + "px";
-                    mPuzzle.style.display = "block";
-                    
-                    setTimeout(() => {
-                        mPuzzle.style.display = "none";
-                        mostrandoSolucion = false;
-                        generarRutaPuzzle();
-                        intentosPuzzle = 4;
-                        document.getElementById('puzzle-intentos').innerText = "Intentos: " + intentosPuzzle;
-                    }, 4000); 
-                } else {
-                    mostrarNotificacion(`Posición incorrecta. Te quedan: ${intentosPuzzle} intentos.`, "error", 2000);
-                }
-            }
-        });
-
-        function terminarPuzzle() {
-            puzzleModoActivo = false;
-            document.getElementById('puzzle-info').style.display = 'none';
-            document.getElementById('flow-overlay').classList.add('hidden');
-            document.getElementById('meta').style.display = 'block';
-            document.getElementById('consola').disabled = false;
-            document.querySelector('.suelo').style.cursor = 'default';
-            
-            moverMeta();
-            startTimer();
-            actualizarFondo();
+        function updateVisuals(p) {
+            const d = document.getElementById(p === 'p1' ? 'dron1' : 'dron2');
+            d.style.left = (state[p].x * GRID) + "px";
+            d.style.top = (state[p].y * GRID) + "px";
+            d.querySelector('.dron-body').style.transform = `rotateZ(${state[p].angle}deg)`;
         }
 
-        // --- SISTEMA DE ENVÍO ---
         function enviarResultados() {
             const scriptUrl = "https://script.google.com/macros/s/AKfycbwVPttSZrhwfWwSZpFo7KWjJ39vldQm3MPGykMWEPWOoF4UsZ24mC8YhgiaE-0xm_7G/exec";
-            document.getElementById('status-overlay').style.display = 'flex';
-            document.getElementById('status-message').innerText = "ENVIANDO DATOS AL SERVIDOR...";
-            fetch(scriptUrl, {
-                method: "POST", mode: "no-cors",
-                body: JSON.stringify({ player1: "Dron " + alumnoNombre, score1: puntos, timestamp: new Date().toLocaleString() })
-            }).then(() => {
-                document.getElementById('status-message').innerText = "¡PUNTUACIÓN REGISTRADA!";
-                setTimeout(() => { document.getElementById('status-overlay').style.display = 'none'; }, 1500);
-            });
+            const data = { player1: state.p1.name, score1: state.p1.score, player2: state.p2.name, score2: state.p2.score };
+            fetch(scriptUrl, { method: "POST", mode: "no-cors", body: JSON.stringify(data) })
+            .then(() => alert("Datos enviados a la hoja de cálculo."));
         }
     </script>
 
