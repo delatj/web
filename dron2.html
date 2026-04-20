@@ -17,12 +17,14 @@
         }
 
         /* Se aumentó la altura de la barra superior a 140px para acomodar el nuevo tamaño del texto */
-        .top-bar { position: fixed; top: 0; width: 100%; display: flex; justify-content: space-around; height: 140px; background: white; border-bottom: 3px solid #333; z-index: 200; }
+        .top-bar { position: fixed; top: 0; width: 100%; display: flex; justify-content: space-around; align-items: center; height: 140px; background: white; border-bottom: 3px solid #333; z-index: 200; }
         .score-card { text-align: center; padding: 10px; min-width: 200px; }
         .name-display { font-size: 1.1rem; font-weight: bold; color: #555; margin-bottom: 2px; }
-        .score-val { font-size: 2.5rem; font-weight: 900; color: #222; margin: 0; }
-        /* Se aumentó el tamaño a 2.5rem y el grosor a 900 para que sea idéntico al score-val */
-        .multiplier { color: #e67e22; font-size: 2.5rem; font-weight: 900; margin: 0; }
+        .score-val { font-size: 2.5rem; font-weight: 900; color: #222; margin: 0; display: none; /* Oculto temporalmente si solo quieres ver el multiplicador, o se puede dejar */ }
+        
+        /* Multiplicador original y nueva clase para el resultado final */
+        .multiplier { color: #e67e22; font-size: 2.5rem; font-weight: 900; margin: 0; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .res-final { color: black; font-weight: bold; font-size: 2em; }
 
         /* Se bajó el panel a 150px para que no choque con la barra superior ampliada */
         .cmd-panel { 
@@ -73,9 +75,19 @@
     <div id="quiz-p2" class="quiz-overlay" style="display:none"></div>
 
     <div class="top-bar">
-        <div class="score-card"><div id="label-n1" class="name-display">P1</div><div class="score-val" id="score1">0</div><div id="calc-1" class="multiplier">[ 0 x 4 = 0 ]</div></div>
-        <div style="align-self:center;"><button onclick="enviarResultados()" style="padding:10px 20px; cursor:pointer; background:#333; color:white; border:none; border-radius:5px; font-weight:bold;">ENVIAR DATOS</button></div>
-        <div class="score-card"><div id="label-n2" class="name-display">P2</div><div class="score-val" id="score2">0</div><div id="calc-2" class="multiplier">[ 0 x 4 = 0 ]</div></div>
+        <div class="score-card">
+            <div id="label-n1" class="name-display">P1</div>
+            <div class="score-val" id="score1" style="display:block;">0</div>
+            <div id="calc-1" class="multiplier">[ 0 x 4 = <span class="res-final">0</span> ]</div>
+        </div>
+        <div style="align-self:center;">
+            <button onclick="enviarResultados()" style="padding:10px 20px; cursor:pointer; background:#333; color:white; border:none; border-radius:5px; font-weight:bold;">ENVIAR DATOS</button>
+        </div>
+        <div class="score-card">
+            <div id="label-n2" class="name-display">P2</div>
+            <div class="score-val" id="score2" style="display:block;">0</div>
+            <div id="calc-2" class="multiplier">[ 0 x 4 = <span class="res-final">0</span> ]</div>
+        </div>
     </div>
 
     <div id="split-container">
@@ -161,12 +173,23 @@
         }
 
         window.onkeydown = (e) => {
-            if(state.p1.exec || state.p2.exec) return;
             const k = e.code;
-            if(k === 'KeyW') addCmd('p1', '↑'); if(k === 'KeyA') addCmd('p1', '↶'); if(k === 'KeyD') addCmd('p1', '↷');
-            if(k === 'Space') ejecutar('p1');
-            if(k === 'ArrowUp') addCmd('p2', '↑'); if(k === 'ArrowLeft') addCmd('p2', '↶'); if(k === 'ArrowRight') addCmd('p2', '↷');
-            if(k === 'Enter') ejecutar('p2');
+            
+            // Controles del Jugador 1: Evaluamos solo el estado de ejecución del P1
+            if(!state.p1.exec) {
+                if(k === 'KeyW') addCmd('p1', '↑'); 
+                if(k === 'KeyA') addCmd('p1', '↶'); 
+                if(k === 'KeyD') addCmd('p1', '↷');
+                if(k === 'Space') ejecutar('p1');
+            }
+
+            // Controles del Jugador 2: Evaluamos solo el estado de ejecución del P2
+            if(!state.p2.exec) {
+                if(k === 'ArrowUp') addCmd('p2', '↑'); 
+                if(k === 'ArrowLeft') addCmd('p2', '↶'); 
+                if(k === 'ArrowRight') addCmd('p2', '↷');
+                if(k === 'Enter') ejecutar('p2');
+            }
         };
 
         function addCmd(p, type) {
@@ -216,7 +239,10 @@
         function updateScoreUI(p) {
             const num = p === 'p1' ? '1' : '2';
             document.getElementById('score' + num).innerText = state[p].score;
-            document.getElementById('calc-' + num).innerText = `[ ${state[p].score} x 4 = ${state[p].score * 4} ]`;
+            
+            // Inyecta el HTML con la clase especial .res-final para modificar tamaño y color del resultado
+            document.getElementById('calc-' + num).innerHTML = `[ ${state[p].score} x 4 = <span class="res-final">${state[p].score * 4}</span> ]`;
+            
             document.getElementById('arena-' + p).style.backgroundColor = getColorByScore(state[p].score);
         }
 
