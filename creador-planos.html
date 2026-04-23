@@ -1,7 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dibuja planos con cotas</title>
   <style>
@@ -98,6 +96,13 @@
     button.info {
       background: var(--info);
     }
+
+    #btnPlus, #btnMinus {
+      padding: 4px 10px;
+      font-weight: bold;
+      font-size: 16px;
+      border-radius: 4px;
+    }
     
     .canvas-wrap {
       flex: 1;
@@ -173,12 +178,6 @@
       margin: 2px;
       padding: 4px 8px;
     }
-    
-    .help-text {
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 5px;
-    }
   </style>
 </head>
 <body>
@@ -187,13 +186,16 @@
       <div style="font-weight:700;font-size:18px">Dibuja planos (con cotas)</div>
       <div style="flex:1"></div>
       <div class="controls">
-        <label>Columnas: <span id="colsLabel">20</span></label>
-        <input id="cols" type="range" min="8" max="48" value="20">
-        <input id="colsInput" type="number" min="8" max="48" value="20">
         
-        <label>Filas: <span id="rowsLabel">20</span></label>
-        <input id="rows" type="range" min="8" max="48" value="20">
-        <input id="rowsInput" type="number" min="8" max="48" value="20">
+        <div style="display: none;">
+          <label>Columnas: <span id="colsLabel">20</span></label>
+          <input id="cols" type="range" min="8" max="48" value="20">
+          <input id="colsInput" type="number" min="8" max="48" value="20">
+          
+          <label>Filas: <span id="rowsLabel">20</span></label>
+          <input id="rows" type="range" min="8" max="48" value="20">
+          <input id="rowsInput" type="number" min="8" max="48" value="20">
+        </div>
         
         <label>Tamaño punto: <span id="dotLabel">3</span>px</label>
         <input id="dotSize" type="range" min="1" max="6" value="3">
@@ -201,15 +203,17 @@
         <label>Escala:</label>
         <select id="scaleSelect">
           <option value="0.5">0.5 cm</option>
-          <option value="1" selected>1 cm</option>
+          <option value="1" selected="">1 cm</option>
           <option value="2">2 cm</option>
         </select>
+        <button id="btnPlus" class="secondary" title="Mostrar medios puntos">+</button>
+        <button id="btnMinus" class="secondary" title="Ocultar medios puntos">-</button>
 
         <label>Tamaño texto: </label>
         <select id="fontSize">
           <option value="12">12px</option>
           <option value="14">14px</option>
-          <option value="16" selected>16px</option>
+          <option value="16" selected="">16px</option>
           <option value="18">18px</option>
           <option value="20">20px</option>
           <option value="24">24px</option>
@@ -218,7 +222,7 @@
         </select>
 
         <button id="undo" class="ghost">Deshacer</button>
-        <button id="redo" class="ghost" disabled>Rehacer</button>
+        <button id="redo" class="ghost" disabled="">Rehacer</button>
         <button id="clear" class="ghost">Borrar todo</button>
         <button id="toggleCota" class="secondary">Modo cota: OFF</button>
         <button id="toggleAuxiliar" class="info">Modo línea auxiliar: OFF</button>
@@ -233,7 +237,7 @@
     </div>
     
     <div class="canvas-wrap">
-      <canvas id="board" width="900" height="900" aria-label="Tablero de dibujo por puntos" style="width: 900px; height: 900px;"></canvas>
+      <canvas id="board" width="809" height="809" aria-label="Tablero de dibujo por puntos" style="width: 900px; height: 900px;"></canvas>
       <div id="menuCota" class="menuCota">
         <button data-pos="arriba">Arriba</button>
         <button data-pos="abajo">Abajo</button>
@@ -275,15 +279,14 @@
     let lastIdx = null;
     let unitCM;              
     let scaleCM = 1;
+    let showMidpoints = false; // CAMBIO: Ahora inicia en falso para que estén ocultos por defecto
     const cotaOffset = 50;     
     const flechaSize = 3;      
 
-    // Historial para deshacer/rehacer
     let history = [];
     let historyIndex = -1;
     let redoStack = [];
 
-    // Para el modo texto
     let textPosition = null;
     let currentFontSize = 16;
 
@@ -309,7 +312,21 @@
 
       for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
-          points.push({ x: Math.round(c * cellW), y: Math.round(r * cellH) });
+          points.push({ x: Math.round(c * cellW), y: Math.round(r * cellH), isMidpoint: false });
+        }
+      }
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          if (c < cols - 1) {
+            points.push({ x: Math.round((c + 0.5) * cellW), y: Math.round(r * cellH), isMidpoint: true });
+          }
+          if (r < rows - 1) {
+            points.push({ x: Math.round(c * cellW), y: Math.round((r + 0.5) * cellH), isMidpoint: true });
+          }
+          if (c < cols - 1 && r < rows - 1) {
+            points.push({ x: Math.round((c + 0.5) * cellW), y: Math.round((r + 0.5) * cellH), isMidpoint: true });
+          }
         }
       }
     }
@@ -319,11 +336,8 @@
       ctx.fillStyle = '#fff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // dibujar líneas de cuadrícula
       ctx.strokeStyle = '#eee';
       ctx.lineWidth = 1;
-      const cellW = points[1].x - points[0].x;
-      const cellH = points[cols].y - points[0].y;
       for (let r = 0; r < rows; r++) {
         ctx.beginPath();
         ctx.moveTo(points[r * cols].x, points[r * cols].y);
@@ -337,9 +351,8 @@
         ctx.stroke();
       }
 
-      // dibujar líneas de usuario
-      ctx.strokeStyle = '#006400';  // Verde oscuro para líneas de pieza
-      ctx.lineWidth = 4;    // Grosor fijo para líneas de pieza
+      ctx.strokeStyle = '#006400';  
+      ctx.lineWidth = 4;    
       lines.forEach(ln => {
         const A = points[ln.a], B = points[ln.b];
         ctx.beginPath();
@@ -348,9 +361,8 @@
         ctx.stroke();
       });
 
-      // dibujar líneas auxiliares
-      ctx.strokeStyle = '#000';  // Negro para líneas auxiliares
-      ctx.lineWidth = 1.5;       // Grosor fijo para líneas auxiliares
+      ctx.strokeStyle = '#000';  
+      ctx.lineWidth = 1.5;       
       auxiliares.forEach(aux => {
         const A = points[aux.a], B = points[aux.b];
         ctx.beginPath();
@@ -359,25 +371,30 @@
         ctx.stroke();
       });
 
-      // dibujar cotas
       cotas.forEach(ct => drawCota(ctx, ct));
 
-      // dibujar textos
       textos.forEach(txt => {
         ctx.font = `${txt.fontSize}px sans-serif`;
         ctx.fillStyle = '#000';
         ctx.fillText(txt.texto, txt.x, txt.y);
       });
 
-      // dibujar puntos
       points.forEach(p => {
-        ctx.beginPath();
-        ctx.fillStyle = '#0b5fff';
-        ctx.arc(p.x, p.y, dotSize, 0, Math.PI * 2);
-        ctx.fill();
+        if (p.isMidpoint) {
+          if (showMidpoints) {
+            ctx.beginPath();
+            ctx.fillStyle = '#ff0000'; 
+            ctx.arc(p.x, p.y, dotSize * 0.7, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        } else {
+          ctx.beginPath();
+          ctx.fillStyle = '#0b5fff'; 
+          ctx.arc(p.x, p.y, dotSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
       });
 
-      // Dibujar punto de inicio actual si existe
       if (lastIdx !== null && !cotaMode && !auxiliarMode && !eraseMode && !textMode) {
         const p = points[lastIdx];
         ctx.beginPath();
@@ -389,17 +406,14 @@
 
     function drawCota(ctx, ct) {
       const A = points[ct.a], B = points[ct.b];
-      ctx.strokeStyle = '#000';  // Negro para líneas de cota
-      ctx.fillStyle = '#000';    // Negro para texto de cota
-      ctx.lineWidth = 1.5;       // Grosor fijo para líneas de cota
+      ctx.strokeStyle = '#000';  
+      ctx.fillStyle = '#000';    
+      ctx.lineWidth = 1.5;       
       ctx.font = '12px sans-serif';
       
-      // Determinar si la cota es horizontal o vertical basándose en la posición seleccionada
       if (ct.pos === 'arriba' || ct.pos === 'abajo') {
-        // Cota horizontal - las líneas auxiliares son verticales
         const y = ct.pos === 'arriba' ? Math.min(A.y, B.y) - cotaOffset : Math.max(A.y, B.y) + cotaOffset;
         
-        // Líneas auxiliares verticales desde los puntos exactos
         ctx.beginPath(); 
         ctx.moveTo(A.x, A.y); 
         ctx.lineTo(A.x, y); 
@@ -407,25 +421,20 @@
         ctx.lineTo(B.x, y); 
         ctx.stroke();
         
-        // Línea de cota principal horizontal
         ctx.beginPath(); 
         ctx.moveTo(A.x, y); 
         ctx.lineTo(B.x, y); 
         ctx.stroke();
         
-        // Flechas
         drawFlecha(ctx, A.x, y, 'H', false); 
         drawFlecha(ctx, B.x, y, 'H', true);
         
-        // Texto de la cota (en milímetros)
-        const distMM = Math.abs(B.x - A.x) / unitCM * scaleCM * 10;
+        const distMM = Math.abs(B.x - A.x) / unitCM * 10;
         ctx.fillText(distMM.toFixed(0), (A.x + B.x) / 2, y - 5);
         
       } else {
-        // Cota vertical - las líneas auxiliares son horizontales
         const x = ct.pos === 'izquierda' ? Math.min(A.x, B.x) - cotaOffset : Math.max(A.x, B.x) + cotaOffset;
         
-        // Líneas auxiliares horizontales desde los puntos exactos
         ctx.beginPath(); 
         ctx.moveTo(A.x, A.y); 
         ctx.lineTo(x, A.y); 
@@ -433,18 +442,15 @@
         ctx.lineTo(x, B.y); 
         ctx.stroke();
         
-        // Línea de cota principal vertical
         ctx.beginPath(); 
         ctx.moveTo(x, A.y); 
         ctx.lineTo(x, B.y); 
         ctx.stroke();
         
-        // Flechas
         drawFlecha(ctx, x, A.y, 'V', 'top');
         drawFlecha(ctx, x, B.y, 'V', 'bottom');
         
-        // Texto de la cota (en milímetros)
-        const distMM = Math.abs(B.y - A.y) / unitCM * scaleCM * 10;
+        const distMM = Math.abs(B.y - A.y) / unitCM * 10;
         ctx.save(); 
         ctx.translate(x - 7, (A.y + B.y) / 2); 
         ctx.rotate(-Math.PI / 2); 
@@ -459,23 +465,15 @@
       
       if (dir === 'H') { 
         if (position === true) {
-          ctx.moveTo(x - size, y - size);
-          ctx.lineTo(x, y);
-          ctx.lineTo(x - size, y + size);
+          ctx.moveTo(x - size, y - size); ctx.lineTo(x, y); ctx.lineTo(x - size, y + size);
         } else {
-          ctx.moveTo(x + size, y - size);
-          ctx.lineTo(x, y);
-          ctx.lineTo(x + size, y + size);
+          ctx.moveTo(x + size, y - size); ctx.lineTo(x, y); ctx.lineTo(x + size, y + size);
         }
       } else { 
         if (position === 'top') {
-          ctx.moveTo(x - size, y + size);
-          ctx.lineTo(x, y);
-          ctx.lineTo(x + size, y + size);
+          ctx.moveTo(x - size, y + size); ctx.lineTo(x, y); ctx.lineTo(x + size, y + size);
         } else {
-          ctx.moveTo(x - size, y - size);
-          ctx.lineTo(x, y);
-          ctx.lineTo(x + size, y - size);
+          ctx.moveTo(x - size, y - size); ctx.lineTo(x, y); ctx.lineTo(x + size, y - size);
         }
       }
       ctx.stroke();
@@ -484,6 +482,8 @@
     function nearestPoint(x, y) {
       let best = null, bestDist = Infinity;
       points.forEach((p, i) => {
+        if (p.isMidpoint && !showMidpoints) return;
+        
         const d = (p.x - x) ** 2 + (p.y - y) ** 2;
         if (d < bestDist) {
           bestDist = d;
@@ -517,8 +517,6 @@
       const idx = nearestPoint(x, y);
       if (idx === null) return;
       
-      saveState();
-      
       const linesToRemove = lines.filter(line => line.a === idx || line.b === idx);
       lines = lines.filter(line => !linesToRemove.includes(line));
       
@@ -529,12 +527,12 @@
       auxiliares = auxiliares.filter(aux => !auxiliaresToRemove.includes(aux));
       
       const textosToRemove = textos.filter(txt => {
-        const dx = txt.x - x;
-        const dy = txt.y - y;
+        const dx = txt.x - x; const dy = txt.y - y;
         return Math.sqrt(dx * dx + dy * dy) < 30;
       });
       textos = textos.filter(txt => !textosToRemove.includes(txt));
       
+      saveState();
       drawGrid();
     }
 
@@ -555,7 +553,6 @@
       }
       
       if (textMode) {
-        saveState();
         textPosition = pos;
         textDialog.style.display = 'block';
         textDialog.style.left = ev.clientX + 'px';
@@ -572,7 +569,6 @@
         if (cotaFirst === null) { 
           cotaFirst = idx; 
         } else {
-          // Permitir cualquier combinación de puntos, no solo los alineados
           menuCota.style.left = ev.clientX + 'px';
           menuCota.style.top = ev.clientY + 'px';
           menuCota.style.display = 'block';
@@ -583,10 +579,9 @@
         if (auxiliarFirst === null) { 
           auxiliarFirst = idx; 
         } else {
-          // Crear línea auxiliar directamente entre los dos puntos
-          saveState();
           auxiliares.push({ a: auxiliarFirst, b: idx });
           auxiliarFirst = null;
+          saveState();
           drawGrid();
         }
       } else {
@@ -594,9 +589,9 @@
           lastIdx = idx;
           drawGrid();
         } else if (idx !== lastIdx) { 
-          saveState();
           lines.push({ a: lastIdx, b: idx }); 
           lastIdx = idx; 
+          saveState();
           drawGrid(); 
         }
       }
@@ -604,7 +599,6 @@
 
     canvas.addEventListener('contextmenu', function(ev) {
       ev.preventDefault();
-      
       if (!cotaMode && !auxiliarMode && !eraseMode && !textMode) {
         resetLastPoint();
         return false;
@@ -620,25 +614,22 @@
           fontSize: currentFontSize
         });
         textDialog.style.display = 'none';
+        saveState();
         drawGrid();
       }
     });
 
     cancelText.addEventListener('click', () => {
       textDialog.style.display = 'none';
-      undo();
     });
 
     menuCota.querySelectorAll('button').forEach(b => {
       b.addEventListener('click', () => {
-        saveState();
         const a = parseInt(menuCota.dataset.a), bIdx = parseInt(menuCota.dataset.b);
-        
-        // Crear cota normal
         cotas.push({ a: a, b: bIdx, pos: b.dataset.pos });
-        
         cotaFirst = null; 
         menuCota.style.display = 'none'; 
+        saveState();
         drawGrid();
       });
     });
@@ -690,30 +681,19 @@
 
     function saveProject() {
       const projectData = {
-        lines: lines,
-        cotas: cotas,
-        textos: textos,
-        auxiliares: auxiliares,
-        cols: cols,
-        rows: rows,
-        dotSize: dotSize,
-        scaleCM: scaleCM
+        lines: lines, cotas: cotas, textos: textos, auxiliares: auxiliares,
+        cols: cols, rows: rows, dotSize: dotSize, scaleCM: scaleCM
       };
       
       const dataStr = JSON.stringify(projectData);
       const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-      
-      const exportFileDefaultName = 'proyecto-planos.json';
-      
       const linkElement = document.createElement('a');
       linkElement.setAttribute('href', dataUri);
-      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.setAttribute('download', 'proyecto-planos.json');
       linkElement.click();
     }
 
-    function loadProject() {
-      fileInput.click();
-    }
+    function loadProject() { fileInput.click(); }
 
     function handleProjectFile(e) {
       const file = e.target.files[0];
@@ -723,65 +703,36 @@
       reader.onload = function(e) {
         try {
           const projectData = JSON.parse(e.target.result);
-          
           if (!projectData.lines || !projectData.cotas || !projectData.cols || !projectData.rows) {
             throw new Error("Formato de archivo inválido");
           }
-          
-          saveState();
           
           lines = projectData.lines;
           cotas = projectData.cotas;
           textos = projectData.textos || [];
           auxiliares = projectData.auxiliares || [];
-          cols = projectData.cols;
-          rows = projectData.rows;
-          dotSize = projectData.dotSize || 6;
-          scaleCM = projectData.scaleCM || 1;
+          cols = projectData.cols; rows = projectData.rows;
+          dotSize = projectData.dotSize || 6; scaleCM = projectData.scaleCM || 1;
           
-          document.getElementById('cols').value = cols;
-          document.getElementById('colsInput').value = cols;
+          document.getElementById('cols').value = cols; document.getElementById('colsInput').value = cols;
           document.getElementById('colsLabel').textContent = cols;
-          
-          document.getElementById('rows').value = rows;
-          document.getElementById('rowsInput').value = rows;
+          document.getElementById('rows').value = rows; document.getElementById('rowsInput').value = rows;
           document.getElementById('rowsLabel').textContent = rows;
-          
-          document.getElementById('dotSize').value = dotSize;
-          document.getElementById('dotLabel').textContent = dotSize;
-          
+          document.getElementById('dotSize').value = dotSize; document.getElementById('dotLabel').textContent = dotSize;
           document.getElementById('scaleSelect').value = scaleCM;
           
-          rebuildPoints();
-          drawGrid();
-          
+          rebuildPoints(); drawGrid(); saveState();
           alert('Proyecto cargado correctamente');
         } catch (error) {
-          console.error(error);
-          alert('Error al cargar el proyecto: ' + error.message);
+          console.error(error); alert('Error al cargar el proyecto: ' + error.message);
         }
       };
       reader.readAsText(file);
-      
       e.target.value = '';
     }
 
     function generateDXF() {
-      let dxfContent = `0
-SECTION
-2
-HEADER
-9
-$ACADVER
-1
-AC1015
-0
-ENDSEC
-0
-SECTION
-2
-ENTITIES
-`;
+      let dxfContent = `0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n`;
 
       const width = parseInt(canvas.style.width);
       const height = parseInt(canvas.style.height);
@@ -793,87 +744,24 @@ ENTITIES
       };
 
       lines.forEach(ln => {
-        const A = points[ln.a];
-        const B = points[ln.b];
-        const worldA = toWorldCoords(A.x, A.y);
-        const worldB = toWorldCoords(B.x, B.y);
-        
-        dxfContent += `0
-LINE
-8
-0
-10
-${worldA.x.toFixed(2)}
-20
-${worldA.y.toFixed(2)}
-30
-0.0
-11
-${worldB.x.toFixed(2)}
-21
-${worldB.y.toFixed(2)}
-31
-0.0
-`;
+        const A = points[ln.a]; const B = points[ln.b];
+        const worldA = toWorldCoords(A.x, A.y); const worldB = toWorldCoords(B.x, B.y);
+        dxfContent += `0\nLINE\n8\n0\n10\n${worldA.x.toFixed(2)}\n20\n${worldA.y.toFixed(2)}\n30\n0.0\n11\n${worldB.x.toFixed(2)}\n21\n${worldB.y.toFixed(2)}\n31\n0.0\n`;
       });
 
-      // Agregar líneas auxiliares al DXF
       auxiliares.forEach(aux => {
-        const A = points[aux.a];
-        const B = points[aux.b];
-        const worldA = toWorldCoords(A.x, A.y);
-        const worldB = toWorldCoords(B.x, B.y);
-        
-        dxfContent += `0
-LINE
-8
-0
-10
-${worldA.x.toFixed(2)}
-20
-${worldA.y.toFixed(2)}
-30
-0.0
-11
-${worldB.x.toFixed(2)}
-21
-${worldB.y.toFixed(2)}
-31
-0.0
-`;
+        const A = points[aux.a]; const B = points[aux.b];
+        const worldA = toWorldCoords(A.x, A.y); const worldB = toWorldCoords(B.x, B.y);
+        dxfContent += `0\nLINE\n8\n0\n10\n${worldA.x.toFixed(2)}\n20\n${worldA.y.toFixed(2)}\n30\n0.0\n11\n${worldB.x.toFixed(2)}\n21\n${worldB.y.toFixed(2)}\n31\n0.0\n`;
       });
 
       textos.forEach((txt, index) => {
         const worldPos = toWorldCoords(txt.x, txt.y);
         const textHeight = (txt.fontSize / 16) * 2.5;
-        
-        dxfContent += `0
-TEXT
-8
-0
-10
-${worldPos.x.toFixed(2)}
-20
-${worldPos.y.toFixed(2)}
-30
-0.0
-40
-${textHeight.toFixed(2)}
-1
-${txt.texto}
-7
-STANDARD
-50
-0.0
-`;
+        dxfContent += `0\nTEXT\n8\n0\n10\n${worldPos.x.toFixed(2)}\n20\n${worldPos.y.toFixed(2)}\n30\n0.0\n40\n${textHeight.toFixed(2)}\n1\n${txt.texto}\n7\nSTANDARD\n50\n0.0\n`;
       });
 
-      dxfContent += `0
-ENDSEC
-0
-EOF
-`;
-
+      dxfContent += `0\nENDSEC\n0\nEOF\n`;
       return dxfContent;
     }
 
@@ -881,12 +769,8 @@ EOF
       const dxfContent = generateDXF();
       const blob = new Blob([dxfContent], { type: 'application/dxf' });
       const url = URL.createObjectURL(blob);
-      
       const link = document.createElement('a');
-      link.href = url;
-      link.download = 'dibujo-planos.dxf';
-      link.click();
-      
+      link.href = url; link.download = 'dibujo-planos.dxf'; link.click();
       setTimeout(() => URL.revokeObjectURL(url), 100);
     }
 
@@ -894,83 +778,65 @@ EOF
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
       const startX = 20, startY = 20, step = 10 * scaleCM;
+      const w = parseInt(canvas.style.width);
+      const h = parseInt(canvas.style.height);
 
-      // puntos
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          pdf.circle(startX + c * step, startY + r * step, 0.5, 'F');
+      points.forEach(p => {
+        const px = startX + (p.x / w) * (cols - 1) * step;
+        const py = startY + (p.y / h) * (rows - 1) * step;
+        if (p.isMidpoint) {
+           if (showMidpoints) {
+             pdf.setFillColor(255, 0, 0); 
+             pdf.circle(px, py, 0.3, 'F');
+           }
+        } else {
+           pdf.setFillColor(0, 0, 0); 
+           pdf.circle(px, py, 0.5, 'F');
         }
-      }
+      });
 
-      // líneas de pieza
       lines.forEach(ln => {
-        const A = { x: startX + (ln.a % cols) * step, y: startY + Math.floor(ln.a / cols) * step };
-        const B = { x: startX + (ln.b % cols) * step, y: startY + Math.floor(ln.b / cols) * step };
-        pdf.setDrawColor(0, 100, 0);
-        pdf.setLineWidth(1.6); // Grosor fijo para líneas de pieza
+        const ptA = points[ln.a]; const ptB = points[ln.b];
+        const A = { x: startX + (ptA.x / w) * (cols - 1) * step, y: startY + (ptA.y / h) * (rows - 1) * step };
+        const B = { x: startX + (ptB.x / w) * (cols - 1) * step, y: startY + (ptB.y / h) * (rows - 1) * step };
+        pdf.setDrawColor(0, 100, 0); pdf.setLineWidth(1.6);
         pdf.line(A.x, A.y, B.x, B.y);
       });
 
-      // líneas auxiliares
       auxiliares.forEach(aux => {
-        const A = { x: startX + (aux.a % cols) * step, y: startY + Math.floor(aux.a / cols) * step };
-        const B = { x: startX + (aux.b % cols) * step, y: startY + Math.floor(aux.b / cols) * step };
-        pdf.setDrawColor(0, 0, 0);
-        pdf.setLineWidth(0.6); // Grosor fijo para líneas auxiliares
+        const ptA = points[aux.a]; const ptB = points[aux.b];
+        const A = { x: startX + (ptA.x / w) * (cols - 1) * step, y: startY + (ptA.y / h) * (rows - 1) * step };
+        const B = { x: startX + (ptB.x / w) * (cols - 1) * step, y: startY + (ptB.y / h) * (rows - 1) * step };
+        pdf.setDrawColor(0, 0, 0); pdf.setLineWidth(0.6);
         pdf.line(A.x, A.y, B.x, B.y);
       });
 
-      // Cotas
       cotas.forEach(ct => {
-        const A = { x: startX + (ct.a % cols) * step, y: startY + Math.floor(ct.a / cols) * step };
-        const B = { x: startX + (ct.b % cols) * step, y: startY + Math.floor(ct.b / cols) * step };
-        pdf.setDrawColor(0, 0, 0);
-        pdf.setTextColor(0, 0, 0);
-        pdf.setLineWidth(0.6); // Grosor fijo para líneas de cota
-        pdf.setFontSize(10);
-        const arrowSize = 2; // Tamaño de flecha en mm
+        const ptA = points[ct.a]; const ptB = points[ct.b];
+        const A = { x: startX + (ptA.x / w) * (cols - 1) * step, y: startY + (ptA.y / h) * (rows - 1) * step };
+        const B = { x: startX + (ptB.x / w) * (cols - 1) * step, y: startY + (ptB.y / h) * (rows - 1) * step };
+        
+        pdf.setDrawColor(0, 0, 0); pdf.setTextColor(0, 0, 0); pdf.setLineWidth(0.6); pdf.setFontSize(10);
+        const arrowSize = 2;
 
         if (ct.pos === 'arriba' || ct.pos === 'abajo') {
-          // Cota horizontal
-          const offset = 8.5; // 8.5mm de offset (equivalente a cotaOffset)
+          const offset = 8.5; 
           const y = ct.pos === 'arriba' ? Math.min(A.y, B.y) - offset : Math.max(A.y, B.y) + offset;
-          
-          // Líneas auxiliares
-          pdf.line(A.x, A.y, A.x, y);
-          pdf.line(B.x, B.y, B.x, y);
-          
-          // Línea de cota principal
+          pdf.line(A.x, A.y, A.x, y); pdf.line(B.x, B.y, B.x, y);
           pdf.line(A.x, y, B.x, y);
+          pdf.line(A.x + arrowSize, y - arrowSize, A.x, y); pdf.line(A.x + arrowSize, y + arrowSize, A.x, y);
+          pdf.line(B.x - arrowSize, y - arrowSize, B.x, y); pdf.line(B.x - arrowSize, y + arrowSize, B.x, y);
           
-          // Flechas
-          pdf.line(A.x + arrowSize, y - arrowSize, A.x, y);
-          pdf.line(A.x + arrowSize, y + arrowSize, A.x, y);
-          pdf.line(B.x - arrowSize, y - arrowSize, B.x, y);
-          pdf.line(B.x - arrowSize, y + arrowSize, B.x, y);
-          
-          // Texto en mm
           const distMM = Math.abs(B.x - A.x) / step * scaleCM * 10;
           pdf.text(distMM.toFixed(0), (A.x + B.x) / 2, y - 2, 'center');
-          
         } else {
-          // Cota vertical
-          const offset = 8.5; // 8.5mm de offset (equivalente a cotaOffset)
+          const offset = 8.5; 
           const x = ct.pos === 'izquierda' ? Math.min(A.x, B.x) - offset : Math.max(A.x, B.x) + offset;
-          
-          // Líneas auxiliares
-          pdf.line(A.x, A.y, x, A.y);
-          pdf.line(B.x, B.y, x, B.y);
-          
-          // Línea de cota principal
+          pdf.line(A.x, A.y, x, A.y); pdf.line(B.x, B.y, x, B.y);
           pdf.line(x, A.y, x, B.y);
+          pdf.line(x - arrowSize, A.y + arrowSize, x, A.y); pdf.line(x + arrowSize, A.y + arrowSize, x, A.y);
+          pdf.line(x - arrowSize, B.y - arrowSize, x, B.y); pdf.line(x + arrowSize, B.y - arrowSize, x, B.y);
           
-          // Flechas (corregidas para orientación correcta)
-          pdf.line(x - arrowSize, A.y + arrowSize, x, A.y);
-          pdf.line(x + arrowSize, A.y + arrowSize, x, A.y);
-          pdf.line(x - arrowSize, B.y - arrowSize, x, B.y);
-          pdf.line(x + arrowSize, B.y - arrowSize, x, B.y);
-          
-          // Texto en mm
           const distMM = Math.abs(B.y - A.y) / step * scaleCM * 10;
           pdf.saveGraphicsState();
           pdf.text(distMM.toFixed(0), x - 2, (A.y + B.y) / 2, 'left', 90);
@@ -978,127 +844,79 @@ EOF
         }
       });
 
-      // textos
       textos.forEach(txt => {
         pdf.setFontSize(txt.fontSize * 0.75);
-        pdf.text(txt.texto, startX + (txt.x / parseInt(canvas.style.width)) * (cols - 1) * step, 
-                         startY + (txt.y / parseInt(canvas.style.height)) * (rows - 1) * step);
+        pdf.text(txt.texto, startX + (txt.x / w) * (cols - 1) * step, startY + (txt.y / h) * (rows - 1) * step);
       });
 
       pdf.save('dibujo-planos.pdf');
     }
 
-    // Controles
-    document.getElementById('cols').addEventListener('input', e => { 
-      cols = parseInt(e.target.value); 
-      document.getElementById('colsLabel').textContent = cols; 
-      document.getElementById('colsInput').value = cols;
-      rebuildPoints(); drawGrid(); 
+    document.getElementById('btnPlus').addEventListener('click', () => {
+      showMidpoints = true;
+      drawGrid();
+    });
+    
+    document.getElementById('btnMinus').addEventListener('click', () => {
+      showMidpoints = false;
+      drawGrid();
     });
 
+    document.getElementById('cols').addEventListener('input', e => { 
+      cols = parseInt(e.target.value); document.getElementById('colsLabel').textContent = cols; document.getElementById('colsInput').value = cols;
+      rebuildPoints(); drawGrid(); 
+    });
     document.getElementById('colsInput').addEventListener('input', e => { 
       let newCols = parseInt(e.target.value);
-      if (newCols >= 8 && newCols <= 48) {
-        cols = newCols;
-        document.getElementById('cols').value = cols;
-        document.getElementById('colsLabel').textContent = cols; 
-        rebuildPoints(); drawGrid();
-      }
+      if (newCols >= 8 && newCols <= 48) { cols = newCols; document.getElementById('cols').value = cols; document.getElementById('colsLabel').textContent = cols; rebuildPoints(); drawGrid(); }
     });
-
     document.getElementById('rows').addEventListener('input', e => { 
-      rows = parseInt(e.target.value); 
-      document.getElementById('rowsLabel').textContent = rows; 
-      document.getElementById('rowsInput').value = rows;
+      rows = parseInt(e.target.value); document.getElementById('rowsLabel').textContent = rows; document.getElementById('rowsInput').value = rows;
       rebuildPoints(); drawGrid(); 
     });
-
     document.getElementById('rowsInput').addEventListener('input', e => { 
       let newRows = parseInt(e.target.value);
-      if (newRows >= 8 && newRows <= 48) {
-        rows = newRows;
-        document.getElementById('rows').value = rows;
-        document.getElementById('rowsLabel').textContent = rows; 
-        rebuildPoints(); drawGrid();
-      }
+      if (newRows >= 8 && newRows <= 48) { rows = newRows; document.getElementById('rows').value = rows; document.getElementById('rowsLabel').textContent = rows; rebuildPoints(); drawGrid(); }
     });
-
     document.getElementById('dotSize').addEventListener('input', e => { 
-      dotSize = parseInt(e.target.value); 
-      document.getElementById('dotLabel').textContent = dotSize; 
-      drawGrid(); 
+      dotSize = parseInt(e.target.value); document.getElementById('dotLabel').textContent = dotSize; drawGrid(); 
     });
-
     document.getElementById('scaleSelect').addEventListener('change', e => { 
-      scaleCM = parseFloat(e.target.value); 
-      rebuildPoints(); drawGrid(); 
+      scaleCM = parseFloat(e.target.value); rebuildPoints(); drawGrid(); 
     });
-
-    document.getElementById('fontSize').addEventListener('change', e => { 
-      currentFontSize = parseInt(e.target.value); 
-    });
-
+    document.getElementById('fontSize').addEventListener('change', e => { currentFontSize = parseInt(e.target.value); });
+    
     document.getElementById('undo').addEventListener('click', undo);
     document.getElementById('redo').addEventListener('click', redo);
+    
     document.getElementById('clear').addEventListener('click', () => { 
-      saveState();
       lines = []; cotas = []; textos = []; auxiliares = []; 
+      saveState();
       drawGrid(); 
     });
 
     document.getElementById('toggleCota').addEventListener('click', () => { 
-      cotaMode = !cotaMode; 
-      auxiliarMode = false;
-      eraseMode = false;
-      textMode = false;
-      cotaFirst = null;
-      auxiliarFirst = null;
-      resetLastPoint();
+      cotaMode = !cotaMode; auxiliarMode = false; eraseMode = false; textMode = false; cotaFirst = null; auxiliarFirst = null; resetLastPoint();
       document.getElementById('toggleCota').textContent = 'Modo cota: ' + (cotaMode ? 'ON' : 'OFF');
       document.getElementById('toggleAuxiliar').textContent = 'Modo línea auxiliar: OFF';
-      document.getElementById('toggleEraser').textContent = 'Modo borrado: OFF';
-      document.getElementById('toggleText').textContent = 'Modo texto: OFF';
+      document.getElementById('toggleEraser').textContent = 'Modo borrado: OFF'; document.getElementById('toggleText').textContent = 'Modo texto: OFF';
     });
-
     document.getElementById('toggleAuxiliar').addEventListener('click', () => { 
-      auxiliarMode = !auxiliarMode; 
-      cotaMode = false;
-      eraseMode = false;
-      textMode = false;
-      cotaFirst = null;
-      auxiliarFirst = null;
-      resetLastPoint();
+      auxiliarMode = !auxiliarMode; cotaMode = false; eraseMode = false; textMode = false; cotaFirst = null; auxiliarFirst = null; resetLastPoint();
       document.getElementById('toggleAuxiliar').textContent = 'Modo línea auxiliar: ' + (auxiliarMode ? 'ON' : 'OFF');
       document.getElementById('toggleCota').textContent = 'Modo cota: OFF';
-      document.getElementById('toggleEraser').textContent = 'Modo borrado: OFF';
-      document.getElementById('toggleText').textContent = 'Modo texto: OFF';
+      document.getElementById('toggleEraser').textContent = 'Modo borrado: OFF'; document.getElementById('toggleText').textContent = 'Modo texto: OFF';
     });
-
     document.getElementById('toggleEraser').addEventListener('click', () => { 
-      eraseMode = !eraseMode; 
-      cotaMode = false;
-      auxiliarMode = false;
-      textMode = false;
-      cotaFirst = null;
-      auxiliarFirst = null;
-      resetLastPoint();
+      eraseMode = !eraseMode; cotaMode = false; auxiliarMode = false; textMode = false; cotaFirst = null; auxiliarFirst = null; resetLastPoint();
       document.getElementById('toggleEraser').textContent = 'Modo borrado: ' + (eraseMode ? 'ON' : 'OFF');
-      document.getElementById('toggleCota').textContent = 'Modo cota: OFF';
-      document.getElementById('toggleAuxiliar').textContent = 'Modo línea auxiliar: OFF';
+      document.getElementById('toggleCota').textContent = 'Modo cota: OFF'; document.getElementById('toggleAuxiliar').textContent = 'Modo línea auxiliar: OFF';
       document.getElementById('toggleText').textContent = 'Modo texto: OFF';
     });
-
     document.getElementById('toggleText').addEventListener('click', () => { 
-      textMode = !textMode; 
-      cotaMode = false;
-      auxiliarMode = false;
-      eraseMode = false;
-      cotaFirst = null;
-      auxiliarFirst = null;
-      resetLastPoint();
+      textMode = !textMode; cotaMode = false; auxiliarMode = false; eraseMode = false; cotaFirst = null; auxiliarFirst = null; resetLastPoint();
       document.getElementById('toggleText').textContent = 'Modo texto: ' + (textMode ? 'ON' : 'OFF');
-      document.getElementById('toggleCota').textContent = 'Modo cota: OFF';
-      document.getElementById('toggleAuxiliar').textContent = 'Modo línea auxiliar: OFF';
+      document.getElementById('toggleCota').textContent = 'Modo cota: OFF'; document.getElementById('toggleAuxiliar').textContent = 'Modo línea auxiliar: OFF';
       document.getElementById('toggleEraser').textContent = 'Modo borrado: OFF';
     });
 
@@ -1114,5 +932,4 @@ EOF
     drawGrid();
     saveState();
   </script>
-</body>
-</html>
+</body></html>
