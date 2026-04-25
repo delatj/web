@@ -1,7 +1,6 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detector de Ruido Pro - Modo Aula</title>
     <style>
@@ -62,6 +61,7 @@
         }
         #bar { width: 0%; height: 100%; background: #4caf50; transition: width 0.1s, background-color 0.3s; }
         
+        /* Botones principales y generales */
         button {
             width: 100%; padding: 12px; font-size: 1rem; font-weight: bold;
             background-color: #007bff; color: white; border: none;
@@ -69,8 +69,38 @@
         }
         button:disabled { background-color: #444; cursor: not-allowed; }
         
+        /* Botón Iniciar (GRANDE) */
+        #startBtn { margin-bottom: 5px; font-size: 1.1rem; padding: 15px; }
+
+        /* Contenedor de Botones Secundarios (PEQUEÑOS Y EN LÍNEA) */
+        .secondary-actions {
+            display: flex; gap: 10px; width: 100%; margin-top: 10px;
+        }
+        .secondary-actions button {
+            margin-top: 0; padding: 10px 5px; font-size: 0.85rem; flex: 1; border-radius: 6px;
+        }
+
         #correctionBtn { background-color: #9c27b0; }
         #resetCorrectionBtn { background-color: #f44336; display: none; }
+        #bellBtn { background-color: #00bcd4; color: #000; border: 2px solid #0097a7; }
+
+        /* Desplegable de educación sobre el ruido */
+        .info-dropdown {
+            width: 100%; margin-top: 15px; background: #2d2d2d; border-radius: 8px;
+            border: 1px solid #ff9800; overflow: hidden;
+        }
+        .info-dropdown summary {
+            background-color: #ff9800; color: #000; padding: 12px; font-weight: bold; font-size: 1rem;
+            cursor: pointer; text-align: center; list-style: none; user-select: none; transition: background 0.3s;
+        }
+        .info-dropdown summary:hover { background-color: #e68a00; }
+        .info-dropdown summary::-webkit-details-marker { display: none; }
+        .info-dropdown .dropdown-content {
+            padding: 15px; font-size: 0.9rem; color: #eee; text-align: left; line-height: 1.5;
+        }
+        .info-dropdown h4 { margin-top: 0; color: #ffca28; margin-bottom: 10px; text-align: center;}
+        .info-dropdown p { margin-bottom: 10px; margin-top: 0; }
+        .info-dropdown p:last-child { margin-bottom: 0; }
 
         .status-container { text-align: center; margin-top: 10px; }
         #db-display { font-size: 1.2rem; font-weight: bold; display: block; margin-bottom: 5px; }
@@ -131,8 +161,22 @@
         </div>
 
         <button id="startBtn">Iniciar Monitor Normal</button>
-        <button id="correctionBtn">Iniciar Modo Silencio (Corrección)</button>
-        <button id="resetCorrectionBtn">Reiniciar Temporizador de Corrección</button>
+        
+        <div class="secondary-actions">
+            <button id="correctionBtn">Modo Silencio</button>
+            <button id="resetCorrectionBtn">Reiniciar Silencio</button>
+            <button id="bellBtn">🚲 Timbre</button>
+        </div>
+
+        <details class="info-dropdown">
+            <summary>🧠 ¿Por qué es importante el silencio?</summary>
+            <div class="dropdown-content">
+                <h4>La Ciencia del Ruido en Clase</h4>
+                <p><strong>🔊 Sonidos Agudos y Puntuales:</strong> Un timbre, una alarma o un aviso rápido son sonidos muy agudos y repentinos. Su función es <em>llamar la atención</em>. Como duran apenas una fracción de segundo, nuestro oído se recupera al instante y <strong>no producen daño auditivo</strong>.</p>
+                <p><strong>🌊 Ruido Continuo y Grave:</strong> El murmullo constante, arrastrar sillas o toda la clase hablando a la vez genera una "ola" de sonido grave y prolongada en el tiempo.</p>
+                <p><strong>⚠️ ¿Qué daños produce?</strong> Este ruido continuo fatiga el sistema nervioso. Aunque parezca que no está muy alto, ese bombardeo constante de sonido es muy perjudicial: satura el cerebro, destruye la concentración, provoca estrés y es la causa principal de <strong>agotamiento mental y fuertes dolores de cabeza</strong> al final del día escolar.</p>
+            </div>
+        </details>
 
         <div id="visualizer">
             <div id="bar"></div>
@@ -179,6 +223,7 @@
         const startBtn = document.getElementById('startBtn');
         const correctionBtn = document.getElementById('correctionBtn');
         const resetCorrectionBtn = document.getElementById('resetCorrectionBtn');
+        const bellBtn = document.getElementById('bellBtn');
         const dbDisplay = document.getElementById('db-display');
         const timerDisplay = document.getElementById('timer-display');
         const bar = document.getElementById('bar');
@@ -203,7 +248,7 @@
         let correctionSecondsLeft = 0;
         let correctionInterval = null;
         let correctionNoiseStartTime = null;
-        let currentCorrectionMinutes = 5; // Variable para guardar el tiempo elegido
+        let currentCorrectionMinutes = 5;
 
         async function initAudio() {
             if (audioContext) return true;
@@ -303,12 +348,11 @@
         correctionBtn.addEventListener('click', async () => {
             if (!await initAudio()) return;
             
-            // Preguntar al usuario los minutos cuando pulsa el botón
             let userInput = prompt("Introduce los minutos para el modo corrección:", "5");
             
             if (userInput === null || userInput.trim() === "" || isNaN(userInput) || userInput <= 0) {
                 alert("Valor no válido o cancelado. No se iniciará el modo corrección.");
-                return; // Cancelar si el usuario no pone un número válido
+                return;
             }
 
             currentCorrectionMinutes = parseFloat(userInput);
@@ -316,7 +360,7 @@
         });
 
         resetCorrectionBtn.addEventListener('click', () => {
-            startCorrection(); // Reinicia usando el tiempo guardado en currentCorrectionMinutes
+            startCorrection();
         });
 
         function startCorrection() {
@@ -389,7 +433,7 @@
             if(isRunning) requestAnimationFrame(monitorCorrection);
         }
 
-        // --- SONIDOS ---
+        // --- SONIDOS ALARMAS ---
         function playAlarm() {
             isAlarmPlaying = true;
             const alarmSecs = parseInt(durationInput.value);
@@ -426,6 +470,65 @@
             osc.start();
             setTimeout(() => osc.stop(), 1500); 
         }
+
+        // --- SONIDO DE TIMBRE DE BICICLETA ---
+        function playBicycleBell() {
+            if (!audioContext) return;
+            const now = audioContext.currentTime;
+
+            function createDing(startTime) {
+                const osc1 = audioContext.createOscillator();
+                const osc2 = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                osc1.type = 'sine';
+                osc2.type = 'sine';
+
+                osc1.frequency.value = 2048; 
+                osc2.frequency.value = 2800; 
+
+                gainNode.gain.setValueAtTime(0, startTime);
+                gainNode.gain.linearRampToValueAtTime(1.5, startTime + 0.02);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 1.2);
+
+                osc1.connect(gainNode);
+                osc2.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                osc1.start(startTime);
+                osc2.start(startTime);
+                osc1.stop(startTime + 1.5);
+                osc2.stop(startTime + 1.5);
+            }
+
+            createDing(now);
+            createDing(now + 0.15); 
+        }
+
+        bellBtn.addEventListener('click', async () => {
+            if (!audioContext) {
+                const initSuccess = await initAudio();
+                if (!initSuccess) return;
+            }
+            
+            bellBtn.disabled = true;
+            bellBtn.innerText = "🚲 ¡Ring Ring!...";
+            
+            const previousText = timerDisplay.innerText;
+            timerDisplay.innerText = "🚲 Avisando a la clase...";
+
+            playBicycleBell();
+
+            setTimeout(() => {
+                bellBtn.disabled = false;
+                bellBtn.innerText = "🚲 Timbre";
+                if (!isRunning) {
+                    timerDisplay.innerText = "✅ Sistema inactivo";
+                } else if (!isCorrectionMode) {
+                    timerDisplay.innerText = "Reanudando escucha...";
+                }
+            }, 3000);
+        });
     </script>
-</body>
-</html>
+
+</body></html>
