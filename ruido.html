@@ -16,17 +16,23 @@
         }
         h2 { margin-top: 0; color: #007bff; text-align: center; }
         
-        /* Botón de Ayuda */
-        #helpBtn {
+        /* Contenedor de Botones Superiores (Ayuda y Educación) */
+        .top-buttons {
             position: absolute; top: 15px; right: 15px;
-            background: #ffc107; color: #000; border: none;
-            border-radius: 50%; width: 30px; height: 30px;
+            display: flex; gap: 10px; z-index: 10;
+        }
+        .icon-btn {
+            border: none; border-radius: 50%; width: 32px; height: 32px;
             font-weight: bold; cursor: pointer; font-size: 1.1rem;
             display: flex; justify-content: center; align-items: center;
+            transition: transform 0.2s;
         }
+        .icon-btn:hover { transform: scale(1.1); }
+        #eduBtn { background: #ff9800; color: #fff; }
+        #helpBtn { background: #ffc107; color: #000; }
 
-        /* Modal de Ayuda */
-        #helpModal {
+        /* Estilo para las Ventanas Emergentes (Modals) */
+        .modal-overlay {
             display: none; position: fixed; top: 0; left: 0;
             width: 100%; height: 100%; background: rgba(0,0,0,0.8);
             z-index: 1000; justify-content: center; align-items: center;
@@ -34,15 +40,19 @@
         .modal-content {
             background: #2d2d2d; padding: 20px; border-radius: 10px;
             max-width: 400px; width: 90%; max-height: 80vh; overflow-y: auto;
+            color: #eee;
         }
+        .modal-content h3 { margin-top:0; color:#007bff; text-align: center; }
+        .modal-content h4 { margin-top:0; color:#ffca28; margin-bottom:15px; text-align: center; font-size: 1.2rem;}
         .close-btn {
             background: #dc3545; color: white; border: none; padding: 8px 15px;
-            border-radius: 5px; cursor: pointer; float: right; margin-top: 10px;
+            border-radius: 5px; cursor: pointer; float: right; margin-top: 15px;
         }
         .modal-content details {
             background: #1e1e1e; margin-bottom: 5px; padding: 10px; border-radius: 5px;
         }
         .modal-content summary { font-weight: bold; cursor: pointer; color: #007bff; }
+        .modal-content p { line-height: 1.5; margin-bottom: 10px; font-size: 0.95rem; }
 
         .control-group { margin-bottom: 12px; }
         label { display: block; margin-bottom: 5px; color: #bbb; font-size: 0.85rem; }
@@ -84,24 +94,6 @@
         #resetCorrectionBtn { background-color: #f44336; display: none; }
         #bellBtn { background-color: #00bcd4; color: #000; border: 2px solid #0097a7; }
 
-        /* Desplegable de educación sobre el ruido */
-        .info-dropdown {
-            width: 100%; margin-top: 15px; background: #2d2d2d; border-radius: 8px;
-            border: 1px solid #ff9800; overflow: hidden;
-        }
-        .info-dropdown summary {
-            background-color: #ff9800; color: #000; padding: 12px; font-weight: bold; font-size: 1rem;
-            cursor: pointer; text-align: center; list-style: none; user-select: none; transition: background 0.3s;
-        }
-        .info-dropdown summary:hover { background-color: #e68a00; }
-        .info-dropdown summary::-webkit-details-marker { display: none; }
-        .info-dropdown .dropdown-content {
-            padding: 15px; font-size: 0.9rem; color: #eee; text-align: left; line-height: 1.5;
-        }
-        .info-dropdown h4 { margin-top: 0; color: #ffca28; margin-bottom: 10px; text-align: center;}
-        .info-dropdown p { margin-bottom: 10px; margin-top: 0; }
-        .info-dropdown p:last-child { margin-bottom: 0; }
-
         .status-container { text-align: center; margin-top: 10px; }
         #db-display { font-size: 1.2rem; font-weight: bold; display: block; margin-bottom: 5px; }
         #timer-display { font-size: 1rem; color: #ffeb3b; min-height: 1.2rem; font-weight: bold;}
@@ -135,7 +127,11 @@
 <body>
 
     <div class="card">
-        <button id="helpBtn" onclick="document.getElementById('helpModal').style.display='flex'">?</button>
+        <div class="top-buttons">
+            <button id="eduBtn" class="icon-btn" title="¿Por qué es importante el silencio?" onclick="document.getElementById('eduModal').style.display='flex'">🧠</button>
+            <button id="helpBtn" class="icon-btn" title="Ayuda" onclick="document.getElementById('helpModal').style.display='flex'">?</button>
+        </div>
+
         <h2>Control de Aula</h2>
         
         <div class="flex-row">
@@ -168,16 +164,6 @@
             <button id="bellBtn">🚲 Timbre</button>
         </div>
 
-        <details class="info-dropdown">
-            <summary>🧠 ¿Por qué es importante el silencio?</summary>
-            <div class="dropdown-content">
-                <h4>La Ciencia del Ruido en Clase</h4>
-                <p><strong>🔊 Sonidos Agudos y Puntuales:</strong> Un timbre, una alarma o un aviso rápido son sonidos muy agudos y repentinos. Su función es <em>llamar la atención</em>. Como duran apenas una fracción de segundo, nuestro oído se recupera al instante y <strong>no producen daño auditivo</strong>.</p>
-                <p><strong>🌊 Ruido Continuo y Grave:</strong> El murmullo constante, arrastrar sillas o toda la clase hablando a la vez genera una "ola" de sonido grave y prolongada en el tiempo.</p>
-                <p><strong>⚠️ ¿Qué daños produce?</strong> Este ruido continuo fatiga el sistema nervioso. Aunque parezca que no está muy alto, ese bombardeo constante de sonido es muy perjudicial: satura el cerebro, destruye la concentración, provoca estrés y es la causa principal de <strong>agotamiento mental y fuertes dolores de cabeza</strong> al final del día escolar.</p>
-            </div>
-        </details>
-
         <div id="visualizer">
             <div id="bar"></div>
         </div>
@@ -200,9 +186,9 @@
         <div id="final-message">¡EL LÍMITE DE RUIDO EN CLASE SE HA SUPERADO!</div>
     </div>
 
-    <div id="helpModal">
+    <div id="helpModal" class="modal-overlay">
         <div class="modal-content">
-            <h3 style="margin-top:0; color:#007bff;">Cómo funciona el programa</h3>
+            <h3>Cómo funciona el programa</h3>
             <details>
                 <summary>Umbral y Segundos para pitar</summary>
                 <p>Define el nivel de ruido máximo permitido (0 a 100). Si la clase supera este nivel de forma constante durante los "Segundos para pitar", sonará la alarma.</p>
@@ -216,6 +202,16 @@
                 <p>Al pulsarlo, te preguntará cuántos minutos de corrección quieres aplicar y activará una cuenta atrás. Durante este tiempo la clase debe estar callada. Si hacen ruido (superan el umbral) durante más de 2 segundos, el temporizador se detiene, avisa del fallo y te obliga a reiniciarlo desde cero con el botón rojo.</p>
             </details>
             <button class="close-btn" onclick="document.getElementById('helpModal').style.display='none'">Cerrar</button>
+        </div>
+    </div>
+
+    <div id="eduModal" class="modal-overlay">
+        <div class="modal-content">
+            <h4>🧠 La Ciencia del Ruido en Clase</h4>
+            <p><strong>🔊 Sonidos Agudos y Puntuales:</strong> Un timbre, una alarma o un aviso rápido son sonidos muy agudos y repentinos. Su función es <em>llamar la atención</em>. Como duran apenas una fracción de segundo, nuestro oído se recupera al instante y <strong>no producen daño auditivo</strong>.</p>
+            <p><strong>🌊 Ruido Continuo y Grave:</strong> El murmullo constante, arrastrar sillas o toda la clase hablando a la vez genera una "ola" de sonido grave y prolongada en el tiempo.</p>
+            <p><strong>⚠️ ¿Qué daños produce?</strong> Este ruido continuo fatiga el sistema nervioso. Aunque parezca que no está muy alto, ese bombardeo constante de sonido es muy perjudicial: satura el cerebro, destruye la concentración, provoca estrés y es la causa principal de <strong>agotamiento mental y fuertes dolores de cabeza</strong> al final del día escolar.</p>
+            <button class="close-btn" onclick="document.getElementById('eduModal').style.display='none'">Cerrar</button>
         </div>
     </div>
 
