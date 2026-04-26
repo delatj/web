@@ -107,17 +107,19 @@
     .canvas-wrap {
       flex: 1;
       display: flex;
-      align-items: center;
-      justify-content: center;
+      align-items: flex-start;
+      justify-content: flex-start;
       position: relative;
+      overflow: auto; 
+      padding: 20px;
     }
     
     canvas {
       background: white;
       border-radius: 8px;
       box-shadow: 0 6px 18px rgba(10, 10, 20, 0.08);
-      max-width: 100%;
-      height: auto;
+      max-width: none;
+      margin: auto;
     }
     
     .help {
@@ -143,6 +145,7 @@
       padding: 6px;
       border-radius: 6px;
       display: none;
+      z-index: 100;
     }
     
     .menuCota button {
@@ -188,9 +191,9 @@
       <div class="controls">
         
         <div style="display: none;">
-          <label>Columnas: <span id="colsLabel">20</span></label>
-          <input id="cols" type="range" min="8" max="48" value="20">
-          <input id="colsInput" type="number" min="8" max="48" value="20">
+          <label>Columnas: <span id="colsLabel">28</span></label>
+          <input id="cols" type="range" min="8" max="48" value="28">
+          <input id="colsInput" type="number" min="8" max="48" value="28">
           
           <label>Filas: <span id="rowsLabel">20</span></label>
           <input id="rows" type="range" min="8" max="48" value="20">
@@ -231,13 +234,19 @@
         <button id="saveProject" class="success">Guardar proyecto</button>
         <button id="loadProject">Cargar proyecto</button>
         <input type="file" id="fileInput" class="file-input" accept=".json">
+        
+        <label style="cursor: pointer; display: flex; align-items: center; gap: 4px; margin-left: 8px; font-weight: bold; color: var(--accent);" title="Desmarca esta casilla para exportar el plano limpio, sin los puntos">
+          <input type="checkbox" id="togglePdfDots" checked>
+          Puntos en PDF
+        </label>
+        
         <button id="download">Descargar PDF</button>
         <button id="exportDXF" class="info">Exportar DXF</button>
       </div>
     </div>
     
     <div class="canvas-wrap">
-      <canvas id="board" width="809" height="809" aria-label="Tablero de dibujo por puntos" style="width: 900px; height: 900px;"></canvas>
+      <canvas id="board" width="1026" height="722" aria-label="Tablero de dibujo por puntos" style="width: 1026px; height: 722px;"></canvas>
       <div id="menuCota" class="menuCota">
         <button data-pos="arriba">Arriba</button>
         <button data-pos="abajo">Abajo</button>
@@ -260,6 +269,7 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
   <script>
     const canvas = document.getElementById('board');
     const ctx = canvas.getContext('2d');
@@ -270,7 +280,7 @@
     const confirmText = document.getElementById('confirmText');
     const cancelText = document.getElementById('cancelText');
     
-    let cols = 20, rows = 20, dotSize = 3;
+    let cols = 28, rows = 20, dotSize = 3;
     let points = [], lines = [], cotas = [], textos = [], auxiliares = [];
     let cotaMode = false, cotaFirst = null;
     let auxiliarMode = false, auxiliarFirst = null;
@@ -279,7 +289,7 @@
     let lastIdx = null;
     let unitCM;              
     let scaleCM = 1;
-    let showMidpoints = false; // CAMBIO: Ahora inicia en falso para que estén ocultos por defecto
+    let showMidpoints = false; 
     const cotaOffset = 50;     
     const flechaSize = 3;      
 
@@ -743,22 +753,104 @@
         return { x: worldX, y: worldY };
       };
 
+      const addLine = (x1, y1, x2, y2, layer = "0", color = 0) => {
+        let str = `0\nLINE\n8\n${layer}\n`;
+        if (color !== 0) str += `62\n${color}\n`;
+        return str + `10\n${x1.toFixed(2)}\n20\n${y1.toFixed(2)}\n30\n0.0\n11\n${x2.toFixed(2)}\n21\n${y2.toFixed(2)}\n31\n0.0\n`;
+      };
+
+      const addText = (text, x, y, rot = 0, h = 2.5, layer = "0", color = 0) => {
+        let str = `0\nTEXT\n8\n${layer}\n`;
+        if (color !== 0) str += `62\n${color}\n`;
+        return str + `10\n${x.toFixed(2)}\n20\n${y.toFixed(2)}\n30\n0.0\n40\n${h.toFixed(2)}\n1\n${text}\n50\n${rot}\n7\nSTANDARD\n`;
+      };
+
+      const addArrow = (x, y, dir, isRightOrTop) => {
+        let res = "";
+        const as = 1.5; 
+        if (dir === 'H') {
+          if (isRightOrTop) {
+             res += addLine(x - as, y - as, x, y, "Cotas", 7);
+             res += addLine(x - as, y + as, x, y, "Cotas", 7);
+          } else {
+             res += addLine(x + as, y - as, x, y, "Cotas", 7);
+             res += addLine(x + as, y + as, x, y, "Cotas", 7);
+          }
+        } else {
+          if (isRightOrTop) {
+             res += addLine(x - as, y - as, x, y, "Cotas", 7);
+             res += addLine(x + as, y - as, x, y, "Cotas", 7);
+          } else {
+             res += addLine(x - as, y + as, x, y, "Cotas", 7);
+             res += addLine(x + as, y + as, x, y, "Cotas", 7);
+          }
+        }
+        return res;
+      };
+
       lines.forEach(ln => {
-        const A = points[ln.a]; const B = points[ln.b];
-        const worldA = toWorldCoords(A.x, A.y); const worldB = toWorldCoords(B.x, B.y);
-        dxfContent += `0\nLINE\n8\n0\n10\n${worldA.x.toFixed(2)}\n20\n${worldA.y.toFixed(2)}\n30\n0.0\n11\n${worldB.x.toFixed(2)}\n21\n${worldB.y.toFixed(2)}\n31\n0.0\n`;
+        const A = toWorldCoords(points[ln.a].x, points[ln.a].y);
+        const B = toWorldCoords(points[ln.b].x, points[ln.b].y);
+        dxfContent += addLine(A.x, A.y, B.x, B.y, "Muros", 3);
       });
 
       auxiliares.forEach(aux => {
-        const A = points[aux.a]; const B = points[aux.b];
-        const worldA = toWorldCoords(A.x, A.y); const worldB = toWorldCoords(B.x, B.y);
-        dxfContent += `0\nLINE\n8\n0\n10\n${worldA.x.toFixed(2)}\n20\n${worldA.y.toFixed(2)}\n30\n0.0\n11\n${worldB.x.toFixed(2)}\n21\n${worldB.y.toFixed(2)}\n31\n0.0\n`;
+        const A = toWorldCoords(points[aux.a].x, points[aux.a].y);
+        const B = toWorldCoords(points[aux.b].x, points[aux.b].y);
+        dxfContent += addLine(A.x, A.y, B.x, B.y, "Auxiliares", 8);
       });
 
-      textos.forEach((txt, index) => {
-        const worldPos = toWorldCoords(txt.x, txt.y);
+      textos.forEach(txt => {
+        const pos = toWorldCoords(txt.x, txt.y);
         const textHeight = (txt.fontSize / 16) * 2.5;
-        dxfContent += `0\nTEXT\n8\n0\n10\n${worldPos.x.toFixed(2)}\n20\n${worldPos.y.toFixed(2)}\n30\n0.0\n40\n${textHeight.toFixed(2)}\n1\n${txt.texto}\n7\nSTANDARD\n50\n0.0\n`;
+        dxfContent += addText(txt.texto, pos.x, pos.y, 0, textHeight, "Textos", 7);
+      });
+
+      cotas.forEach(ct => {
+        const A = toWorldCoords(points[ct.a].x, points[ct.a].y);
+        const B = toWorldCoords(points[ct.b].x, points[ct.b].y);
+        const offset = 10; 
+        
+        const distX = Math.abs(B.x - A.x);
+        const distY = Math.abs(B.y - A.y);
+
+        if (ct.pos === 'arriba' || ct.pos === 'abajo') {
+          const dimY = ct.pos === 'arriba' ? Math.max(A.y, B.y) + offset : Math.min(A.y, B.y) - offset;
+          
+          dxfContent += addLine(A.x, A.y, A.x, dimY, "Cotas", 7);
+          dxfContent += addLine(B.x, B.y, B.x, dimY, "Cotas", 7);
+          dxfContent += addLine(A.x, dimY, B.x, dimY, "Cotas", 7);
+          
+          const leftX = Math.min(A.x, B.x);
+          const rightX = Math.max(A.x, B.x);
+          dxfContent += addArrow(leftX, dimY, 'H', false);
+          dxfContent += addArrow(rightX, dimY, 'H', true);
+          
+          const textStr = distX.toFixed(0);
+          const shiftX = textStr.length * 0.8; 
+          const textY = ct.pos === 'arriba' ? dimY + 1 : dimY - 3.5;
+          dxfContent += addText(textStr, (A.x + B.x)/2 - shiftX, textY, 0, 2.5, "Cotas", 7);
+
+        } else {
+          const dimX = ct.pos === 'derecha' ? Math.max(A.x, B.x) + offset : Math.min(A.x, B.x) - offset;
+          
+          dxfContent += addLine(A.x, A.y, dimX, A.y, "Cotas", 7);
+          dxfContent += addLine(B.x, B.y, dimX, B.y, "Cotas", 7);
+          dxfContent += addLine(dimX, A.y, dimX, B.y, "Cotas", 7);
+          
+          const bottomY = Math.min(A.y, B.y);
+          const topY = Math.max(A.y, B.y);
+          dxfContent += addArrow(dimX, bottomY, 'V', false);
+          dxfContent += addArrow(dimX, topY, 'V', true);
+          
+          const textStr = distY.toFixed(0);
+          const shiftY = textStr.length * 0.8;
+          
+          // FIX: Compensación para el texto derecho. Al girar 90 grados, el texto se "despliega" hacia la izquierda. 
+          // Si lo posicionamos directamente en dimX, colisiona con la línea. Sumamos 3.5 para empujarlo a la derecha.
+          const textX = ct.pos === 'derecha' ? dimX + 3.5 : dimX - 1.5;
+          dxfContent += addText(textStr, textX, (A.y + B.y)/2 - shiftY, 90, 2.5, "Cotas", 7);
+        }
       });
 
       dxfContent += `0\nENDSEC\n0\nEOF\n`;
@@ -775,25 +867,39 @@
     }
 
     function exportToPDF() {
+      if (typeof window.jspdf === 'undefined') {
+        alert("La librería para crear PDF no ha cargado aún. Por favor comprueba tu conexión a internet e inténtalo en unos segundos.");
+        return;
+      }
+
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
-      const startX = 20, startY = 20, step = 10 * scaleCM;
+      const step = 10 * scaleCM;
       const w = parseInt(canvas.style.width);
       const h = parseInt(canvas.style.height);
 
-      points.forEach(p => {
-        const px = startX + (p.x / w) * (cols - 1) * step;
-        const py = startY + (p.y / h) * (rows - 1) * step;
-        if (p.isMidpoint) {
-           if (showMidpoints) {
-             pdf.setFillColor(255, 0, 0); 
-             pdf.circle(px, py, 0.3, 'F');
-           }
-        } else {
-           pdf.setFillColor(0, 0, 0); 
-           pdf.circle(px, py, 0.5, 'F');
-        }
-      });
+      const totalWidthMM = (cols - 1) * step;
+      const totalHeightMM = (rows - 1) * step;
+      const startX = (297 - totalWidthMM) / 2;
+      const startY = (210 - totalHeightMM) / 2;
+
+      const includePdfDots = document.getElementById('togglePdfDots').checked;
+
+      if (includePdfDots) {
+        points.forEach(p => {
+          const px = startX + (p.x / w) * (cols - 1) * step;
+          const py = startY + (p.y / h) * (rows - 1) * step;
+          if (p.isMidpoint) {
+             if (showMidpoints) {
+               pdf.setFillColor(255, 0, 0); 
+               pdf.circle(px, py, 0.3, 'F');
+             }
+          } else {
+             pdf.setFillColor(0, 0, 0); 
+             pdf.circle(px, py, 0.5, 'F');
+          }
+        });
+      }
 
       lines.forEach(ln => {
         const ptA = points[ln.a]; const ptB = points[ln.b];
