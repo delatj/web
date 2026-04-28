@@ -33,7 +33,7 @@
       text-align: center;
     }
     
-    #player-names-modal {
+    #player-names-modal, #question-modal {
       position: fixed;
       top: 0;
       left: 0;
@@ -45,17 +45,29 @@
       align-items: center;
       z-index: 1000;
     }
+
+    #question-modal {
+      display: none;
+      z-index: 1002;
+    }
     
-    #player-names-form {
+    #player-names-form, #question-form {
       background-color: white;
       padding: 30px;
       border-radius: 12px;
       text-align: center;
       box-shadow: 0 6px 18px rgba(0,0,0,0.3);
       min-width: 400px;
+      max-width: 600px;
     }
     
     #player-names-form h2 {
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+
+    #question-form h2 {
+      color: #1f6feb;
       margin-top: 0;
       margin-bottom: 20px;
     }
@@ -87,6 +99,46 @@
     #player-names-form button:hover {
       background-color: #45a049;
     }
+
+    /* Estilos para las preguntas de ciberseguridad */
+    .option-btn {
+      display: block;
+      width: 100%;
+      margin: 10px 0;
+      padding: 15px;
+      font-size: 16px;
+      background-color: #f8f9fa;
+      color: #333;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s;
+    }
+
+    .option-btn:hover {
+      background-color: #e9ecef;
+      border-color: #ccc;
+    }
+
+    .option-btn.correct {
+      background-color: #d4edda;
+      border-color: #28a745;
+      color: #155724;
+    }
+
+    .option-btn.wrong {
+      background-color: #f8d7da;
+      border-color: #dc3545;
+      color: #721c24;
+    }
+
+    #question-feedback {
+      margin-top: 15px;
+      font-weight: bold;
+      font-size: 18px;
+      min-height: 25px;
+    }
     
     #game-area {
       display: flex;
@@ -94,7 +146,7 @@
       max-width: 1600px;
       width: 100%;
       justify-content: center;
-      display: none; /* Oculto hasta que se ingresen los nombres */
+      display: none;
     }
     
     .player-container {
@@ -160,7 +212,6 @@
       color: #000000 !important; 
     }
 
-    /* Nuevas clases para el multiplicador calcadas del juego anterior */
     .multiplier {
       color: #e67e22;
       font-size: 1.2rem;
@@ -173,7 +224,7 @@
     .res-final {
       color: black;
       font-weight: bold;
-      font-size: 2em; /* Doble de tamaño del contenedor base */
+      font-size: 2em;
     }
     
     .canvas-container {
@@ -350,6 +401,16 @@
       <button id="start-game">Comenzar Juego</button>
     </div>
   </div>
+
+  <div id="question-modal">
+    <div id="question-form">
+      <h2 id="q-title">🛡️ Pregunta de Ciberseguridad</h2>
+      <p id="q-player-turn" style="font-weight: bold; margin-bottom: 15px;"></p>
+      <h3 id="q-text" style="color: #333; margin-bottom: 20px;"></h3>
+      <div id="q-options"></div>
+      <div id="question-feedback"></div>
+    </div>
+  </div>
   
   <h1 id="game-title" style="display: none;">Derriba la Torre - 2 Jugadores</h1>
   
@@ -409,7 +470,7 @@
   
   <div class="instructions" id="game-instructions">
     <h3>Instrucciones del juego</h3>
-    <p>Observa la cuadrícula (origen en la esquina inferior izquierda). Ajusta las coordenadas X e Y usando las teclas y luego lanza la bola. Si golpea una pieza, la pieza y todas las de arriba caen. Sumas 5 puntos cuando derribas TODA la torre. ¡Continúa hasta que no quede ningún bloque!</p>
+    <p>Observa la cuadrícula (origen en la esquina inferior izquierda). Ajusta las coordenadas X e Y usando las teclas y luego lanza la bola. Si golpea una pieza, la pieza y todas las de arriba caen. Sumas 5 puntos cuando derribas TODA la torre. <b>¡Cuidado! Cada 10 puntos tendrás que responder a una pregunta de ciberseguridad, si fallas perderás 2 puntos.</b> ¡Continúa hasta que no quede ningún bloque!</p>
     
     <div class="controls-info">
       <div class="player-controls player1">
@@ -452,6 +513,9 @@
     let player2Name = "";
     let resultsSent = false;
     let player1Game, player2Game;
+
+    // Estado global de la pregunta de ciberseguridad
+    let isQuestionActive = false;
     
     const playerNamesModal = document.getElementById('player-names-modal');
     const gameArea = document.getElementById('game-area');
@@ -460,6 +524,40 @@
     const sendResultsButton = document.getElementById('send-results');
     const startGameButton = document.getElementById('start-game');
     
+    // Preguntas de ciberseguridad
+    const cyberQuestions = [
+      { q: "¿Qué es el Phishing?", options: ["Un deporte náutico", "Engaño por email para robar claves", "Un tipo de cable de red"], correct: 1 },
+      { q: "¿Qué contraseña es más segura?", options: ["12345678", "pAssw0rd!", "D0m1ng0_2024*"], correct: 2 },
+      { q: "Si recibes un link sospechoso de un amigo:", options: ["Lo abro porque confío en él", "Le pregunto por otro medio si él lo envió", "Lo borro inmediatamente sin mirar"], correct: 1 },
+      { q: "¿Qué indica el candado en la barra de direcciones?", options: ["Que la web es 100% legal", "Que la conexión está cifrada (HTTPS)", "Que no puedes copiar el contenido"], correct: 1 },
+      { q: "Sobre las redes Wi-Fi públicas:", options: ["Son totalmente seguras", "Son ideales para entrar al banco", "Son poco seguras para datos privados"], correct: 2 },
+      { q: "¿Qué es el Ciberacoso?", options: ["Un juego de rol online", "Acoso u humillación a través de redes", "Tener muchos seguidores"], correct: 1 },
+      { q: "La webcam de tu ordenador debería estar:", options: ["Siempre encendida por si acaso", "Tapada físicamente cuando no se usa", "Apuntando siempre a la ventana"], correct: 1 },
+      { q: "¿Qué información NO debes compartir?", options: ["Tu música favorita", "Tu dirección y número de teléfono", "Tu color de ojos"], correct: 1 },
+      { q: "¿Qué es un Malware?", options: ["Un software para editar fotos", "Cualquier programa malicioso (virus, etc.)", "Un componente de la placa base"], correct: 1 },
+      { q: "Si recibes un premio por SMS de un sorteo en el que no participaste:", options: ["Reclamo el premio rápido", "Es un intento de estafa", "Llamo al número para preguntar"], correct: 1 },
+      { q: "¿Qué es el Grooming?", options: ["Un tipo de peinado moderno", "Adulto que engaña a menor online", "Cuidar a tu mascota virtual"], correct: 1 },
+      { q: "Las redes sociales deben usarse para:", options: ["Compartir tus claves con amigos", "Ocio con configuración de privacidad", "Insultar a quien no te cae bien"], correct: 1 },
+      { q: "¿Qué significa el 2FA?", options: ["Doble Factor de Autenticación", "Dos Ficheros Adjuntos", "Segunda Fase de Arranque"], correct: 0 },
+      { q: "Tu perfil en redes sociales debería ser:", options: ["Público para ser famoso", "Privado (solo para conocidos)", "Con la dirección de tu casa"], correct: 1 },
+      { q: "Si alguien te insulta en un videojuego online:", options: ["Le devuelvo el insulto", "Le ignoro, silencio y reporto", "Apago el router"], correct: 1 },
+      { q: "¿Qué son las Fake News?", options: ["Noticias muy divertidas", "Noticias falsas para manipular", "Noticias sobre videojuegos"], correct: 1 },
+      { q: "Actualizar el sistema operativo sirve para:", options: ["Gastar espacio y batería", "Cerrar agujeros de seguridad", "Que el ordenador vaya más lento"], correct: 1 },
+      { q: "Un troyano es:", options: ["Un virus que se disfraza de programa útil", "Un programa para acelerar descargas", "Un antivirus gratuito"], correct: 0 },
+      { q: "Si ves algo perturbador en internet:", options: ["No digo nada a nadie", "Se lo cuento a un adulto de confianza", "Lo comparto con todos mis contactos"], correct: 1 },
+      { q: "¿Qué es la Huella Digital?", options: ["La marca de tu dedo en el móvil", "El rastro que dejas al navegar", "Un sistema de pago nuevo"], correct: 1 },
+      { q: "El antivirus sirve para:", options: ["Limpiar el polvo del PC", "Detectar y eliminar amenazas", "Mejorar la velocidad de internet"], correct: 1 },
+      { q: "¿Es seguro dar tu teléfono a desconocidos online?", options: ["Sí, para hacer amigos", "No, nunca", "Solo si me caen bien"], correct: 1 },
+      { q: "¿Qué es el Ransomware?", options: ["Virus que secuestra tus archivos", "Un programa de edición de vídeo", "Un tipo de monitor"], correct: 0 },
+      { q: "¿Se puede borrar algo de internet para siempre?", options: ["Sí, dándole a borrar", "Es casi imposible borrar el rastro total", "Solo si apagas el servidor"], correct: 1 },
+      { q: "Los términos de uso de una App:", options: ["No hace falta leerlos nunca", "Es importante saber qué hacen con tus datos", "Son todos iguales"], correct: 1 },
+      { q: "Un \"Hacker\" ético es alguien que:", options: ["Roba contraseñas por diversión", "Busca fallos para ayudar a arreglarlos", "Bloquea páginas del gobierno"], correct: 1 },
+      { q: "Compartir tu ubicación en tiempo real es:", options: ["Muy seguro en cualquier red", "Peligroso si es público", "Necesario para jugar"], correct: 1 },
+      { q: "El Spam es:", options: ["Un virus muy potente", "Correo basura no deseado", "Un comando de programación"], correct: 1 },
+      { q: "¿Qué es un Firewall?", options: ["Una pared resistente al fuego", "Un sistema de defensa de red", "Un cable de alta velocidad"], correct: 1 },
+      { q: "Cerrar sesión en ordenadores públicos es:", options: ["Opcional si tengo prisa", "Fundamental para proteger mis cuentas", "Malo para el ordenador"], correct: 1 }
+    ];
+
     startGameButton.addEventListener('click', startGame);
     
     document.getElementById('player1-name-input').addEventListener('keypress', (e) => {
@@ -507,7 +605,6 @@
         this.ctx = this.canvas.getContext('2d');
         this.scoreElement = document.getElementById(scoreId);
         
-        // Elementos nuevos para el multiplicador
         this.scoreBaseElement = document.getElementById('score-base' + playerNumber);
         this.scoreMultElement = document.getElementById('score-mult' + playerNumber);
         
@@ -527,6 +624,7 @@
         
         this.blocks = [];
         this.score = 0;
+        this.pointsSinceLastQuestion = 0; // Contador para las preguntas
         this.animating = false;
         this.launcher = { x: 1, y: 1 };
         this.colors = playerNumber === 1 ? 
@@ -567,17 +665,14 @@
           }
         }
 
-        // NUEVA DIFICULTAD: 5 Piezas aisladas (no tocan ningún bloque existente ni entre sí)
+        // 5 Piezas aisladas
         let isolatedPiecesAdded = 0;
         let attempts = 0;
         while (isolatedPiecesAdded < 5 && attempts < 200) {
           const rx = this.randInt(0, GRID_W - 1);
           const ry = this.randInt(0, GRID_H - 1);
           
-          // Verificar que no esté en la misma casilla ni en las casillas adyacentes (horizontal, vertical, diagonal)
           const isIsolated = !this.blocks.some(b => Math.abs(b.x - rx) <= 1 && Math.abs(b.y - ry) <= 1);
-          
-          // Además, nos aseguramos que no aparezca en la zona inicial del lanzador (1,1)
           const awayFromLauncher = (rx > 2 || ry > 2);
 
           if (isIsolated && awayFromLauncher) {
@@ -592,6 +687,12 @@
       
       updateBlocksCount() {
         this.blocksCountElement.textContent = this.blocks.length;
+      }
+
+      updateScoreUI() {
+        this.scoreElement.textContent = this.score;
+        this.scoreBaseElement.textContent = this.score;
+        this.scoreMultElement.textContent = this.score * 4;
       }
       
       updateCoordinatesDisplay() {
@@ -692,9 +793,8 @@
               if (allDestroyed) {
                 // Actualización de los Puntos y del Multiplicador
                 this.score += POINTS_PER_FULL_TOWER;
-                this.scoreElement.textContent = this.score;
-                this.scoreBaseElement.textContent = this.score;
-                this.scoreMultElement.textContent = this.score * 4;
+                this.pointsSinceLastQuestion += POINTS_PER_FULL_TOWER;
+                this.updateScoreUI();
                 
                 this.messageElement.textContent = `¡Torre completamente derribada! +${POINTS_PER_FULL_TOWER} puntos`;
                 this.updatePlayerColor();
@@ -707,6 +807,12 @@
               this.updateBlocksCount();
               
               if (allDestroyed) {
+                // Verificar si salta pregunta
+                if (this.pointsSinceLastQuestion >= 10) {
+                  this.pointsSinceLastQuestion -= 10;
+                  setTimeout(() => { showCyberQuestion(this); }, 500);
+                }
+
                 setTimeout(() => {
                   this.messageElement.textContent = '¡Perfecto! Generando nueva torre...';
                   setTimeout(() => {
@@ -801,6 +907,7 @@
       
       setupCanvasEvents() {
         this.canvas.addEventListener('click', (ev) => {
+          if (isQuestionActive) return; // Bloquear si hay pregunta
           const rect = this.canvas.getBoundingClientRect();
           const px = ev.clientX - rect.left;
           const py = ev.clientY - rect.top;
@@ -833,6 +940,64 @@
         return this.score;
       }
     }
+
+    // Lógica para mostrar la pregunta de ciberseguridad
+    function showCyberQuestion(player) {
+      isQuestionActive = true;
+      const modal = document.getElementById('question-modal');
+      const qText = document.getElementById('q-text');
+      const qOptions = document.getElementById('q-options');
+      const qFeedback = document.getElementById('question-feedback');
+      const qPlayerTurn = document.getElementById('q-player-turn');
+
+      qFeedback.textContent = '';
+      qOptions.innerHTML = '';
+      qPlayerTurn.textContent = `Turno de: ${player.playerName} (Jugador ${player.playerNumber})`;
+      qPlayerTurn.style.color = player.colors.primary;
+      
+      // Seleccionar pregunta aleatoria
+      const randomIdx = Math.floor(Math.random() * cyberQuestions.length);
+      const question = cyberQuestions[randomIdx];
+      
+      qText.textContent = question.q;
+
+      question.options.forEach((opt, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.textContent = opt;
+        btn.onclick = () => handleAnswer(index, question.correct, btn, player, modal, qOptions, qFeedback);
+        qOptions.appendChild(btn);
+      });
+
+      modal.style.display = 'flex';
+    }
+
+    function handleAnswer(selectedIndex, correctIndex, buttonElement, player, modal, optionsContainer, feedbackElement) {
+      // Desactivar botones
+      const buttons = optionsContainer.querySelectorAll('.option-btn');
+      buttons.forEach(b => b.disabled = true);
+
+      if (selectedIndex === correctIndex) {
+        buttonElement.classList.add('correct');
+        feedbackElement.textContent = "¡Correcto! Tus puntos están a salvo.";
+        feedbackElement.style.color = "#28a745";
+      } else {
+        buttonElement.classList.add('wrong');
+        buttons[correctIndex].classList.add('correct'); // Mostrar la correcta
+        feedbackElement.textContent = "¡Incorrecto! Pierdes 2 puntos.";
+        feedbackElement.style.color = "#dc3545";
+        
+        // Penalización de puntos
+        player.score = Math.max(0, player.score - 2); // Evitar negativos (opcional)
+        player.updateScoreUI();
+      }
+
+      // Cerrar modal después de unos segundos
+      setTimeout(() => {
+        modal.style.display = 'none';
+        isQuestionActive = false;
+      }, 2500);
+    }
     
     function initializeGames() {
       player1Game = new PlayerGame('game1', 'score1', 'message1', 'blocksCount1', 
@@ -842,8 +1007,10 @@
     }
     
     document.addEventListener('keydown', (e) => {
-      const key = e.key.toLowerCase();
       if (playerNamesModal.style.display === 'flex') return;
+      if (isQuestionActive) return; // Bloqueo de controles durante la pregunta
+      
+      const key = e.key.toLowerCase();
       
       if (key === 'q') { player1Game.adjustX(1); e.preventDefault(); } 
       else if (key === 'a') { player1Game.adjustX(-1); e.preventDefault(); } 
