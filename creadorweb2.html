@@ -85,6 +85,10 @@
       border: 1px solid #ccc; border-radius: 3px; cursor: pointer;
     }
     .table-controls button:hover { background: #e8eaed; border-color: #1a73e8; }
+
+    /* Animación Grabación Audio */
+    @keyframes recordPulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+    .recording { animation: recordPulse 1.5s infinite !important; background-color: #d32f2f !important; color: white !important; border-color: #b71c1c !important; }
   </style>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
@@ -173,6 +177,8 @@
       <button onclick="insertTable()" style="background: #e3f2fd;">📊 Tabla</button>
       <button onclick="insertRawHTML()" style="background: #e0f2f1; color: #004d40; border-color: #009688;" title="Incrustar código HTML"><b>&lt;/&gt; HTML</b></button>
       
+      <button id="btnRecordAudio" onclick="toggleAudioRecording()" style="background: #f8bbd0; color: #880e4f;" title="Grabar audio con tu micrófono">🎙️ Grabar Audio</button>
+
       <button type="button" class="n-btn" onclick="document.getElementById('pdf-input').click()" style="background-color: #e74c3c; color: white; border: none; padding: 4px 10px; cursor: pointer; margin-left: 10px;">📄 PDF a Fotos</button>
       <input type="file" id="pdf-input" accept="application/pdf" style="display: none;" onchange="handlePDFUpload(event)">
 
@@ -492,6 +498,80 @@
         }
       }
     }
+
+    // --- NUEVO: LÓGICA DE GRABACIÓN DE AUDIO ---
+    let mediaRecorder;
+    let audioChunks = [];
+    let isRecording = false;
+
+    async function toggleAudioRecording() {
+      const btn = document.getElementById("btnRecordAudio");
+
+      if (!isRecording) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
+
+          mediaRecorder.ondataavailable = event => {
+            if (event.data.size > 0) audioChunks.push(event.data);
+          };
+
+          mediaRecorder.onstop = () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            // Convertimos el audio a Base64 para que se guarde dentro del HTML y no se pierda al descargar
+            const reader = new FileReader();
+            reader.readAsDataURL(audioBlob);
+            reader.onloadend = () => {
+              insertAudioToEditor(reader.result);
+            };
+            stream.getTracks().forEach(track => track.stop()); // Apagar el micrófono del navegador
+          };
+
+          mediaRecorder.start();
+          isRecording = true;
+          btn.innerHTML = "⏹️ Detener";
+          btn.classList.add("recording");
+        } catch (err) {
+          console.error("Error al acceder al micrófono:", err);
+          alert("No se pudo acceder al micrófono. Asegúrate de dar los permisos necesarios en tu navegador.");
+        }
+      } else {
+        mediaRecorder.stop();
+        isRecording = false;
+        btn.innerHTML = "🎙️ Grabar Audio";
+        btn.classList.remove("recording");
+      }
+    }
+
+    function insertAudioToEditor(base64Audio) {
+      const wrapper = document.createElement("div");
+      wrapper.style.margin = "15px 0";
+      wrapper.style.padding = "10px";
+      wrapper.style.border = "2px solid #ddd";
+      wrapper.style.borderRadius = "8px";
+      wrapper.style.background = "#fafafa";
+      wrapper.style.display = "inline-block";
+      wrapper.contentEditable = "false";
+
+      wrapper.innerHTML = `
+        <div style="display:flex; align-items:center; gap:10px;">
+          <audio controls src="${base64Audio}"></audio>
+          <button onclick="this.parentElement.parentElement.remove()" style="background:#ffcdd2; color:#b71c1c; border:none; padding:6px 10px; cursor:pointer; border-radius:4px; font-weight:bold;" title="Borrar Audio">❌</button>
+        </div>
+      `;
+
+      const activeEditor = document.querySelector(".editor-pane.active");
+      if(activeEditor) {
+        activeEditor.focus();
+        const sel = window.getSelection();
+        if (sel.rangeCount) {
+          sel.getRangeAt(0).insertNode(wrapper);
+          const p = document.createElement("p"); p.innerHTML = "&#8203;"; wrapper.after(p);
+        }
+      }
+    }
+    // ---------------------------------------------
 
     function saveFile() {
       const data = {
