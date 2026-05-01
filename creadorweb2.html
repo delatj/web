@@ -87,10 +87,16 @@
     .table-controls button:hover { background: #e8eaed; border-color: #1a73e8; }
   </style>
 
-  <script src="./web2_files/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 
 </head>
 <body>
+
+  <div id="loadingOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; justify-content:center; align-items:center; color:white; flex-direction:column;">
+    <div style="border: 6px solid #444; border-top: 6px solid #1a73e8; border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; margin-bottom:15px;"></div>
+    <span id="loadingText" style="font-size: 1.2rem; font-weight: bold;">Procesando PDF...</span>
+    <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+  </div>
 
   <h2>Editor Web Profesional Completo</h2>
 
@@ -178,8 +184,8 @@
     </div>
   </div>
 
-  <div id="tab-container"><div class="tab active" id="btn-p-1"><span>Inicio</span><button class="close-tab" onclick="event.stopPropagation(); removeTab('p-1')">X</button></div></div>
-  <div id="editor-container"><div class="editor-pane active" id="p-1" contenteditable="true" style="background-color: rgb(255, 255, 255); display: block;"><h3 style="margin-top:0;">Inicio</h3><p>Empieza a escribir aquí...</p></div></div>
+  <div id="tab-container"></div>
+  <div id="editor-container"></div>
 
   <div id="taskModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:4000; justify-content:center; align-items:center;">
     <div class="info-modal-content">
@@ -434,7 +440,6 @@
       input.click();
     }
 
-    // --- FUNCIÓN PARA INCRUSTAR HTML COMPLETAMENTE AISLADO (AHORA CON EL DOBLE DE ALTURA) ---
     function insertRawHTML() {
       const htmlCode = prompt("Pega aquí tu código HTML (se insertará aislado para no romper el editor):");
       if(htmlCode) {
@@ -444,21 +449,18 @@
           
           const sel = window.getSelection();
           if (sel.rangeCount) {
-            // Creamos un contenedor protector que NO se puede editar
             const wrapper = document.createElement("div");
             wrapper.style.margin = "15px 0";
             wrapper.contentEditable = "false"; 
 
-            // Creamos un iframe: esto aísla el código.
             const iframe = document.createElement("iframe");
             iframe.style.width = "100%";
-            iframe.style.minHeight = "800px"; // <-- ¡AQUÍ ESTÁ LA ALTURA DUPLICADA!
+            iframe.style.minHeight = "800px"; 
             iframe.style.border = "2px dashed #1a73e8";
             iframe.style.borderRadius = "8px";
             iframe.style.backgroundColor = "transparent";
             iframe.srcdoc = htmlCode; 
             
-            // Botón para borrarlo si ya no lo quieres
             const delBtn = document.createElement("button");
             delBtn.innerHTML = "❌ Borrar este HTML";
             delBtn.style.display = "block";
@@ -471,21 +473,17 @@
             delBtn.style.borderRadius = "4px";
             delBtn.onclick = function() { wrapper.remove(); };
 
-            // Juntamos las piezas
             wrapper.appendChild(iframe);
             wrapper.appendChild(delBtn);
             
-            // Lo insertamos en el editor
             const range = sel.getRangeAt(0);
             range.deleteContents(); 
             range.insertNode(wrapper);
             
-            // Creamos un hueco debajo para que puedas seguir escribiendo
             const p = document.createElement("p"); 
             p.innerHTML = "&#8203;"; 
             wrapper.after(p);
             
-            // Movemos el cursor ahí
             range.setStart(p, 0);
             range.collapse(true);
             sel.removeAllRanges();
@@ -553,8 +551,7 @@
         .img-row-container { display: flex; gap: 15px; width: 100%; justify-content: center; }
         .img-row-container img { flex: 1 1 0; min-width: 0; max-height: 500px; object-fit: contain; border-radius: 6px; }
         
-        /* Ajuste de PDF e imágenes en la web descargada */
-        .sec img { max-width: 100%; height: auto; }
+        .sec img { max-width: 100%; height: auto; display: block; margin: 10px auto; } /* Mejora para centrar imágenes de PDF descargadas */
 
         table { width: 100%; border-collapse: collapse; margin: 15px 0; }
         table td { padding: 8px; border: 1px solid #555; }
@@ -581,12 +578,18 @@
       a.click();
     }
 
-    // --- LÓGICA DE PDF A IMÁGENES INYECTADA ---
+    // --- LÓGICA DE PDF MEJORADA ---
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
     async function handlePDFUpload(event) {
         const file = event.target.files[0];
         if (!file) return;
+
+        // Mostrar pantalla de carga
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const loadingText = document.getElementById('loadingText');
+        loadingOverlay.style.display = 'flex';
+        loadingText.innerText = "Abriendo archivo PDF...";
 
         const fileReader = new FileReader();
         fileReader.onload = async function() {
@@ -596,9 +599,10 @@
                 const activeEditor = document.querySelector(".editor-pane.active");
                 if(activeEditor) activeEditor.focus();
 
-                const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                const pdf = await window.pdfjsLib.getDocument(typedarray).promise;
                 
                 for (let i = 1; i <= pdf.numPages; i++) {
+                    loadingText.innerText = `Procesando página ${i} de ${pdf.numPages}...`; // Actualizar texto
                     const page = await pdf.getPage(i);
                     const viewport = page.getViewport({ scale: 2.0 }); 
                     
@@ -611,16 +615,20 @@
                     
                     const imgData = canvas.toDataURL('image/png');
                     
-                    document.execCommand('insertImage', false, imgData);
-                    document.execCommand('insertHTML', false, '<br><br>');
+                    // Insertamos la imagen formateada con un marco elegante mediante HTML en vez de insertImage básica
+                    const imgHTML = `<img src="${imgData}" style="max-width: 100%; height: auto; display: block; margin: 15px auto; border: 1px solid #ccc; box-shadow: 0px 4px 10px rgba(0,0,0,0.15);">`;
+                    document.execCommand('insertHTML', false, imgHTML + '<br>');
                 }
             } catch (error) {
                 console.error("Error al procesar el PDF:", error);
-                alert("Hubo un error al convertir el PDF a imágenes. Revisa la consola para más detalles.");
+                alert("Hubo un error al convertir el PDF. Es posible que el archivo esté protegido o no tenga un formato válido.");
+            } finally {
+                // Ocultar pantalla de carga al terminar o dar error
+                loadingOverlay.style.display = 'none';
+                event.target.value = ''; // Resetear el input para poder subir el mismo PDF de nuevo si se desea
             }
         };
         fileReader.readAsArrayBuffer(file);
-        event.target.value = '';
     }
   </script>
 
