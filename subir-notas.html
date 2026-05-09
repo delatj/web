@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
+<!-- saved from url=(0045)https://delatj.github.io/web/subir-notas.html -->
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Creador de Web de Notas Pro</title>
     <style>
@@ -46,7 +46,7 @@
             Haz clic aquí para seleccionar los archivos CSV <br>o <b>arrástralos y suéltalos</b>.
         </label>
         
-        <input type="file" id="csvFiles" multiple accept=".csv">
+        <input type="file" id="csvFiles" multiple="" accept=".csv">
         <div id="file-status"></div>
         <button id="btnGenerar" class="btn-notas" onclick="generarYDescargar()">✅ Generar Archivo Final</button>
     </div>
@@ -168,16 +168,16 @@
                     tablesHTML += '<td data-label="Identificación" style="background-color: #eee;" class="col-identificacion"><span class="grade-val">' + stu.cols[0] + '</span></td>\n';
 
                     if (typeCols.T.length > 0 && stu.avgT !== null) {
-                        let pctT = maxAvgs.T > 0 ? ((stu.avgT / maxAvgs.T) * 100).toFixed(1) : 0;
-                        tablesHTML += '<td data-label="MEDIA TAREAS" style="background-color: #b8d4ff; border: 3px solid #0056b3 !important;"><span class="grade-val">' + pctT + '%</span></td>\n';
+                        let pctT = maxAvgs.T > 0 ? ((stu.avgT / maxAvgs.T) * 10 ).toFixed(1) : 0;
+                        tablesHTML += '<td data-label="MEDIA TAREAS" style="background-color: #b8d4ff; border: 3px solid #0056b3 !important;"><span class="grade-val">' + pctT + '</span></td>\n';
                     }
                     if (typeCols.C.length > 0 && stu.avgC !== null) {
-                        let pctC = maxAvgs.C > 0 ? ((stu.avgC / maxAvgs.C) * 100).toFixed(1) : 0;
-                        tablesHTML += '<td data-label="MEDIA PRUEBAS" style="background-color: #f5c6cb; border: 3px solid #b21f2d !important;"><span class="grade-val">' + pctC + '%</span></td>\n';
+                        let pctC = maxAvgs.C > 0 ? ((stu.avgC / maxAvgs.C) * 10 ).toFixed(1) : 0;
+                        tablesHTML += '<td data-label="MEDIA PRUEBAS" style="background-color: #f5c6cb; border: 3px solid #b21f2d !important;"><span class="grade-val">' + pctC + '</span></td>\n';
                     }
                     if (typeCols.P.length > 0 && stu.avgP !== null) {
-                        let pctP = maxAvgs.P > 0 ? ((stu.avgP / maxAvgs.P) * 100).toFixed(1) : 0;
-                        tablesHTML += '<td data-label="MEDIA PROYECTOS" style="background-color: #c3e6cb; border: 3px solid #1e7e34 !important;"><span class="grade-val">' + pctP + '%</span></td>\n';
+                        let pctP = maxAvgs.P > 0 ? ((stu.avgP / maxAvgs.P) * 10 ).toFixed(1) : 0;
+                        tablesHTML += '<td data-label="MEDIA PROYECTOS" style="background-color: #c3e6cb; border: 3px solid #1e7e34 !important;"><span class="grade-val">' + pctP + '</span></td>\n';
                     }
 
                     stu.cols.slice(1).forEach((col, cIdx) => {
@@ -336,7 +336,7 @@
     let currentIndex = 0;
     let dataStore = {};
 
-    const defPart1 = "Buenos días, en cuanto a las notas de tecnología puede ir viendo la evolución de su hijo/a picando en la palabra notas (usando el código que se le ha dado en clase) en la siguiente dirección web  https://sites.google.com/view/eduardodelatorre/web";
+    const defPart1 = "Buenos días, en cuanto a las notas de tecnología puede ir viendo la evolución de su hijo/a (con el código proporcionado en clase) en la siguiente dirección web  https://delatj.github.io/web/Notas_Alumnos.html";
     const defPart2 = "Además tiene la posibilidad de hacer tareas para subir nota que pueden encontrar en la plataforma de trabajo online Classroom o Moodle.";
 
     function cambiarPestana(index) {
@@ -605,5 +605,6 @@
             document.body.removeChild(link);
         }
     </script>
-</body>
-</html>
+
+
+</body></html>
