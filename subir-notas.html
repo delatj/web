@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- saved from url=(0045)https://delatj.github.io/web/subir-notas.html -->
 <html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -479,12 +478,17 @@
         updatePreview();
     }
 
+    // --- AQUÍ ESTÁ EL CÓDIGO CORREGIDO ---
     function formatItems(items) {
         if (items.length === 0) return "";
         if (items.length === 1) return items[0] + ".";
-        const lastItem = items.pop();
-        return items.join(', ') + ' y ' + lastItem + '.';
+        
+        // Creamos una copia de la lista para que el pop() no destruya la original
+        const itemsCopy = items.slice(); 
+        const lastItem = itemsCopy.pop();
+        return itemsCopy.join(', ') + ' y ' + lastItem + '.';
     }
+    // -------------------------------------
 
     function updatePreview() {
         const stu = studentsData[currentIndex];
