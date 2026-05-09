@@ -236,8 +236,22 @@
   .btn-print { background: #e67e22; color: white; width: 100%; margin-top: 10px; padding: 15px; font-size: 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
   .btn-print:hover { background: #d35400; }
   .btn-volver { position: absolute; top: 25px; right: 25px; background: #dc3545; color: white; }
-  .result-area { margin-top: 20px; background: #ffffff; border: 2px solid #1a5f7a; padding: 20px; border-radius: 8px; }
-  #finalText { white-space: pre-wrap; font-size: 15px; line-height: 1.6; color: #000; font-family: monospace; }
+  .result-area { margin-top: 20px; background: #ffffff; border: 2px solid #1a5f7a; padding: 10px; border-radius: 8px; }
+  
+  #finalText { 
+    width: 100%; 
+    min-height: 200px; 
+    border: none; 
+    outline: none; 
+    font-size: 15px; 
+    line-height: 1.6; 
+    color: #000; 
+    font-family: monospace; 
+    resize: vertical; 
+    white-space: pre-wrap; 
+    background: transparent;
+  }
+
   .current-info { background: #1a5f7a; color: white; padding: 15px 20px; border-radius: 5px; display: flex; flex-direction: column; gap: 5px; margin-bottom: 15px; }
   .section-label { font-weight: bold; margin-top: 15px; display: block; color: #555; }
   .alert-info { background: #fff9c4; padding: 10px; border-radius: 5px; border: 1px solid #fbc02d; margin-top: 10px; font-size: 0.9em; }
@@ -319,7 +333,8 @@
               </div>
 
               <div class="result-area">
-                  <div id="finalText"></div>
+                  <textarea id="finalText" oninput="manualEdit()"></textarea>
+                  <div style="font-size:10px; color:#888; text-align:right;">(Puedes editar este texto libremente)</div>
               </div>
               
               <button class="btn-download" onclick="downloadAllHtml()">📥 Descargar HTML Web (Todos los Alumnos)</button>
@@ -354,7 +369,6 @@
         document.getElementById('avisoNoEncontrado').style.display = "none";
     }
 
-    // BÚSQUEDA DEL ALUMNO POR CÓDIGO
     function filtrarNotas() {
       const input = document.getElementById("searchInput").value.trim().toLowerCase();
       const navTools = document.getElementById('navTools');
@@ -411,12 +425,8 @@
     function abrirPrenotas() {
         if (!unlocked) {
             let pass = prompt("Acceso restringido. Introduce la contraseña del profesor:");
-            if (pass === "1979") {
-                unlocked = true;
-            } else {
-                if (pass !== null) alert("Contraseña incorrecta.");
-                return;
-            }
+            if (pass === "1979") { unlocked = true; } 
+            else { if (pass !== null) alert("Contraseña incorrecta."); return; }
         }
         
         document.getElementById('vista-notas').classList.add('hidden');
@@ -427,9 +437,7 @@
         if(activeTab) {
             const rows = activeTab.querySelectorAll('.student-card');
             rows.forEach(row => {
-                // Recupera el nombre real (Columna 0 oculta en CSV original)
                 let realName = decodeURIComponent(escape(atob(row.getAttribute('data-name')))).toUpperCase();
-                
                 let medias = [];
                 row.querySelectorAll('td').forEach(td => {
                     let label = td.getAttribute('data-label');
@@ -438,22 +446,11 @@
                         medias.push(label + ': ' + val);
                     }
                 });
-
-                if(realName) {
-                    studentsData.push({ 
-                        name: realName, 
-                        medias: medias.join(' | ') 
-                    });
-                }
+                if(realName) studentsData.push({ name: realName, medias: medias.join(' | ') });
             });
         }
         
-        if(studentsData.length === 0) {
-            alert("No se han encontrado alumnos en la pestaña actual.");
-            volverNotas();
-            return;
-        }
-
+        if(studentsData.length === 0) { alert("No hay alumnos."); volverNotas(); return; }
         showStudent(0);
     }
 
@@ -470,72 +467,105 @@
         document.getElementById('currentMedias').innerText = stu.medias;
         document.getElementById('counter').innerText = (currentIndex + 1) + " de " + studentsData.length;
         
-        const saved = dataStore[stu.name] || { items: [], p1: defPart1, p2: defPart2 };
+        const saved = dataStore[stu.name] || { items: [], p1: defPart1, p2: defPart2, fullText: "" };
+        
         document.querySelectorAll('.item').forEach(cb => cb.checked = saved.items.includes(cb.value));
         document.getElementById('part1').value = saved.p1;
         document.getElementById('part2').value = saved.p2;
         
-        updatePreview();
+        if (saved.fullText) {
+            document.getElementById('finalText').value = saved.fullText;
+        } else {
+            updatePreview(); 
+        }
     }
 
-    // --- AQUÍ ESTÁ EL CÓDIGO CORREGIDO ---
+    // Le quitamos el punto final a esta función para poder añadir el ", pero" de forma más limpia
     function formatItems(items) {
         if (items.length === 0) return "";
-        if (items.length === 1) return items[0] + ".";
-        
-        // Creamos una copia de la lista para que el pop() no destruya la original
+        if (items.length === 1) return items[0];
         const itemsCopy = items.slice(); 
         const lastItem = itemsCopy.pop();
-        return itemsCopy.join(', ') + ' y ' + lastItem + '.';
+        return itemsCopy.join(', ') + ' y ' + lastItem;
     }
-    // -------------------------------------
+
+    function manualEdit() {
+        const stu = studentsData[currentIndex];
+        const currentText = document.getElementById('finalText').value;
+        if (!dataStore[stu.name]) dataStore[stu.name] = { items: [], p1: defPart1, p2: defPart2 };
+        dataStore[stu.name].fullText = currentText;
+    }
 
     function updatePreview() {
         const stu = studentsData[currentIndex];
-        const selectedItems = Array.from(document.querySelectorAll('.item:checked')).map(cb => cb.value);
+        
+        // Separamos los ítems en positivos y negativos según el bloque en el que están
+        const selectedBuenos = Array.from(document.querySelectorAll('.buenos .item:checked')).map(cb => cb.value);
+        const selectedMalos = Array.from(document.querySelectorAll('.malos .item:checked')).map(cb => cb.value);
+        const allSelected = Array.from(document.querySelectorAll('.item:checked')).map(cb => cb.value);
+        
         const p1 = document.getElementById('part1').value;
         const p2 = document.getElementById('part2').value;
         
-        let descripcion = formatItems(selectedItems);
-        dataStore[stu.name] = { items: selectedItems, p1: p1, p2: p2 };
+        let descBuenos = formatItems(selectedBuenos);
+        let descMalos = formatItems(selectedMalos);
         
-        let cabecera = stu.name;
-        if (stu.medias !== "") {
-             cabecera += " - " + stu.medias;
+        let descripcion = "";
+        
+        // Lógica para añadir el "pero" si hay de ambos, o solo punto si hay de uno
+        if (descBuenos !== "" && descMalos !== "") {
+            descripcion = descBuenos + ", pero " + descMalos + ".";
+        } else if (descBuenos !== "") {
+            descripcion = descBuenos + ".";
+        } else if (descMalos !== "") {
+            descripcion = descMalos + ".";
         }
         
-        document.getElementById('finalText').innerText = cabecera + "\\n\\n" + p1 + "\\n\\n" + p2 + "\\n\\nDescripción del alumno/a: " + descripcion;
+        let cabecera = stu.name + (stu.medias ? " - " + stu.medias : "");
+        let nuevoTexto = cabecera + "\\n\\n" + p1 + "\\n\\n" + p2;
+        
+        if (descripcion !== "") {
+            nuevoTexto += "\\n\\nDescripción del alumno/a: " + descripcion;
+        } else {
+            nuevoTexto += "\\n\\nDescripción del alumno/a: ";
+        }
+        
+        document.getElementById('finalText').value = nuevoTexto;
+        
+        dataStore[stu.name] = { 
+            items: allSelected, 
+            p1: p1, 
+            p2: p2, 
+            fullText: nuevoTexto 
+        };
     }
 
-    document.querySelectorAll('.item, #vista-prenotas textarea').forEach(el => el.addEventListener('input', updatePreview));
+    document.querySelectorAll('.item, #part1, #part2').forEach(el => {
+        el.addEventListener('input', updatePreview);
+    });
 
     function nextStudent() { if (currentIndex < studentsData.length - 1) showStudent(currentIndex + 1); }
     function prevStudent() { if (currentIndex > 0) showStudent(currentIndex - 1); }
 
     function copyCurrent() {
-        navigator.clipboard.writeText(document.getElementById('finalText').innerText);
+        navigator.clipboard.writeText(document.getElementById('finalText').value);
         alert("Copiado al portapapeles.");
     }
 
-    // DESCARGAR COMO WEB INDEPENDIENTE
     function downloadAllHtml() {
-        let content = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Informe Prenotas Final</title><style>';
+        let content = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Informe Prenotas</title><style>';
         content += 'body{font-family:sans-serif;background:#f0f2f5;padding:30px;} .card{background:white;padding:20px;margin-bottom:25px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.1);max-width:800px;margin-left:auto;margin-right:auto;} h3{color:#1a5f7a;margin-top:0; border-bottom: 2px solid #eee; padding-bottom: 10px;} pre{white-space:pre-wrap;background:#f9f9f9;padding:15px;border:1px solid #ddd;border-radius:5px;font-family:monospace; font-size: 14px; line-height: 1.5;} button{background:#2e7d32;color:white;padding:12px 20px;border:none;border-radius:5px;cursor:pointer;font-weight:bold; width: 100%; font-size: 16px;} button:hover{background:#1b5e20;}';
         content += '</style></head><body><h1 style="text-align:center;">Listado Final para Familias</h1>';
 
         studentsData.forEach(stu => {
-            const data = dataStore[stu.name] || { items: [], p1: defPart1, p2: defPart2 };
-            const descripcion = formatItems(data.items);
-            let cabecera = stu.name;
-            if (stu.medias !== "") cabecera += " - " + stu.medias;
-            
-            const fullText = cabecera + "\\n\\n" + data.p1 + "\\n\\n" + data.p2 + "\\n\\nDescripción de alumno/a: " + descripcion;
+            const data = dataStore[stu.name] || {};
+            const fullText = data.fullText || (stu.name + "\\n\\n" + defPart1 + "\\n\\n" + defPart2);
             const safeId = "text-" + btoa(unescape(encodeURIComponent(stu.name))).replace(/=/g, '');
             
             content += '<div class="card"><h3>' + stu.name + '</h3><pre id="' + safeId + '">' + fullText + '</pre><button onclick="copyNote(\\'' + safeId + '\\')">📋 Copiar esta nota</button></div>';
         });
 
-        content += '<script>function copyNote(id) { const text = document.getElementById(id).innerText; navigator.clipboard.writeText(text); const btn = event.target; const oldText = btn.innerText; btn.innerText = "✅ ¡Copiado!"; setTimeout(function(){ btn.innerText = oldText; }, 1500); }<' + '/script></body></html>';
+        content += '<script>function copyNote(id) { const text = document.getElementById(id).innerText; navigator.clipboard.writeText(text); alert("Nota copiada"); }<' + '/script></body></html>';
 
         const blob = new Blob([content], { type: 'text/html' });
         const a = document.createElement('a');
@@ -544,9 +574,7 @@
         a.click();
     }
 
-    // IMPRIMIR / PDF FÍSICO (CON FECHA AUTOMÁTICA)
     function imprimirTodos() {
-        // Obtenemos la fecha de hoy automáticamente en español
         const opcionesFecha = { year: 'numeric', month: 'long', day: 'numeric' };
         const fechaHoy = new Date().toLocaleDateString('es-ES', opcionesFecha);
 
@@ -556,28 +584,19 @@
         content += '.page:last-child { page-break-after: auto; } ';
         content += 'h2 { color: #1a5f7a; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 30px; font-size: 22px; } ';
         content += '.texto { white-space: pre-wrap; font-size: 16px; line-height: 1.6; } ';
-        
-        // Estilos para la firma y la fecha en el pie de página
         content += '.fecha { position: absolute; bottom: 50px; left: 50px; font-size: 14px; font-weight: bold; color: #444; } ';
         content += '.firma { position: absolute; bottom: 50px; right: 50px; border-top: 1px solid #000; width: 300px; text-align: center; padding-top: 10px; font-size: 14px; font-weight: bold; }';
         content += '</style></head><body>';
 
         studentsData.forEach(stu => {
-            const data = dataStore[stu.name] || { items: [], p1: defPart1, p2: defPart2 };
-            const descripcion = formatItems(data.items);
-            let cabecera = stu.name;
-            if (stu.medias !== "") cabecera += " - " + stu.medias;
-            
-            const fullText = cabecera + "\\n\\n" + data.p1 + "\\n\\n" + data.p2 + "\\n\\nDescripción del alumno/a: " + descripcion;
+            const data = dataStore[stu.name] || {};
+            const fullText = data.fullText || (stu.name + "\\n\\n" + defPart1 + "\\n\\n" + defPart2);
             
             content += '<div class="page">';
             content += '<h2>INFORME ACADÉMICO</h2>';
             content += '<div class="texto">' + fullText + '</div>';
-            
-            // Añadimos la fecha automática a la izquierda y la firma a la derecha
             content += '<div class="fecha">Fecha de entrega: ' + fechaHoy + '</div>';
             content += '<div class="firma">Firma del padre / madre / tutor legal</div>';
-            
             content += '</div>';
         });
 
@@ -587,10 +606,7 @@
         printWindow.document.write(content);
         printWindow.document.close();
         printWindow.focus();
-        
-        setTimeout(() => {
-            printWindow.print();
-        }, 500);
+        setTimeout(() => { printWindow.print(); }, 500);
     }
 
     window.onload = function() {
@@ -609,6 +625,4 @@
             document.body.removeChild(link);
         }
     </script>
-
-
 </body></html>
