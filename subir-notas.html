@@ -500,7 +500,7 @@
              cabecera += " - " + stu.medias;
         }
         
-        document.getElementById('finalText').innerText = cabecera + "\\n\\n" + p1 + "\\n\\n" + p2 + "\\n\\nDescripción del alumnado: " + descripcion;
+        document.getElementById('finalText').innerText = cabecera + "\\n\\n" + p1 + "\\n\\n" + p2 + "\\n\\nDescripción del alumno/a: " + descripcion;
     }
 
     document.querySelectorAll('.item, #vista-prenotas textarea').forEach(el => el.addEventListener('input', updatePreview));
@@ -525,7 +525,7 @@
             let cabecera = stu.name;
             if (stu.medias !== "") cabecera += " - " + stu.medias;
             
-            const fullText = cabecera + "\\n\\n" + data.p1 + "\\n\\n" + data.p2 + "\\n\\nDescripción del alumnado: " + descripcion;
+            const fullText = cabecera + "\\n\\n" + data.p1 + "\\n\\n" + data.p2 + "\\n\\nDescripción de alumno/a: " + descripcion;
             const safeId = "text-" + btoa(unescape(encodeURIComponent(stu.name))).replace(/=/g, '');
             
             content += '<div class="card"><h3>' + stu.name + '</h3><pre id="' + safeId + '">' + fullText + '</pre><button onclick="copyNote(\\'' + safeId + '\\')">📋 Copiar esta nota</button></div>';
