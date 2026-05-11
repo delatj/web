@@ -906,19 +906,7 @@
       }
       
       setupCanvasEvents() {
-        this.canvas.addEventListener('click', (ev) => {
-          if (isQuestionActive) return; // Bloquear si hay pregunta
-          const rect = this.canvas.getBoundingClientRect();
-          const px = ev.clientX - rect.left;
-          const py = ev.clientY - rect.top;
-          const cell = this.cellAtPixel(px, py);
-          if (cell) {
-            this.currentX = cell.x;
-            this.currentY = cell.y;
-            this.updateCoordinatesDisplay();
-            this.drawGrid();
-          }
-        });
+        // Función anulada a petición: Ya no se pueden seleccionar las coordenadas haciendo clic en el canvas.
       }
       
       updatePlayerColor() {
