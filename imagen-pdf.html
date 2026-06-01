@@ -3,468 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>📸 Foto a PDF - Herramienta Vertical Optimizada</title>
+    <title>📸 Conversor PDF - Smartphone Total</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            background: linear-gradient(145deg, #d4e0e9 0%, #bdc7cf 100%);
-            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .pdf-card {
-            max-width: 600px;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.97);
-            border-radius: 2rem;
-            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.35);
-            overflow: hidden;
-            transition: all 0.2s ease;
-        }
-
-        .header {
-            background: #1e2f3e;
-            padding: 1.5rem 1.8rem;
-            text-align: center;
-            color: white;
-        }
-
-        .header h1 {
-            font-size: 1.8rem;
-            letter-spacing: -0.3px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .header p {
-            font-size: 0.85rem;
-            opacity: 0.8;
-            margin-top: 8px;
-        }
-
-        .content {
-            padding: 1.8rem;
-        }
-
-        .action-group {
-            background: #f8fafc;
-            border-radius: 1.5rem;
-            padding: 1.2rem;
-            margin-bottom: 1.8rem;
-            border: 1px solid #e2edf2;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
-        }
-
-        .action-title {
-            font-weight: 700;
-            font-size: 1.25rem;
-            color: #0c4e6e;
-            margin-bottom: 0.8rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border-left: 5px solid #2c7da0;
-            padding-left: 12px;
-        }
-
-        .btn-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin: 18px 0 12px 0;
-        }
-
-        .btn {
-            flex: 1 1 auto;
-            border: none;
-            padding: 12px 18px;
-            font-weight: 600;
-            border-radius: 60px;
-            font-size: 0.9rem;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            cursor: pointer;
-            transition: 0.2s;
-            background: white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border: 1px solid #cddfe6;
-        }
-
-        .btn-primary {
-            background: #2c7da0;
-            color: white;
-            border: none;
-            box-shadow: 0 4px 8px rgba(44,125,160,0.25);
-        }
-
-        .btn-primary:hover {
-            background: #1f5e7a;
-            transform: scale(0.97);
-        }
-
-        .btn-outline {
-            background: #ffffff;
-            border: 1px solid #2c7da0;
-            color: #2c7da0;
-        }
-
-        .btn-outline:hover {
-            background: #e6f4fa;
-        }
-
-        .btn-success {
-            background: #2b7a4b;
-            color: white;
-            border: none;
-            width: 100%;
-            margin-top: 8px;
-            padding: 14px;
-            font-size: 1rem;
-            border-radius: 40px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .btn-success:hover {
-            background: #1f5e3a;
-        }
-
-        .orient-box {
-            background: white;
-            border-radius: 1rem;
-            padding: 12px;
-            margin: 12px 0;
-            border: 1px solid #dcf0f5;
-        }
-
-        .orient-label {
-            font-weight: 600;
-            margin-bottom: 12px;
-            display: block;
-            color: #1f5068;
-        }
-
-        .radio-group {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .radio-group label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 500;
-            background: #f1f9fe;
-            padding: 8px 16px;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: 0.1s;
-            border: 1px solid transparent;
-        }
-
-        .radio-group input[type="radio"] {
-            accent-color: #2c7da0;
-            width: 18px;
-            height: 18px;
-            margin: 0;
-        }
-
-        .radio-group label:has(input:checked) {
-            background: #d4eaf3;
-            border-color: #2c7da0;
-            font-weight: bold;
-        }
-
-        .file-stats {
-            background: #eef3f7;
-            border-radius: 2rem;
-            padding: 10px 15px;
-            text-align: center;
-            font-weight: 500;
-            margin: 12px 0;
-            font-size: 0.9rem;
-        }
-
-        .filename-input {
-            width: 100%;
-            padding: 12px 15px;
-            border-radius: 60px;
-            border: 1px solid #cbdde6;
-            font-size: 0.95rem;
-            margin: 12px 0 8px;
-            background: white;
-        }
-
-        footer {
-            text-align: center;
-            font-size: 0.7rem;
-            padding: 1rem;
-            color: #5a7a8c;
-            border-top: 1px solid #e2edf2;
-            background: #fefefe;
-        }
-
-        @media (max-width: 500px) {
-            .btn-row {
-                flex-direction: column;
-            }
-            .content {
-                padding: 1.2rem;
-            }
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #f0f4f8; font-family: system-ui, -apple-system, sans-serif; padding: 15px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .card { background: white; max-width: 500px; width: 100%; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); padding: 20px; }
+        h1 { font-size: 1.4rem; color: #1e293b; text-align: center; margin-bottom: 15px; }
+        .input-name { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 10px; margin-bottom: 15px; font-size: 1rem; }
+        .box { background: #f8fafc; border: 2px dashed #3b82f6; border-radius: 12px; padding: 15px; margin-bottom: 15px; text-align: center; }
+        .box label { display: block; font-weight: bold; color: #1e3a8a; margin-bottom: 8px; }
+        .input-file { width: 100%; font-size: 0.9rem; }
+        .counter { background: #dcfce7; color: #14532d; padding: 12px; border-radius: 10px; text-align: center; font-weight: bold; margin-bottom: 15px; font-size: 1.1rem; }
+        .btn-send { background: #16a34a; color: white; border: none; width: 100%; padding: 16px; font-size: 1.1rem; border-radius: 10px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .btn-reset { background: #fee2e2; color: #991b1b; border: none; width: 100%; padding: 8px; border-radius: 8px; margin-top: 10px; cursor: pointer; font-size: 0.85rem; }
     </style>
 </head>
 <body>
 
-<div class="pdf-card">
-    <div class="header">
-        <h1>📄✨ Foto → PDF Inteligente</h1>
-        <p>Corrige automáticamente la rotación para un formato vertical perfecto</p>
+<div class="card">
+    <h1>📄 Convertir a PDF (Formato Vertical)</h1>
+    
+    <input type="text" id="pdfName" class="input-name" placeholder="Nombre del PDF" value="Mis_Fotos">
+
+    <div class="box">
+        <label>📷 HACER FOTO AHORA</label>
+        <input type="file" id="camInput" accept="image/*" capture="environment" class="input-file">
     </div>
 
-    <div class="content">
-        <div class="action-group">
-            <div class="action-title">
-                🖼️ Convertir imágenes a PDF
-            </div>
-
-            <input type="text" id="pdfFileName" class="filename-input" placeholder="Nombre del archivo PDF" value="Mis_fotos_convertidas">
-
-            <div class="orient-box">
-                <span class="orient-label">📐 Orientación de las páginas:</span>
-                <div class="radio-group" id="orientationGroup">
-                    <label>
-                        <input type="radio" name="orientation" value="vertical" checked> 📲 Vertical (Fuerza Retrato / Auto-rotación)
-                    </label>
-                    <label>
-                        <input type="radio" name="orientation" value="auto"> 🔄 Automática (Fiel al archivo)
-                    </label>
-                    <label>
-                        <input type="radio" name="orientation" value="horizontal"> 📱 Horizontal (Apaisado)
-                    </label>
-                </div>
-                <div class="info-tag" style="font-size:0.75rem; margin-top:8px; color:#c2410c; font-weight: 500;">
-                    ⭐ <strong>Modo Vertical Activo por defecto:</strong> Si la cámara toma la foto de lado, el sistema la girará automáticamente para que el PDF quede 100% vertical y sin márgenes extraños.
-                </div>
-            </div>
-
-            <div class="btn-row">
-                <button id="cameraBtn" class="btn btn-primary">📷 Tomar foto / Cámara</button>
-                <button id="galleryBtn" class="btn btn-outline">📁 Seleccionar del explorador</button>
-            </div>
-
-            <input type="file" id="cameraFileInput" accept="image/*" capture="environment" style="display:none">
-            <input type="file" id="galleryFileInput" accept="image/*" multiple style="display:none">
-
-            <div id="imageListStatus" class="file-stats">
-                🖼️ Imágenes en cola: <span id="imageCount">0</span>
-            </div>
-
-            <button id="generatePdfBtn" class="btn-success">⬇️ GENERAR PDF PERFECTO ⬇️</button>
-        </div>
-
-        <div style="background:#eef3fc; border-radius: 18px; padding: 12px; text-align: center; font-size: 0.75rem;">
-            💡 <strong>Solución de carga:</strong> Si el explorador nativo se congela, usa el botón "Seleccionar del explorador". Hemos optimizado la memoria interna para que no sature tu dispositivo.
-        </div>
+    <div class="box">
+        <label>📁 SELECCIONAR DE LA GALERÍA</label>
+        <input type="file" id="galInput" multiple class="input-file">
     </div>
-    <footer>
-        🛠️ Versión reparada: Auto-rotación de fotos horizontales a verticales integrada.
-    </footer>
+
+    <div id="statusCounter" class="counter">
+        📸 Archivos listos: <span id="numFiles">0</span>
+    </div>
+
+    <button id="processBtn" class="btn-send">⬇️ GENERAR PDF PERFECTO ⬇️</button>
+    <button id="resetBtn" class="btn-reset">🗑️ Vaciar lista</button>
 </div>
 
 <script>
     (function(){
-        const cameraBtn = document.getElementById('cameraBtn');
-        const galleryBtn = document.getElementById('galleryBtn');
-        const cameraInput = document.getElementById('cameraFileInput');
-        const galleryInput = document.getElementById('galleryFileInput');
-        const imageCountSpan = document.getElementById('imageCount');
-        const generateBtn = document.getElementById('generatePdfBtn');
-        const pdfNameInput = document.getElementById('pdfFileName');
+        const camInput = document.getElementById('camInput');
+        const galInput = document.getElementById('galInput');
+        const numFiles = document.getElementById('numFiles');
+        const processBtn = document.getElementById('processBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const pdfName = document.getElementById('pdfName');
 
-        let selectedImageFiles = [];
+        let fileList = [];
 
-        function updateImageCounter() {
-            imageCountSpan.innerText = selectedImageFiles.length;
+        function refreshCounter() {
+            numFiles.innerText = fileList.length;
         }
 
-        function addFiles(files) {
-            if (!files) return;
-            const validImages = Array.from(files).filter(file => file.type.startsWith('image/'));
-            
-            if (validImages.length === 0 && files.length > 0) {
-                alert("Por favor, selecciona archivos de imagen válidos.");
-                return;
+        // AGREGAR ARCHIVOS SIN NINGÚN FILTRO (Evita el error de "Hecho" vacío)
+        function addFilesToList(files) {
+            if (!files || files.length === 0) return;
+            for(let i=0; i<files.length; i++) {
+                fileList.push(files[i]);
             }
-
-            selectedImageFiles.push(...validImages);
-            updateImageCounter();
-
-            // Feedback visual rápido
-            const msg = `✅ Añadida(s) ${validImages.length} imagen(es)`;
-            const tempDiv = document.createElement('div');
-            tempDiv.innerText = msg;
-            tempDiv.style = 'fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#1f5e3a; color:white; padding:8px 18px; border-radius:40px; font-size:0.8rem; z-index:999; font-weight:bold; position:fixed; box-shadow:0 4px 12px rgba(0,0,0,0.2);';
-            document.body.appendChild(tempDiv);
-            setTimeout(() => tempDiv.remove(), 1500);
+            refreshCounter();
         }
 
-        cameraBtn.addEventListener('click', (e) => { e.preventDefault(); cameraInput.click(); });
-        galleryBtn.addEventListener('click', (e) => { e.preventDefault(); galleryInput.click(); });
+        camInput.addEventListener('change', function() { addFilesToList(this.files); });
+        galInput.addEventListener('change', function() { addFilesToList(this.files); });
 
-        cameraInput.addEventListener('change', (e) => { addFiles(e.target.files); cameraInput.value = ''; });
-        galleryInput.addEventListener('change', (e) => { addFiles(e.target.files); galleryInput.value = ''; });
-
-        // Procesamiento avanzado de imagen con Canvas para corregir rotaciones en tiempo real
-        function processImageFile(file, targetOrientation) {
-            return new Promise((resolve, reject) => {
+        function processImage(file) {
+            return new Promise((resolve) => {
                 const reader = new FileReader();
-                reader.onload = (event) => {
+                reader.onload = (e) => {
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
                         const ctx = canvas.getContext('2d');
                         
-                        let srcWidth = img.width;
-                        let srcHeight = img.height;
-                        
-                        // Detectar si el archivo original está en horizontal (ancho > alto)
-                        const isOriginalHorizontal = srcWidth > srcHeight;
-                        
-                        let needsRotation = false;
-                        if (targetOrientation === 'vertical' && isOriginalHorizontal) {
-                            needsRotation = true;
-                        } else if (targetOrientation === 'horizontal' && !isOriginalHorizontal) {
-                            needsRotation = true;
-                        }
-
-                        if (needsRotation) {
-                            // Intercambiamos dimensiones para el lienzo final
-                            canvas.width = srcHeight;
-                            canvas.height = srcWidth;
-                            // Rotamos 90 grados el lienzo para enderezar la foto
+                        // Fuerza la orientación vertical si la foto está tumbada
+                        if (img.width > img.height) {
+                            canvas.width = img.height;
+                            canvas.height = img.width;
                             ctx.translate(canvas.width / 2, canvas.height / 2);
                             ctx.rotate(90 * Math.PI / 180);
-                            ctx.drawImage(img, -srcWidth / 2, -srcHeight / 2);
+                            ctx.drawImage(img, -img.width / 2, -img.height / 2);
                         } else {
-                            // Se queda con su orientación nativa
-                            canvas.width = srcWidth;
-                            canvas.height = srcHeight;
+                            canvas.width = img.width;
+                            canvas.height = img.height;
                             ctx.drawImage(img, 0, 0);
                         }
 
-                        // Exportamos la imagen limpia en formato JPEG de alta calidad
                         resolve({
-                            dataUrl: canvas.toDataURL('image/jpeg', 0.92),
-                            width: canvas.width,
-                            height: canvas.height
+                            url: canvas.toDataURL('image/jpeg', 0.85),
+                            w: canvas.width,
+                            h: canvas.height
                         });
                     };
-                    img.onerror = () => reject(new Error("Error cargando imagen estrucutral"));
-                    img.src = event.target.result;
+                    img.src = e.target.result;
                 };
-                reader.onerror = () => reject(new Error("Error de lectura de archivo"));
                 reader.readAsDataURL(file);
             });
         }
 
-        function getSelectedOrientation() {
-            const radios = document.querySelectorAll('input[name="orientation"]');
-            for (let radio of radios) {
-                if (radio.checked) return radio.value;
-            }
-            return 'vertical';
-        }
-
-        async function generarPDFConOrientacion() {
-            if (selectedImageFiles.length === 0) {
-                alert("📭 No hay imágenes cargadas. Toma una foto o búscalas en el explorador.");
+        async function savePDF() {
+            if (fileList.length === 0) {
+                alert("⚠️ Error: No has seleccionado ningún archivo o el móvil bloqueó la carga.");
                 return;
             }
 
-            let baseName = pdfNameInput.value.trim() || "documento_convertido";
-            const safeName = baseName.replace(/[\\/*?:"<>|]/g, "").substring(0, 50);
+            let doc = null;
 
-            const orientationMode = getSelectedOrientation();
-            let pdfDoc = null;
-
-            // Procesar secuencialmente para no congelar el explorador de archivos ni la memoria
-            for (let idx = 0; idx < selectedImageFiles.length; idx++) {
-                const file = selectedImageFiles[idx];
+            for (let i = 0; i < fileList.length; i++) {
                 try {
-                    // Procesamos la imagen corrigiendo su rotación si es necesario
-                    const { dataUrl, width, height } = await processImageFile(file, orientationMode);
-                    
-                    // Convertimos los píxeles de la imagen a dimensiones en milímetros para un PDF perfecto sin deformaciones
-                    // Usamos una densidad estándar de puntos para que encaje 1:1 en su lienzo
-                    const pxToMmFactor = 0.264583; 
-                    const imgWidthMM = width * pxToMmFactor;
-                    const imgHeightMM = height * pxToMmFactor;
+                    const { url, w, h } = await processImage(fileList[i]);
+                    const mm = 0.264583;
+                    const pW = w * mm;
+                    const pH = h * mm;
 
-                    // Definimos la orientación nativa de la página del PDF según el resultado final de la imagen procesada
-                    const pageOrientation = (imgWidthMM > imgHeightMM) ? 'l' : 'p';
+                    // Reducción del 20% (Imagen al 80% de su tamaño)
+                    const sW = pW * 0.80;
+                    const sH = pH * 0.80;
+                    const mx = (pW - sW) / 2;
+                    const my = (pH - sH) / 2;
 
-                    if (idx === 0) {
-                        // Creamos el PDF exactamente con el tamaño milimétrico de la primera foto
-                        pdfDoc = new jspdf.jsPDF({
-                            orientation: pageOrientation,
-                            unit: 'mm',
-                            format: [imgWidthMM, imgHeightMM]
-                        });
+                    if (i === 0) {
+                        doc = new jspdf.jsPDF({ orientation: pW > pH ? 'l' : 'p', unit: 'mm', format: [pW, pH] });
                     } else {
-                        // Añadimos páginas dinámicas que se ajustan al tamaño de cada foto individual
-                        pdfDoc.addPage([imgWidthMM, imgHeightMM], pageOrientation);
+                        doc.addPage([pW, pH], pW > pH ? 'l' : 'p');
                     }
 
-                    // Insertamos la imagen ocupando el 100% de la página, sin bordes blancos extras
-                    pdfDoc.addImage(dataUrl, 'JPEG', 0, 0, imgWidthMM, imgHeightMM, undefined, 'FAST');
-
+                    doc.addImage(url, 'JPEG', mx, my, sW, sH, undefined, 'FAST');
                 } catch (err) {
                     console.error(err);
-                    alert(`Se omitió una imagen debido a un error de procesamiento.`);
                 }
             }
 
-            if (pdfDoc) {
-                pdfDoc.save(`${safeName || "archivo"}.pdf`);
-                alert(`🎉 ¡PDF Creado con éxito!\n📲 Todas las fotos se han procesado y unificado en formato vertical.`);
-                selectedImageFiles = [];
-                updateImageCounter();
+            if (doc) {
+                doc.save((pdfName.value.trim() || "documento") + ".pdf");
+                alert("🎉 ¡PDF creado con éxito!");
+                fileList = [];
+                camInput.value = '';
+                galInput.value = '';
+                refreshCounter();
             }
         }
 
-        generateBtn.addEventListener('click', generarPDFConOrientacion);
-
-        // Limpieza de cola
-        const clearButton = document.createElement('button');
-        clearButton.innerText = '🗑️ Limpiar cola';
-        clearButton.className = 'btn';
-        clearButton.style = 'background-color:#f0f3f6; border:1px solid #cbdae2; margin-top:8px; font-size:0.75rem; padding:6px 12px; border-radius:60px; cursor:pointer;';
-        clearButton.addEventListener('click', () => {
-            if(selectedImageFiles.length > 0) {
-                selectedImageFiles = [];
-                updateImageCounter();
-            }
-        });
-        document.querySelector('.action-group').appendChild(clearButton);
+        processBtn.addEventListener('click', savePDF);
+        resetBtn.addEventListener('click', () => { fileList = []; camInput.value = ''; galInput.value = ''; refreshCounter(); });
     })();
 </script>
 </body>
