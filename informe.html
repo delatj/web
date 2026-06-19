@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  
-  <title>Generador de Informes Individualizados</title>
-  <script src="./Generador de Informes Individualizados_files/xlsx.full.min.js"></script>
-  <script src="./Generador de Informes Individualizados_files/jspdf.umd.min.js"></script>
-  <script src="./Generador de Informes Individualizados_files/html2canvas.min.js"></script>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Generador de Informes Individualizados (en cuaderno profesor.. guardar números redondeados , 1 decimal y notas de 0 a 10 // en hoja de google  formato..número..texto sin formato)</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     body { 
       font-family: 'Segoe UI', Arial, sans-serif; 
@@ -168,39 +169,6 @@
       border-radius: 4px;
       font-size: 11px;
     }
-    /* Estilos para el índice de alumnos */
-    .indice-alumnos {
-      background: white;
-      padding: 15px;
-      margin-bottom: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .indice-alumnos h2 {
-      margin-top: 0;
-      color: #2c3e50;
-      font-size: 16px;
-      border-bottom: 1px solid #eee;
-      padding-bottom: 8px;
-    }
-    .lista-alumnos {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 10px;
-    }
-    .alumno-link {
-      padding: 6px 12px;
-      background-color: #e8f4fc;
-      border-radius: 4px;
-      color: #2c3e50;
-      text-decoration: none;
-      transition: all 0.2s;
-    }
-    .alumno-link:hover {
-      background-color: #3498db;
-      color: white;
-    }
     @media print {
       @page {
         size: A4 portrait;
@@ -273,9 +241,6 @@
         font-size: 10px !important;
         margin: 2px 0 4px 0 !important;
       }
-      .indice-alumnos {
-        display: none !important;
-      }
     }
   </style>
 </head>
@@ -286,43 +251,43 @@
 <div class="no-print">
   <div class="grupo-campos">
     <div class="campo-formulario">
-      <label>Fecha: <input type="date" id="fecha" required=""></label>
+      <label>Fecha: <input type="date" id="fecha" required></label>
       <div class="error-message" id="error-fecha">Por favor, ingrese una fecha válida</div>
     </div>
     <div class="campo-formulario">
-      <label>Curso: <input type="text" id="curso" placeholder="Ej: 1º ESO" required=""></label>
+      <label>Curso: <input type="text" id="curso" placeholder="Ej: 1º ESO" required></label>
       <div class="error-message" id="error-curso">Por favor, ingrese un curso</div>
     </div>
     <div class="campo-formulario">
-      <label>Año del informe: <input type="number" id="anio" value="2024" min="2000" max="2100" required=""></label>
+      <label>Año del informe: <input type="number" id="anio" value="2024" min="2000" max="2100" required></label>
       <div class="error-message" id="error-anio">Ingrese un año entre 2000 y 2100</div>
     </div>
   </div>
 
   <div class="grupo-campos">
     <div class="campo-formulario">
-      <label>Nombre del Centro: <input type="text" id="centro" value="IES Almudeyne" required=""></label>
+      <label>Nombre del Centro: <input type="text" id="centro" value="IES Almudeyne" required></label>
       <div class="error-message" id="error-centro">Ingrese el nombre del centro</div>
     </div>
     <div class="campo-formulario">
-      <label>Departamento: <input type="text" id="departamento" value="Departamento de Tecnología" required=""></label>
+      <label>Departamento: <input type="text" id="departamento" value="Departamento de Tecnología" required></label>
       <div class="error-message" id="error-departamento">Ingrese el nombre del departamento</div>
     </div>
     <div class="campo-formulario">
-      <label>Profesor/a: <input type="text" id="profesor" placeholder="Nombre del profesor" required=""></label>
+      <label>Profesor/a: <input type="text" id="profesor" placeholder="Nombre del profesor" required></label>
       <div class="error-message" id="error-profesor">Ingrese el nombre del profesor</div>
     </div>
   </div>
 
   <div class="campo-formulario">
     <label>Propuestas de actividades (aparecerá en todos los informes):</label>
-    <textarea id="propuestas-actividades">Propuesta de actividades: repasar los contenidos de la materia y los ejercicios prácticos realizados durante el curso, usar para ello los recursos y plataformas digitales empleadas como: web del profesor, Classroom o Moodle.</textarea>
+    <textarea id="propuestas-actividades">Propuesta de actividaes: repasar los contenidos de la materia y los ejercicios prácticos realizados durante el curso, usar para ello las plataformas digitales empleadas como Classroom o Moodle.</textarea>
   </div>
 
   <div class="campo-formulario">
-    <label>Archivo Excel: <input type="file" id="fileInput" accept=".xlsx, .xls" required=""></label>
+    <label>Archivo Excel: <input type="file" id="fileInput" accept=".xlsx, .xls" required></label>
     <div class="error-message" id="error-archivo">Seleccione un archivo Excel válido</div>
-    <small>Formato requerido: en drive 24-25 INFOR INDV tienes los xls ya creados para pegar los alumnos</small>
+    <small>Formato requerido: Primera fila competencias, segunda fila criterios, filas siguientes alumnos</small>
   </div>
 
   <div class="loading" id="loading">
@@ -336,8 +301,6 @@
     <strong>Resumen:</strong> Se generarán informes para <span id="cantidad-alumnos">0</span> alumnos
   </div>
 </div>
-
-<div id="indiceContainer" class="indice-alumnos no-print" style="display: none;"></div>
 
 <div id="informesContainer"></div>
 
@@ -428,7 +391,6 @@ function limpiarFormulario() {
   document.getElementById('propuestas-actividades').value = 'Repasar los contenidos de la materia y los ejercicios prácticos realizados durante el curso, usar para ello las plataformas digitales empleadas como Classroom o Moodle.';
   document.getElementById('fileInput').value = '';
   document.getElementById('informesContainer').innerHTML = '';
-  document.getElementById('indiceContainer').style.display = 'none';
   document.getElementById('resumen-alumnos').style.display = 'none';
   
   // Ocultar todos los mensajes de error
@@ -472,27 +434,6 @@ function procesarExcel() {
   reader.readAsArrayBuffer(file);
 }
 
-function generarIndiceAlumnos(alumnos) {
-  const indiceContainer = document.getElementById('indiceContainer');
-  indiceContainer.innerHTML = '';
-  
-  if (alumnos.length === 0) {
-    indiceContainer.style.display = 'none';
-    return;
-  }
-  
-  let html = '<h2>Índice de Alumnos</h2><div class="lista-alumnos">';
-  
-  alumnos.forEach(alumno => {
-    const idAlumno = alumno.replace(/\s+/g, '-').toLowerCase();
-    html += `<a href="#${idAlumno}" class="alumno-link">${alumno}</a>`;
-  });
-  
-  html += '</div>';
-  indiceContainer.innerHTML = html;
-  indiceContainer.style.display = 'block';
-}
-
 function generarInformes(data) {
   const fechaInput = document.getElementById('fecha').value;
   const curso = document.getElementById('curso').value;
@@ -530,9 +471,8 @@ function generarInformes(data) {
     }
   }
 
-  // Contador de alumnos y lista para el índice
+  // Contador de alumnos
   let totalAlumnos = 0;
-  const listaAlumnos = [];
 
   // Procesar alumnos
   for (let fila = filaAlumnos; fila < data.length; fila++) {
@@ -544,7 +484,6 @@ function generarInformes(data) {
 
     const superados = [];
     const noSuperados = [];
-    const idAlumno = nombre.replace(/\s+/g, '-').toLowerCase();
 
     for (let col = 1; col < filaAlumno.length; col++) {
       const notaStr = String(filaAlumno[col]).replace(",", ".").trim();
@@ -571,9 +510,6 @@ function generarInformes(data) {
     // Generar informe para el alumno
     const div = document.createElement('div');
     div.className = "informe";
-    div.id = idAlumno;
-    
-    // Le pasamos a imprimirInformeIndividual el nombre del alumno para que lo ponga en el título del PDF
     div.innerHTML = `
       <div class="cabecera-informe">
         <h2 style="margin:0;">INFORME INDIVIDUALIZADO ${anio}</h2>
@@ -596,17 +532,12 @@ function generarInformes(data) {
       ${crearTabla(superados)}
       
       <div class="botones-informe no-print">
-        <button class="boton" onclick="imprimirInformeIndividual(this.parentNode.parentNode, '${nombre.replace(/'/g, "\\'")}')">Imprimir Informe</button>
-        <button class="boton boton-secundario" onclick="descargarInformePDF(this.parentNode.parentNode, '${nombre.replace(/'/g, "\\'")}')">Descargar PDF</button>
+        <button class="boton" onclick="imprimirInformeIndividual(this.parentNode.parentNode)">Imprimir Informe</button>
       </div>
     `;
     contenedor.appendChild(div);
-    listaAlumnos.push(nombre);
     totalAlumnos++;
   }
-
-  // Generar índice de alumnos
-  generarIndiceAlumnos(listaAlumnos);
 
   // Actualizar resumen
   if (totalAlumnos > 0) {
@@ -647,15 +578,9 @@ function formatearFecha(fechaStr) {
   return `${dia}/${mes}/${anio}`;
 }
 
-// Modificamos esta función para que reciba el nombre del alumno y lo asigne al título
-function imprimirInformeIndividual(elemento, nombreAlumno) {
+function imprimirInformeIndividual(elemento) {
   const ventana = window.open('', 'PRINT', 'height=600,width=800');
-  
-  // Limpiar el nombre para que no tenga caracteres raros en el archivo
-  const nombreSeguro = nombreAlumno ? nombreAlumno.replace(/[/\\?%*:|"<>]/g, '_') : 'Individualizado';
-  
-  // Le ponemos el título con el nombre del alumno para que Chrome/Edge/Firefox lo usen al guardar como PDF
-  ventana.document.write('<html><head><title>Informe_' + nombreSeguro + '</title>');
+  ventana.document.write('<html><head><title>Informe Individualizado</title>');
   ventana.document.write('<style>body { font-family: Arial; font-size: 9px; margin: 0; padding: 5mm; }');
   ventana.document.write('table { width: 98%; border-collapse: collapse; font-size: 8px; border: 1px solid #000 !important; margin: 2px auto; }');
   ventana.document.write('th, td { border: 1px solid #000 !important; padding: 3px 2px !important; }');
@@ -752,6 +677,52 @@ async function descargarInformePDF(elemento, nombreAlumno) {
   }
 }
 
+async function descargarTodosPDF() {
+  const informes = document.querySelectorAll('.informe');
+  if (informes.length === 0) {
+    alert("No hay informes para descargar.");
+    return;
+  }
+  
+  const confirmacion = confirm(`¿Desea descargar ${informes.length} informes como archivos PDF individuales?`);
+  if (!confirmacion) return;
+  
+  // Deshabilitar el botón durante el proceso
+  const botonDescargarTodos = document.querySelector('button[onclick="descargarTodosPDF()"]');
+  const textoOriginal = botonDescargarTodos.textContent;
+  botonDescargarTodos.disabled = true;
+  botonDescargarTodos.textContent = 'Generando PDFs...';
+  
+  try {
+    // Descargar cada informe uno por uno con un retraso
+    for (let i = 0; i < informes.length; i++) {
+      const informe = informes[i];
+      const nombreAlumno = informe.querySelector('p strong:first-child')?.nextSibling?.textContent?.trim() || `alumno_${i+1}`;
+      const nombreSeguro = nombreAlumno.replace(/[/\\?%*:|"<>]/g, '_');
+      
+      // Esperar antes de cada descarga para evitar bloqueos del navegador
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Descargar el informe actual
+      await descargarInformePDF(informe, nombreSeguro);
+    }
+    
+    alert(`Se han descargado ${informes.length} informes correctamente.`);
+  } catch (error) {
+    console.error("Error al descargar todos los PDFs:", error);
+    alert("Ocurrió un error al descargar algunos informes.");
+  } finally {
+    // Restaurar el botón
+    botonDescargarTodos.disabled = false;
+    botonDescargarTodos.textContent = textoOriginal;
+  }
+}
 </script>
 
-</body></html>
+<div class="no-print" style="margin-top: 20px; text-align: center;">
+  <button class="boton" onclick="descargarTodosPDF()">Descargar Todos los Informes (PDF)</button>
+  <button class="boton boton-peligro" onclick="limpiarFormulario()">Limpiar Todo</button>
+</div>
+
+</body>
+</html>
