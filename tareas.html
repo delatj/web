@@ -97,51 +97,83 @@
     </div>
 
     <script>
-        let temporizador;
-        let pitidoInterval;
+        let temporizador = null;
+        let pitidoInterval = null;
         let audioCtx = null;
+        let tiempoFin = null;
 
         function iniciarMinutos(minutos) {
-            let tiempoRestante = minutos * 60;
-            const display = document.getElementById('display');
-            
-            detenerTodo(); // Limpiamos cualquier temporizador o pitido anterior
+            detenerTodo();
 
-            temporizador = setInterval(() => {
-                let min = Math.floor(tiempoRestante / 60);
-                let seg = tiempoRestante % 60;
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            } else if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
 
-                display.textContent = `${min < 10 ? '0' : ''}${min}:${seg < 10 ? '0' : ''}${seg}`;
+            tiempoFin = Date.now() + (minutos * 60 * 1000);
+            actualizarPantalla();
+            temporizador = setInterval(actualizarPantalla, 500);
+        }
 
-                if (tiempoRestante <= 0) {
-                    clearInterval(temporizador);
-                    iniciarPitido3Minutos();
-                } else {
-                    tiempoRestante--;
-                }
-            }, 1000);
+        function actualizarPantalla() {
+            if (!tiempoFin) return;
+
+            const msRestantes = tiempoFin - Date.now();
+            const segundosRestantes = Math.ceil(msRestantes / 1000);
+
+            if (segundosRestantes <= 0) {
+                clearInterval(temporizador);
+                temporizador = null;
+                tiempoFin = null;
+                iniciarPitido3Minutos();
+            } else {
+                let min = Math.floor(segundosRestantes / 60);
+                let seg = segundosRestantes % 60;
+                document.getElementById('display').textContent = 
+                    `${min < 10 ? '0' : ''}${min}:${seg < 10 ? '0' : ''}${seg}`;
+            }
         }
 
         function iniciarTemporizador(minutos) {
             iniciarMinutos(minutos);
         }
 
+        // Función que genera un tono rápido individual
+        function emiterTono(frecuencia, duracionMs, tiempoInicio) {
+            let oscillator = audioCtx.createOscillator();
+            let gainNode = audioCtx.createGain();
+            
+            // Tipo 'square' (onda cuadrada) para el sonido sintético/electrónico de un reloj
+            oscillator.type = 'square'; 
+            oscillator.frequency.setValueAtTime(frecuencia, tiempoInicio);
+            
+            // Volumen ligeramente ajustado para no distorsionar por la frecuencia alta
+            gainNode.gain.setValueAtTime(0.15, tiempoInicio);
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            oscillator.start(tiempoInicio);
+            oscillator.stop(tiempoInicio + (duracionMs / 1000));
+        }
+
+        // Reproduce el patrón "bi-bit" característico de reloj digital
         function reproducirBeep() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             }
-            let oscillator = audioCtx.createOscillator();
-            let gainNode = audioCtx.createGain();
-            
-            oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(587.33, audioCtx.currentTime);
-            oscillator.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            
-            oscillator.start();
-            setTimeout(() => {
-                oscillator.stop();
-            }, 400);
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const ahora = audioCtx.currentTime;
+            const frecuenciaAguda = 2048; // Frecuencia típica (~2kHz) de los relojes digitales
+
+            // Primer pitido cortito
+            emiterTono(frecuenciaAguda, 80, ahora);
+            // Segundo pitido cortito poco después
+            emiterTono(frecuenciaAguda, 80, ahora + 0.12);
         }
 
         function iniciarPitido3Minutos() {
@@ -162,12 +194,21 @@
         function detenerTodo() {
             clearInterval(temporizador);
             clearInterval(pitidoInterval);
+            temporizador = null;
+            pitidoInterval = null;
+            tiempoFin = null;
             document.getElementById('display').textContent = "00:00";
         }
 
         function abrirEnlace(url) {
             window.open(url, '_blank');
         }
+
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible" && tiempoFin) {
+                actualizarPantalla();
+            }
+        });
     </script>
 
 </body>
