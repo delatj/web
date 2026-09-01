@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador WEB2026 (sube carpetas y dentro de cada una los pdf y los html de los temas, el archivo test-master has de añadirlo aparte)</title>
+    <title>Generador WEB2026 (sube carpetas y dentro de cada una los pdf y los html/htm de los temas)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         :root {
@@ -165,20 +165,20 @@
 
     <div class="container">
         <h1>WEB2026</h1>
-        <p class="subtitle">Añade tus carpetas. Se generará un índice interactivo a todo color.</p>
+        <p class="subtitle">Añade tus carpetas (archivos .html, .htm y .pdf). Se generará un índice interactivo a todo color.</p>
 
         <div class="upload-area">
             <div class="upload-icon">🗂️</div>
             <strong style="font-size: 1.2rem; color: var(--accent);">Haz clic aquí para añadir una carpeta</strong>
             <p style="margin-top: 10px; font-size: 0.9rem; color: var(--text-muted);">Puedes repetir este paso para añadir múltiples carpetas.</p>
-            <input type="file" id="fileInput" webkitdirectory directory multiple>
+            <input type="file" id="fileInput" webkitdirectory="" directory="" multiple="">
         </div>
 
         <div class="folder-summary" id="folderSummary"></div>
 
         <div class="button-group">
             <button class="btn btn-clear" id="clearBtn">Limpiar Todo</button>
-            <button class="btn btn-download" id="downloadBtn" disabled>Generar y Descargar WEB2026.zip</button>
+            <button class="btn btn-download" id="downloadBtn" disabled="">Generar y Descargar WEB2026.zip</button>
         </div>
     </div>
 
@@ -192,11 +192,12 @@
         let addedFilePaths = new Set();
         let hasFiles = false;
 
-        // Acumular archivos
+        // Acumular archivos - MODIFICADO para aceptar .htm
         fileInput.addEventListener('change', (event) => {
             const newFiles = Array.from(event.target.files).filter(file => {
                 const name = file.name.toLowerCase();
-                return name.endsWith('.html') || name.endsWith('.pdf');
+                // Ahora acepta .html, .htm y .pdf
+                return name.endsWith('.html') || name.endsWith('.htm') || name.endsWith('.pdf');
             });
 
             newFiles.forEach(file => {
@@ -213,9 +214,11 @@
 
                     groupedByFolder[mainFolder].rawFiles.push(file);
 
-                    if (file.name.toLowerCase().endsWith('.html')) {
+                    // Ahora detecta tanto .html como .htm
+                    const fileName = file.name.toLowerCase();
+                    if (fileName.endsWith('.html') || fileName.endsWith('.htm')) {
                         groupedByFolder[mainFolder].html.push(file);
-                    } else if (file.name.toLowerCase().endsWith('.pdf')) {
+                    } else if (fileName.endsWith('.pdf')) {
                         groupedByFolder[mainFolder].pdf.push(file);
                     }
                 }
@@ -245,6 +248,9 @@
                 
                 let summaryHTML = `<h3 style="margin-top:0; color:#2F3542;">Carpetas añadidas:</h3>`;
                 
+                // Ordenar carpetas alfabéticamente
+                folderNames.sort();
+                
                 folderNames.forEach(folder => {
                     const htmlCount = groupedByFolder[folder].html.length;
                     const pdfCount = groupedByFolder[folder].pdf.length;
@@ -252,7 +258,7 @@
                     summaryHTML += `
                         <div style="margin-bottom: 10px;">
                             <strong>📁 ${folder}</strong>
-                            <span class="badge html">${htmlCount} HTML</span>
+                            <span class="badge html">${htmlCount} HTML/HTM</span>
                             <span class="badge pdf">${pdfCount} Teorías</span>
                         </div>
                     `;
@@ -279,13 +285,26 @@
             // Paleta de colores vibrantes para cada carpeta
             const themeColors = ['#6c5ce7', '#00b894', '#0984e3', '#e84393', '#fdcb6e', '#00cec9', '#d63031'];
 
-            Object.keys(groupedByFolder).forEach((folderName, index) => {
+            // Obtener nombres de carpetas y ordenarlas alfabéticamente
+            const folderNames = Object.keys(groupedByFolder).sort();
+
+            folderNames.forEach((folderName, index) => {
                 const folderData = groupedByFolder[folderName];
-                const themeColor = themeColors[index % themeColors.length]; // Alterna los colores
+                const themeColor = themeColors[index % themeColors.length];
                 
                 // Añadir al ZIP
                 folderData.rawFiles.forEach(file => {
                     zip.file(file.webkitRelativePath, file);
+                });
+
+                // Ordenar archivos HTML alfabéticamente por nombre
+                const htmlFiles = [...folderData.html].sort((a, b) => {
+                    return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+                });
+
+                // Ordenar archivos PDF alfabéticamente por nombre
+                const pdfFiles = [...folderData.pdf].sort((a, b) => {
+                    return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
                 });
 
                 // Crear sección desplegable (details/summary) inyectando el color dinámico
@@ -303,17 +322,17 @@
                             <div class="sub-section">
                                 <h3 class="html-title">🌐 HTML</h3>
                                 <ul class="html-list">
-                                    ${folderData.html.length > 0 ? 
-                                        folderData.html.map(f => `<li><a href="${f.webkitRelativePath}" target="_blank">${f.name}</a></li>`).join('') 
-                                        : '<li class="empty-msg">No hay archivos HTML en esta carpeta.</li>'}
+                                    ${htmlFiles.length > 0 ? 
+                                        htmlFiles.map(f => `<li><a href="${f.webkitRelativePath}" target="_blank">${f.name}</a></li>`).join('') 
+                                        : '<li class="empty-msg">No hay archivos HTML/HTM en esta carpeta.</li>'}
                                 </ul>
                             </div>
 
                             <div class="sub-section">
                                 <h3 class="pdf-title">📚 Teorías</h3>
                                 <ul class="pdf-list">
-                                    ${folderData.pdf.length > 0 ? 
-                                        folderData.pdf.map(f => `<li><a href="${f.webkitRelativePath}" target="_blank">${f.name}</a></li>`).join('') 
+                                    ${pdfFiles.length > 0 ? 
+                                        pdfFiles.map(f => `<li><a href="${f.webkitRelativePath}" target="_blank">${f.name}</a></li>`).join('') 
                                         : '<li class="empty-msg">No hay Teorías (PDF) en esta carpeta.</li>'}
                                 </ul>
                             </div>
@@ -378,13 +397,12 @@
         }
         .container { max-width: 900px; margin: 0 auto; }
         
-        /* Estilos del Desplegable */
         details.folder-section {
             background: var(--card); 
             border-radius: 16px; 
             margin-bottom: 25px; 
             box-shadow: 0 8px 25px rgba(0,0,0,0.04);
-            border-left: 8px solid; /* El color se inyecta por JS */
+            border-left: 8px solid;
             overflow: hidden;
             transition: all 0.3s ease;
         }
@@ -394,7 +412,7 @@
             font-size: 1.5rem; 
             font-weight: 700;
             cursor: pointer;
-            list-style: none; /* Oculta la flecha por defecto */
+            list-style: none;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -419,7 +437,6 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
 
-        /* Flecha animada */
         summary::-webkit-details-marker { display: none; }
         .arrow {
             font-size: 1.2rem;
@@ -429,7 +446,6 @@
             transform: rotate(-180deg);
         }
 
-        /* Contenido que se despliega */
         .folder-content {
             padding: 10px 30px 30px 30px;
             border-top: 2px solid #f1f2f6;
@@ -446,7 +462,6 @@
         .pdf-title { color: #0984e3; display: flex; align-items: center; margin-bottom: 15px; font-size: 1.3rem; }
         ul { list-style-type: none; padding: 0; margin: 0; display: grid; gap: 12px; }
         
-        /* Estilo de los enlaces (tarjetitas) */
         li {
             border-radius: 10px; 
             transition: all 0.2s ease;
@@ -530,5 +545,6 @@
             });
         });
     </script>
+
 </body>
 </html>
