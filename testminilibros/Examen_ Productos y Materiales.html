@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Examen de Productos y Materiales - Opciones Equilibradas</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+      line-height: 1.25;
+      font-size: 13px;
+    }
+
+    /* Encabezado e Hoja de Respuestas */
+    .header-container {
+      background-color: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 10px 15px;
+      margin: 10px auto;
+      max-width: 900px;
+    }
+
+    .header-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .student-info {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .info-field {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+    }
+
+    .info-field label {
+      font-weight: 700;
+      color: #334155;
+      white-space: nowrap;
+      font-size: 0.85rem;
+    }
+
+    .info-field input {
+      flex: 1;
+      border: none;
+      border-bottom: 1px dashed #64748b;
+      padding: 2px 4px;
+      font-size: 0.85rem;
+      outline: none;
+      background: transparent;
+    }
+
+    .date-box-container {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .date-box {
+      width: 120px;
+      height: 24px;
+      border: 1px solid #64748b;
+      border-radius: 3px;
+    }
+
+    .score-field {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+
+    .score-box {
+      width: 60px;
+      height: 24px;
+      border: 1px solid #64748b;
+      border-radius: 3px;
+    }
+
+    /* Tabla de Plantilla de Respuestas rápida */
+    .answer-grid-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #475569;
+      margin-bottom: 4px;
+      text-align: center;
+    }
+
+    .answer-grid-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 4px;
+    }
+
+    .answer-grid-table th, .answer-grid-table td {
+      border: 1px solid #94a3b8;
+      text-align: center;
+      padding: 2px 0;
+      font-size: 0.75rem;
+    }
+
+    .answer-grid-table th {
+      background-color: #f1f5f9;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .answer-grid-table td {
+      height: 22px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    /* Contenedor del Test (Columnas compactas) */
+    .quiz-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 10px 10px 10px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 12px;
+    }
+
+    .question-card {
+      background-color: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      padding: 6px 8px;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .question-text {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+
+    .options-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .option-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      padding: 2px 4px;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    .option-item:hover {
+      background-color: #f1f5f9;
+    }
+
+    .option-item input[type="radio"] {
+      margin-top: 2px;
+      cursor: pointer;
+    }
+
+    .option-label {
+      font-size: 0.78rem;
+      color: #334155;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    /* Botones de acción */
+    .actions-bar {
+      max-width: 900px;
+      margin: 10px auto;
+      padding: 0 10px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .btn {
+      background-color: #2563eb;
+      color: #ffffff;
+      border: none;
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn-success {
+      background-color: #16a34a;
+    }
+
+    .btn-success:hover {
+      background-color: #15803d;
+    }
+
+    .btn-secondary {
+      background-color: #64748b;
+    }
+
+    .result-msg {
+      max-width: 900px;
+      margin: 5px auto;
+      padding: 8px;
+      text-align: center;
+      font-weight: bold;
+      border-radius: 4px;
+      display: none;
+    }
+
+    /* ESTILOS DE IMPRESIÓN AJUSTADOS PARA 2 PÁGINAS A4 */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 8mm 8mm 8mm 8mm;
+      }
+
+      body {
+        background-color: #ffffff;
+        color: #000000;
+        font-size: 11px;
+        line-height: 1.2;
+      }
+
+      .actions-bar, .result-msg {
+        display: none !important;
+      }
+
+      .header-container {
+        border: 1px solid #000000;
+        padding: 6px 10px;
+        margin: 0 0 8px 0;
+        max-width: 100%;
+      }
+
+      .header-title {
+        font-size: 1rem;
+        margin-bottom: 4px;
+      }
+
+      .student-info {
+        margin-bottom: 6px;
+      }
+
+      .answer-grid-table th, .answer-grid-table td {
+        border: 1px solid #000000;
+        padding: 1px 0;
+        font-size: 0.7rem;
+      }
+
+      .quiz-container {
+        max-width: 100%;
+        padding: 0;
+        gap: 6px 10px;
+      }
+
+      .question-card {
+        border: 1px solid #94a3b8;
+        padding: 5px 6px;
+        margin-bottom: 0;
+      }
+
+      .question-text {
+        font-size: 0.78rem;
+        margin-bottom: 2px;
+      }
+
+      .option-label {
+        font-size: 0.74rem;
+      }
+
+      .option-item input[type="radio"] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 10px;
+        height: 10px;
+        border: 1px solid #000;
+        border-radius: 50%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header-container">
+    <div class="header-title">Examen: Productos y Materiales (intentar copiar supone 0 y parte)</div>
+    
+    <div class="student-info">
+      <div class="info-field">
+        <label>Nombre del Alumno/a:</label>
+        <input type="text" placeholder="Escriba el nombre completo...">
+      </div>
+      <div class="date-box-container">
+        <label style="font-weight: 700; font-size: 0.85rem;">Fecha:</label>
+        <div class="date-box"></div>
+      </div>
+      <div class="score-field">
+        <span>Nota:</span>
+        <div class="score-box"></div>
+      </div>
+    </div>
+
+    <div class="answer-grid-title">Tabla de Respuestas (Escriba la letra a, b o c elegida)</div>
+    <table class="answer-grid-table">
+      <thead>
+        <tr>
+          <th>Preg.</th>
+          <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th>
+          <th>11</th><th>12</th><th>13</th><th>14</th><th>15</th><th>16</th><th>17</th><th>18</th><th>19</th><th>20</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Rpta.</th>
+          <td id="cell-1"></td><td id="cell-2"></td><td id="cell-3"></td><td id="cell-4"></td><td id="cell-5"></td>
+          <td id="cell-6"></td><td id="cell-7"></td><td id="cell-8"></td><td id="cell-9"></td><td id="cell-10"></td>
+          <td id="cell-11"></td><td id="cell-12"></td><td id="cell-13"></td><td id="cell-14"></td><td id="cell-15"></td>
+          <td id="cell-16"></td><td id="cell-17"></td><td id="cell-18"></td><td id="cell-19"></td><td id="cell-20"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="actions-bar">
+    <button class="btn btn-secondary" onclick="shuffleQuiz()">Reorganizar Preguntas</button>
+    <button class="btn btn-success" onclick="checkAnswers()">Comprobar Aciertos</button>
+    <button class="btn" onclick="window.print()">Imprimir / Guardar PDF (Ctrl+P)</button>
+  </div>
+
+  <div class="result-msg" id="result-msg"></div>
+
+  <div class="quiz-container" id="quiz-container"></div>
+
+  <script>
+    // Las respuestas correctas mantienen la exactitud literal del texto original.
+    // Los distractores han sido igualados en extensión o redactados intencionadamente más largos.
+    const questionsData = [
+      {
+        question: "1. ¿Qué caracteriza a la etapa de introducción del producto?",
+        options: [
+          "En la etapa de introducción, el producto acaba de ser lanzado al mercado. Las personas se emocionan al ser algo nuevo y los precios suelen ser altos debido a la baja competencia.",
+          "En esta fase inicial el producto alcanza su cuota máxima de mercado, logrando que los precios se reduzcan drásticamente gracias a la masiva presencia de distribuidores y competidores.",
+          "Es la etapa en la que las empresas deciden retirar la producción industrial activa por completo debido al desinterés generalizado de los consumidores hacia las novedades."
+        ]
+      },
+      {
+        question: "2. ¿Qué ocurre durante la fase de crecimiento y popularidad?",
+        options: [
+          "El producto comienza a ganar popularidad y más clientes lo compran. Las empresas aumentan la producción y reducen los precios para atraer a una mayor cantidad de compradores.",
+          "Las empresas congelan la producción industrial para mantener precios elevados y evitar la llegada de nuevos compradores que puedan saturar el canal de distribución.",
+          "El interés del cliente disminuye notablemente, lo que obliga a la empresa a fabricar variantes estéticas de forma limitada manteniendo costes de producción excesivamente altos."
+        ]
+      },
+      {
+        question: "3. ¿Qué sucede cuando un producto alcanza la etapa de madurez?",
+        options: [
+          "En la madurez, el producto se vuelve muy común y la mayoría de los interesados ya lo posee. Las empresas compiten ofreciendo características adicionales para mantener el interés.",
+          "Durante la madurez el producto es totalmente desconocido por el público, obligando a fijar precios exorbitantes para amortizar de golpe los gastos iniciales de diseño.",
+          "Se caracteriza por la ausencia total de competencia comercial, permitiendo que la empresa elimine prestaciones adicionales sin perder cuota de mercado en el sector."
+        ]
+      },
+      {
+        question: "4. ¿Por qué motivos entra un producto en la fase de declive?",
+        options: [
+          "El producto pierde popularidad debido a la aparición de opciones nuevas y mejores. Las empresas pueden optar por reducir la fabricación o dejar de producirlo por completo.",
+          "Debido a un exceso repentino de demanda internacional que imposibilita la adquisición de materias primas para abastecer a las cadenas de montaje establecidas.",
+          "Porque el producto se vuelve demasiado innovador para la tecnología actual, forzando un parón técnico temporal hasta que los clientes aprendan a utilizarlo."
+        ]
+      },
+      {
+        question: "5. ¿En qué consiste la realización de un análisis sencillo?",
+        options: [
+          "Consiste en observar de forma clara cómo evoluciona un producto a lo largo del tiempo, evaluando su popularidad y ayudando a las empresas a decidir si continúan fabricándolo o crean algo nuevo.",
+          "Consiste en desarmar el prototipo para cuantificar únicamente el peso en gramos de sus piezas metálicas, determinando con ello el precio exacto de distribución en comercios.",
+          "Se basa en evaluar de forma exclusiva las opiniones vertidas en redes sociales durante la primera semana de lanzamiento, ignorando los datos de ventas o fabricación."
+        ]
+      },
+      {
+        question: "6. ¿Qué estudian los análisis morfológico y funcional respectivamente?",
+        options: [
+          "El análisis morfológico estudia las características físicas del objeto. Por su parte, el análisis funcional responde a su utilidad, necesidades que satisface y modo de funcionamiento.",
+          "El análisis morfológico determina el coste financiero total de la materia prima en taller, mientras que el análisis funcional se enfoca en el impacto medioambiental del envasado.",
+          "El análisis morfológico examina la historia histórica del fabricante del objeto, en tanto que el funcional se encarga de analizar los canales de publicidad y marketing masivo."
+        ]
+      },
+      {
+        question: "7. ¿Qué aspectos abordan el análisis técnico y el análisis económico?",
+        options: [
+          "El análisis técnico evalúa la constitución y sistema de funcionamiento del objeto. El análisis económico profundiza en los costes de diseño, fabricación y comercialización.",
+          "El análisis técnico se limita a estudiar las impresiones estéticas de los clientes, mientras que el económico calcula exclusivamente la tasa de reciclaje del plástico usado.",
+          "El análisis técnico mide el nivel de aceptación social de la marca, mientras que el económico establece la biografía detallada de los ingenieros a cargo del prototipo."
+        ]
+      },
+      {
+        question: "8. ¿De qué se ocupan los análisis sociológico y estético?",
+        options: [
+          "El análisis sociológico estudia la relación del objeto con las necesidades humanas que satisface. El estético revisa las sensaciones que el diseño genera en el usuario.",
+          "El análisis sociológico calcula la resistencia mecánica al impacto directo, mientras que el estético determina el circuito eléctrico y el consumo de vatios por hora.",
+          "El análisis sociológico contabiliza los costes impositivos de importación, en tanto que el estético analiza las rutas de transporte necesarias para su comercialización."
+        ]
+      },
+      {
+        question: "9. ¿En qué se centran el análisis ambiental y el análisis histórico?",
+        options: [
+          "El análisis medioambiental evalúa el impacto generado durante todo el ciclo de vida del objeto. El histórico revisa la evolución tecnológica del producto a lo largo del tiempo.",
+          "El análisis medioambiental analiza el balance de pérdidas y ganancias presupuestarias, mientras que el histórico prevé los competidores que surgirán en la próxima década.",
+          "El análisis medioambiental evalúa la rigidez mecánica de los metales, en tanto que el histórico calcula las horas de trabajo requeridas por cada operario de planta."
+        ]
+      },
+      {
+        question: "10. ¿Por qué es fundamental la selección adecuada de materiales?",
+        options: [
+          "Al diseñar un proyecto u objeto es fundamental pensar en los materiales a utilizar, ya que cada uno posee características y propiedades diferentes que determinan su correcto funcionamiento.",
+          "Porque elegir materiales caros garantiza por sí solo que la estética del diseño sea aprobada automáticamente por los organismos públicos de regulación industrial.",
+          "Resulta fundamental para garantizar que el peso final de la estructura sea idéntico independientemente de si se emplea plástico, madera, vidrio o aleaciones metálicas."
+        ]
+      },
+      {
+        question: "11. ¿Qué ejemplo demuestra la propiedad de fuerza en un material?",
+        options: [
+          "Algunos materiales son fuertes y pueden soportar mucho peso, como es el caso del acero. Esto resulta imprescindible al construir estructuras seguras como los puentes.",
+          "La fragilidad del cristal de alta densidad, el cual se quiebra con facilidad al recibir cargas ligeras en construcciones de tipo industrial o en naves comerciales.",
+          "El comportamiento elástico de la goma sintética, la cual pierde la forma original al ser sometida a tracciones mecánicas continuas sobre superficies metálicas."
+        ]
+      },
+      {
+        question: "12. ¿Por qué se requieren materiales ligeros como el aluminio?",
+        options: [
+          "Existen materiales ligeros como el aluminio, indispensables en el diseño de vehículos aéreos para garantizar que puedan volar de manera eficiente.",
+          "Para asegurar que las tuberías subterráneas soporten la máxima presión hidráulica posible sin agrietarse con las variaciones extremas de temperatura exterior.",
+          "Debido a que los materiales ligeros impiden por completo el paso de la corriente eléctrica, utilizándose como aislantes térmicos en calderas de alta presión."
+        ]
+      },
+      {
+        question: "13. ¿Qué aporta la durabilidad?",
+        options: [
+          "La durabilidad permite resistir la corrosión o el desgaste. Es una cualidad clave para elementos expuestos a entornos difíciles, como un barco en agua salada.",
+          "Asegura que el producto aumente su peso original paulatinamente con el paso de los años tras entrar en contacto directo con disolventes o detergentes alcalinos.",
+          "Garantiza que la pieza reduzca progresivamente su tamaño mediante una fricción constante, facilitando la sustitución semanal por repuestos de menor coste."
+        ]
+      },
+      {
+        question: "14. ¿Qué material destaca por su conductividad eléctrica y uso?",
+        options: [
+          "Para la elaboración de circuitos eléctricos se requieren materiales con alta capacidad de conducción eficiente de la electricidad, destacando el uso del cobre.",
+          "Se prefiere el uso del hormigón reforzado debido a su gran capacidad para conducir electrones a alta velocidad sin generar resistencia ni calentamiento pasivo.",
+          "Destaca la madera tratada al barniz, elegida habitualmente para el cableado de redes electrónicas por su elasticidad ante variaciones de voltaje intenso."
+        ]
+      },
+      {
+        question: "15. ¿Qué ocurre con los precios en la introducción del producto?",
+        options: [
+          "los precios suelen ser altos debido a la baja competencia.",
+          "los precios se mantienen en su nivel mínimo histórico debido al exceso de competidores directos en el sector.",
+          "los precios son regulados y fijados obligatoriamente por los consumidores mediante consultas previas en el mercado."
+        ]
+      },
+      {
+        question: "16. En la fase de crecimiento, ¿cómo atraen a más compradores?",
+        options: [
+          "reducen los precios para atraer a una mayor cantidad de compradores.",
+          "aumentan los costes marginales de distribución para limitar el volumen de clientes y mantener la exclusividad.",
+          "detienen temporalmente la cadena de montaje para generar escasez artificial y elevar la demanda en tienda."
+        ]
+      },
+      {
+        question: "17. ¿Qué respuesta da el análisis funcional según el texto?",
+        options: [
+          "responde a su utilidad, necesidades que satisface y modo de funcionamiento.",
+          "mide el nivel exacto de rentabilidad económica tras descontar los impuestos de venta al público.",
+          "determina el color, la textura superficial y el empaquetado exterior comercial del prototipo ideado."
+        ]
+      },
+      {
+        question: "18. ¿Qué aspectos financieros examina el análisis económico?",
+        options: [
+          "profundiza en los costes de diseño, fabricación y comercialización.",
+          "evalúa exclusivamente la tasa de consumo energético de los aparatos durante su encendido inicial.",
+          "analiza la historia completa de las cotizaciones bursátiles de la empresa desarrolladora a lo largo del año."
+        ]
+      },
+      {
+        question: "19. ¿Qué sensaciones evalúa el análisis estético en el objeto?",
+        options: [
+          "revisa las sensaciones que el diseño genera en el usuario.",
+          "calcula el grado de deformación física que experimenta la estructura al aplicarle una fuerza de tracción.",
+          "mide el nivel de ruido acústico producido por el motor interno durante largos periodos de uso continuo."
+        ]
+      },
+      {
+        question: "20. ¿Qué cualidad del material se menciona para la construcción de puentes?",
+        options: [
+          "Algunos materiales son fuertes y pueden soportar mucho peso, como es el caso del acero.",
+          "Algunos materiales destacan por ser sumamente transparentes y frágiles ante cargas dinámicas, como el vidrio térmico.",
+          "Algunos materiales poseen una alta capacidad de deformación elástica permanente ante cambios de temperatura, como la goma sintética."
+        ]
+      }
+    ];
+
+    let currentCorrectAnswers = {};
+
+    function shuffle(array) {
+      let currentIndex = array.length, randomIndex;
+      const newArray = [...array];
+      while (currentIndex !== 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+        [newArray[currentIndex], newArray[randomIndex]] = [newArray[randomIndex], newArray[currentIndex]];
+      }
+      return newArray;
+    }
+
+    function shuffleQuiz() {
+      const quizContainer = document.getElementById('quiz-container');
+      quizContainer.innerHTML = '';
+      currentCorrectAnswers = {};
+
+      for(let i=1; i<=20; i++) {
+        document.getElementById(`cell-${i}`).innerText = '';
+      }
+      document.getElementById('result-msg').style.display = 'none';
+
+      const shuffledQuestions = shuffle(questionsData);
+      const optionLetters = ['a', 'b', 'c'];
+
+      shuffledQuestions.forEach((qItem, qIndex) => {
+        const questionCard = document.createElement('div');
+        questionCard.className = 'question-card';
+
+        const qTitle = document.createElement('div');
+        qTitle.className = 'question-text';
+        const cleanQuestionText = qItem.question.replace(/^\d+\.\s*/, '');
+        const qNum = qIndex + 1;
+        qTitle.innerText = `${qNum}. ${cleanQuestionText}`;
+        questionCard.appendChild(qTitle);
+
+        const correctText = qItem.options[0];
+        const shuffledOptions = shuffle(qItem.options);
+
+        const optionsList = document.createElement('ul');
+        optionsList.className = 'options-list';
+
+        shuffledOptions.forEach((optText, optIndex) => {
+          const letter = optionLetters[optIndex];
+          
+          if (optText === correctText) {
+            currentCorrectAnswers[qNum] = letter;
+          }
+
+          const optLi = document.createElement('li');
+          optLi.className = 'option-item';
+
+          const inputRadio = document.createElement('input');
+          inputRadio.type = 'radio';
+          inputRadio.name = `question_${qNum}`;
+          inputRadio.id = `q_${qNum}_opt_${optIndex}`;
+          inputRadio.value = letter;
+
+          inputRadio.addEventListener('change', () => {
+            document.getElementById(`cell-${qNum}`).innerText = letter.toUpperCase();
+          });
+
+          const label = document.createElement('label');
+          label.className = 'option-label';
+          label.htmlFor = `q_${qNum}_opt_${optIndex}`;
+          label.innerText = `${letter}) ${optText}`;
+
+          optLi.appendChild(inputRadio);
+          optLi.appendChild(label);
+          optionsList.appendChild(optLi);
+        });
+
+        questionCard.appendChild(optionsList);
+        quizContainer.appendChild(questionCard);
+      });
+    }
+
+    function checkAnswers() {
+      let correctCount = 0;
+      let totalQuestions = 20;
+
+      for (let i = 1; i <= 20; i++) {
+        const selectedOption = document.querySelector(`input[name="question_${i}"]:checked`);
+        if (selectedOption && selectedOption.value === currentCorrectAnswers[i]) {
+          correctCount++;
+        }
+      }
+
+      const score = ((correctCount / totalQuestions) * 10).toFixed(1);
+
+      const msgDiv = document.getElementById('result-msg');
+      msgDiv.style.display = 'block';
+      msgDiv.style.backgroundColor = score >= 5 ? '#dcfce7' : '#fee2e2';
+      msgDiv.style.color = score >= 5 ? '#15803d' : '#b91c1c';
+      msgDiv.style.border = `1px solid ${score >= 5 ? '#86efac' : '#fca5a5'}`;
+      msgDiv.innerText = `Resultado del Test: Has acertado ${correctCount} de ${totalQuestions} preguntas (Nota: ${score} / 10).`;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      shuffleQuiz();
+    });
+  </script>
+</body>
+</html>

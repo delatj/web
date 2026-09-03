@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Examen de Neumática e Hidráulica - Opciones Equilibradas</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+      line-height: 1.25;
+      font-size: 13px;
+    }
+
+    /* Encabezado e Hoja de Respuestas */
+    .header-container {
+      background-color: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 10px 15px;
+      margin: 10px auto;
+      max-width: 900px;
+    }
+
+    .header-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .student-info {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .info-field {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+    }
+
+    .info-field label {
+      font-weight: 700;
+      color: #334155;
+      white-space: nowrap;
+      font-size: 0.85rem;
+    }
+
+    .info-field input {
+      flex: 1;
+      border: none;
+      border-bottom: 1px dashed #64748b;
+      padding: 2px 4px;
+      font-size: 0.85rem;
+      outline: none;
+      background: transparent;
+    }
+
+    .date-box-container {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .date-box {
+      width: 120px;
+      height: 24px;
+      border: 1px solid #64748b;
+      border-radius: 3px;
+    }
+
+    .score-field {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+
+    .score-box {
+      width: 60px;
+      height: 24px;
+      border: 1px solid #64748b;
+      border-radius: 3px;
+    }
+
+    /* Tabla de Plantilla de Respuestas rápida */
+    .answer-grid-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #475569;
+      margin-bottom: 4px;
+      text-align: center;
+    }
+
+    .answer-grid-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 4px;
+    }
+
+    .answer-grid-table th, .answer-grid-table td {
+      border: 1px solid #94a3b8;
+      text-align: center;
+      padding: 2px 0;
+      font-size: 0.75rem;
+    }
+
+    .answer-grid-table th {
+      background-color: #f1f5f9;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .answer-grid-table td {
+      height: 22px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    /* Contenedor del Test (Columnas compactas) */
+    .quiz-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 10px 10px 10px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 12px;
+    }
+
+    .question-card {
+      background-color: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      padding: 6px 8px;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .question-text {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+
+    .options-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .option-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      padding: 2px 4px;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    .option-item:hover {
+      background-color: #f1f5f9;
+    }
+
+    .option-item input[type="radio"] {
+      margin-top: 2px;
+      cursor: pointer;
+    }
+
+    .option-label {
+      font-size: 0.78rem;
+      color: #334155;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    /* Botones de acción */
+    .actions-bar {
+      max-width: 900px;
+      margin: 10px auto;
+      padding: 0 10px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .btn {
+      background-color: #2563eb;
+      color: #ffffff;
+      border: none;
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn-success {
+      background-color: #16a34a;
+    }
+
+    .btn-success:hover {
+      background-color: #15803d;
+    }
+
+    .btn-secondary {
+      background-color: #64748b;
+    }
+
+    .result-msg {
+      max-width: 900px;
+      margin: 5px auto;
+      padding: 8px;
+      text-align: center;
+      font-weight: bold;
+      border-radius: 4px;
+      display: none;
+    }
+
+    /* ESTILOS DE IMPRESIÓN AJUSTADOS PARA 2 PÁGINAS A4 */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 8mm 8mm 8mm 8mm;
+      }
+
+      body {
+        background-color: #ffffff;
+        color: #000000;
+        font-size: 11px;
+        line-height: 1.2;
+      }
+
+      .actions-bar, .result-msg {
+        display: none !important;
+      }
+
+      .header-container {
+        border: 1px solid #000000;
+        padding: 6px 10px;
+        margin: 0 0 8px 0;
+        max-width: 100%;
+      }
+
+      .header-title {
+        font-size: 1rem;
+        margin-bottom: 4px;
+      }
+
+      .student-info {
+        margin-bottom: 6px;
+      }
+
+      .answer-grid-table th, .answer-grid-table td {
+        border: 1px solid #000000;
+        padding: 1px 0;
+        font-size: 0.7rem;
+      }
+
+      .quiz-container {
+        max-width: 100%;
+        padding: 0;
+        gap: 6px 10px;
+      }
+
+      .question-card {
+        border: 1px solid #94a3b8;
+        padding: 5px 6px;
+        margin-bottom: 0;
+      }
+
+      .question-text {
+        font-size: 0.78rem;
+        margin-bottom: 2px;
+      }
+
+      .option-label {
+        font-size: 0.74rem;
+      }
+
+      .option-item input[type="radio"] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 10px;
+        height: 10px;
+        border: 1px solid #000;
+        border-radius: 50%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header-container">
+    <div class="header-title">Examen: Neumática e Hidráulica (intentar copiar supone 0 y parte)</div>
+    
+    <div class="student-info">
+      <div class="info-field">
+        <label>Nombre del Alumno/a:</label>
+        <input type="text" placeholder="Escriba el nombre completo...">
+      </div>
+      <div class="date-box-container">
+        <label style="font-weight: 700; font-size: 0.85rem;">Fecha:</label>
+        <div class="date-box"></div>
+      </div>
+      <div class="score-field">
+        <span>Nota:</span>
+        <div class="score-box"></div>
+      </div>
+    </div>
+
+    <div class="answer-grid-title">Tabla de Respuestas (Escriba la letra a, b o c elegida)</div>
+    <table class="answer-grid-table">
+      <thead>
+        <tr>
+          <th>Preg.</th>
+          <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th>
+          <th>11</th><th>12</th><th>13</th><th>14</th><th>15</th><th>16</th><th>17</th><th>18</th><th>19</th><th>20</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Rpta.</th>
+          <td id="cell-1"></td><td id="cell-2"></td><td id="cell-3"></td><td id="cell-4"></td><td id="cell-5"></td>
+          <td id="cell-6"></td><td id="cell-7"></td><td id="cell-8"></td><td id="cell-9"></td><td id="cell-10"></td>
+          <td id="cell-11"></td><td id="cell-12"></td><td id="cell-13"></td><td id="cell-14"></td><td id="cell-15"></td>
+          <td id="cell-16"></td><td id="cell-17"></td><td id="cell-18"></td><td id="cell-19"></td><td id="cell-20"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="actions-bar">
+    <button class="btn btn-secondary" onclick="shuffleQuiz()">Reorganizar Preguntas</button>
+    <button class="btn btn-success" onclick="checkAnswers()">Comprobar Aciertos</button>
+    <button class="btn" onclick="window.print()">Imprimir / Guardar PDF (Ctrl+P)</button>
+  </div>
+
+  <div class="result-msg" id="result-msg"></div>
+
+  <div class="quiz-container" id="quiz-container"></div>
+
+  <script>
+    // Las respuestas correctas contienen la literalidad exacta extraída del documento Neumática_e_hidráulica.html.
+    // Los distractores han sido adaptados en longitud y coherencia lógica con cada pregunta.
+    const questionsData = [
+      {
+        question: "1. ¿Cómo se definen formalmente los circuitos neumáticos?",
+        options: [
+          "Los circuitos neumáticos son instalaciones que se emplean para generar, transmitir y transformar fuerzas y movimientos por medio del aire comprimido.",
+          "Son redes eléctricas de alta tensión diseñadas para canalizar calor a través de tuberías de plástico o metal rellenas de gas nitrógeno o hidrógeno a baja velocidad.",
+          "Constituyen sistemas mecánicos rígidos articulados exclusivamente para elevar grandes masas mediante el uso de palancas y poleas manuales."
+        ]
+      },
+      {
+        question: "2. ¿De qué elementos básicos se compone un circuito neumático?",
+        options: [
+          "Se compone de un generador de aire comprimido, tuberías y conductos de transporte, actuadores para realizar un trabajo útil y elementos de control como las válvulas distribuidoras.",
+          "Consta de un motor de gasolina, transformadores eléctricos de potencia, alternadores de corriente continua y resistencias variables para limitar o controlar la velocidad del fluido.",
+          "Está formado por una bomba hidráulica de agua limpia, mangueras elásticas de caucho, fusibles térmicos de seguridad y disipadores de aluminio de gran tamaño."
+        ]
+      },
+      {
+        question: "3. ¿Qué función realizan los compresores y qué instrumentos acompañan al depósito?",
+        options: [
+          "Los compresores elevan la presión del aire atmosférico al valor de servicio deseado. El aire se almacena en un depósito dotado de manómetro de regulación, válvula de seguridad y termómetro.",
+          "Los compresores transforman el aire en vapor de agua hirviendo. El fluido se almacena en un tanque dotado de un interruptor magnetotérmico, un potenciómetro y un voltímetro digital.",
+          "Los compresores absorben la humedad del ambiente sin cambiar la presión. El aire se guarda en un contenedor dotado de un fusible, una resistencia NTC y un diodo LED."
+        ]
+      },
+      {
+        question: "4. ¿Cuál es el papel del filtro y qué nombre recibe todo este conjunto inicial?",
+        options: [
+          "El filtro extrae todas las impurezas y la humedad condensable del aire circulante. Todo este conjunto inicial de elementos conforma el denominado circuito de control o preparación del aire.",
+          "El filtro aumenta la temperatura del gas para evitar el congelamiento. Todo este conjunto inicial de elementos conforma el denominado bloque de conmutación electrónica secundaria.",
+          "El filtro mezcla el aire comprimido con aceite viscoso para frenar el flujo. Todo este conjunto inicial de elementos conforma el denominado sistema de escape y descarga directa."
+        ]
+      },
+      {
+        question: "5. ¿Cómo funcionan los actuadores neumático tipo cilindro al recibir presión?",
+        options: [
+          "Al recibir la presión del aire comprimido, se desplaza un vástago o barra deslizante capaz de accionar elementos mecánicos externos para transformar la energía neumática en trabajo útil.",
+          "Al recibir la presión del aire comprimido, giran sobre su propio eje a altas revoluciones mediante un conjunto de piñones internos para generar corriente eléctrica directa.",
+          "Al recibir la presión del aire comprimido, absorben la masa gaseosa cerrando la entrada principal para mantener detenido el sistema sin producir desplazamiento mecánico."
+        ]
+      },
+      {
+        question: "6. ¿Qué caracteriza a un cilindro de simple efecto?",
+        options: [
+          "Posee una única conexión neumática. Ejerce fuerza en un solo sentido, mientras que el retorno del vástago se efectúa de manera automática mediante la acción de un muelle interno.",
+          "Tiene dos entradas de aire opuestas. Ejerce fuerza controlada en ambos sentidos mediante la inyección alternada de aceite sintético bajo presión extrema.",
+          "Dispone de tres vías de alimentación neumática (entrada, salida, actuador). Ejerce fuerza constante en sentido rotatorio mientras el retorno del vástago se activa mediante un solenoide eléctrico."
+        ]
+      },
+      {
+        question: "7. ¿Cómo opera un cilindro de doble efecto?",
+        options: [
+          "Dispone de dos entradas de aire que mueven el émbolo en ambas direcciones. Proporciona una fuerza útil y controlada tanto en la carrera de avance como en la de retorno.",
+          "Cuenta con una sola entrada neumática y un resorte. Proporciona fuerza únicamente durante la carrera de avance mientras que el retorno depende de la fuerza de la gravedad recibida.",
+          "Tiene tres conexiones cerradas y un pistón fijo. Proporciona un movimiento de vibración lineal continua de alta frecuencia en una sola dirección sin retorno posible."
+        ]
+      },
+      {
+        question: "8. ¿Qué son los motores neumáticos y qué tipo de movimiento generan?",
+        options: [
+          "Son dispositivos que transforman la energía neumática del aire a presión en un movimiento rotativo o de giro mecánico continuo, con opciones de funcionamiento en uno o dos sentidos.",
+          "Son unidades que convierten la fuerza eléctrica de una batería de litio de larga duración en un desplazamiento lineal alternativo de corta distancia con aceleración constante sin rotación.",
+          "Son elementos pasivos que transforman la energía térmica del aire ambiente en vibraciones acústicas de alta frecuencia diseñadas para limpiar los conductos del circuito."
+        ]
+      },
+      {
+        question: "9. ¿Qué función tienen las válvulas distribuidoras y cómo se esquematizan?",
+        options: [
+          "Gobiernan la puesta en marcha, paradas, direcciones de flujo y niveles de presión o caudal. Sus posiciones se esquematizan mediante cuadrados yuxtapuestos con líneas y flechas internas.",
+          "Filtran las partículas sólidas del aire atmosférico antes de entrar al depósito. Sus posiciones se esquematizan mediante círculos concéntricos cruzados por líneas de puntos.",
+          "Elevan la temperatura del aire comprimido para evitar pérdidas de carga. Sus posiciones se esquematizan mediante triángulos superpuestos con símbolos magnéticos en los extremos."
+        ]
+      },
+      {
+        question: "10. ¿Qué tipos de válvulas destacan dentro de los circuitos neumáticos?",
+        options: [
+          "Destacan las válvulas 2/2 y 3/2 normalmente cerradas con retorno por muelle, la válvula 5/2 pilotada por aire de forma bilateral y las diferentes válvulas selectoras y de escape rápido.",
+          "Destacan las válvulas hidráulicas de retención por bola metálica, los grifos manuales de paso cónico de bronce y las válvulas solenoides de tres vías con enfriamiento líquido continuo.",
+          "Destacan las válvulas de mariposa de plástico rígido, los termostatos regulables por mercurio y los obturadores neumotécnicos de seguridad para gases de alta combustión."
+        ]
+      },
+      {
+        question: "11. ¿Cuál es el funcionamiento y utilidad de un regulador de flujo?",
+        options: [
+          "Controla y estrangula el paso del aire en un sentido mientras permite su libre circulación en el sentido opuesto, aunando las funciones de regulación de velocidad y bloqueo selectivo.",
+          "Aumenta la velocidad del gas en ambas direcciones por igual, permitiendo elevar la aceleración del vástago sin importar el sentido de circulación del aire comprimido en el circuito neumático.",
+          "Bloquea por completo el paso del fluido en ambas direcciones, actuando como un tapón rígido diseñado para detener de emergencia la presión total del compresor."
+        ]
+      },
+      {
+        question: "12. ¿Qué fluido emplean los circuitos hidráulicos y qué ventajas ofrece?",
+        options: [
+          "Emplean un líquido incompresible, habitualmente aceite mineral, en lugar de aire, permitiendo alcanzar presiones muy elevadas e intensificar grandes fuerzas en los mecanismos de trabajo.",
+          "Emplean aire atmosférico purificado y seco, en lugar de líquidos, permitiendo reducir las perdidas por fricción interna en tuberías de gran longitud a baja presión.",
+          "Emplean gas nitrógeno o hidrógeno comprimido a alta temperatura, en lugar de lubricante, permitiendo generar movimientos de oscilación de gran velocidad en espacios reducidos."
+        ]
+      },
+      {
+        question: "13. ¿Qué componentes fundamentales constituyen un circuito hidráulico?",
+        options: [
+          "Incluye un depósito de aceite, una bomba hidráulica impulsada por un motor, filtros para mantener limpio el fluido, una válvula de alivio o limitadora de presión, elementos de control y actuadores.",
+          "Incluye un compresor de aire seco, una caldereta de vapor a alta presión, un condensador eléctrico, fusibles de seguridad de fusión lenta y relés electromecánicos rectos qué proporciona seguridad al circuito.",
+          "Incluye un alternador trifásico, tuberías de cobre sin aislamiento, una resistencia variable por calor, termómetros de líquido expansivo y colectores de escape directo."
+        ]
+      },
+      {
+        question: "14. ¿En qué sectores se aplican los sistemas hidráulicos según el texto?",
+        options: [
+          "Se aplican en maquinaria de transporte, excavación, grúas y frenos de camiones, así como en líneas de producción automatizadas, robótica, sector plástico, alimentario y aeronáutico.",
+          "Se aplican en la fabricación exclusiva de electrodomésticos portátiles de bajo consumo o categoría energética AAA, relojería de precisión, dispositivos móviles de telefonía y pantallas digitales.",
+          "Se aplican en la distribución doméstica de gas natural a baja presión, redes de cableado telefónico aéreo, sistemas de iluminación urbana y antenas de radioaficionado."
+        ]
+      },
+      {
+        question: "15. ¿Por medio de qué elemento transmite energía un circuito neumático?",
+        options: [
+          "por medio del aire comprimido.",
+          "por medio de un aceite vegetal.",
+          "por medio de corriente continua."
+        ]
+      },
+      {
+        question: "16. ¿Qué instrumentos de medición y seguridad se ubican en el depósito neumático?",
+        options: [
+          "manómetro de regulación, válvula de seguridad y termómetro.",
+          "voltímetro digital, fusible térmico y amperímetro de cuadro.",
+          "caudalímetro magnético, termostato de gas y relé de protección."
+        ]
+      },
+      {
+        question: "17. ¿Mediante qué elemento interno regresa el vástago en un cilindro de simple efecto?",
+        options: [
+          "mediante la acción de un muelle interno.",
+          "mediante la inyección de aire por la vía trasera.",
+          "mediante la fuerza magnética de un electroimán."
+        ]
+      },
+      {
+        question: "18. ¿Qué forma geométrica esquematiza las posiciones de una válvula distribuidora?",
+        options: [
+          "mediante cuadrados yuxtapuestos con líneas y flechas internas.",
+          "mediante círculos concéntricos aislados con puntos centrales.",
+          "mediante triángulos escalenos unidos por líneas discontinuas."
+        ]
+      },
+      {
+        question: "19. ¿Qué líquido incompresible se utiliza habitualmente en hidráulica?",
+        options: [
+          "habitualmente aceite mineral,",
+          "habitualmente agua destilada,",
+          "habitualmente alcohol etílico,"
+        ]
+      },
+      {
+        question: "20. ¿Qué válvula se encarga de proteger el circuito hidráulico limitando la presión?",
+        options: [
+          "una válvula de alivio o limitadora de presión,",
+          "una válvula de escape rápido y purga manual,",
+          "una válvula selectora de doble efecto neumático,"
+        ]
+      }
+    ];
+
+    let currentCorrectAnswers = {};
+
+    function shuffle(array) {
+      let currentIndex = array.length, randomIndex;
+      const newArray = [...array];
+      while (currentIndex !== 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+        [newArray[currentIndex], newArray[randomIndex]] = [newArray[randomIndex], newArray[currentIndex]];
+      }
+      return newArray;
+    }
+
+    function shuffleQuiz() {
+      const quizContainer = document.getElementById('quiz-container');
+      quizContainer.innerHTML = '';
+      currentCorrectAnswers = {};
+
+      for(let i=1; i<=20; i++) {
+        document.getElementById(`cell-${i}`).innerText = '';
+      }
+      document.getElementById('result-msg').style.display = 'none';
+
+      const shuffledQuestions = shuffle(questionsData);
+      const optionLetters = ['a', 'b', 'c'];
+
+      shuffledQuestions.forEach((qItem, qIndex) => {
+        const questionCard = document.createElement('div');
+        questionCard.className = 'question-card';
+
+        const qTitle = document.createElement('div');
+        qTitle.className = 'question-text';
+        const cleanQuestionText = qItem.question.replace(/^\d+\.\s*/, '');
+        const qNum = qIndex + 1;
+        qTitle.innerText = `${qNum}. ${cleanQuestionText}`;
+        questionCard.appendChild(qTitle);
+
+        const correctText = qItem.options[0];
+        const shuffledOptions = shuffle(qItem.options);
+
+        const optionsList = document.createElement('ul');
+        optionsList.className = 'options-list';
+
+        shuffledOptions.forEach((optText, optIndex) => {
+          const letter = optionLetters[optIndex];
+          
+          if (optText === correctText) {
+            currentCorrectAnswers[qNum] = letter;
+          }
+
+          const optLi = document.createElement('li');
+          optLi.className = 'option-item';
+
+          const inputRadio = document.createElement('input');
+          inputRadio.type = 'radio';
+          inputRadio.name = `question_${qNum}`;
+          inputRadio.id = `q_${qNum}_opt_${optIndex}`;
+          inputRadio.value = letter;
+
+          inputRadio.addEventListener('change', () => {
+            document.getElementById(`cell-${qNum}`).innerText = letter.toUpperCase();
+          });
+
+          const label = document.createElement('label');
+          label.className = 'option-label';
+          label.htmlFor = `q_${qNum}_opt_${optIndex}`;
+          label.innerText = `${letter}) ${optText}`;
+
+          optLi.appendChild(inputRadio);
+          optLi.appendChild(label);
+          optionsList.appendChild(optLi);
+        });
+
+        questionCard.appendChild(optionsList);
+        quizContainer.appendChild(questionCard);
+      });
+    }
+
+    function checkAnswers() {
+      let correctCount = 0;
+      let totalQuestions = 20;
+
+      for (let i = 1; i <= 20; i++) {
+        const selectedOption = document.querySelector(`input[name="question_${i}"]:checked`);
+        if (selectedOption && selectedOption.value === currentCorrectAnswers[i]) {
+          correctCount++;
+        }
+      }
+
+      const score = ((correctCount / totalQuestions) * 10).toFixed(1);
+
+      const msgDiv = document.getElementById('result-msg');
+      msgDiv.style.display = 'block';
+      msgDiv.style.backgroundColor = score >= 5 ? '#dcfce7' : '#fee2e2';
+      msgDiv.style.color = score >= 5 ? '#15803d' : '#b91c1c';
+      msgDiv.style.border = `1px solid ${score >= 5 ? '#86efac' : '#fca5a5'}`;
+      msgDiv.innerText = `Resultado del Test: Has acertado ${correctCount} de ${totalQuestions} preguntas (Nota: ${score} / 10).`;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      shuffleQuiz();
+    });
+  </script>
+</body>
+</html>

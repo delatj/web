@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Examen de Creatividad y Proceso Tecnológico - Citas Literales</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+      line-height: 1.25;
+      font-size: 13px;
+    }
+
+    /* Encabezado e Hoja de Respuestas */
+    .header-container {
+      background-color: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 10px 15px;
+      margin: 10px auto;
+      max-width: 900px;
+    }
+
+    .header-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .student-info {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .info-field {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+    }
+
+    .info-field label {
+      font-weight: 700;
+      color: #334155;
+      white-space: nowrap;
+      font-size: 0.85rem;
+    }
+
+    .info-field input {
+      flex: 1;
+      border: none;
+      border-bottom: 1px dashed #64748b;
+      padding: 2px 4px;
+      font-size: 0.85rem;
+      outline: none;
+      background: transparent;
+    }
+
+    .date-box-container {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .date-box {
+      width: 120px;
+      height: 24px;
+      border: 1px solid #64748b;
+      border-radius: 3px;
+    }
+
+    .score-field {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+
+    .score-box {
+      width: 60px;
+      height: 24px;
+      border: 1px solid #64748b;
+      border-radius: 3px;
+    }
+
+    /* Tabla de Plantilla de Respuestas rápida */
+    .answer-grid-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #475569;
+      margin-bottom: 4px;
+      text-align: center;
+    }
+
+    .answer-grid-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 4px;
+    }
+
+    .answer-grid-table th, .answer-grid-table td {
+      border: 1px solid #94a3b8;
+      text-align: center;
+      padding: 2px 0;
+      font-size: 0.75rem;
+    }
+
+    .answer-grid-table th {
+      background-color: #f1f5f9;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .answer-grid-table td {
+      height: 22px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    /* Contenedor del Test (Columnas compactas) */
+    .quiz-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 10px 10px 10px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 12px;
+    }
+
+    .question-card {
+      background-color: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      padding: 6px 8px;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .question-text {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+
+    .options-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .option-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      padding: 2px 4px;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    .option-item:hover {
+      background-color: #f1f5f9;
+    }
+
+    .option-item input[type="radio"] {
+      margin-top: 2px;
+      cursor: pointer;
+    }
+
+    .option-label {
+      font-size: 0.78rem;
+      color: #334155;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    /* Botones de acción */
+    .actions-bar {
+      max-width: 900px;
+      margin: 10px auto;
+      padding: 0 10px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .btn {
+      background-color: #2563eb;
+      color: #ffffff;
+      border: none;
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn-success {
+      background-color: #16a34a;
+    }
+
+    .btn-success:hover {
+      background-color: #15803d;
+    }
+
+    .btn-secondary {
+      background-color: #64748b;
+    }
+
+    .result-msg {
+      max-width: 900px;
+      margin: 5px auto;
+      padding: 8px;
+      text-align: center;
+      font-weight: bold;
+      border-radius: 4px;
+      display: none;
+    }
+
+    /* ESTILOS DE IMPRESIÓN AJUSTADOS PARA 2 PÁGINAS A4 */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 8mm 8mm 8mm 8mm;
+      }
+
+      body {
+        background-color: #ffffff;
+        color: #000000;
+        font-size: 11px;
+        line-height: 1.2;
+      }
+
+      .actions-bar, .result-msg {
+        display: none !important;
+      }
+
+      .header-container {
+        border: 1px solid #000000;
+        padding: 6px 10px;
+        margin: 0 0 8px 0;
+        max-width: 100%;
+      }
+
+      .header-title {
+        font-size: 1rem;
+        margin-bottom: 4px;
+      }
+
+      .student-info {
+        margin-bottom: 6px;
+      }
+
+      .answer-grid-table th, .answer-grid-table td {
+        border: 1px solid #000000;
+        padding: 1px 0;
+        font-size: 0.7rem;
+      }
+
+      .quiz-container {
+        max-width: 100%;
+        padding: 0;
+        gap: 6px 10px;
+      }
+
+      .question-card {
+        border: 1px solid #94a3b8;
+        padding: 5px 6px;
+        margin-bottom: 0;
+      }
+
+      .question-text {
+        font-size: 0.78rem;
+        margin-bottom: 2px;
+      }
+
+      .option-label {
+        font-size: 0.74rem;
+      }
+
+      .option-item input[type="radio"] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 10px;
+        height: 10px;
+        border: 1px solid #000;
+        border-radius: 50%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ENCABEZADO CON PLANTILLA DE RESPUESTAS Y DATOS -->
+  <div class="header-container">
+    <div class="header-title">Examen: Creatividad y Proceso Tecnológico (intentar copiar supone 0 y parte)</div>
+    
+    <div class="student-info">
+      <div class="info-field">
+        <label>Nombre del Alumno/a:</label>
+        <input type="text" placeholder="Escriba el nombre completo...">
+      </div>
+      <div class="date-box-container">
+        <label style="font-weight: 700; font-size: 0.85rem;">Fecha:</label>
+        <div class="date-box"></div>
+      </div>
+      <div class="score-field">
+        <span>Nota:</span>
+        <div class="score-box"></div>
+      </div>
+    </div>
+
+    <!-- TABLA DE RESPUESTAS RÁPIDAS PARA CORRECCIÓN -->
+    <div class="answer-grid-title">Tabla de Respuestas (Escriba la letra a, b o c elegida)</div>
+    <table class="answer-grid-table">
+      <thead>
+        <tr>
+          <th>Preg.</th>
+          <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th>
+          <th>11</th><th>12</th><th>13</th><th>14</th><th>15</th><th>16</th><th>17</th><th>18</th><th>19</th><th>20</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Rpta.</th>
+          <td id="cell-1"></td><td id="cell-2"></td><td id="cell-3"></td><td id="cell-4"></td><td id="cell-5"></td>
+          <td id="cell-6"></td><td id="cell-7"></td><td id="cell-8"></td><td id="cell-9"></td><td id="cell-10"></td>
+          <td id="cell-11"></td><td id="cell-12"></td><td id="cell-13"></td><td id="cell-14"></td><td id="cell-15"></td>
+          <td id="cell-16"></td><td id="cell-17"></td><td id="cell-18"></td><td id="cell-19"></td><td id="cell-20"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- BARRA DE ACCIONES -->
+  <div class="actions-bar">
+    <button class="btn btn-secondary" onclick="shuffleQuiz()">Reorganizar Preguntas</button>
+    <button class="btn btn-success" onclick="checkAnswers()">Comprobar Aciertos</button>
+    <button class="btn" onclick="window.print()">Imprimir / Guardar PDF (Ctrl+P)</button>
+  </div>
+
+  <div class="result-msg" id="result-msg"></div>
+
+  <!-- CONTENEDOR DEL TEST EN 2 COLUMNAS -->
+  <div class="quiz-container" id="quiz-container"></div>
+
+  <script>
+    // Preguntas con respuestas sacadas LITERALMENTE del texto de las 14 minipáginas.
+    // La opción en el índice 0 es siempre la respuesta correcta literal.
+    const questionsData = [
+      {
+        question: "1. ¿Cómo se define el Proceso Tecnológico?",
+        options: [
+          "Es un conjunto sistemático de pasos para conceptualizar, planificar y construir soluciones funcionales.",
+          "Es un esquema de trabajo orientado a la producción automatizada de piezas en la industria pesada.",
+          "Es una metodología de análisis financiero enfocada en la distribución de bienes en el mercado global."
+        ]
+      },
+      {
+        question: "2. ¿Desde dónde y hasta dónde va el Proceso Tecnológico?",
+        options: [
+          "Va desde la idea inicial hasta la evaluación final del producto creado.",
+          "Va desde la adquisición de materias primas hasta su reciclaje industrial.",
+          "Va desde el diseño en el ordenador hasta la venta directa al consumidor."
+        ]
+      },
+      {
+        question: "3. ¿Qué hacen los alumnos tras plantearse un reto en el aula?",
+        options: [
+          "Los alumnos analizan detalladamente el desafío, proponen alternativas y eligen por consenso la mejor opción.",
+          "Los alumnos construyen maquetas directas en el taller sin requerir investigación previa ni debate.",
+          "Los alumnos redactan de forma individual un informe de evaluación sin consultar con el grupo de trabajo."
+        ]
+      },
+      {
+        question: "4. ¿Cómo documenta el proyecto la Memoria Técnica?",
+        options: [
+          "Mediante tablas de materiales y herramientas, planos a escala o croquis detallados, y planificación con Gantt.",
+          "Mediante resúmenes teóricos del tema, tablas estadísticas de costes y balances económicos finales del aula.",
+          "Mediante listas de calificaciones del alumnado, normas de seguridad del taller y fichas de asistencia."
+        ]
+      },
+      {
+        question: "5. ¿Qué se hace en la etapa de Construcción y Test?",
+        options: [
+          "Se fabrican las piezas y se ensambla el objeto según lo planificado. En la comprobación se verifica su función.",
+          "Se investigan los antecedentes históricos del invento y se seleccionan los proveedores de materias primas.",
+          "Se calculan los presupuestos comerciales y se redactan los contratos para la distribución del producto."
+        ]
+      },
+      {
+        question: "6. ¿Qué función cumple la creatividad?",
+        options: [
+          "La creatividad genera ideas disruptivas y novedosas.",
+          "La creatividad aplica directamente los productos en el mercado.",
+          "La creatividad analiza los costes de fabricación de una empresa."
+        ]
+      },
+      {
+        question: "7. ¿Hasta dónde va la innovación?",
+        options: [
+          "La innovación va más allá implementando esas ideas para mejorar productos o aportar ventajas competitivas.",
+          "La innovación va dirigida a clasificar herramientas e instrumental de laboratorio según su precisión.",
+          "La innovación va encaminada exclusivamente a la sustitución de materiales plásticos por derivados ecológicos."
+        ]
+      },
+      {
+        question: "8. ¿Qué sectores destacan dentro de las tecnologías emergentes?",
+        options: [
+          "Sectores como la inteligencia artificial, biotecnología o computación cuántica superan tecnologías previas.",
+          "Sectores como la herrería tradicional, la carpintería artesanal y la impresión de libros en papel térmico.",
+          "Sectores centrados en la fabricación mecánica de engranajes y la instalación de redes eléctricas básicas."
+        ]
+      },
+      {
+        question: "9. ¿Qué ejemplo de tecnología emergente se destaca en la reciente pandemia?",
+        options: [
+          "Destacando ejemplos como la telemedicina en la reciente pandemia.",
+          "Destacando ejemplos como el comercio electrónico de ropa deportiva.",
+          "Destacando ejemplos como la fabricación automatizada de calzado."
+        ]
+      },
+      {
+        question: "10. ¿Cómo se define el desarrollo sostenible?",
+        options: [
+          "El desarrollo sostenible equilibra economía, sociedad y medio ambiente sin agotar recursos.",
+          "El desarrollo sostenible fomenta la extracción ilimitada de recursos naturales en poco tiempo.",
+          "El desarrollo sostenible prioriza el beneficio financiero inmediato sobre el cuidado ambiental."
+        ]
+      },
+      {
+        question: "11. ¿Qué acción reduce el impacto ecológico negativo?",
+        options: [
+          "Utilizar energías renovables como la solar y la eólica reduce el impacto ecológico negativo.",
+          "Aumentar el uso de combustibles fósiles en las fábricas reduce el impacto ecológico negativo.",
+          "Sustituir los componentes electrónicos por plástico denso reduce el impacto ecológico negativo."
+        ]
+      },
+      {
+        question: "12. ¿Por qué causas puede ocurrir la obsolescencia?",
+        options: [
+          "Puede ocurrir por desactualización tecnológica o por diseño programado para limitar la vida útil.",
+          "Puede ocurrir por fallos accidental de montaje durante el empaquetado inicial del producto.",
+          "Puede ocurrir por variaciones repentinas en el precio del transporte internacional de mercancías."
+        ]
+      },
+      {
+        question: "13. ¿Qué transformaciones genera el impacto social de la tecnología?",
+        options: [
+          "Automatiza la industria cambiando empleos, revoluciona la medicina y transforma la comunicación global.",
+          "Reduce el número de ordenadores en las fábricas, frena la medicina e interrumpe la red de datos.",
+          "Promueve el retorno exclusivo a métodos artesanales de producción y frena el tráfico de información."
+        ]
+      },
+      {
+        question: "14. ¿Qué elementos define un plan de marketing efectivo?",
+        options: [
+          "Define las características, analiza el público objetivo, fija precios, establece canales y comunicación.",
+          "Define el número de empleados, calcula el alquiler de la nave industrial y revisa el inventario de herramientas.",
+          "Define la distribución de mesas en el taller, asigna tareas a los alumnos y califica las memorias técnicas."
+        ]
+      },
+      {
+        question: "15. ¿Qué estudian respectivamente el análisis morfológico y el funcional?",
+        options: [
+          "El morfológico estudia la forma y dimensiones; el funcional examina su utilidad práctica y funcionamiento.",
+          "El morfológico estudia el precio de venta; el funcional evalúa el impacto que produce en la naturaleza.",
+          "El morfológico mide el consumo de energía; el funcional analiza la evolución histórica del diseño técnico."
+        ]
+      },
+      {
+        question: "16. ¿Qué evalúa el análisis técnico?",
+        options: [
+          "El análisis técnico evalúa la constitución interna y principios físicos.",
+          "El análisis técnico evalúa la historia del objeto a lo largo del siglo.",
+          "El análisis técnico evalúa los presupuestos de comunicación en redes."
+        ]
+      },
+      {
+        question: "17. ¿En qué profundiza el análisis económico?",
+        options: [
+          "El análisis económico profundiza detalladamente en costes de diseño, fabricación, ensamblaje y comercialización.",
+          "El análisis económico profundiza en las sensaciones visuales y las emociones generadas en el comprador.",
+          "El análisis económico profundiza en la resistencia de las piezas mecánicas sometidas a altas temperaturas."
+        ]
+      },
+      {
+        question: "18. ¿Qué examina el análisis estético?",
+        options: [
+          "El análisis estético examina sensaciones, percepción visual, atractivo y emociones generadas en el usuario.",
+          "El análisis estético examina la resistencia mecánica de los materiales empleados en la estructura base.",
+          "El análisis estético examina la huella ecológica producida por los residuos durante el proceso de reciclaje."
+        ]
+      },
+      {
+        question: "19. ¿Qué mide el análisis medioambiental?",
+        options: [
+          "El análisis medioambiental mide la huella ecológica a lo largo de todo su ciclo de vida.",
+          "El análisis medioambiental mide el coste total de los materiales empleados en la fabricación.",
+          "El análisis medioambiental mide la velocidad de producción en la cadena de ensamblaje."
+        ]
+      },
+      {
+        question: "20. ¿Qué examina el análisis histórico?",
+        options: [
+          "El análisis histórico examina su evolución técnica y perfeccionamiento constante en el tiempo.",
+          "El análisis histórico examina el precio que alcanzará el objeto en el mercado de segunda mano.",
+          "El análisis histórico examina los diagramas de Gantt asociados a la planificación de la memoria."
+        ]
+      }
+    ];
+
+    let currentCorrectAnswers = {};
+
+    function shuffle(array) {
+      let currentIndex = array.length, randomIndex;
+      const newArray = [...array];
+      while (currentIndex !== 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+        [newArray[currentIndex], newArray[randomIndex]] = [newArray[randomIndex], newArray[currentIndex]];
+      }
+      return newArray;
+    }
+
+    function shuffleQuiz() {
+      const quizContainer = document.getElementById('quiz-container');
+      quizContainer.innerHTML = '';
+      currentCorrectAnswers = {};
+
+      for(let i=1; i<=20; i++) {
+        document.getElementById(`cell-${i}`).innerText = '';
+      }
+      document.getElementById('result-msg').style.display = 'none';
+
+      const shuffledQuestions = shuffle(questionsData);
+      const optionLetters = ['a', 'b', 'c'];
+
+      shuffledQuestions.forEach((qItem, qIndex) => {
+        const questionCard = document.createElement('div');
+        questionCard.className = 'question-card';
+
+        const qTitle = document.createElement('div');
+        qTitle.className = 'question-text';
+        const cleanQuestionText = qItem.question.replace(/^\d+\.\s*/, '');
+        const qNum = qIndex + 1;
+        qTitle.innerText = `${qNum}. ${cleanQuestionText}`;
+        questionCard.appendChild(qTitle);
+
+        const correctText = qItem.options[0];
+        const shuffledOptions = shuffle(qItem.options);
+
+        const optionsList = document.createElement('ul');
+        optionsList.className = 'options-list';
+
+        shuffledOptions.forEach((optText, optIndex) => {
+          const letter = optionLetters[optIndex];
+          
+          if (optText === correctText) {
+            currentCorrectAnswers[qNum] = letter;
+          }
+
+          const optLi = document.createElement('li');
+          optLi.className = 'option-item';
+
+          const inputRadio = document.createElement('input');
+          inputRadio.type = 'radio';
+          inputRadio.name = `question_${qNum}`;
+          inputRadio.id = `q_${qNum}_opt_${optIndex}`;
+          inputRadio.value = letter;
+
+          inputRadio.addEventListener('change', () => {
+            document.getElementById(`cell-${qNum}`).innerText = letter.toUpperCase();
+          });
+
+          const label = document.createElement('label');
+          label.className = 'option-label';
+          label.htmlFor = `q_${qNum}_opt_${optIndex}`;
+          label.innerText = `${letter}) ${optText}`;
+
+          optLi.appendChild(inputRadio);
+          optLi.appendChild(label);
+          optionsList.appendChild(optLi);
+        });
+
+        questionCard.appendChild(optionsList);
+        quizContainer.appendChild(questionCard);
+      });
+    }
+
+    function checkAnswers() {
+      let correctCount = 0;
+      let totalQuestions = 20;
+
+      for (let i = 1; i <= 20; i++) {
+        const selectedOption = document.querySelector(`input[name="question_${i}"]:checked`);
+        if (selectedOption && selectedOption.value === currentCorrectAnswers[i]) {
+          correctCount++;
+        }
+      }
+
+      const score = ((correctCount / totalQuestions) * 10).toFixed(1);
+
+      const msgDiv = document.getElementById('result-msg');
+      msgDiv.style.display = 'block';
+      msgDiv.style.backgroundColor = score >= 5 ? '#dcfce7' : '#fee2e2';
+      msgDiv.style.color = score >= 5 ? '#15803d' : '#b91c1c';
+      msgDiv.style.border = `1px solid ${score >= 5 ? '#86efac' : '#fca5a5'}`;
+      msgDiv.innerText = `Resultado del Test: Has acertado ${correctCount} de ${totalQuestions} preguntas (Nota: ${score} / 10).`;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      shuffleQuiz();
+    });
+  </script>
+</body>
+</html>

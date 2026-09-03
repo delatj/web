@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Examen de Control y Robótica - Formato Optimizado 2 Páginas</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+      line-height: 1.25;
+      font-size: 13px;
+    }
+
+    /* Encabezado e Hoja de Respuestas */
+    .header-container {
+      background-color: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 10px 15px;
+      margin: 10px auto;
+      max-width: 900px;
+    }
+
+    .header-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .student-info {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .info-field {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+    }
+
+    .info-field label {
+      font-weight: 700;
+      color: #334155;
+      white-space: nowrap;
+      font-size: 0.85rem;
+    }
+
+    .info-field input {
+      flex: 1;
+      border: none;
+      border-bottom: 1px dashed #64748b;
+      padding: 2px 4px;
+      font-size: 0.85rem;
+      outline: none;
+      background: transparent;
+    }
+
+    .date-box-container {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .date-box {
+      width: 120px;
+      height: 24px;
+      border: 1px solid #64748b;
+      border-radius: 3px;
+    }
+
+    .score-field {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+
+    .score-box {
+      width: 60px;
+      height: 24px;
+      border: 1px solid #64748b;
+      border-radius: 3px;
+    }
+
+    /* Tabla de Plantilla de Respuestas rápida */
+    .answer-grid-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #475569;
+      margin-bottom: 4px;
+      text-align: center;
+    }
+
+    .answer-grid-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 4px;
+    }
+
+    .answer-grid-table th, .answer-grid-table td {
+      border: 1px solid #94a3b8;
+      text-align: center;
+      padding: 2px 0;
+      font-size: 0.75rem;
+    }
+
+    .answer-grid-table th {
+      background-color: #f1f5f9;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .answer-grid-table td {
+      height: 22px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    /* Contenedor del Test (Columnas compactas) */
+    .quiz-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 10px 10px 10px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 12px;
+    }
+
+    .question-card {
+      background-color: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      padding: 6px 8px;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .question-text {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+
+    .options-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .option-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      padding: 2px 4px;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    .option-item:hover {
+      background-color: #f1f5f9;
+    }
+
+    .option-item input[type="radio"] {
+      margin-top: 2px;
+      cursor: pointer;
+    }
+
+    .option-label {
+      font-size: 0.78rem;
+      color: #334155;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    /* Botones de acción */
+    .actions-bar {
+      max-width: 900px;
+      margin: 10px auto;
+      padding: 0 10px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .btn {
+      background-color: #0284c7;
+      color: #ffffff;
+      border: none;
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn-success {
+      background-color: #16a34a;
+    }
+
+    .btn-success:hover {
+      background-color: #15803d;
+    }
+
+    .btn-secondary {
+      background-color: #64748b;
+    }
+
+    .result-msg {
+      max-width: 900px;
+      margin: 5px auto;
+      padding: 8px;
+      text-align: center;
+      font-weight: bold;
+      border-radius: 4px;
+      display: none;
+    }
+
+    /* ESTILOS DE IMPRESIÓN AJUSTADOS PARA 2 PÁGINAS A4 */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 8mm 8mm 8mm 8mm;
+      }
+
+      body {
+        background-color: #ffffff;
+        color: #000000;
+        font-size: 11px;
+        line-height: 1.2;
+      }
+
+      .actions-bar, .result-msg {
+        display: none !important;
+      }
+
+      .header-container {
+        border: 1px solid #000000;
+        padding: 6px 10px;
+        margin: 0 0 8px 0;
+        max-width: 100%;
+      }
+
+      .header-title {
+        font-size: 1rem;
+        margin-bottom: 4px;
+      }
+
+      .student-info {
+        margin-bottom: 6px;
+      }
+
+      .answer-grid-table th, .answer-grid-table td {
+        border: 1px solid #000000;
+        padding: 1px 0;
+        font-size: 0.7rem;
+      }
+
+      .quiz-container {
+        max-width: 100%;
+        padding: 0;
+        gap: 6px 10px;
+      }
+
+      .question-card {
+        border: 1px solid #94a3b8;
+        padding: 5px 6px;
+        margin-bottom: 0;
+      }
+
+      .question-text {
+        font-size: 0.78rem;
+        margin-bottom: 2px;
+      }
+
+      .option-label {
+        font-size: 0.74rem;
+      }
+
+      .option-item input[type="radio"] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 10px;
+        height: 10px;
+        border: 1px solid #000;
+        border-radius: 50%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header-container">
+    <div class="header-title">Examen: Control y Robótica (intentar copiar supone 0 y parte)</div>
+    
+    <div class="student-info">
+      <div class="info-field">
+        <label>Nombre del Alumno/a:</label>
+        <input type="text" placeholder="Escriba el nombre completo...">
+      </div>
+      <div class="date-box-container">
+        <label style="font-weight: 700; font-size: 0.85rem;">Fecha:</label>
+        <div class="date-box"></div>
+      </div>
+      <div class="score-field">
+        <span>Nota:</span>
+        <div class="score-box"></div>
+      </div>
+    </div>
+
+    <div class="answer-grid-title">Tabla de Respuestas (Escriba la letra a, b o c elegida)</div>
+    <table class="answer-grid-table">
+      <thead>
+        <tr>
+          <th>Preg.</th>
+          <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th>
+          <th>11</th><th>12</th><th>13</th><th>14</th><th>15</th><th>16</th><th>17</th><th>18</th><th>19</th><th>20</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Rpta.</th>
+          <td id="cell-1"></td><td id="cell-2"></td><td id="cell-3"></td><td id="cell-4"></td><td id="cell-5"></td>
+          <td id="cell-6"></td><td id="cell-7"></td><td id="cell-8"></td><td id="cell-9"></td><td id="cell-10"></td>
+          <td id="cell-11"></td><td id="cell-12"></td><td id="cell-13"></td><td id="cell-14"></td><td id="cell-15"></td>
+          <td id="cell-16"></td><td id="cell-17"></td><td id="cell-18"></td><td id="cell-19"></td><td id="cell-20"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="actions-bar">
+    <button class="btn btn-secondary" onclick="shuffleQuiz()">Reorganizar Preguntas</button>
+    <button class="btn btn-success" onclick="checkAnswers()">Comprobar Aciertos</button>
+    <button class="btn" onclick="window.print()">Imprimir / Guardar PDF (Ctrl+P)</button>
+  </div>
+
+  <div class="result-msg" id="result-msg"></div>
+
+  <div class="quiz-container" id="quiz-container"></div>
+
+  <script>
+    // Preguntas basadas estrictamente en Control y robótica.html.
+    // La respuesta correcta NUNCA es la opción más larga.
+    const questionsData = [
+      {
+        question: "1. ¿Qué es una máquina según la unidad?",
+        options: [
+          "Un sistema capaz de realizar un trabajo dirigido por un usuario.",
+          "Un dispositivo automático que realiza tareas complejas de forma independiente sin intervención humana alguna en ningún momento.",
+          "Un circuito electrónico diseñado exclusivamente para procesar señales de entrada y convertirlas en datos digitales sin movimiento."
+        ]
+      },
+      {
+        question: "2. ¿Cómo se define un automatismo?",
+        options: [
+          "Dispositivo que repite de forma automática un trabajo sencillo sin intervención manual.",
+          "Sistema electrónico de control capaz de decidir por sí mismo qué tarea ejecutar analizando constantemente variables complejas del entorno.",
+          "Cualquier estructura física rígida que sostiene mecanismos operados manualmente por un usuario experto durante largos períodos."
+        ]
+      },
+      {
+        question: "3. ¿Qué caracteriza a un robot a diferencia de un automatismo simple?",
+        options: [
+          "Es un sistema programable que decide qué tarea hacer según la información de su entorno.",
+          "Es una máquina rígida que solo ejecuta secuencias mecánicas fijas e inalterables sin procesar ningún tipo de señal recibida del exterior.",
+          "Un elemento mecánico simple que requiere la supervisión constante y el control manual de un operario para poder realizar cualquier trabajo."
+        ]
+      },
+      {
+        question: "4. ¿Qué es un sistema de control y cómo se representa?",
+        options: [
+          "Conjunto de elementos electrónicos que genera una salida al recibir entradas; se representa mediante un diagrama de bloques.",
+          "Una red compleja de sensores electromagnéticos que transmiten datos sin generar una respuesta física a la salida de sus componentes.",
+          "Un algoritmo digital cerrado que regula el movimiento de piezas pesadas en motores sin utilizar información ni diagramas en bloques."
+        ]
+      },
+      {
+        question: "5. ¿Qué define a un sistema de control de lazo abierto?",
+        options: [
+          "La salida no tiene ningún efecto sobre la acción del sistema.",
+          "La toma de decisiones del sistema depende directamente de la reconducción constante de la señal de salida mediante realimentación continua.",
+          "Un mecanismo automatizado que reajusta sus parámetros físicos analizando las variaciones de temperatura y humedad en el entorno."
+        ]
+      },
+      {
+        question: "6. ¿En qué consiste un sistema de control de lazo cerrado?",
+        options: [
+          "En un sistema cerrado la toma de decisiones depende tanto de la entrada como de la salida gracias al feedback.",
+          "Un proceso directo donde la señal de entrada produce un resultado a la salida sin que esta última ejerza influencia alguna sobre el sistema.",
+          "Una estructura electrónica simple que ejecuta un trabajo repetitivo fijado de manera definitiva durante su fabricación."
+        ]
+      },
+      {
+        question: "7. En un diagrama de lazo cerrado, ¿qué función cumple el comparador?",
+        options: [
+          "Recibe la entrada y la realimentación para enviar la señal a los elementos de control.",
+          "Transforma la respuesta final en trabajo mecánico útil activando directamente los actuadores al final del proceso industrial.",
+          "Mide directamente los parámetros físicos externos como luz o humedad sin interactuar con los circuitos de realimentación del sistema."
+        ]
+      },
+      {
+        question: "8. ¿Qué función tienen los sensores en los sistemas de control?",
+        options: [
+          "Dispositivos que captan parámetros físicos para introducir datos de entrada y realimentación.",
+          "Componentes encargados de ejecutar las decisiones del control produciendo movimiento, luz o sonido a la salida del sistema.",
+          "Mecanismos de protección que detienen la corriente eléctrica para evitar sobrecargas."
+        ]
+      },
+      {
+        question: "9. ¿Para qué sirven los sensores de contacto como los finales de carrera?",
+        options: [
+          "Para detectar la posición límite o el final del recorrido de componentes mecánicos.",
+          "Para captar variaciones de iluminación ambiental que interrumpan la señal eléctrica en automatismos de lazo abierto.",
+          "Para medir la fuerza de aceleración y la temperatura interna en los actuadores."
+        ]
+      },
+      {
+        question: "10. ¿Cómo funcionan los sensores ópticos mencionados en el texto?",
+        options: [
+          "Detectan objetos o personas al interrumpirse un haz de luz que llega al sensor.",
+          "Miden directamente el aumento de temperatura en piezas mecánicass.",
+          "Registran las fuerzas de fricción producidas por el paso continuo de componentes en un sistema automatizado."
+        ]
+      },
+      {
+        question: "11. ¿Cuáles son los principales sensores de temperatura citados?",
+        options: [
+          "Los termistores, NTC o PTC.",
+          "Las fotorresistencias LDR.",
+          "Los interruptores Reed accionados mediante campos magnéticos externos."
+        ]
+      },
+      {
+        question: "12. ¿Dónde se aplican principalmente los sensores de humedad?",
+        options: [
+          "Para detectar el nivel de líquido en un depósito o en sistemas de riego.",
+          "En la medición del ángulo de giro y la posición límite en motores de precisión para robots industriales.",
+          "Para registrar la presencia de personas al interrumpir un haz invisible de luz en accesos automatizados."
+        ]
+      },
+      {
+        question: "13. ¿Qué componentes forman un sensor infrarrojo?",
+        options: [
+          "Un diodo emisor de luz infrarroja y un fototransistor receptor.",
+          "Un interruptor magnético Reed combinado con una resistencia NTC sensible a los cambios térmicos.",
+          "Un conjunto de contactos mecánicos de fin de carrera."
+        ]
+      },
+      {
+        question: "14. ¿Qué elemento detecta campos magnéticos como los de un imán?",
+        options: [
+          "El interruptor Reed.",
+          "El termistor de tipo PTC diseñado para variaciones de corriente.",
+          "La fotorresistencia LDR sensible a la radiación solar."
+        ]
+      },
+      {
+        question: "15. ¿Cuáles son los tres bloques principales de la arquitectura de un robot?",
+        options: [
+          "Sensores, elementos de control y actuadores.",
+          "Comparadores, unidades de realimentación continua y dispositivos mecánicos rígidos de soporte.",
+          "Motores paso a paso, cilindros neumáticos y fuentes de alimentación eléctrica de alta potencia."
+        ]
+      },
+      {
+        question: "16. Según la unidad, ¿cuál es la función de los actuadores en la arquitectura robótica?",
+        options: [
+          "Generar una respuesta o acción física a la salida del sistema.",
+          "Procesar la información de entrada procedente de los sensores.",
+          "Captar parámetros del entorno como la temperatura, la luz, la posición o las fuerzas ejercidas sobre la estructura."
+        ]
+      },
+      {
+        question: "17. ¿Qué función realizan los elementos de control dentro del robot?",
+        options: [
+          "Procesar la información de entrada y tomar decisiones.",
+          "Medir valores físicos del exterior como la presión.",
+          "Ejecutar directamente las acciones mecánicas finales como el movimiento de pistones o luces."
+        ]
+      },
+      {
+        question: "18. ¿Cuál de las siguientes es una aplicación industrial de los robots citada en el texto?",
+        options: [
+          "Aplicación de pintura, esmalte y adhesivos.",
+          "Fabricación artesanal de componentes electrónicos mediante control manual directo.",
+          "Diseño de esquemas en bloque."
+        ]
+      },
+      {
+        question: "19. ¿Qué tipo de operaciones de material realizan los robots en la industria?",
+        options: [
+          "Operaciones de corte, montaje y ensamblaje.",
+          "Inspección táctil manual de la resistencia mecánica en estructuras de hormigón.",
+          "Filtrado térmico de líquidos corrosivos."
+        ]
+      },
+      {
+        question: "20. ¿Qué tareas de unión de piezas efectúan habitualmente los robots industriales?",
+        options: [
+          "Soldadura.",
+          "Medición de temperatura con sensores NTC.",
+          "Realimentación de señales en lazo abierto."
+        ]
+      }
+    ];
+
+    let currentCorrectAnswers = {};
+
+    function shuffle(array) {
+      let currentIndex = array.length, randomIndex;
+      const newArray = [...array];
+      while (currentIndex !== 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+        [newArray[currentIndex], newArray[randomIndex]] = [newArray[randomIndex], newArray[currentIndex]];
+      }
+      return newArray;
+    }
+
+    function shuffleQuiz() {
+      const quizContainer = document.getElementById('quiz-container');
+      quizContainer.innerHTML = '';
+      currentCorrectAnswers = {};
+
+      for(let i=1; i<=20; i++) {
+        document.getElementById(`cell-${i}`).innerText = '';
+      }
+      document.getElementById('result-msg').style.display = 'none';
+
+      const shuffledQuestions = shuffle(questionsData);
+      const optionLetters = ['a', 'b', 'c'];
+
+      shuffledQuestions.forEach((qItem, qIndex) => {
+        const questionCard = document.createElement('div');
+        questionCard.className = 'question-card';
+
+        const qTitle = document.createElement('div');
+        qTitle.className = 'question-text';
+        const cleanQuestionText = qItem.question.replace(/^\d+\.\s*/, '');
+        const qNum = qIndex + 1;
+        qTitle.innerText = `${qNum}. ${cleanQuestionText}`;
+        questionCard.appendChild(qTitle);
+
+        const correctText = qItem.options[0];
+        const shuffledOptions = shuffle(qItem.options);
+
+        const optionsList = document.createElement('ul');
+        optionsList.className = 'options-list';
+
+        shuffledOptions.forEach((optText, optIndex) => {
+          const letter = optionLetters[optIndex];
+          
+          if (optText === correctText) {
+            currentCorrectAnswers[qNum] = letter;
+          }
+
+          const optLi = document.createElement('li');
+          optLi.className = 'option-item';
+
+          const inputRadio = document.createElement('input');
+          inputRadio.type = 'radio';
+          inputRadio.name = `question_${qNum}`;
+          inputRadio.id = `q_${qNum}_opt_${optIndex}`;
+          inputRadio.value = letter;
+
+          inputRadio.addEventListener('change', () => {
+            document.getElementById(`cell-${qNum}`).innerText = letter.toUpperCase();
+          });
+
+          const label = document.createElement('label');
+          label.className = 'option-label';
+          label.htmlFor = `q_${qNum}_opt_${optIndex}`;
+          label.innerText = `${letter}) ${optText}`;
+
+          optLi.appendChild(inputRadio);
+          optLi.appendChild(label);
+          optionsList.appendChild(optLi);
+        });
+
+        questionCard.appendChild(optionsList);
+        quizContainer.appendChild(questionCard);
+      });
+    }
+
+    function checkAnswers() {
+      let correctCount = 0;
+      let totalQuestions = 20;
+
+      for (let i = 1; i <= 20; i++) {
+        const selectedOption = document.querySelector(`input[name="question_${i}"]:checked`);
+        if (selectedOption && selectedOption.value === currentCorrectAnswers[i]) {
+          correctCount++;
+        }
+      }
+
+      const score = ((correctCount / totalQuestions) * 10).toFixed(1);
+
+      const msgDiv = document.getElementById('result-msg');
+      msgDiv.style.display = 'block';
+      msgDiv.style.backgroundColor = score >= 5 ? '#dcfce7' : '#fee2e2';
+      msgDiv.style.color = score >= 5 ? '#15803d' : '#b91c1c';
+      msgDiv.style.border = `1px solid ${score >= 5 ? '#86efac' : '#fca5a5'}`;
+      msgDiv.innerText = `Resultado del Test: Has acertado ${correctCount} de ${totalQuestions} preguntas (Nota: ${score} / 10).`;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      shuffleQuiz();
+    });
+  </script>
+</body>
+</html>

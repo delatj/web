@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Examen: Datos Masivos (Big Data) y Metadatos</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+      line-height: 1.25;
+      font-size: 13px;
+    }
+
+    /* Encabezado e Hoja de Respuestas */
+    .header-container {
+      background-color: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 10px 15px;
+      margin: 10px auto;
+      max-width: 900px;
+    }
+
+    .header-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .student-info {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .info-field {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+    }
+
+    .info-field label {
+      font-weight: 700;
+      color: #334155;
+      white-space: nowrap;
+      font-size: 0.85rem;
+    }
+
+    .info-field input {
+      flex: 1;
+      border: none;
+      border-bottom: 1px dashed #64748b;
+      padding: 2px 4px;
+      font-size: 0.85rem;
+      outline: none;
+      background: transparent;
+    }
+
+    .date-box-container {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .date-box {
+      width: 120px;
+      height: 24px;
+      border: 1px solid #64748b;
+      border-radius: 3px;
+    }
+
+    .score-field {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+
+    .score-box {
+      width: 60px;
+      height: 24px;
+      border: 1px solid #64748b;
+      border-radius: 3px;
+    }
+
+    /* Tabla de Plantilla de Respuestas rápida (10 preguntas) */
+    .answer-grid-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #475569;
+      margin-bottom: 4px;
+      text-align: center;
+    }
+
+    .answer-grid-table {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto 4px auto;
+      border-collapse: collapse;
+    }
+
+    .answer-grid-table th, .answer-grid-table td {
+      border: 1px solid #94a3b8;
+      text-align: center;
+      padding: 2px 0;
+      font-size: 0.75rem;
+    }
+
+    .answer-grid-table th {
+      background-color: #f1f5f9;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .answer-grid-table td {
+      height: 22px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    /* Contenedor del Test */
+    .quiz-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 10px 10px 10px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 12px;
+    }
+
+    .question-card {
+      background-color: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      padding: 6px 8px;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .question-text {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+
+    .options-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .option-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      padding: 2px 4px;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    .option-item:hover {
+      background-color: #f1f5f9;
+    }
+
+    .option-item input[type="radio"] {
+      margin-top: 2px;
+      cursor: pointer;
+    }
+
+    .option-label {
+      font-size: 0.78rem;
+      color: #334155;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    /* Botones de acción */
+    .actions-bar {
+      max-width: 900px;
+      margin: 10px auto;
+      padding: 0 10px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .btn {
+      background-color: #0284c7;
+      color: #ffffff;
+      border: none;
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn-success {
+      background-color: #16a34a;
+    }
+
+    .btn-success:hover {
+      background-color: #15803d;
+    }
+
+    .btn-secondary {
+      background-color: #64748b;
+    }
+
+    .result-msg {
+      max-width: 900px;
+      margin: 5px auto;
+      padding: 8px;
+      text-align: center;
+      font-weight: bold;
+      border-radius: 4px;
+      display: none;
+    }
+
+    /* ESTILOS DE IMPRESIÓN */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 8mm 8mm 8mm 8mm;
+      }
+
+      body {
+        background-color: #ffffff;
+        color: #000000;
+        font-size: 11px;
+        line-height: 1.2;
+      }
+
+      .actions-bar, .result-msg {
+        display: none !important;
+      }
+
+      .header-container {
+        border: 1px solid #000000;
+        padding: 6px 10px;
+        margin: 0 0 8px 0;
+        max-width: 100%;
+      }
+
+      .header-title {
+        font-size: 1rem;
+        margin-bottom: 4px;
+      }
+
+      .student-info {
+        margin-bottom: 6px;
+      }
+
+      .answer-grid-table th, .answer-grid-table td {
+        border: 1px solid #000000;
+        padding: 1px 0;
+        font-size: 0.7rem;
+      }
+
+      .quiz-container {
+        max-width: 100%;
+        padding: 0;
+        gap: 6px 10px;
+      }
+
+      .question-card {
+        border: 1px solid #94a3b8;
+        padding: 5px 6px;
+        margin-bottom: 0;
+      }
+
+      .question-text {
+        font-size: 0.78rem;
+        margin-bottom: 2px;
+      }
+
+      .option-label {
+        font-size: 0.74rem;
+      }
+
+      .option-item input[type="radio"] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 10px;
+        height: 10px;
+        border: 1px solid #000;
+        border-radius: 50%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header-container">
+    <div class="header-title">Examen: Datos Masivos (Big Data) y Metadatos (intentar copiar supone 0 y parte)</div>
+    
+    <div class="student-info">
+      <div class="info-field">
+        <label>Nombre del Alumno/a:</label>
+        <input type="text" placeholder="Escriba el nombre completo...">
+      </div>
+      <div class="date-box-container">
+        <label style="font-weight: 700; font-size: 0.85rem;">Fecha:</label>
+        <div class="date-box"></div>
+      </div>
+      <div class="score-field">
+        <span>Nota:</span>
+        <div class="score-box"></div>
+      </div>
+    </div>
+
+    <div class="answer-grid-title">Tabla de Respuestas (Escriba la letra a, b o c elegida)</div>
+    <table class="answer-grid-table">
+      <thead>
+        <tr>
+          <th>Preg.</th>
+          <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
+          <th>6</th><th>7</th><th>8</th><th>9</th><th>10</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Rpta.</th>
+          <td id="cell-1"></td><td id="cell-2"></td><td id="cell-3"></td><td id="cell-4"></td><td id="cell-5"></td>
+          <td id="cell-6"></td><td id="cell-7"></td><td id="cell-8"></td><td id="cell-9"></td><td id="cell-10"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="actions-bar">
+    <button class="btn btn-secondary" onclick="shuffleQuiz()">Reorganizar Preguntas</button>
+    <button class="btn btn-success" onclick="checkAnswers()">Comprobar Aciertos</button>
+    <button class="btn" onclick="window.print()">Imprimir / Guardar PDF (Ctrl+P)</button>
+  </div>
+
+  <div class="result-msg" id="result-msg"></div>
+
+  <div class="quiz-container" id="quiz-container"></div>
+
+  <script>
+    // 10 preguntas basadas en las 8 minipáginas del documento
+    const questionsData = [
+      {
+        question: "¿Qué define principalmente a los datos masivos o big data?",
+        options: [
+          { text: "Conjuntos de información masivos que superan las herramientas tradicionales.", correct: true },
+          { text: "Archivos comprimidos guardados exclusivamente en memorias USB externas.", correct: false },
+          { text: "Bases de datos pequeñas diseñadas para hojas de cálculo sencillas.", correct: false }
+        ]
+      },
+      {
+        question: "¿Cómo se clasifican las tres categorías principales de metadatos?",
+        options: [
+          { text: "Se clasifican en metadatos Descriptivos, Administrativos y Estructurales.", correct: true },
+          { text: "Se clasifican en metadatos Públicos, Privados y de Acceso restringido.", correct: false },
+          { text: "Se clasifican en metadatos Primarios, Secundarios y de Almacenamiento.", correct: false }
+        ]
+      },
+      {
+        question: "¿Qué función cumplen específicamente los metadatos descriptivos?",
+        options: [
+          { text: "Proporcionan información detallada referente al contenido de los datos.", correct: true },
+          { text: "Describen la creación técnica y la gestión administrativa de los archivos.", correct: false },
+          { text: "Detallan únicamente la estructura física y el formato del disco duro.", correct: false }
+        ]
+      },
+      {
+        question: "¿Cuáles son los usos principales de los metadatos en los sistemas?",
+        options: [
+          { text: "Facilitar la organización, la gestión y la interoperabilidad de datos.", correct: true },
+          { text: "Incrementar la velocidad del procesador y desfragmentar el disco local.", correct: false },
+          { text: "Encriptar contraseñas de red y bloquear el acceso a páginas externas.", correct: false }
+        ]
+      },
+      {
+        question: "¿Dónde se pueden almacenar los metadatos de un sistema?",
+        options: [
+          { text: "Dentro de los propios archivos de datos o en bases de datos dedicadas.", correct: true },
+          { text: "Únicamente en la memoria RAM volátil del ordenador mientras esté encendido.", correct: false },
+          { text: "Exclusivamente en servidores externos que carecen de conexión a internet.", correct: false }
+        ]
+      },
+      {
+        question: "¿En qué consiste exactamente la técnica de data scraping?",
+        options: [
+          { text: "Extraer información web para convertir datos no estructurados en estructurados.", correct: true },
+          { text: "Borrar archivos duplicados del disco duro para liberar memoria física.", correct: false },
+          { text: "Comprimir carpetas grandes de texto para enviarlas rápidamente por correo.", correct: false }
+        ]
+      },
+      {
+        question: "¿Qué fuentes de datos recopila un supermercado con análisis de big data?",
+        options: [
+          { text: "Transacciones, historiales de clientes, inventario y datos meteorológicos.", correct: true },
+          { text: "Únicamente las facturas impresas en papel y las firmas físicas recibidas.", correct: false },
+          { text: "Solamente los correos electrónicos de los empleados de la plantilla.", correct: false }
+        ]
+      },
+      {
+        question: "¿Cómo utiliza un supermercado el análisis de patrones de compra?",
+        options: [
+          { text: "Comprende tendencias estacionales y personaliza promociones según el clima.", correct: true },
+          { text: "Establece el salario de los empleados en función del volumen de clientes.", correct: false },
+          { text: "Aumenta los precios de forma aleatoria durante los fines de semana.", correct: false }
+        ]
+      },
+      {
+        question: "¿Cómo ayuda el big data a la optimización del inventario?",
+        options: [
+          { text: "Prevé demandas ajustando existencias automáticamente ante eventos locales.", correct: true },
+          { text: "Reduce a cero el espacio de almacenamiento disponible en el almacén.", correct: false },
+          { text: "Elimina los productos perecederos de la tienda antes de que caduquen.", correct: false }
+        ]
+      },
+      {
+        question: "¿De qué manera mejora la experiencia del cliente gracias a la información recopilada?",
+        options: [
+          { text: "Optimiza la ubicación de productos en tienda y personaliza la publicidad.", correct: true },
+          { text: "Envía publicidad genérica de forma masiva a usuarios sin registrar.", correct: false },
+          { text: "Obliga a los clientes a comprar exclusivamente a través de la web.", correct: false }
+        ]
+      }
+    ];
+
+    function shuffle(array) {
+      let currentIndex = array.length, randomIndex;
+      const newArray = array.map(item => ({ ...item }));
+      while (currentIndex !== 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+        [newArray[currentIndex], newArray[randomIndex]] = [newArray[randomIndex], newArray[currentIndex]];
+      }
+      return newArray;
+    }
+
+    function shuffleQuiz() {
+      const quizContainer = document.getElementById('quiz-container');
+      quizContainer.innerHTML = '';
+
+      for(let i = 1; i <= 10; i++) {
+        document.getElementById(`cell-${i}`).innerText = '';
+      }
+      document.getElementById('result-msg').style.display = 'none';
+
+      // 1. Aleatorizar PREGUNTAS
+      const shuffledQuestions = shuffle(questionsData);
+
+      shuffledQuestions.forEach((qItem, qIndex) => {
+        const qNum = qIndex + 1;
+        const questionCard = document.createElement('div');
+        questionCard.className = 'question-card';
+
+        const qTitle = document.createElement('div');
+        qTitle.className = 'question-text';
+        qTitle.innerText = `${qNum}. ${qItem.question}`;
+        questionCard.appendChild(qTitle);
+
+        const optionsList = document.createElement('ul');
+        optionsList.className = 'options-list';
+
+        // 2. Aleatorizar RESPUESTAS de cada pregunta
+        const shuffledOptions = shuffle(qItem.options);
+
+        shuffledOptions.forEach((optObj, optIndex) => {
+          const letter = ['a', 'b', 'c'][optIndex];
+
+          const optLi = document.createElement('li');
+          optLi.className = 'option-item';
+
+          const inputRadio = document.createElement('input');
+          inputRadio.type = 'radio';
+          inputRadio.name = `question_${qNum}`;
+          inputRadio.id = `q_${qNum}_opt_${optIndex}`;
+          inputRadio.value = letter;
+          inputRadio.dataset.correct = optObj.correct;
+
+          inputRadio.addEventListener('change', () => {
+            document.getElementById(`cell-${qNum}`).innerText = letter.toUpperCase();
+          });
+
+          const label = document.createElement('label');
+          label.className = 'option-label';
+          label.htmlFor = `q_${qNum}_opt_${optIndex}`;
+          label.innerText = `${letter}) ${optObj.text}`;
+
+          optLi.appendChild(inputRadio);
+          optLi.appendChild(label);
+          optionsList.appendChild(optLi);
+        });
+
+        questionCard.appendChild(optionsList);
+        quizContainer.appendChild(questionCard);
+      });
+    }
+
+    function checkAnswers() {
+      let correctCount = 0;
+      let totalQuestions = 10;
+
+      for (let i = 1; i <= 10; i++) {
+        const selectedOption = document.querySelector(`input[name="question_${i}"]:checked`);
+        if (selectedOption && selectedOption.dataset.correct === "true") {
+          correctCount++;
+        }
+      }
+
+      const score = ((correctCount / totalQuestions) * 10).toFixed(1);
+
+      const msgDiv = document.getElementById('result-msg');
+      msgDiv.style.display = 'block';
+      msgDiv.style.backgroundColor = score >= 5 ? '#dcfce7' : '#fee2e2';
+      msgDiv.style.color = score >= 5 ? '#15803d' : '#b91c1c';
+      msgDiv.style.border = `1px solid ${score >= 5 ? '#86efac' : '#fca5a5'}`;
+      msgDiv.innerText = `Resultado del Test: Has acertado ${correctCount} de ${totalQuestions} preguntas (Nota: ${score} / 10).`;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      shuffleQuiz();
+    });
+  </script>
+</body>
+</html>

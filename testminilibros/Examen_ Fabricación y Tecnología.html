@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Examen de Fabricación y Tecnología - Opciones Equilibradas</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+      line-height: 1.25;
+      font-size: 13px;
+    }
+
+    /* Encabezado e Hoja de Respuestas */
+    .header-container {
+      background-color: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 10px 15px;
+      margin: 10px auto;
+      max-width: 900px;
+    }
+
+    .header-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .student-info {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .info-field {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+    }
+
+    .info-field label {
+      font-weight: 700;
+      color: #334155;
+      white-space: nowrap;
+      font-size: 0.85rem;
+    }
+
+    .info-field input {
+      flex: 1;
+      border: none;
+      border-bottom: 1px dashed #64748b;
+      padding: 2px 4px;
+      font-size: 0.85rem;
+      outline: none;
+      background: transparent;
+    }
+
+    .date-box-container {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .date-box {
+      width: 120px;
+      height: 24px;
+      border: 1px solid #64748b;
+      border-radius: 3px;
+    }
+
+    .score-field {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+
+    .score-box {
+      width: 60px;
+      height: 24px;
+      border: 1px solid #64748b;
+      border-radius: 3px;
+    }
+
+    /* Tabla de Plantilla de Respuestas rápida */
+    .answer-grid-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #475569;
+      margin-bottom: 4px;
+      text-align: center;
+    }
+
+    .answer-grid-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 4px;
+    }
+
+    .answer-grid-table th, .answer-grid-table td {
+      border: 1px solid #94a3b8;
+      text-align: center;
+      padding: 2px 0;
+      font-size: 0.75rem;
+    }
+
+    .answer-grid-table th {
+      background-color: #f1f5f9;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .answer-grid-table td {
+      height: 22px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    /* Contenedor del Test (Columnas compactas) */
+    .quiz-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 10px 10px 10px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 12px;
+    }
+
+    .question-card {
+      background-color: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      padding: 6px 8px;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .question-text {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+
+    .options-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .option-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      padding: 2px 4px;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    .option-item:hover {
+      background-color: #f1f5f9;
+    }
+
+    .option-item input[type="radio"] {
+      margin-top: 2px;
+      cursor: pointer;
+    }
+
+    .option-label {
+      font-size: 0.78rem;
+      color: #334155;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    /* Botones de acción */
+    .actions-bar {
+      max-width: 900px;
+      margin: 10px auto;
+      padding: 0 10px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .btn {
+      background-color: #2563eb;
+      color: #ffffff;
+      border: none;
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn-success {
+      background-color: #16a34a;
+    }
+
+    .btn-success:hover {
+      background-color: #15803d;
+    }
+
+    .btn-secondary {
+      background-color: #64748b;
+    }
+
+    .result-msg {
+      max-width: 900px;
+      margin: 5px auto;
+      padding: 8px;
+      text-align: center;
+      font-weight: bold;
+      border-radius: 4px;
+      display: none;
+    }
+
+    /* ESTILOS DE IMPRESIÓN AJUSTADOS PARA 2 PÁGINAS A4 */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 8mm 8mm 8mm 8mm;
+      }
+
+      body {
+        background-color: #ffffff;
+        color: #000000;
+        font-size: 11px;
+        line-height: 1.2;
+      }
+
+      .actions-bar, .result-msg {
+        display: none !important;
+      }
+
+      .header-container {
+        border: 1px solid #000000;
+        padding: 6px 10px;
+        margin: 0 0 8px 0;
+        max-width: 100%;
+      }
+
+      .header-title {
+        font-size: 1rem;
+        margin-bottom: 4px;
+      }
+
+      .student-info {
+        margin-bottom: 6px;
+      }
+
+      .answer-grid-table th, .answer-grid-table td {
+        border: 1px solid #000000;
+        padding: 1px 0;
+        font-size: 0.7rem;
+      }
+
+      .quiz-container {
+        max-width: 100%;
+        padding: 0;
+        gap: 6px 10px;
+      }
+
+      .question-card {
+        border: 1px solid #94a3b8;
+        padding: 5px 6px;
+        margin-bottom: 0;
+      }
+
+      .question-text {
+        font-size: 0.78rem;
+        margin-bottom: 2px;
+      }
+
+      .option-label {
+        font-size: 0.74rem;
+      }
+
+      .option-item input[type="radio"] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 10px;
+        height: 10px;
+        border: 1px solid #000;
+        border-radius: 50%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header-container">
+    <div class="header-title">Examen: Fabricación y Tecnología (intentar copiar supone 0 y parte)</div>
+    
+    <div class="student-info">
+      <div class="info-field">
+        <label>Nombre del Alumno/a:</label>
+        <input type="text" placeholder="Escriba el nombre completo...">
+      </div>
+      <div class="date-box-container">
+        <label style="font-weight: 700; font-size: 0.85rem;">Fecha:</label>
+        <div class="date-box"></div>
+      </div>
+      <div class="score-field">
+        <span>Nota:</span>
+        <div class="score-box"></div>
+      </div>
+    </div>
+
+    <div class="answer-grid-title">Tabla de Respuestas (Escriba la letra a, b o c elegida)</div>
+    <table class="answer-grid-table">
+      <thead>
+        <tr>
+          <th>Preg.</th>
+          <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th>
+          <th>11</th><th>12</th><th>13</th><th>14</th><th>15</th><th>16</th><th>17</th><th>18</th><th>19</th><th>20</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Rpta.</th>
+          <td id="cell-1"></td><td id="cell-2"></td><td id="cell-3"></td><td id="cell-4"></td><td id="cell-5"></td>
+          <td id="cell-6"></td><td id="cell-7"></td><td id="cell-8"></td><td id="cell-9"></td><td id="cell-10"></td>
+          <td id="cell-11"></td><td id="cell-12"></td><td id="cell-13"></td><td id="cell-14"></td><td id="cell-15"></td>
+          <td id="cell-16"></td><td id="cell-17"></td><td id="cell-18"></td><td id="cell-19"></td><td id="cell-20"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="actions-bar">
+    <button class="btn btn-secondary" onclick="shuffleQuiz()">Reorganizar Preguntas</button>
+    <button class="btn btn-success" onclick="checkAnswers()">Comprobar Aciertos</button>
+    <button class="btn" onclick="window.print()">Imprimir / Guardar PDF (Ctrl+P)</button>
+  </div>
+
+  <div class="result-msg" id="result-msg"></div>
+
+  <div class="quiz-container" id="quiz-container"></div>
+
+  <script>
+    // Las respuestas verdaderas mantienen su texto exacto del material de origen.
+    // Los distractores han sido cuidadosamente redactados con longitud semejante o mayor a la opción correcta.
+    const questionsData = [
+      {
+        question: "1. ¿Qué permite el Diseño Asistido por Computadora en Tres Dimensiones (CAD 3D)?",
+        options: [
+          "El Diseño Asistido por Computadora en Tres Dimensiones (CAD 3D) permite crear representaciones tridimensionales de objetos, posibilitando verlos desde cualquier ángulo como si estuvieran en tus manos.",
+          "Permite imprimir automáticamente cualquier documento técnico de ingeniería sin requerir el diseño de maquetas ni el modelado digital de los volúmenes de las piezas.",
+          "Se encarga de calcular los costes económicos directos de la mano de obra sin necesidad de generar una representación geométrica visible de los productos proyectados."
+        ]
+      },
+      {
+        question: "2. ¿Cuáles son dos de los programas CAD más populares en la industria?",
+        options: [
+          "Existen diversos programas de CAD populares en la industria, siendo AutoCAD y SolidWorks herramientas destacadas para desarrollar proyectos avanzados.",
+          "Photoshop e Illustrator representan el estándar exclusivo en la industria para el cálculo de tolerancias dimensionales en piezas de ensamblaje industrial.",
+          "Excel y PowerPoint destacan ampliamente por ser los principales programas de modelado tridimensional para la arquitectura pesada y la ingeniería de estructuras."
+        ]
+      },
+      {
+        question: "3. ¿Cómo se aplica el CAD en los campos de la arquitectura e ingeniería?",
+        options: [
+          "En arquitectura, los profesionales visualizan edificios antes de construirlos. En ingeniería, el CAD se emplea para diseñar componentes esenciales de maquinaria y vehículos.",
+          "En arquitectura sirve únicamente para contabilizar el sueldo de los obreros, mientras que en ingeniería se utiliza como un procesador de texto para memorias descriptivas.",
+          "En ambos campos se utiliza de forma exclusiva para programar los cortafuegos de seguridad informática sin intervenir en la creación gráfica de modelos o planos."
+        ]
+      },
+      {
+        question: "4. ¿Qué información contienen los planos detallados generados por programas CAD?",
+        options: [
+          "El CAD permite generar planos detallados con dimensiones precisas, materiales e instrucciones de ensamblaje, facilitando la fabricación de productos diversos, desde coches hasta móviles.",
+          "Los planos CAD recopilan únicamente la legislación laboral vigente y el directorio telefónico completo de los proveedores de materias primas metálicas de la región.",
+          "Contienen de manera exclusiva imágenes fotográficas en color de productos ya comercializados en el mercado sin indicar cotas, escalas ni dimensiones técnicas reales."
+        ]
+      },
+      {
+        question: "5. ¿Qué caracteriza a la fabricación manual y mecánica?",
+        options: [
+          "La fabricación manual y mecánica emplea herramientas y técnicas tradicionales a cargo de carpinteros, herreros y ebanistas, siendo clave para crear productos únicos y personalizados.",
+          "Consiste en el uso exclusivo de brazos robóticos interconectados por satélite que eliminan por completo la intervención humana y de herramental clásico en el taller.",
+          "Se basa en la producción masiva de objetos de plástico mediante moldes de inyección automatizados que no admiten variaciones artesanales ni acabados a mano."
+        ]
+      },
+      {
+        question: "6. ¿Qué trabajo realizan los carpinteros y herreros en la fabricación tradicional?",
+        options: [
+          "Un carpintero corta y ensambla madera para muebles, mientras que un herrero forja metal con martillos para crear bisagras o clavos, aportando un toque que las máquinas no replican.",
+          "Un carpintero funde piezas de titanio mediante soldadura de alta frecuencia, mientras que el herrero teje telas orgánicas para la confección de uniformes de protección.",
+          "Ambos oficios se dedican exclusivamente a la programación informática de microchips para automóviles sin manipular materiales físicos como madera o metales."
+        ]
+      },
+      {
+        question: "7. ¿Cómo transforma la fabricación digital la creación de objetos?",
+        options: [
+          "La fabricación digital transforma la creación de objetos mediante tecnologías avanzadas, destacando principalmente la impresión en tres dimensiones y el corte controlado por computadora.",
+          "Transforma la creación al exigir que todo el trabajo sea tallado a mano de forma artesanal mediante herramientas manuales sin la intervención de ordenadores.",
+          "Sustituye la fase de prototipado físico por la redacción de informes manuscritos que sustituyen completamente los archivos digitales de corte en la planta."
+        ]
+      },
+      {
+        question: "8. ¿En qué consiste la impresión 3D y cuáles son algunos de sus usos?",
+        options: [
+          "Consiste en crear objetos capa por capa. Se utiliza para prototipos rápidos, prótesis médicas personalizadas y componentes en la industria aeroespacial.",
+          "Consiste en grabar texto en dos dimensiones sobre papel prensa estándar mediante cartuchos de tinta líquida, utilizándose exclusivamente para libros de texto.",
+          "Consiste en cortar bloques de piedra maciza utilizando sierras circulares accionadas por agua a presión para la obtención de cimientos de edificación."
+        ]
+      },
+      {
+        question: "9. ¿Qué ventaja ofrece el corte controlado por computadora?",
+        options: [
+          "Permite cortar materiales como metal, madera o plástico siguiendo especificaciones de diseño digital, logrando una precisión milimétrica en paneles de automóviles.",
+          "Permite moldear plásticos derretidos utilizando únicamente moldes de arcilla hechos a mano sin requerir instrucciones o archivos desde una computadora de control.",
+          "Su ventaja principal es acelerar la pintura de la madera reduciendo el coste de envasado del producto final sin afectar la precisión geométrica de las piezas."
+        ]
+      },
+      {
+        question: "10. ¿Por qué son clave las herramientas de fabricación digital hoy en día?",
+        options: [
+          "Estas herramientas otorgan mayor precisión, eficiencia y flexibilidad. Son habilidades clave en el mundo actual impulsado por la transformación tecnológica.",
+          "Garantizan que las empresas puedan prescindir por completo de los ordenadores, regresando a métodos de ensamblaje exclusivamente manuales y artesanales.",
+          "Permiten reducir el consumo de energía eléctrica a cero al no requerir ningún tipo de motor o sistema computarizado durante la fase de mecanizado de piezas."
+        ]
+      },
+      {
+        question: "11. ¿Qué posibilita la tecnología CAD 3D según el texto?",
+        options: [
+          "posibilita verlos desde cualquier ángulo como si estuvieran en tus manos.",
+          "posibilita calcular automáticamente los impuestos de exportación de las piezas producidas en fábrica.",
+          "posibilita reemplazar la adquisición de materia prima por simulaciones virtuales no ejecutables."
+        ]
+      },
+      {
+        question: "12. ¿En qué se enfoca el uso del CAD dentro del sector de la ingeniería?",
+        options: [
+          "el CAD se emplea para diseñar componentes esenciales de maquinaria y vehículos.",
+          "el CAD se orienta a redactar los contratos laborales del personal de montaje de la empresa.",
+          "el CAD se utiliza para supervisar la atención telefónica a los clientes de repuestos industriales."
+        ]
+      },
+      {
+        question: "13. ¿Quiénes están a cargo de la fabricación manual y mecánica tradicional?",
+        options: [
+          "carpinteros, herreros y ebanistas",
+          "ingenieros informáticos especializados en ciberseguridad industrial",
+          "auditores financieros y consultores de marketing comercial en planta"
+        ]
+      },
+      {
+        question: "14. ¿Qué elemento utiliza el herrero en su oficio artesanal?",
+        options: [
+          "un herrero forja metal con martillos para crear bisagras o clavos",
+          "un herrero ensambla circuitos impresos utilizando soldadores de precisión de estaño",
+          "un herrero diseña maquetas de cartón para la evaluación de acabados de pintura"
+        ]
+      },
+      {
+        question: "15. ¿Cuáles son las tecnologías más destacadas de la fabricación digital?",
+        options: [
+          "principalmente la impresión en tres dimensiones y el corte controlado por computadora.",
+          "principalmente la fundición en arena y el forjado manual sobre yunque de hierro.",
+          "principalmente el ensamblado por remaches y el cepillado artesanal de tablas de madera."
+        ]
+      },
+      {
+        question: "16. ¿Cómo construye los objetos la técnica de impresión 3D?",
+        options: [
+          "Consiste en crear objetos capa por capa.",
+          "Consiste en esculpir bloques enteros retirando el material sobrante mediante cincel manual.",
+          "Consiste en derretir metales en un horno para verterlos en un molde único sin capas intermedias."
+        ]
+      },
+      {
+        question: "17. ¿En qué sectores avanzados se aplica la impresión en 3D?",
+        options: [
+          "prototipos rápidos, prótesis médicas personalizadas y componentes en la industria aeroespacial.",
+          "fabricación masiva de papel de embalaje, envases de vidrio reciclado y cuerdas sintéticas de amarre.",
+          "construcción de vías ferroviarias de acero fundido y tendidos de alta tensión eléctrica a gran escala."
+        ]
+      },
+      {
+        question: "18. ¿Qué materiales se pueden trabajar mediante el corte controlado por computadora?",
+        options: [
+          "Permite cortar materiales como metal, madera o plástico",
+          "Permite fundir únicamente aleaciones de oro, plata y metales preciosos para alta joyería",
+          "Permite tejer materiales textiles orgánicos como el algodón, la seda y el lino en telares industriales"
+        ]
+      },
+      {
+        question: "19. ¿Qué logra el corte controlado informáticamente?",
+        options: [
+          "logra una precisión milimétrica en paneles de automóviles.",
+          "logra un acabado rugoso e imperfecto ideal para esculturas artísticas de gran tamaño.",
+          "logra un margen de error considerable que requiere un posterior lijado manual obligatorio."
+        ]
+      },
+      {
+        question: "20. ¿Qué ventajas inmediatas aportan estas tecnologías según la conclusión?",
+        options: [
+          "Estas herramientas otorgan mayor precisión, eficiencia y flexibilidad.",
+          "Estas herramientas garantizan la sustitución total de la fase de pruebas técnicas y de control de calidad.",
+          "Estas herramientas reducen a la mitad la necesidad de capacitar al personal técnico en el uso de ordenadores."
+        ]
+      }
+    ];
+
+    let currentCorrectAnswers = {};
+
+    function shuffle(array) {
+      let currentIndex = array.length, randomIndex;
+      const newArray = [...array];
+      while (currentIndex !== 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+        [newArray[currentIndex], newArray[randomIndex]] = [newArray[randomIndex], newArray[currentIndex]];
+      }
+      return newArray;
+    }
+
+    function shuffleQuiz() {
+      const quizContainer = document.getElementById('quiz-container');
+      quizContainer.innerHTML = '';
+      currentCorrectAnswers = {};
+
+      for(let i=1; i<=20; i++) {
+        document.getElementById(`cell-${i}`).innerText = '';
+      }
+      document.getElementById('result-msg').style.display = 'none';
+
+      const shuffledQuestions = shuffle(questionsData);
+      const optionLetters = ['a', 'b', 'c'];
+
+      shuffledQuestions.forEach((qItem, qIndex) => {
+        const questionCard = document.createElement('div');
+        questionCard.className = 'question-card';
+
+        const qTitle = document.createElement('div');
+        qTitle.className = 'question-text';
+        const cleanQuestionText = qItem.question.replace(/^\d+\.\s*/, '');
+        const qNum = qIndex + 1;
+        qTitle.innerText = `${qNum}. ${cleanQuestionText}`;
+        questionCard.appendChild(qTitle);
+
+        const correctText = qItem.options[0];
+        const shuffledOptions = shuffle(qItem.options);
+
+        const optionsList = document.createElement('ul');
+        optionsList.className = 'options-list';
+
+        shuffledOptions.forEach((optText, optIndex) => {
+          const letter = optionLetters[optIndex];
+          
+          if (optText === correctText) {
+            currentCorrectAnswers[qNum] = letter;
+          }
+
+          const optLi = document.createElement('li');
+          optLi.className = 'option-item';
+
+          const inputRadio = document.createElement('input');
+          inputRadio.type = 'radio';
+          inputRadio.name = `question_${qNum}`;
+          inputRadio.id = `q_${qNum}_opt_${optIndex}`;
+          inputRadio.value = letter;
+
+          inputRadio.addEventListener('change', () => {
+            document.getElementById(`cell-${qNum}`).innerText = letter.toUpperCase();
+          });
+
+          const label = document.label || document.createElement('label');
+          label.className = 'option-label';
+          label.htmlFor = `q_${qNum}_opt_${optIndex}`;
+          label.innerText = `${letter}) ${optText}`;
+
+          optLi.appendChild(inputRadio);
+          optLi.appendChild(label);
+          optionsList.appendChild(optLi);
+        });
+
+        questionCard.appendChild(optionsList);
+        quizContainer.appendChild(questionCard);
+      });
+    }
+
+    function checkAnswers() {
+      let correctCount = 0;
+      let totalQuestions = 20;
+
+      for (let i = 1; i <= 20; i++) {
+        const selectedOption = document.querySelector(`input[name="question_${i}"]:checked`);
+        if (selectedOption && selectedOption.value === currentCorrectAnswers[i]) {
+          correctCount++;
+        }
+      }
+
+      const score = ((correctCount / totalQuestions) * 10).toFixed(1);
+
+      const msgDiv = document.getElementById('result-msg');
+      msgDiv.style.display = 'block';
+      msgDiv.style.backgroundColor = score >= 5 ? '#dcfce7' : '#fee2e2';
+      msgDiv.style.color = score >= 5 ? '#15803d' : '#b91c1c';
+      msgDiv.style.border = `1px solid ${score >= 5 ? '#86efac' : '#fca5a5'}`;
+      msgDiv.innerText = `Resultado del Test: Has acertado ${correctCount} de ${totalQuestions} preguntas (Nota: ${score} / 10).`;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      shuffleQuiz();
+    });
+  </script>
+</body>
+</html>
