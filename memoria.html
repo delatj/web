@@ -1,18 +1,71 @@
 <!DOCTYPE html>
-<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generador de Proyecto</title>
     <style>
         body { background-color: #E6F0FA; font-family: Arial, sans-serif; padding: 20px; }
         h1 { text-align: center; color: #003366; margin-bottom: 5px; }
         
-        /* Estilos del botón de ayuda */
+        /* Selector de modo de planificación */
+        .mode-selector-container {
+            background-color: #ffffff;
+            border: 2px solid #003366;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px auto 25px auto;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .mode-selector-container label {
+            font-weight: bold;
+            color: #003366;
+            font-size: 1.1em;
+            display: block;
+            margin-bottom: 10px;
+        }
+        .btn-mode {
+            background-color: #e0e0e0;
+            color: #333;
+            border: 2px solid #003366;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 0 5px;
+            transition: all 0.3s;
+        }
+        .btn-mode.active {
+            background-color: #003366;
+            color: white;
+        }
+        .btn-mode:hover {
+            opacity: 0.9;
+        }
+
+        /* Botones generales */
         .btn-ayuda-container { text-align: center; margin-bottom: 25px; }
         .btn-ayuda { background-color: #28a745; color: white; padding: 10px 20px; border: none; cursor: pointer; border-radius: 5px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: background-color 0.3s; }
         .btn-ayuda:hover { background-color: #218838; }
 
-        /* Estilos de la ventana emergente (Modal) */
+        .btn-pdf {
+            background-color: #d9534f;
+            color: white;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            display: inline-block;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.15);
+        }
+        .btn-pdf:hover { background-color: #c9302c; }
+
+        /* Estilos del modal de ayuda */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(3px); }
         .modal-content { background-color: #fefefe; margin: 5% auto; padding: 30px; border: 1px solid #888; width: 80%; max-width: 800px; border-radius: 10px; max-height: 80vh; overflow-y: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
@@ -30,12 +83,16 @@
         button:hover { background-color: #0059b3; }
         input, textarea { padding: 8px; margin-top: 4px; margin-bottom: 12px; box-sizing: border-box; }
         textarea { resize: vertical; min-height: 80px; width: 100%; }
+        
+        label { font-weight: bold; color: #003366; display: block; margin-top: 15px; }
+        
         .entry-group { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
         .entry-group input[type="text"], 
         .entry-group input[type="number"],
         .entry-group input[type="date"] { flex: 1; min-width: 120px; }
-        .data-table { width: 100%; border-collapse: collapse; margin: 5px 0; }
-        .data-table th, .data-table td { border: 1px solid #666; padding: 8px; }
+        
+        .data-table { width: 100%; border-collapse: collapse; margin: 10px 0; table-layout: fixed; }
+        .data-table th, .data-table td { border: 1px solid #666; padding: 8px; word-wrap: break-word; }
         .data-table th { background-color: #555; color: white; }
         .data-table tr:nth-child(even) { background-color: #e0e0e0; }
         .data-table tr:nth-child(odd) { background-color: #f0f0f0; }
@@ -48,6 +105,51 @@
         
         .save-load-controls { display: flex; gap: 10px; margin-top: 20px; }
         .save-load-controls button { flex: 1; }
+
+        .note-text { font-size: 0.9em; color: #444; margin-top: -5px; margin-bottom: 8px; }
+
+        /* Estilos específicos para impresión de plantillas A4 */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 10mm;
+            }
+            body {
+                background-color: #fff !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            body * { visibility: hidden; }
+            #printArea, #printArea * { visibility: visible; }
+            #printArea { 
+                position: absolute; 
+                left: 0; 
+                top: 0; 
+                width: 100%; 
+                box-sizing: border-box;
+                font-family: Arial, sans-serif; 
+                color: #000; 
+                padding: 0;
+            }
+            .print-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 10px; }
+            .print-header h2 { margin: 0; font-size: 1.2em; }
+            .print-table { 
+                width: 100%; 
+                border-collapse: collapse; 
+                margin-top: 5px; 
+                table-layout: fixed;
+                box-sizing: border-box;
+            }
+            .print-table th, .print-table td { 
+                border: 1px solid #000; 
+                padding: 4px 6px; 
+                vertical-align: middle; 
+                word-wrap: break-word;
+                font-size: 0.85em;
+            }
+            .print-table th { background-color: #f0f0f0 !important; -webkit-print-color-adjust: exact; text-align: center; }
+            .blank-box { border: 1px solid #000; min-height: 60px; margin-bottom: 10px; box-sizing: border-box; }
+        }
     </style>
 </head>
 <body>
@@ -57,36 +159,40 @@
         <button id="btnAbrirAyuda" class="btn-ayuda">ℹ️ Guía de Uso</button>
     </div>
 
+    <!-- Selector de Tipo de Planificación -->
+    <div class="mode-selector-container">
+        <label>Selecciona el tipo de planificación para tu memoria:</label>
+        <button type="button" id="btnGantt" class="btn-mode active" onclick="setMode('gantt')">📊 Diagrama de Gantt</button>
+        <button type="button" id="btnProceso" class="btn-mode" onclick="setMode('proceso')">📋 Hoja de Proceso</button>
+    </div>
+
     <div id="modalAyuda" class="modal">
         <div class="modal-content">
-            <span class="close-btn" id="btnCerrarAyuda">&times;</span>
+            <span class="close-btn" id="btnCerrarAyuda">×</span>
             <h2>Cómo utilizar el Generador de Memorias</h2>
             <p>Bienvenido/a. Esta herramienta te permite crear y documentar la memoria de tu proyecto de forma sencilla. Sigue estos pasos para no perder tu trabajo:</p>
             
-            <h3>1. Rellenar los apartados con botón "Añadir"</h3>
+            <h3>1. Selección de Planificación</h3>
+            <p>Puedes elegir la modalidad de trabajo según lo acordado con el profesor: <b>Diagrama de Gantt</b> (Planos, Construcción y Comprobación con minutos) o <b>Hoja de Proceso</b> (Operaciones paso a paso, materiales/herramientas y minutos).</p>
+
+            <h3>2. Precios en Euros</h3>
+            <p>Al rellenar los precios de los materiales, <b>debes expresarlos siempre en euros (€)</b>. Si un material cuesta céntimos, ponlo como un valor decimal en euros. Por ejemplo, 50 céntimos se debe escribir como <span class="destacado">0.5</span> ó <span class="destacado">0.50</span>.</p>
+
+            <h3>3. Rellenar los apartados con botón "Añadir"</h3>
             <ul>
-                <li>En secciones como <i>Materiales</i>, <i>Planos</i>, <i>Construcción</i> y <i>Comprobación</i>, <b>escanear o rellenar las casillas de texto no es suficiente</b>.</li>
-                <li>Una vez escribas los datos (ej: Nombre del material y Precio), <b><span class="destacado">tienes que pulsar obligatoriamente el botón "Añadir"</span></b>.</li>
+                <li>En secciones con casillas múltiples, una vez escribas los datos, <b><span class="destacado">tienes que pulsar obligatoriamente el botón "Añadir"</span></b>.</li>
                 <li>Sabrás que lo has hecho bien cuando el texto aparezca escrito justo arriba de las casillas en forma de lista.</li>
             </ul>
 
-            <h3>2. Grabar o Subir el Audio</h3>
+            <h3>4. Grabar o Subir el Audio</h3>
             <ul>
-                <li>Puedes grabarte directamente desde el navegador pulsando <b>"🎤 Grabar Audio"</b> (te pedirá permisos de micrófono). Para finalizar, pulsa <b>"⏹️ Detener"</b>.</li>
-                <li>Si prefieres grabar el audio con el móvil (suele escucharse mejor) o lo tienes en formato MP3/WAV, puedes usar el botón <b>"Seleccionar archivo"</b> para subirlo desde tu dispositivo.</li>
+                <li>Puedes grabarte directamente desde el navegador pulsando <b>"🎤 Grabar Audio"</b> o subir un archivo con el botón <b>"Seleccionar archivo"</b>.</li>
             </ul>
 
-            <h3>3. Pausar el trabajo: Guardar y Cargar Proyecto</h3>
+            <h3>5. Entrega Final al Profesor/a</h3>
             <ul>
-                <li>Si la clase termina y no has acabado tu memoria, ¡no te preocupes! Pulsa el botón <b>"💾 Guardar Proyecto"</b>.</li>
-                <li>Esto descargará un archivo <span class="destacado">.json</span> a tu ordenador/tablet. <b>Guarda este archivo a buen recaudo</b> (en tu Drive o pendrive).</li>
-                <li>El próximo día que abras esta web, pulsa <b>"📂 Cargar Proyecto"</b>, selecciona tu archivo <code>.json</code> y todo volverá a aparecer tal y como lo dejaste, ¡incluso el audio!</li>
-            </ul>
-
-            <h3>4. Entrega Final</h3>
-            <ul>
-                <li>Cuando esté todo 100% terminado y revisado, pulsa el botón gris de abajo del todo: <b>"Generar HTML y Descargar"</b>.</li>
-                <li>Esto creará el documento final (un archivo <code>.html</code>) bonito, con formato de tablas y con el reproductor de audio integrado, que es lo que le entregarás a tu profesor/a.</li>
+                <li>Cuando esté todo terminado, pulsa: <b>"Generar HTML y Descargar"</b>.</li>
+                <li><b>MUY IMPORTANTE:</b> Una vez descargado el archivo HTML en tu ordenador/tablet, <span class="destacado">debes enviárselo al profesor a través de la tarea correspondiente de la plataforma o por correo electrónico</span>, según se haya indicado en clase.</li>
             </ul>
         </div>
     </div>
@@ -97,39 +203,68 @@
     <label for="responsables">Personas Responsables:</label>
     <textarea id="responsables"></textarea>
 
-    <label>Materiales y herramientas (ejemplo ponemos cartulina   0.4 y le damos a añadir):</label>
+    <label>Materiales y herramientas (ejemplo: Cartulina - 0.4 y le damos a añadir):</label>
+    <p class="note-text">Nota: Escribe el precio siempre en Euros (€). Ejemplo: 50 céntimos = 0.5</p>
     <div id="materialesContainer"></div>
     <div class="entry-group">
         <input type="text" id="nuevoMaterial" placeholder="Nombre del material o herramienta">
-        <input type="number" id="precioMaterial" placeholder="Precio (€)">
-        <button onclick="agregarMaterial()">Añadir</button>
+        <input type="number" id="precioMaterial" step="0.01" placeholder="Precio (€) Ej: 0.5">
+        <button type="button" onclick="agregarMaterial()">Añadir</button>
     </div>
 
-    <label>Responsable de Planos y horas invertidas (usa el botón añadir para día de creación de planos):</label>
-    <div id="planosContainer"></div>
-    <div class="entry-group">
-        <input type="text" id="nuevoPlano" placeholder="Nombre del responsable">
-        <input type="number" id="horasPlano" placeholder="Horas">
-        <input type="date" id="fechaPlano">
-        <button onclick="agregarEntrada('planosContainer', 'nuevoPlano', 'horasPlano', 'fechaPlano')">Añadir</button>
+    <!-- ZONA PLANIFICACIÓN: DIAGRAMA DE GANTT -->
+    <div id="sectionGantt">
+        <div style="text-align: right;">
+            <button type="button" class="btn-pdf" onclick="imprimirPlantilla('gantt')">🖨️ Descargar plantilla PDF para imprimir (A4)</button>
+        </div>
+
+        <label>Responsable de Planos y minutos invertidos (usa el botón añadir para día de creación de planos):</label>
+        <div id="planosContainer"></div>
+        <div class="entry-group">
+            <input type="text" id="nuevoPlano" placeholder="Nombre del responsable">
+            <input type="number" id="minutosPlano" placeholder="Tiempo (minutos)">
+            <input type="date" id="fechaPlano">
+            <button type="button" onclick="agregarEntrada('planosContainer', 'nuevoPlano', 'minutosPlano', 'fechaPlano')">Añadir</button>
+        </div>
+
+        <label>Construcción (Responsables y minutos invertidos)(usa el botón añadir para día de construcción):</label>
+        <div id="construccionContainer"></div>
+        <div class="entry-group">
+            <input type="text" id="nuevoConstruccion" placeholder="Nombre del responsable">
+            <input type="number" id="minutosConstruccion" placeholder="Tiempo (minutos)">
+            <input type="date" id="fechaConstruccion">
+            <button type="button" onclick="agregarEntrada('construccionContainer', 'nuevoConstruccion', 'minutosConstruccion', 'fechaConstruccion')">Añadir</button>
+        </div>
+
+        <label>Comprobación (Responsables y minutos invertidos):</label>
+        <div id="comprobacionContainer"></div>
+        <div class="entry-group">
+            <input type="text" id="nuevoComprobacion" placeholder="Nombre del responsable">
+            <input type="number" id="minutosComprobacion" placeholder="Tiempo (minutos)">
+            <input type="date" id="fechaComprobacion">
+            <button type="button" onclick="agregarEntrada('comprobacionContainer', 'nuevoComprobacion', 'minutosComprobacion', 'fechaComprobacion')">Añadir</button>
+        </div>
     </div>
 
-    <label>Construcción (Responsables y horas invertidas)(usa el botón añadir para día de construcción):</label>
-    <div id="construccionContainer"></div>
-    <div class="entry-group">
-        <input type="text" id="nuevoConstruccion" placeholder="Nombre del responsable">
-        <input type="number" id="horasConstruccion" placeholder="Horas">
-        <input type="date" id="fechaConstruccion">
-        <button onclick="agregarEntrada('construccionContainer', 'nuevoConstruccion', 'horasConstruccion', 'fechaConstruccion')">Añadir</button>
-    </div>
+    <!-- ZONA PLANIFICACIÓN: HOJA DE PROCESO -->
+    <div id="sectionProceso" style="display: none;">
+        <div style="text-align: right;">
+            <button type="button" class="btn-pdf" onclick="imprimirPlantilla('proceso')">🖨️ Descargar plantilla PDF para imprimir (A4)</button>
+        </div>
 
-    <label>Comprobación (Responsables y horas invertidas):</label>
-    <div id="comprobacionContainer"></div>
-    <div class="entry-group">
-        <input type="text" id="nuevoComprobacion" placeholder="Nombre del responsable">
-        <input type="number" id="horasComprobacion" placeholder="Horas">
-        <input type="date" id="fechaComprobacion">
-        <button onclick="agregarEntrada('comprobacionContainer', 'nuevoComprobacion', 'horasComprobacion', 'fechaComprobacion')">Añadir</button>
+        <label>Hoja de Proceso (Operaciones de fabricación ordenadas):</label>
+        <p class="note-text">Añade cada fase del proceso de fabricación especificando los detalles:</p>
+        
+        <div id="procesoContainer"></div>
+        
+        <div class="entry-group" style="flex-direction: column; gap: 8px; background: #fff; padding: 12px; border: 1px solid #ccc; border-radius: 5px;">
+            <input type="text" id="procOperacion" placeholder="Operaciones ordenadas (ej: Trazar sobre el cartón el patrón de la caja)">
+            <div style="display: flex; gap: 10px; width: 100%; flex-wrap: wrap;">
+                <input type="text" id="procMatHerr" placeholder="Materiales y herramientas / máquinas (ej: Cartón, lápiz, tijeras, regla)">
+                <input type="text" id="procTiempo" placeholder="Tiempo de ejecución (ej: 15 min)" style="max-width: 250px;">
+            </div>
+            <button type="button" onclick="agregarProceso()" style="align-self: flex-start;">Añadir Fase a la Hoja de Proceso</button>
+        </div>
     </div>
 
     <label for="problemas">Problemas encontrados si ha habido y cómo se han resuelto:</label>
@@ -139,44 +274,63 @@
     <p>En el audio se ha de explicar cómo se ha realizado el proyecto y durar al menos 1 minuto (herramientas y materiales usados, cómo se ha diseñado, cómo se ha construido, cómo se ha comprobado, etc.).</p>
     
     <div>
-        <button id="startRecording">🎤 Grabar Audio</button>
-        <button id="stopRecording" disabled="">⏹️ Detener Grabación</button>
-        <button id="playRecording" disabled="">▶️ Reproducir</button>
+        <button id="startRecording" type="button">🎤 Grabar Audio</button>
+        <button id="stopRecording" type="button" disabled>⏹️ Detener Grabación</button>
+        <button id="playRecording" type="button" disabled>▶️ Reproducir</button>
         <div id="recordingStatus" class="audio-status"></div>
-        <audio id="recordedAudio" controls="" style="width: 100%; margin-top: 10px;"></audio>
+        <audio id="recordedAudio" controls style="width: 100%; margin-top: 10px;"></audio>
     </div>
     
     <label for="audioInput">O sube un audio existente:</label>
     <input type="file" id="audioInput" accept="audio/*">
     
     <div class="save-load-controls">
-        <button onclick="guardarProyecto()">💾 Guardar Proyecto</button>
-        <button onclick="cargarProyecto()">📂 Cargar Proyecto</button>
+        <button type="button" onclick="guardarProyecto()">💾 Guardar Proyecto</button>
+        <button type="button" onclick="cargarProyecto()">📂 Cargar Proyecto</button>
         <input type="file" id="projectFileInput" accept=".json" style="display: none;">
     </div>
 
-    <button onclick="generateHtml()" style="background-color: #555; font-size: 1.1em; padding: 15px 30px; display: block; margin: 30px auto 10px auto;">Generar HTML y Descargar</button>
+    <div style="text-align: center; margin-top: 30px;">
+        <button type="button" onclick="generateHtml()" style="background-color: #555; font-size: 1.1em; padding: 15px 30px;">Generar HTML y Descargar</button>
+        <p style="font-size: 0.9em; color: #666; font-weight: bold; margin-top: 8px;">
+            ⚠️ Recuerda mandar el documento HTML generado al profesor/a por la tarea o correo indicado.
+        </p>
+    </div>
+
+    <!-- Contenedor dinámico e invisible para la generación de PDFs imprimibles en A4 -->
+    <div id="printArea" style="display: none;"></div>
 
     <script>
-        // Lógica de la ventana modal de ayuda
+        let currentMode = 'gantt'; // 'gantt' o 'proceso'
+
+        function setMode(mode) {
+            currentMode = mode;
+            const btnGantt = document.getElementById('btnGantt');
+            const btnProceso = document.getElementById('btnProceso');
+            const sectionGantt = document.getElementById('sectionGantt');
+            const sectionProceso = document.getElementById('sectionProceso');
+
+            if (mode === 'gantt') {
+                btnGantt.classList.add('active');
+                btnProceso.classList.remove('active');
+                sectionGantt.style.display = 'block';
+                sectionProceso.style.display = 'none';
+            } else {
+                btnProceso.classList.add('active');
+                btnGantt.classList.remove('active');
+                sectionGantt.style.display = 'none';
+                sectionProceso.style.display = 'block';
+            }
+        }
+
         const modalAyuda = document.getElementById('modalAyuda');
         const btnAbrirAyuda = document.getElementById('btnAbrirAyuda');
         const btnCerrarAyuda = document.getElementById('btnCerrarAyuda');
 
-        btnAbrirAyuda.onclick = function() {
-            modalAyuda.style.display = "block";
-        }
-        btnCerrarAyuda.onclick = function() {
-            modalAyuda.style.display = "none";
-        }
-        // Cerrar haciendo clic fuera de la ventana
-        window.onclick = function(event) {
-            if (event.target == modalAyuda) {
-                modalAyuda.style.display = "none";
-            }
-        }
+        btnAbrirAyuda.onclick = function() { modalAyuda.style.display = "block"; }
+        btnCerrarAyuda.onclick = function() { modalAyuda.style.display = "none"; }
+        window.onclick = function(event) { if (event.target == modalAyuda) modalAyuda.style.display = "none"; }
 
-        // --- CÓDIGO ORIGINAL INTACTO ---
         let audioDataUrl = '';
         let mediaRecorder;
         let audioChunks = [];
@@ -195,9 +349,7 @@
                 mediaRecorder = new MediaRecorder(stream);
                 audioChunks = [];
                 
-                mediaRecorder.ondataavailable = event => {
-                    audioChunks.push(event.data);
-                };
+                mediaRecorder.ondataavailable = event => { audioChunks.push(event.data); };
                 
                 mediaRecorder.onstop = () => {
                     const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
@@ -251,8 +403,9 @@
         
         function agregarMaterial() {
             const nombre = document.getElementById('nuevoMaterial').value.trim();
-            const precio = document.getElementById('precioMaterial').value.trim();
-            if (nombre && precio) {
+            let precio = document.getElementById('precioMaterial').value.trim();
+            if (nombre && precio !== '') {
+                precio = precio.replace(',', '.');
                 const contenedor = document.getElementById('materialesContainer');
                 const div = document.createElement('div');
                 div.textContent = `${nombre} - ${precio} €`;
@@ -262,29 +415,63 @@
             }
         }
 
-        function agregarEntrada(containerId, inputId, horasId, fechaId) {
+        function agregarEntrada(containerId, inputId, minutosId, fechaId) {
             const nombre = document.getElementById(inputId).value.trim();
-            const horas = document.getElementById(horasId).value.trim();
+            const minutos = document.getElementById(minutosId).value.trim();
             const fecha = document.getElementById(fechaId).value;
-            if (nombre && horas && fecha) {
+            if (nombre && minutos && fecha) {
                 const contenedor = document.getElementById(containerId);
                 const div = document.createElement('div');
-                div.textContent = `${nombre} - ${horas} hora(s) - ${fecha}`;
+                div.textContent = `${nombre} - ${minutos} min - ${fecha}`;
                 contenedor.appendChild(div);
                 document.getElementById(inputId).value = '';
-                document.getElementById(horasId).value = '';
+                document.getElementById(minutosId).value = '';
                 document.getElementById(fechaId).value = '';
+            }
+        }
+
+        function agregarProceso() {
+            const op = document.getElementById('procOperacion').value.trim();
+            const matHerr = document.getElementById('procMatHerr').value.trim();
+            let tiempo = document.getElementById('procTiempo').value.trim();
+
+            if (op) {
+                if(tiempo && !isNaN(tiempo)) { tiempo = `${tiempo} min`; }
+                const contenedor = document.getElementById('procesoContainer');
+                const div = document.createElement('div');
+                div.className = 'item-proceso';
+                div.dataset.op = op;
+                div.dataset.matherr = matHerr;
+                div.dataset.tiempo = tiempo;
+
+                div.style.marginBottom = "5px";
+                div.style.padding = "5px";
+                div.style.background = "#fff";
+                div.style.borderLeft = "4px solid #003366";
+                div.textContent = `• ${op} | Mat/Herr: ${matHerr || '-'} | Tiempo: ${tiempo || '-'}`;
+
+                contenedor.appendChild(div);
+
+                document.getElementById('procOperacion').value = '';
+                document.getElementById('procMatHerr').value = '';
+                document.getElementById('procTiempo').value = '';
             }
         }
         
         function guardarProyecto() {
             const proyecto = {
+                tipoPlanificacion: currentMode,
                 titulo: document.getElementById('title').value,
                 responsables: document.getElementById('responsables').value,
                 materiales: Array.from(document.getElementById('materialesContainer').children).map(el => el.textContent),
                 planos: Array.from(document.getElementById('planosContainer').children).map(el => el.textContent),
                 construccion: Array.from(document.getElementById('construccionContainer').children).map(el => el.textContent),
                 comprobacion: Array.from(document.getElementById('comprobacionContainer').children).map(el => el.textContent),
+                hojaProceso: Array.from(document.getElementById('procesoContainer').children).map(el => ({
+                    op: el.dataset.op,
+                    matherr: el.dataset.matherr,
+                    tiempo: el.dataset.tiempo
+                })),
                 problemas: document.getElementById('problemas').value,
                 audio: audioDataUrl
             };
@@ -305,27 +492,50 @@
                 reader.onload = function(e) {
                     try {
                         const proyecto = JSON.parse(e.target.result);
+                        
+                        if (proyecto.tipoPlanificacion) {
+                            setMode(proyecto.tipoPlanificacion);
+                        } else {
+                            setMode('gantt');
+                        }
+
                         document.getElementById('title').value = proyecto.titulo || '';
                         document.getElementById('responsables').value = proyecto.responsables || '';
                         document.getElementById('problemas').value = proyecto.problemas || '';
                         
                         const materialesContainer = document.getElementById('materialesContainer');
                         materialesContainer.innerHTML = '';
-                        proyecto.materiales.forEach(m => {
+                        (proyecto.materiales || []).forEach(m => {
                             const div = document.createElement('div'); div.textContent = m; materialesContainer.appendChild(div);
                         });
                         
                         const planosContainer = document.getElementById('planosContainer');
                         planosContainer.innerHTML = '';
-                        proyecto.planos.forEach(p => { const div = document.createElement('div'); div.textContent = p; planosContainer.appendChild(div); });
+                        (proyecto.planos || []).forEach(p => { const div = document.createElement('div'); div.textContent = p; planosContainer.appendChild(div); });
                         
                         const construccionContainer = document.getElementById('construccionContainer');
                         construccionContainer.innerHTML = '';
-                        proyecto.construccion.forEach(c => { const div = document.createElement('div'); div.textContent = c; construccionContainer.appendChild(div); });
+                        (proyecto.construccion || []).forEach(c => { const div = document.createElement('div'); div.textContent = c; construccionContainer.appendChild(div); });
                         
                         const comprobacionContainer = document.getElementById('comprobacionContainer');
                         comprobacionContainer.innerHTML = '';
-                        proyecto.comprobacion.forEach(c => { const div = document.createElement('div'); div.textContent = c; comprobacionContainer.appendChild(div); });
+                        (proyecto.comprobacion || []).forEach(c => { const div = document.createElement('div'); div.textContent = c; comprobacionContainer.appendChild(div); });
+
+                        const procesoContainer = document.getElementById('procesoContainer');
+                        procesoContainer.innerHTML = '';
+                        (proyecto.hojaProceso || []).forEach(item => {
+                            const div = document.createElement('div');
+                            div.className = 'item-proceso';
+                            div.dataset.op = item.op || '';
+                            div.dataset.matherr = item.matherr || item.mat || '';
+                            div.dataset.tiempo = item.tiempo || '';
+                            div.style.marginBottom = "5px";
+                            div.style.padding = "5px";
+                            div.style.background = "#fff";
+                            div.style.borderLeft = "4px solid #003366";
+                            div.textContent = `• ${item.op} | Mat/Herr: ${div.dataset.matherr || '-'} | Tiempo: ${item.tiempo || '-'}`;
+                            procesoContainer.appendChild(div);
+                        });
                         
                         if (proyecto.audio) {
                             audioDataUrl = proyecto.audio;
@@ -339,13 +549,100 @@
             }
         });
 
+        // Función para imprimir plantilla física A4
+        function imprimirPlantilla(tipo) {
+            const printArea = document.getElementById('printArea');
+            let tablaPlanificacionHTML = '';
+
+            if (tipo === 'gantt') {
+                tablaPlanificacionHTML = `
+                    <table class="print-table" style="margin-top:0;">
+                        <thead>
+                            <tr>
+                                <th style="width: 25%;">Fase</th>
+                                <th style="width: 35%;">Responsables</th>
+                                <th style="width: 20%;">Tiempo (min)</th>
+                                <th style="width: 20%;">Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="height:25px;"><td rowspan="2" style="font-weight:bold; text-align:center;">1. Diseños / Planos</td><td></td><td></td><td></td></tr>
+                            <tr style="height:25px;"><td></td><td></td><td></td></tr>
+                            <tr style="height:25px;"><td rowspan="3" style="font-weight:bold; text-align:center;">2. Construcción</td><td></td><td></td><td></td></tr>
+                            <tr style="height:25px;"><td></td><td></td><td></td></tr>
+                            <tr style="height:25px;"><td></td><td></td><td></td></tr>
+                            <tr style="height:25px;"><td rowspan="2" style="font-weight:bold; text-align:center;">3. Comprobación</td><td></td><td></td><td></td></tr>
+                            <tr style="height:25px;"><td></td><td></td><td></td></tr>
+                        </tbody>
+                    </table>
+                `;
+            } else {
+                let filasVaciasProceso = '';
+                // 5 filas con el triple de altura (90px)
+                for (let i = 0; i < 5; i++) {
+                    filasVaciasProceso += `<tr style="height: 90px;"><td></td><td></td><td></td></tr>`;
+                }
+                tablaPlanificacionHTML = `
+                    <table class="print-table" style="margin-top:0;">
+                        <thead>
+                            <tr>
+                                <th style="width: 60%;">Operaciones ordenadas</th>
+                                <th style="width: 25%;">Materiales y herramientas / máquinas</th>
+                                <th style="width: 15%;">Tiempo (min)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filasVaciasProceso}
+                        </tbody>
+                    </table>
+                `;
+            }
+
+            // Duplicado a 8 filas en materiales y herramientas
+            let filasMateriales = '';
+            for (let i = 0; i < 8; i++) {
+                filasMateriales += `<tr style="height:22px;"><td></td><td></td></tr>`;
+            }
+
+            printArea.innerHTML = `
+                <div class="print-header">
+                    <h2>MEMORIA DE PROYECTO (${tipo === 'gantt' ? 'DIAGRAMA DE GANTT' : 'HOJA DE PROCESO'})</h2>
+                </div>
+                <p style="margin: 3px 0;"><strong>Título del Proyecto:</strong> ____________________________________________________________________</p>
+                <p style="margin: 3px 0;"><strong>Personas Responsables:</strong> ________________________________________________________________</p>
+                
+                <h4 style="margin: 6px 0 3px 0;">1. Materiales y Herramientas</h4>
+                <table class="print-table" style="margin-top:0;">
+                    <thead>
+                        <tr>
+                            <th style="width: 80%;">Material / Herramienta</th>
+                            <th style="width: 20%;">Precio (€)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${filasMateriales}
+                    </tbody>
+                </table>
+
+                <h4 style="margin: 6px 0 3px 0;">2. Planificación del Proyecto</h4>
+                ${tablaPlanificacionHTML}
+
+                <h4 style="margin: 6px 0 3px 0;">3. Problemas encontrados y soluciones</h4>
+                <div class="blank-box"></div>
+            `;
+
+            printArea.style.display = 'block';
+            window.print();
+            printArea.style.display = 'none';
+        }
+
         function generateHtml() {
             const title = document.getElementById('title').value;
             const responsables = document.getElementById('responsables').value.split('\n').filter(r => r.trim() !== '').map(r => `<li>${r.trim()}</li>`).join('');
             
             const materialesRows = Array.from(document.getElementById('materialesContainer').children)
-                .map(div => { const [nombre, precio] = div.textContent.split(' - '); return `<tr><td>${nombre}</td><td>${precio}</td></tr>`; }).join('');
-            const materialesTable = materialesRows ? `<table class="data-table"><thead><tr><th>Material/Herramienta</th><th>Precio</th></tr></thead><tbody>${materialesRows}</tbody></table>` : 'No se añadieron materiales';
+                .map(div => { const [nombre, precio] = div.textContent.split(' - '); return `<tr><td>${nombre}</td><td style="text-align: right;">${precio}</td></tr>`; }).join('');
+            const materialesTable = materialesRows ? `<table class="data-table"><thead><tr><th style="width: 80%;">Material/Herramienta</th><th style="width: 20%;">Precio (€)</th></tr></thead><tbody>${materialesRows}</tbody></table>` : 'No se añadieron materiales';
             
             function tablaEntradas(container, titulo) {
                 const rows = Array.from(document.getElementById(container).children)
@@ -356,11 +653,50 @@
                             const [yyyy, mm, dd] = partes[2].split('-');
                             fechaFormateada = `${dd}/${mm}/${yyyy}`;
                         }
-                        return `<tr><td>${partes[0]}</td><td>${partes[1]}</td><td>${fechaFormateada}</td></tr>`;
+                        return `<tr><td>${partes[0]}</td><td style="text-align: center;">${partes[1]}</td><td style="text-align: center;">${fechaFormateada}</td></tr>`;
                     }).join('');
-                return rows ? `<table class="data-table"><thead><tr><th>Responsable</th><th>Horas</th><th>Fecha</th></tr></thead><tbody>${rows}</tbody></table>` : `No se añadieron ${titulo}`;
+                return rows ? `<table class="data-table"><thead><tr><th style="width: 50%;">Responsable</th><th style="width: 25%;">Tiempo</th><th style="width: 25%;">Fecha</th></tr></thead><tbody>${rows}</tbody></table>` : `No se añadieron ${titulo}`;
+            }
+
+            function tablaHojaProceso() {
+                const items = Array.from(document.getElementById('procesoContainer').children);
+                if (items.length === 0) return 'No se registró la Hoja de Proceso.';
+
+                const rows = items.map(el => {
+                    return `<tr>
+                        <td>${el.dataset.op || ''}</td>
+                        <td>${el.dataset.matherr || ''}</td>
+                        <td style="text-align: center;">${el.dataset.tiempo || ''}</td>
+                    </tr>`;
+                }).join('');
+
+                return `<table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 60%;">Operaciones ordenadas</th>
+                            <th style="width: 25%;">Materiales y herramientas / máquinas</th>
+                            <th style="width: 15%;">Tiempo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows}
+                    </tbody>
+                </table>`;
             }
             
+            let planificacionFilasHTML = '';
+            if (currentMode === 'gantt') {
+                planificacionFilasHTML = `
+                    <tr><th>Responsables de Planos</th><td>${tablaEntradas('planosContainer','planos')}</td></tr>
+                    <tr><th>Construcción</th><td>${tablaEntradas('construccionContainer','construcción')}</td></tr>
+                    <tr><th>Comprobación</th><td>${tablaEntradas('comprobacionContainer','comprobación')}</td></tr>
+                `;
+            } else {
+                planificacionFilasHTML = `
+                    <tr><th>Hoja de Proceso</th><td>${tablaHojaProceso()}</td></tr>
+                `;
+            }
+
             const problemasFormatted = document.getElementById('problemas').value.replace(/\n/g, '<br>');
 
             const htmlContent = `<!DOCTYPE html>
@@ -371,11 +707,11 @@
 <style>
 body { background-color:#E6F0FA; font-family:Arial; padding:20px; max-width:1000px; margin:0 auto; }
 h1 { text-align:center; color:#003366; margin-bottom:30px; border-bottom:2px solid #003366; padding-bottom:10px; }
-.main-table { background:#FFFFCC; width:100%; border-collapse:collapse; margin-top:20px; border:2px solid black; }
-.main-table th, .main-table td { border:2px solid black; padding:12px; text-align:left; vertical-align:top; }
+.main-table { background:#FFFFCC; width:100%; border-collapse:collapse; margin-top:20px; border:2px solid black; table-layout: fixed; }
+.main-table th, .main-table td { border:2px solid black; padding:12px; text-align:left; vertical-align:top; word-wrap: break-word; }
 .main-table th { background:#003366; color:white; width:20%; }
-.data-table { width:100%; border-collapse:collapse; margin:5px 0; border:2px solid black; }
-.data-table th, .data-table td { border:2px solid black; padding:8px; }
+.data-table { width:100%; border-collapse:collapse; margin:5px 0; border:2px solid black; table-layout: fixed; }
+.data-table th, .data-table td { border:2px solid black; padding:8px; word-wrap: break-word; }
 .data-table th { background:#555; color:white; }
 .data-table tr:nth-child(even){background:#e0e0e0;} .data-table tr:nth-child(odd){background:#f0f0f0;}
 audio{margin-top:15px;width:100%;}
@@ -386,9 +722,7 @@ audio{margin-top:15px;width:100%;}
 <table class="main-table">
 <tr><th>Personas Responsables</th><td>${responsables ? `<ul>${responsables}</ul>` : 'No se especificaron responsables'}</td></tr>
 <tr><th>Materiales y Herramientas</th><td>${materialesTable}</td></tr>
-<tr><th>Responsables de Planos</th><td>${tablaEntradas('planosContainer','planos')}</td></tr>
-<tr><th>Construcción</th><td>${tablaEntradas('construccionContainer','construcción')}</td></tr>
-<tr><th>Comprobación</th><td>${tablaEntradas('comprobacionContainer','comprobación')}</td></tr>
+${planificacionFilasHTML}
 <tr><th>Problemas y Soluciones</th><td>${problemasFormatted || 'No se reportaron problemas'}</td></tr>
 </table>
 <div class="audio-section">
@@ -403,4 +737,5 @@ audio{margin-top:15px;width:100%;}
             link.click();
         }
     </script>
-</body></html>
+</body>
+</html>
