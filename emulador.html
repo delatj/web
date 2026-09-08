@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulador de SO - Entorno Seguro</title>
-    <!-- Usamos CDN jsDelivr con versión fija para evitar fallos de carga -->
     <script src="https://cdn.jsdelivr.net/npm/v86@latest/build/v86_all.js"></script>
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, sans-serif; margin: 0; padding: 0; }
@@ -15,8 +14,8 @@
         button { background: #a6e3a1; color: #11111b; border: none; padding: 12px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; font-size: 1rem; }
         button:disabled { background: #45475a; color: #7f849c; cursor: not-allowed; }
         #status { margin-top: 10px; font-size: 0.9rem; color: #f9e2af; font-weight: bold; }
-        #screen_container { width: 640px; height: 400px; background: #000; border: 2px solid #89b4fa; border-radius: 6px; display: none; margin-top: 15px; overflow: hidden; }
-        #screen_container canvas { width: 100% !important; height: 100% !important; }
+        #screen_container { width: 640px; height: 400px; background: #000; border: 2px solid #89b4fa; border-radius: 6px; display: none; margin-top: 15px; overflow: hidden; position: relative; }
+        canvas { width: 100% !important; height: 100% !important; display: block; }
     </style>
 </head>
 <body>
@@ -32,7 +31,9 @@
     </div>
 
     <div id="screen_container">
-        <div id="screen"></div>
+        <!-- Generamos el canvas y el div de texto explícitamente -->
+        <canvas id="v86-canvas"></canvas>
+        <div id="v86-text" style="white-space: pre; font-family: monospace; position: absolute; top:0; left:0; width:100%; height:100%;"></div>
     </div>
 
     <script>
@@ -40,13 +41,12 @@
         const startBtn = document.getElementById('start-btn');
         const statusDiv = document.getElementById('status');
 
-        // Verificar que la librería v86 se haya cargado correctamente en la página
         window.addEventListener('load', () => {
             if (typeof V86Starter !== 'undefined') {
                 statusDiv.innerText = "Motor listo. Por favor, selecciona un archivo .ISO";
                 statusDiv.style.color = "#a6e3a1";
             } else {
-                statusDiv.innerText = "Error: No se pudo cargar el motor v86. Revisa tu conexión o cortafuegos.";
+                statusDiv.innerText = "Error: No se pudo cargar la librería del emulador.";
                 statusDiv.style.color = "#f38ba8";
             }
         });
@@ -58,31 +58,29 @@
         });
 
         function startSystem() {
-            if (typeof V86Starter === 'undefined') {
-                alert("Error: La librería V86Starter no está cargada.");
-                return;
-            }
-
             const file = isoInput.files[0];
             if (!file) return;
 
             startBtn.disabled = true;
-            statusDiv.innerText = "Lectura de imagen ISO en memoria RAM...";
+            statusDiv.innerText = "Procesando archivo ISO...";
 
             const reader = new FileReader();
             
             reader.onload = function(e) {
                 const buffer = e.target.result;
-                statusDiv.innerText = "Iniciando máquina virtual x86...";
+                statusDiv.innerText = "Iniciando hardware virtual...";
                 
-                document.getElementById('screen_container').style.display = 'block';
+                // Muestra la pantalla ANTES de iniciar el emulador para garantizar la existencia del Canvas
+                const screenContainer = document.getElementById('screen_container');
+                screenContainer.style.display = 'block';
 
                 try {
                     const emulator = new V86Starter({
                         wasm_path: "https://cdn.jsdelivr.net/npm/v86@latest/build/v86.wasm",
                         memory_size: 128 * 1024 * 1024,
                         vga_memory_size: 8 * 1024 * 1024,
-                        screen_container: document.getElementById("screen"),
+                        screen_container: screenContainer,
+                        canvas: document.getElementById("v86-canvas"),
                         bios: { url: "https://cdn.jsdelivr.net/npm/v86@latest/bios/seabios.bin" },
                         vga_bios: { url: "https://cdn.jsdelivr.net/npm/v86@latest/bios/vgabios.bin" },
                         cdrom: { buffer: buffer },
@@ -90,7 +88,7 @@
                     });
 
                     emulator.add_listener("emulator-ready", function() {
-                        statusDiv.innerText = "¡Sistema iniciado! Haz clic en la pantalla virtual para interactuar.";
+                        statusDiv.innerText = "¡Sistema iniciado! Haz clic dentro de la pantalla gráfica para interactuar.";
                         statusDiv.style.color = "#a6e3a1";
                     });
 
