@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulador de SO - Entorno Seguro</title>
-    <script src="https://unpkg.com/v86@latest/build/v86_all.js"></script>
+    <!-- Usamos CDN jsDelivr con versión fija para evitar fallos de carga -->
+    <script src="https://cdn.jsdelivr.net/npm/v86@latest/build/v86_all.js"></script>
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, sans-serif; margin: 0; padding: 0; }
         body { background: #11111b; color: #cdd6f4; display: flex; flex-direction: column; align-items: center; padding: 20px; }
@@ -16,7 +17,6 @@
         #status { margin-top: 10px; font-size: 0.9rem; color: #f9e2af; font-weight: bold; }
         #screen_container { width: 640px; height: 400px; background: #000; border: 2px solid #89b4fa; border-radius: 6px; display: none; margin-top: 15px; overflow: hidden; }
         #screen_container canvas { width: 100% !important; height: 100% !important; }
-        #screen_container div { font-family: monospace !important; color: #a6e3a1 !important; }
     </style>
 </head>
 <body>
@@ -28,7 +28,7 @@
         </p>
         <input type="file" id="iso-file" accept=".iso">
         <button id="start-btn" onclick="startSystem()" disabled>Cargar e Iniciar SO</button>
-        <div id="status"></div>
+        <div id="status">Cargando motor de simulación...</div>
     </div>
 
     <div id="screen_container">
@@ -40,11 +40,29 @@
         const startBtn = document.getElementById('start-btn');
         const statusDiv = document.getElementById('status');
 
+        // Verificar que la librería v86 se haya cargado correctamente en la página
+        window.addEventListener('load', () => {
+            if (typeof V86Starter !== 'undefined') {
+                statusDiv.innerText = "Motor listo. Por favor, selecciona un archivo .ISO";
+                statusDiv.style.color = "#a6e3a1";
+            } else {
+                statusDiv.innerText = "Error: No se pudo cargar el motor v86. Revisa tu conexión o cortafuegos.";
+                statusDiv.style.color = "#f38ba8";
+            }
+        });
+
         isoInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) startBtn.disabled = false;
+            if (e.target.files.length > 0 && typeof V86Starter !== 'undefined') {
+                startBtn.disabled = false;
+            }
         });
 
         function startSystem() {
+            if (typeof V86Starter === 'undefined') {
+                alert("Error: La librería V86Starter no está cargada.");
+                return;
+            }
+
             const file = isoInput.files[0];
             if (!file) return;
 
@@ -53,7 +71,6 @@
 
             const reader = new FileReader();
             
-            // Leemos el archivo local como Buffer para entregárselo directamente a WebAssembly
             reader.onload = function(e) {
                 const buffer = e.target.result;
                 statusDiv.innerText = "Iniciando máquina virtual x86...";
@@ -62,13 +79,13 @@
 
                 try {
                     const emulator = new V86Starter({
-                        wasm_path: "https://unpkg.com/v86@latest/build/v86.wasm",
-                        memory_size: 128 * 1024 * 1024, // 128 MB RAM
+                        wasm_path: "https://cdn.jsdelivr.net/npm/v86@latest/build/v86.wasm",
+                        memory_size: 128 * 1024 * 1024,
                         vga_memory_size: 8 * 1024 * 1024,
                         screen_container: document.getElementById("screen"),
-                        bios: { url: "https://unpkg.com/v86@latest/bios/seabios.bin" },
-                        vga_bios: { url: "https://unpkg.com/v86@latest/bios/vgabios.bin" },
-                        cdrom: { buffer: buffer }, // Pasamos la ISO procesada como buffer
+                        bios: { url: "https://cdn.jsdelivr.net/npm/v86@latest/bios/seabios.bin" },
+                        vga_bios: { url: "https://cdn.jsdelivr.net/npm/v86@latest/bios/vgabios.bin" },
+                        cdrom: { buffer: buffer },
                         autostart: true
                     });
 
