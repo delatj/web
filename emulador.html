@@ -3,53 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador de Instalación de SO - Entorno Virtual x86</title>
-    <!-- Cargamos la librería del emulador v86 directamente desde CDN -->
+    <title>Simulador de SO - Entorno Seguro</title>
     <script src="https://unpkg.com/v86@latest/build/v86_all.js"></script>
     <style>
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
-        body { background: #11111b; color: #cdd6f4; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; }
-        h1 { color: #89b4fa; margin-bottom: 10px; font-size: 1.6rem; text-align: center; }
-        p.subtitle { color: #a6adc8; margin-bottom: 20px; font-size: 0.95rem; text-align: center; max-width: 800px; }
-        
-        .setup-card { background: #181825; border: 1px solid #45475a; border-radius: 8px; padding: 20px; width: 100%; max-width: 800px; margin-bottom: 20px; }
-        .file-input-group { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
-        input[type="file"] { background: #313244; padding: 10px; border-radius: 4px; color: #cdd6f4; border: 1px solid #45475a; cursor: pointer; }
-        
-        .btn { background: #a6e3a1; color: #11111b; border: none; padding: 12px 20px; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 1rem; margin-top: 15px; width: 100%; }
-        .btn:disabled { background: #45475a; color: #7f849c; cursor: not-allowed; }
-
-        /* Contenedor del Monitor Virtual */
-        #screen_container { background: #000; border: 2px solid #89b4fa; border-radius: 6px; width: 640px; height: 400px; display: none; margin-top: 10px; overflow: hidden; position: relative; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, sans-serif; margin: 0; padding: 0; }
+        body { background: #11111b; color: #cdd6f4; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .box { background: #181825; border: 1px solid #45475a; padding: 20px; border-radius: 8px; width: 100%; max-width: 680px; margin-bottom: 15px; }
+        h2 { color: #89b4fa; margin-bottom: 10px; }
+        input[type="file"] { margin: 10px 0; width: 100%; background: #313244; padding: 10px; border-radius: 4px; color: #fff; border: 1px solid #45475a; }
+        button { background: #a6e3a1; color: #11111b; border: none; padding: 12px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; font-size: 1rem; }
+        button:disabled { background: #45475a; color: #7f849c; cursor: not-allowed; }
+        #status { margin-top: 10px; font-size: 0.9rem; color: #f9e2af; font-weight: bold; }
+        #screen_container { width: 640px; height: 400px; background: #000; border: 2px solid #89b4fa; border-radius: 6px; display: none; margin-top: 15px; overflow: hidden; }
         #screen_container canvas { width: 100% !important; height: 100% !important; }
-
-        .info-box { background: #313244; border-left: 4px solid #f9e2af; padding: 10px 15px; margin-top: 15px; font-size: 0.85rem; border-radius: 0 4px 4px 0; }
+        #screen_container div { font-family: monospace !important; color: #a6e3a1 !important; }
     </style>
 </head>
 <body>
 
-    <h1>Simulador Seguro de Instalación de SO</h1>
-    <p class="subtitle">Práctica de lectura de imágenes ISO, gestión de máquinas virtuales y particionado sin riesgo para el equipo informático.</p>
-
-    <div class="setup-card">
-        <h3>1. Descarga e Importación de la ISO</h3>
-        <p style="font-size: 0.85rem; margin-top: 5px; color: #bac2de;">
-            Descarga una imagen ISO ligera como <b>Tiny Core Linux (~17 MB)</b> o <b>KolibriOS (~1.4 MB)</b> en el ordenador de clase.
+    <div class="box">
+        <h2>Simulador de Arranque de Sistema Operativo</h2>
+        <p style="font-size: 0.9rem; color: #bac2de;">
+            Carga la ISO descargada (ej. Tiny Core o SliTaz) para iniciar el arranque virtual en la memoria RAM:
         </p>
-
-        <div class="file-input-group">
-            <label><b>Seleccionar archivo .ISO descargado:</b></label>
-            <input type="file" id="iso-file" accept=".iso">
-        </div>
-
-        <div class="info-box">
-            <b>Seguridad garantizada:</b> La ISO seleccionada se ejecutará exclusivamente dentro de la memoria RAM asignada al navegador web. No modificará el disco duro ni el sistema operativo Vitalinux.
-        </div>
-
-        <button class="btn" id="start-btn" onclick="startEmulator()" disabled>Iniciar Máquina Virtual con ISO</button>
+        <input type="file" id="iso-file" accept=".iso">
+        <button id="start-btn" onclick="startSystem()" disabled>Cargar e Iniciar SO</button>
+        <div id="status"></div>
     </div>
 
-    <!-- Pantalla del monitor del PC emulado -->
     <div id="screen_container">
         <div id="screen"></div>
     </div>
@@ -57,36 +38,52 @@
     <script>
         const isoInput = document.getElementById('iso-file');
         const startBtn = document.getElementById('start-btn');
-        let emulator = null;
+        const statusDiv = document.getElementById('status');
 
-        // Activar el botón solo cuando el alumno seleccione un archivo .ISO
         isoInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                startBtn.disabled = false;
-            }
+            if (e.target.files.length > 0) startBtn.disabled = false;
         });
 
-        function startEmulator() {
+        function startSystem() {
             const file = isoInput.files[0];
             if (!file) return;
 
-            // Ocultar panel de selección y mostrar la pantalla del ordenador simulado
-            document.querySelector('.setup-card').style.display = 'none';
-            const container = document.getElementById('screen_container');
-            container.style.display = 'block';
+            startBtn.disabled = true;
+            statusDiv.innerText = "Lectura de imagen ISO en memoria RAM...";
 
-            // Configuración del hardware virtual de v86 (PC x86 en la RAM del navegador)
-            emulator = new V86Starter({
-                wasm_path: "https://unpkg.com/v86@latest/build/v86.wasm",
-                memory_size: 256 * 1024 * 1024, // 256 MB RAM Virtual
-                vga_memory_size: 8 * 1024 * 1024,
-                screen_container: document.getElementById("screen"),
-                bios: { url: "https://unpkg.com/v86@latest/bios/seabios.bin" },
-                vga_bios: { url: "https://unpkg.com/v86@latest/bios/vgabios.bin" },
-                cdrom: { file: file }, // Monta la ISO seleccionada por el alumno
-                hda: { size: 512 * 1024 * 1024 }, // Crea un Disco Duro virtual en blanco de 512MB
-                autostart: true
-            });
+            const reader = new FileReader();
+            
+            // Leemos el archivo local como Buffer para entregárselo directamente a WebAssembly
+            reader.onload = function(e) {
+                const buffer = e.target.result;
+                statusDiv.innerText = "Iniciando máquina virtual x86...";
+                
+                document.getElementById('screen_container').style.display = 'block';
+
+                try {
+                    const emulator = new V86Starter({
+                        wasm_path: "https://unpkg.com/v86@latest/build/v86.wasm",
+                        memory_size: 128 * 1024 * 1024, // 128 MB RAM
+                        vga_memory_size: 8 * 1024 * 1024,
+                        screen_container: document.getElementById("screen"),
+                        bios: { url: "https://unpkg.com/v86@latest/bios/seabios.bin" },
+                        vga_bios: { url: "https://unpkg.com/v86@latest/bios/vgabios.bin" },
+                        cdrom: { buffer: buffer }, // Pasamos la ISO procesada como buffer
+                        autostart: true
+                    });
+
+                    emulator.add_listener("emulator-ready", function() {
+                        statusDiv.innerText = "¡Sistema iniciado! Haz clic en la pantalla virtual para interactuar.";
+                        statusDiv.style.color = "#a6e3a1";
+                    });
+
+                } catch (err) {
+                    statusDiv.innerText = "Error al iniciar el emulador: " + err.message;
+                    statusDiv.style.color = "#f38ba8";
+                }
+            };
+
+            reader.readAsArrayBuffer(file);
         }
     </script>
 </body>
