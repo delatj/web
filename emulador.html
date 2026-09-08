@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Instalación de Sistema Operativo</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+        body { background: #1e1e2e; color: #cdd6f4; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .window { background: #181825; border: 1px solid #45475a; border-radius: 8px; width: 100%; max-width: 650px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); overflow: hidden; }
+        .title-bar { background: #313244; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; border-bottom: 1px solid #45475a; }
+        .content { padding: 25px; min-height: 320px; }
+        .step { display: none; }
+        .step.active { display: block; }
+        h2 { color: #89b4fa; margin-bottom: 15px; font-size: 1.3rem; }
+        p { margin-bottom: 15px; font-size: 0.95rem; line-height: 1.4; color: #bac2de; }
+        label { display: block; margin-top: 10px; font-weight: bold; font-size: 0.9rem; }
+        select, input[type="text"], input[type="password"] { width: 100%; padding: 10px; margin-top: 5px; background: #313244; border: 1px solid #45475a; color: #cdd6f4; border-radius: 4px; }
+        .option-card { border: 2px solid #45475a; padding: 12px; border-radius: 6px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; }
+        .option-card:hover, .option-card.selected { border-color: #89b4fa; background: #313244; }
+        .progress-bar { width: 100%; background: #313244; height: 20px; border-radius: 10px; overflow: hidden; margin-top: 20px; }
+        .progress-fill { width: 0%; height: 100%; background: #a6e3a1; transition: width 0.3s; }
+        .footer { background: #11111b; padding: 15px 25px; display: flex; justify-content: space-between; border-top: 1px solid #45475a; }
+        button { background: #89b4fa; color: #11111b; border: none; padding: 8px 18px; font-weight: bold; border-radius: 4px; cursor: pointer; }
+        button:disabled { background: #45475a; color: #7f849c; cursor: not-allowed; }
+        .summary-box { background: #313244; padding: 15px; border-radius: 6px; font-family: monospace; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+<div class="window">
+    <div class="title-bar">
+        <span>Asistente de Instalación - EduOS 1.0</span>
+        <span style="font-size: 0.8rem; color: #a6adc8;">Modo Simulación</span>
+    </div>
+    
+    <div class="content">
+        <!-- Paso 1: Idioma -->
+        <div class="step active" id="step-1">
+            <h2>1. Idioma y distribución de teclado</h2>
+            <p>Selecciona los parámetros regionales para configurar el sistema operativo:</p>
+            <label for="lang">Idioma del sistema:</label>
+            <select id="lang">
+                <option value="Español (España)">Español (España)</option>
+                <option value="English (US)">English (US)</option>
+                <option value="Français">Français</option>
+            </select>
+            
+            <label for="kb">Distribución del teclado:</label>
+            <select id="kb">
+                <option value="Español (QWERTY)">Español (QWERTY)</option>
+                <option value="Inglés (US)">Inglés (US)</option>
+            </select>
+        </div>
+
+        <!-- Paso 2: Particionado -->
+        <div class="step" id="step-2">
+            <h2>2. Tipo de Instalación (Particionado)</h2>
+            <p>Selecciona cómo se estructurará el disco duro virtual (/dev/sda):</p>
+            
+            <div class="option-card selected" onclick="selectPartition(this, 'auto')">
+                <strong>Guiada - Borrar disco entero</strong>
+                <p style="margin:0; font-size: 0.8rem;">Crea una partición raíz (/) y swap automáticamente. Recomendado para entornos seguros.</p>
+            </div>
+            
+            <div class="option-card" onclick="selectPartition(this, 'manual')">
+                <strong>Manual (Avanzado)</strong>
+                <p style="margin:0; font-size: 0.8rem;">Permite definir particiones /, /home y swap de forma independiente.</p>
+            </div>
+        </div>
+
+        <!-- Paso 3: Usuario -->
+        <div class="step" id="step-3">
+            <h2>3. Configuración de Usuario</h2>
+            <p>Crea la cuenta del administrador principal del sistema:</p>
+            
+            <label>Nombre del usuario:</label>
+            <input type="text" id="username" placeholder="ej. alumno" oninput="validateUser()">
+            
+            <label>Nombre del equipo (Hostname):</label>
+            <input type="text" id="hostname" placeholder="ej. pc-aula-01">
+            
+            <label>Contraseña:</label>
+            <input type="password" id="password" placeholder="••••••••" oninput="validateUser()">
+        </div>
+
+        <!-- Paso 4: Copia de archivos -->
+        <div class="step" id="step-4">
+            <h2>4. Instalando el sistema...</h2>
+            <p id="install-status">Preparando tabla de particiones...</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress"></div>
+            </div>
+        </div>
+
+        <!-- Paso 5: Resumen -->
+        <div class="step" id="step-5">
+            <h2>¡Instalación Completada!</h2>
+            <p>Se ha simulado con éxito el proceso. Resumen de la configuración:</p>
+            <div class="summary-box" id="summary"></div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <button id="btn-prev" onclick="changeStep(-1)" disabled>Anterior</button>
+        <button id="btn-next" onclick="changeStep(1)">Siguiente</button>
+    </div>
+</div>
+
+<script>
+    let currentStep = 1;
+    let partitionType = 'auto';
+
+    function selectPartition(element, type) {
+        document.querySelectorAll('.option-card').forEach(el => el.classList.remove('selected'));
+        element.classList.add('selected');
+        partitionType = type;
+    }
+
+    function validateUser() {
+        const u = document.getElementById('username').value;
+        const p = document.getElementById('password').value;
+        document.getElementById('btn-next').disabled = (u.trim() === '' || p.trim() === '');
+    }
+
+    function changeStep(delta) {
+        document.getElementById(`step-${currentStep}`).classList.remove('active');
+        currentStep += delta;
+        document.getElementById(`step-${currentStep}`).classList.add('active');
+
+        // Controles de botones
+        document.getElementById('btn-prev').disabled = (currentStep === 1 || currentStep === 4 || currentStep === 5);
+        
+        if (currentStep === 3) {
+            validateUser();
+        } else if (currentStep === 4) {
+            document.getElementById('btn-next').disabled = true;
+            runInstallation();
+        } else {
+            document.getElementById('btn-next').disabled = false;
+        }
+
+        if (currentStep === 5) {
+            document.getElementById('btn-next').innerText = "Reiniciar Simulador";
+            document.getElementById('btn-next').onclick = () => location.reload();
+            document.getElementById('btn-next').disabled = false;
+            showSummary();
+        }
+    }
+
+    function runInstallation() {
+        let p = 0;
+        const fill = document.getElementById('progress');
+        const status = document.getElementById('install-status');
+        
+        const logs = [
+            "Creando partición ext4 en /dev/sda1...",
+            "Copiando archivos del Kernel de Linux...",
+            "Instalando módulos del sistema y drivers...",
+            "Configurando entorno gráfico...",
+            "Aplicando ajustes de usuario e idioma...",
+            "Finalizando instalación..."
+        ];
+
+        const interval = setInterval(() => {
+            p += 20;
+            fill.style.width = p + '%';
+            status.innerText = logs[Math.min(Math.floor(p / 20), logs.length - 1)];
+
+            if (p >= 100) {
+                clearInterval(interval);
+                setTimeout(() => changeStep(1), 500);
+            }
+        }, 800);
+    }
+
+    function showSummary() {
+        const lang = document.getElementById('lang').value;
+        const kb = document.getElementById('kb').value;
+        const user = document.getElementById('username').value;
+        const host = document.getElementById('hostname').value || 'eduOS-pc';
+
+        document.getElementById('summary').innerHTML = `
+            > Idioma: ${lang}<br>
+            > Teclado: ${kb}<br>
+            > Particionado: ${partitionType === 'auto' ? 'Automático (Raíz + Swap)' : 'Manual'}<br>
+            > Usuario creado: ${user}@${host}<br>
+            > Estado del sistema: Listo para el primer arranque.
+        `;
+    }
+</script>
+
+</body>
+</html>
