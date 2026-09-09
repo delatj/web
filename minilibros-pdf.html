@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Impresor y Generador de Minilibros A4</title>
+
+  <!-- Librerías para generación de PDF y compresión ZIP -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <style>
+    /* Estilos de la Interfaz */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f3f4f6;
+      margin: 0;
+      padding: 20px;
+      color: #1f2937;
+    }
+
+    .toolbar {
+      max-width: 1000px;
+      margin: 0 auto 20px auto;
+      background: #ffffff;
+      padding: 16px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+    }
+
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    input[type="file"] { display: none; }
+
+    select {
+      padding: 8px 12px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: 1px solid #d1d5db;
+      background-color: #fff;
+      cursor: pointer;
+    }
+
+    .btn {
+      padding: 10px 18px;
+      font-weight: bold;
+      font-size: 14px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .btn-select { background-color: #3b82f6; color: white; }
+    .btn-select:hover { background-color: #2563eb; }
+
+    .btn-print { background-color: #10b981; color: white; }
+    .btn-print:hover { background-color: #059669; }
+
+    .btn-zip { background-color: #8b5cf6; color: white; }
+    .btn-zip:hover { background-color: #7c3aed; }
+
+    .btn:disabled {
+      background-color: #9ca3af !important;
+      cursor: not-allowed;
+    }
+
+    .info-text { font-size: 14px; color: #4b5563; }
+
+    /* Estructura Hojas A4 */
+    .print-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 30px;
+    }
+
+    .hoja-a4 {
+      width: 297mm;
+      height: 210mm;
+      background: white;
+      padding: 5mm;
+      box-sizing: border-box;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 3mm;
+      overflow: hidden;
+      page-break-after: always;
+    }
+
+    /* Tarjetas */
+    .card {
+      border: 1.5px solid #0f172a;
+      border-radius: 5px;
+      padding: 6px 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-sizing: border-box;
+      height: 100%;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #cbd5e1;
+      padding-bottom: 2px;
+      margin-bottom: 4px;
+      flex-shrink: 0;
+    }
+
+    .card-title {
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.15;
+      text-transform: uppercase;
+      margin: 0;
+    }
+
+    .page-num {
+      font-weight: 800;
+      color: #475569;
+      white-space: nowrap;
+    }
+
+    .card-body {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .card-content {
+      color: #0f172a;
+      text-align: left;
+      font-weight: 500;
+      width: 100%;
+    }
+
+    .card-content p { margin: 0; }
+
+    .illustration {
+      width: 64px;
+      height: 64px;
+      min-width: 64px;
+      min-height: 64px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      padding: 2px;
+      margin-top: 4px;
+      align-self: center;
+    }
+
+    .illustration svg { width: 100%; height: 100%; }
+
+    /* Nuevos Tamaños de Letra (13px, 15px, 18px) */
+    .font-sm .card-title { font-size: 13px; }
+    .font-sm .page-num { font-size: 11px; }
+    .font-sm .card-content { font-size: 13px; line-height: 1.25; }
+
+    .font-md .card-title { font-size: 15px; }
+    .font-md .page-num { font-size: 12px; }
+    .font-md .card-content { font-size: 15px; line-height: 1.2; }
+
+    .font-lg .card-title { font-size: 16.5px; }
+    .font-lg .page-num { font-size: 13px; }
+    .font-lg .card-content { font-size: 18px; line-height: 1.15; }
+
+    /* Ajustes de Impresión */
+    @media print {
+      @page { size: A4 landscape; margin: 0; }
+      body { background: none; padding: 0; }
+      .toolbar { display: none !important; }
+      .print-container { gap: 0; }
+      .hoja-a4 { box-shadow: none; width: 297mm; height: 210mm; padding: 4mm; box-sizing: border-box; }
+    }
+  </style>
+</head>
+<body class="font-md">
+
+  <div class="toolbar">
+    <div class="control-group">
+      <button class="btn btn-select" onclick="document.getElementById('fileInput').click()">
+        📁 Cargar HTMLs
+      </button>
+      <input type="file" id="fileInput" accept=".html,.htm" multiple onchange="cargarHTMLs(event)">
+      <span id="fileName" class="info-text">Ningún archivo cargado</span>
+    </div>
+
+    <div class="control-group">
+      <label for="fontSizeSelect" class="info-text"><strong>Letra:</strong></label>
+      <select id="fontSizeSelect" onchange="cambiarTamanoLetra(this.value)">
+        <option value="font-sm">Pequeña (13px)</option>
+        <option value="font-md" selected>Mediana (15px)</option>
+        <option value="font-lg">Grande (18px)</option>
+      </select>
+    </div>
+    
+    <div class="control-group">
+      <button id="btnPrint" class="btn btn-print" onclick="window.print()" disabled>🖨️ Imprimir A4</button>
+      <button id="btnZip" class="btn btn-zip" onclick="descargarTodosZIP()" disabled>📦 Descargar ZIP (PDFs)</button>
+    </div>
+  </div>
+
+  <div id="printArea" class="print-container"></div>
+
+  <script>
+    let archivosProcesados = [];
+
+    function cambiarTamanoLetra(claseFuente) {
+      document.body.className = claseFuente;
+    }
+
+    function cargarHTMLs(event) {
+      const files = Array.from(event.target.files);
+      if (files.length === 0) return;
+
+      archivosProcesados = [];
+      document.getElementById('fileName').textContent = `${files.length} archivo(s) seleccionado(s)`;
+
+      let lecturasCompletadas = 0;
+      const printArea = document.getElementById('printArea');
+      printArea.innerHTML = '';
+
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(e.target.result, 'text/html');
+          const cards = Array.from(doc.querySelectorAll('.card'));
+
+          if (cards.length > 0) {
+            archivosProcesados.push({
+              nombre: file.name.replace(/\.[^/.]+$/, ""),
+              cards: cards
+            });
+          }
+
+          lecturasCompletadas++;
+          if (lecturasCompletadas === files.length) {
+            renderizarVistaPrevia();
+          }
+        };
+        reader.readAsText(file);
+      });
+    }
+
+    function renderizarVistaPrevia() {
+      const printArea = document.getElementById('printArea');
+      printArea.innerHTML = '';
+
+      archivosProcesados.forEach(item => {
+        const tarjetasPorHoja = 8;
+        const totalHojas = Math.ceil(item.cards.length / tarjetasPorHoja);
+
+        for (let i = 0; i < totalHojas; i++) {
+          const hoja = document.createElement('div');
+          hoja.className = 'hoja-a4';
+          hoja.dataset.tema = item.nombre;
+
+          const tarjetasGrupo = item.cards.slice(i * tarjetasPorHoja, (i + 1) * tarjetasPorHoja);
+          
+          tarjetasGrupo.forEach(card => {
+            const cardClone = card.cloneNode(true);
+            const body = cardClone.querySelector('.card-body');
+            const content = cardClone.querySelector('.card-content');
+            const illustration = cardClone.querySelector('.illustration');
+
+            if (body && content && illustration) {
+              body.innerHTML = '';
+              body.appendChild(content);
+              body.appendChild(illustration);
+            }
+
+            hoja.appendChild(cardClone);
+          });
+
+          printArea.appendChild(hoja);
+        }
+      });
+
+      const deshabilitar = archivosProcesados.length === 0;
+      document.getElementById('btnPrint').disabled = deshabilitar;
+      document.getElementById('btnZip').disabled = deshabilitar;
+    }
+
+    async function descargarTodosZIP() {
+      const btnZip = document.getElementById('btnZip');
+      btnZip.disabled = true;
+      btnZip.textContent = "⌛ Generando PDFs...";
+
+      const { jsPDF } = window.jspdf;
+      const zip = new JSZip();
+
+      const temasMap = new Map();
+      const hojas = document.querySelectorAll('.hoja-a4');
+
+      hojas.forEach(hoja => {
+        const nombreTema = hoja.dataset.tema;
+        if (!temasMap.has(nombreTema)) {
+          temasMap.set(nombreTema, []);
+        }
+        temasMap.get(nombreTema).push(hoja);
+      });
+
+      for (let [nombreTema, hojasTema] of temasMap.entries()) {
+        const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+        for (let i = 0; i < hojasTema.length; i++) {
+          const hoja = hojasTema[i];
+          const canvas = await html2canvas(hoja, { scale: 2, useCORS: true });
+          const imgData = canvas.toDataURL('image/jpeg', 0.95);
+
+          if (i > 0) pdf.addPage('a4', 'landscape');
+          pdf.addImage(imgData, 'JPEG', 0, 0, 297, 210);
+        }
+
+        const pdfBlob = pdf.output('blob');
+        zip.file(`${nombreTema}.pdf`, pdfBlob);
+      }
+
+      btnZip.textContent = "📦 Comprimiendo ZIP...";
+      const zipContent = await zip.generateAsync({ type: 'blob' });
+
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(zipContent);
+      link.download = 'minilibros_pdf.zip';
+      link.click();
+
+      btnZip.disabled = false;
+      btnZip.textContent = "📦 Descargar ZIP (PDFs)";
+    }
+  </script>
+</body>
+</html>
