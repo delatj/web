@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Hiperrealista TikTok - Privacidad y Cuestionario</title>
+    <style>
+        :root {
+            --tt-white: #ffffff;
+            --tt-bg-light: #f8f8f8;
+            --tt-card: #ffffff;
+            --tt-text-black: #121212;
+            --tt-text-muted: #8a8a8e;
+            --tt-pink: #ff2c55;
+            --tt-blue: #25f4ee;
+            --tt-green: #34c759;
+            --tt-border: #e5e5ea;
+            --tt-item-active: #f2f2f7;
+            
+            /* Colores de nota */
+            --score-blue: #007aff;
+            --score-green: #34c759;
+            --score-orange: #ff9500;
+            --score-red: #ff3b30;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #e4e4e7;
+            color: var(--tt-text-black);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .guide-box {
+            max-width: 380px;
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid #d4d4d8;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .guide-box h4 {
+            margin: 0 0 4px 0;
+            color: var(--tt-pink);
+            font-size: 0.9rem;
+        }
+
+        .guide-box p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: #52525b;
+        }
+
+        .timer-display {
+            font-weight: bold;
+            color: #dc2626;
+            margin-top: 4px;
+            font-size: 0.85rem;
+        }
+
+        .video-btn {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 6px 12px;
+            background-color: var(--tt-pink);
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 0.78rem;
+            text-decoration: none;
+            border-radius: 16px;
+            transition: background-color 0.2s;
+        }
+
+        .video-btn:hover {
+            background-color: #e02647;
+        }
+
+        /* Mockup iPhone */
+        .phone-frame {
+            width: 360px;
+            height: 720px;
+            background: var(--tt-white);
+            border: 12px solid #18181b;
+            border-radius: 48px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: background-color 0.3s ease;
+        }
+
+        /* Notch */
+        .notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 130px;
+            height: 25px;
+            background: #18181b;
+            border-bottom-left-radius: 14px;
+            border-bottom-right-radius: 14px;
+            z-index: 100;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            height: 40px;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #000;
+            background: transparent;
+            z-index: 90;
+        }
+
+        /* Header Dynamic */
+        .app-header {
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            border-bottom: 0.5px solid var(--tt-border);
+            background: var(--tt-white);
+        }
+
+        .header-title {
+            font-size: 1rem;
+            font-weight: 700;
+            text-align: center;
+            flex: 1;
+        }
+
+        .btn-back {
+            background: none;
+            border: none;
+            color: #000;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+        }
+
+        /* Phone Screen Body */
+        .app-body {
+            flex: 1;
+            overflow-y: auto;
+            background: var(--tt-bg-light);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Profile Screen UI */
+        .profile-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0 10px;
+            background: var(--tt-white);
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--tt-pink), var(--tt-blue));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        .username {
+            font-weight: 700;
+            font-size: 1.05rem;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 24px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .stat-num {
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .stat-lbl {
+            font-size: 0.75rem;
+            color: var(--tt-text-muted);
+        }
+
+        /* Settings List UI */
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--tt-text-muted);
+            padding: 14px 16px 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .menu-group {
+            background: var(--tt-white);
+            border-top: 0.5px solid var(--tt-border);
+            border-bottom: 0.5px solid var(--tt-border);
+            margin-bottom: 10px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 13px 16px;
+            background: var(--tt-white);
+            border-bottom: 0.5px solid var(--tt-border);
+            cursor: pointer;
+            color: var(--tt-text-black);
+            opacity: 1 !important; /* Mismo color uniforme para todas las opciones */
+        }
+
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .menu-item:active {
+            background: var(--tt-item-active);
+        }
+
+        .menu-item-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .menu-icon {
+            font-size: 1.1rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .menu-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--tt-text-black);
+        }
+
+        .menu-desc {
+            font-size: 0.75rem;
+            color: var(--tt-text-muted);
+            margin-top: 4px;
+            line-height: 1.35;
+            max-width: 230px;
+        }
+
+        /* Bottom Sheet Modal */
+        .modal-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            z-index: 200;
+        }
+
+        .bottom-sheet {
+            background: var(--tt-white);
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+            padding: 12px 0 25px;
+            animation: slideUp 0.25s ease-out;
+        }
+
+        /* Popup Informativo previo */
+        .info-popup {
+            background: var(--tt-white);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            text-align: left;
+            animation: slideUp 0.25s ease-out;
+        }
+
+        .info-popup h3 {
+            margin: 0 0 10px 0;
+            font-size: 1rem;
+            color: var(--tt-pink);
+        }
+
+        .info-popup ul {
+            margin: 10px 0;
+            padding-left: 18px;
+            font-size: 0.78rem;
+            color: #333;
+            line-height: 1.4;
+        }
+
+        .btn-confirm {
+            background: var(--tt-pink);
+            color: #fff;
+            border: none;
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .sheet-handle {
+            width: 36px;
+            height: 4px;
+            background: #d1d1d6;
+            border-radius: 2px;
+            margin: 0 auto 12px;
+        }
+
+        /* Toggle Switch iOS/TikTok Style */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 28px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #e9e9ea;
+            transition: .2s;
+            border-radius: 28px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .2s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        input:checked + .slider {
+            background-color: var(--tt-green);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        /* Navigation Bar Bottom */
+        .bottom-nav {
+            height: 50px;
+            background: var(--tt-white);
+            border-top: 0.5px solid var(--tt-border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding-bottom: 10px;
+        }
+
+        .nav-tab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.65rem;
+            color: var(--tt-text-muted);
+            cursor: pointer;
+        }
+
+        .nav-tab.active {
+            color: #000;
+            font-weight: 600;
+        }
+
+        .nav-tab-icon {
+            font-size: 1.2rem;
+            margin-bottom: 2px;
+        }
+
+        /* Cuestionario Styles */
+        .quiz-container {
+            padding: 16px;
+        }
+
+        .quiz-option {
+            background: var(--tt-white);
+            border: 1px solid var(--tt-border);
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .quiz-option.selected {
+            background: #e5e5ea;
+            border-color: #8e8e93;
+            font-weight: 600;
+        }
+
+        /* Resultado Final Box */
+        .result-box {
+            padding: 24px;
+            border-radius: 16px;
+            color: #ffffff;
+            text-align: center;
+            margin: 20px 0;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            transition: background-color 0.3s ease;
+        }
+
+        .result-score {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="guide-box">
+    <h4 id="guide-step-title">Practica la ruta correcta</h4>
+    <p id="guide-step-desc">Navega por la interfaz hasta activar la cuenta privada.</p>
+    <div id="timer-box" class="timer-display">Tiempo restante: 05:00</div>
+    <a class="video-btn" href="https://youtube.com/shorts/vB39fya4wfw?si=Go9gTzgncWOCJOWT" target="_blank">📺 Ver tutorial en TikTok</a>
+</div>
+
+<div class="phone-frame" id="phone-frame">
+    <div class="notch"></div>
+    <div class="status-bar">
+        <span>10:15</span>
+        <span>5G 🔋</span>
+    </div>
+
+    <!-- PANTALLA DINÁMICA -->
+    <div id="screen-container" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
+        <!-- Contenido renderizado por JS -->
+    </div>
+</div>
+
+<script>
+    let step = 1;
+    let quizAnswers = Array(10).fill(null);
+    let currentQuestion = 0;
+    
+    // Configuración del temporizador de 5 minutos (300 segundos)
+    let timeLeft = 300;
+    let timerInterval = null;
+
+    function startTimer() {
+        if (timerInterval) clearInterval(timerInterval);
+        timeLeft = 300;
+        updateTimerDisplay();
+        
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            updateTimerDisplay();
+            
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                alert("⏳ ¡Se ha agotado el tiempo de 5 minutos! El simulador se reiniciará.");
+                restartAll();
+            }
+        }, 1000);
+    }
+
+    function stopTimer() {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+        document.getElementById('timer-box').style.display = 'none';
+    }
+
+    function updateTimerDisplay() {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        const formatted = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        const timerElem = document.getElementById('timer-box');
+        if (timerElem) {
+            timerElem.innerText = `Tiempo restante: ${formatted}`;
+        }
+    }
+
+    const questions = [
+        {
+            q: "1. ¿Qué ocurre inmediatamente cuando activas la 'Cuenta privada' en redes?",
+            options: [
+                "Se borran todos tus seguidores actuales automáticamente.",
+                "Solo las personas que apruebes podrán seguirte y ver tu contenido.",
+                "Tus publicaciones seguirán apareciendo en el buscador de Google."
+            ],
+            correct: 1
+        },
+        {
+            q: "2. Si tu cuenta es pública, ¿quién puede ver tus vídeos e historias?",
+            options: [
+                "Cualquier persona dentro o fuera de la plataforma.",
+                "Únicamente tus amigos agregados.",
+                "Solo las personas que vivan en tu misma ciudad."
+            ],
+            correct: 0
+        },
+        {
+            q: "3. ¿Por qué es peligroso mantener activa la 'Ubicación precisa' en las publicaciones?",
+            options: [
+                "Gasta más batería de lo normal en el teléfono.",
+                "Permite a desconocidos o agresores rastrear los lugares que frecuentas.",
+                "Hace que los vídeos se carguen más lento."
+            ],
+            correct: 1
+        },
+        {
+            q: "4. ¿Qué es la 'huella digital' en internet?",
+            options: [
+                "El método para desbloquear la pantalla del móvil con el dedo.",
+                "El rastro de datos e información personal que dejas al usar redes e internet.",
+                "Una contraseña de alta seguridad para la cuenta."
+            ],
+            correct: 1
+        },
+        {
+            q: "5. Si desactivas 'Recomendar tu cuenta a otros', ¿qué logras?",
+            options: [
+                "Evitas que la plataforma sugiera tu perfil a conocidos o desconocidos.",
+                "Imposibilitas que tus seguidores te envíen mensajes privados.",
+                "Ocultas el número de seguidores en tu perfil."
+            ],
+            correct: 0
+        },
+        {
+            q: "6. ¿Qué ajuste evita que extraños te envíen spam o enlaces sospechosos por mensaje?",
+            options: [
+                "Restringir los Mensajes Directos solo a 'Amigos' o 'Nadie'.",
+                "Desactivar las notificaciones del móvil.",
+                "Poner el teléfono en Modo Avión."
+            ],
+            correct: 0
+        },
+        {
+            q: "7. Si cambias de cuenta Pública a Privada, ¿qué pasa con tus seguidores actuales?",
+            options: [
+                "Tienen que enviarte solicitud de nuevo.",
+                "Se mantienen como seguidores y seguirán viendo tu contenido.",
+                "Reciben un correo electrónico de notificación."
+            ],
+            correct: 1
+        },
+        {
+            q: "8. ¿Por qué no debes publicar tu número de teléfono ni colegio en la biografía?",
+            options: [
+                "Porque TikTok cancelará tu cuenta de inmediato.",
+                "Porque reduce los 'Me gusta' de tus vídeos.",
+                "Porque expone tus datos a suplantación de identidad e ingeniería social."
+            ],
+            correct: 2
+        },
+        {
+            q: "9. ¿Qué implica desactivar la opción 'Permitir descarga de tus vídeos'?",
+            options: [
+                "Impide que los usuarios descarguen directamente tu contenido al móvil.",
+                "Hace que tus vídeos se borren en 24 horas.",
+                "No te deja volver a subir vídeos jamás."
+            ],
+            correct: 0
+        },
+        {
+            q: "10. ¿Cuál es la mejor práctica de privacidad en entornos virtuales de aprendizaje y redes?",
+            options: [
+                "Aceptar solicitudes de seguimiento de cualquier persona para ganar fama.",
+                "Revisar periódicamente los ajustes de privacidad y limitar el acceso público.",
+                "Usar la misma contraseña en todas las plataformas."
+            ],
+            correct: 1
+        }
+    ];
+
+    function renderScreen() {
+        const container = document.getElementById('screen-container');
+        const guideTitle = document.getElementById('guide-step-title');
+        const guideDesc = document.getElementById('guide-step-desc');
+        const phoneFrame = document.getElementById('phone-frame');
+
+        // Resetear fondo del teléfono
+        phoneFrame.style.backgroundColor = "var(--tt-white)";
+
+        if (step === 1) {
+            guideTitle.innerText = "Secuencia: Encuentra la ruta";
+            guideDesc.innerHTML = "Encuentra la ruta correcta para llegar a la configuración de Privacidad.";
+
+            container.innerHTML = `
+                <div class="app-header">
+                    <span style="font-size:0.85rem; color:var(--tt-text-muted);">Siguiendo</span>
+                    <span class="header-title" style="border-bottom: 2px solid #000; padding-bottom: 2px;">Para ti</span>
+                    <span style="font-size:1.1rem;">🔍</span>
+                </div>
+                <div class="app-body" style="justify-content:center; align-items:center; color:var(--tt-text-muted); background: #000;">
+                    <div style="font-size:4rem; margin-bottom:10px;">🎵</div>
+                    <p style="font-size:0.85rem; color:#fff;">[Feed de Vídeos Principal]</p>
+                </div>
+                <div class="bottom-nav">
+                    <div class="nav-tab active"><span class="nav-tab-icon">🏠</span>Inicio</div>
+                    <div class="nav-tab"><span class="nav-tab-icon">👥</span>Amigos</div>
+                    <div class="nav-tab"><span class="nav-tab-icon" style="color:var(--tt-pink);">➕</span></div>
+                    <div class="nav-tab"><span class="nav-tab-icon">💬</span>Bandeja</div>
+                    <div class="nav-tab" onclick="nextStep(2)"><span class="nav-tab-icon">👤</span>Perfil</div>
+                </div>
+            `;
+        } else if (step === 2) {
+            container.innerHTML = `
+                <div class="app-header">
+                    <span style="font-size:0.9rem;">🔒</span>
+                    <span class="header-title">alumno_privacidad</span>
+                    <span style="font-size:1.3rem; cursor:pointer;" onclick="nextStep(3)">☰</span>
+                </div>
+                <div class="app-body">
+                    <div class="profile-header">
+                        <div class="avatar">🎓</div>
+                        <div class="username">@alumno_privacidad</div>
+                        <div class="stats-row">
+                            <div><div class="stat-num">45</div><div class="stat-lbl">Siguiendo</div></div>
+                            <div><div class="stat-num">210</div><div class="stat-lbl">Seguidores</div></div>
+                            <div><div class="stat-num">3.4k</div><div class="stat-lbl">Me gusta</div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bottom-nav">
+                    <div class="nav-tab"><span class="nav-tab-icon">🏠</span>Inicio</div>
+                    <div class="nav-tab"><span class="nav-tab-icon">👥</span>Amigos</div>
+                    <div class="nav-tab"><span class="nav-tab-icon">➕</span></div>
+                    <div class="nav-tab"><span class="nav-tab-icon">💬</span>Bandeja</div>
+                    <div class="nav-tab active"><span class="nav-tab-icon">👤</span>Perfil</div>
+                </div>
+            `;
+        } else if (step === 3) {
+            container.innerHTML = `
+                <div class="app-header">
+                    <span class="header-title">alumno_privacidad</span>
+                    <span style="font-size:1.3rem;">☰</span>
+                </div>
+                <div class="app-body">
+                    <div class="profile-header">
+                        <div class="avatar">🎓</div>
+                        <div class="username">@alumno_privacidad</div>
+                    </div>
+                </div>
+                <div class="modal-overlay">
+                    <div class="bottom-sheet">
+                        <div class="sheet-handle"></div>
+                        <div class="menu-item">
+                            <div class="menu-item-left"><span class="menu-icon">📷</span><span class="menu-label">Mi código QR</span></div>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-left"><span class="menu-icon">⚡</span><span class="menu-label">Herramientas para creadores</span></div>
+                        </div>
+                        <div class="menu-item" onclick="nextStep(4)">
+                            <div class="menu-item-left"><span class="menu-icon">⚙️</span><span class="menu-label">Ajustes y privacidad</span></div>
+                            <span style="color:var(--tt-text-black);">➔</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else if (step === 4) {
+            // Ajustes y privacidad -> Ahora redirige a "Cuenta"
+            container.innerHTML = `
+                <div class="app-header">
+                    <button class="btn-back" onclick="nextStep(2)">❮</button>
+                    <span class="header-title">Ajustes y privacidad</span>
+                    <span style="width:24px;"></span>
+                </div>
+                <div class="app-body">
+                    <div class="section-title">Cuenta</div>
+                    <div class="menu-group">
+                        <div class="menu-item" onclick="nextStep(5)">
+                            <div class="menu-item-left"><span class="menu-icon">👤</span><span class="menu-label">Cuenta</span></div>
+                            <span style="color:var(--tt-text-black);">➔</span>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-left"><span class="menu-icon">🔒</span><span class="menu-label">Seguridad</span></div>
+                            <span style="color:var(--tt-text-black);">➔</span>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-left"><span class="menu-icon">🛡️</span><span class="menu-label">Permisos de app</span></div>
+                            <span style="color:var(--tt-text-black);">➔</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else if (step === 5) {
+            // Menú Cuenta -> Opción Privacidad
+            container.innerHTML = `
+                <div class="app-header">
+                    <button class="btn-back" onclick="nextStep(4)">❮</button>
+                    <span class="header-title">Cuenta</span>
+                    <span style="width:24px;"></span>
+                </div>
+                <div class="app-body">
+                    <div class="section-title">Ajustes de cuenta</div>
+                    <div class="menu-group">
+                        <div class="menu-item">
+                            <div class="menu-item-left"><span class="menu-icon">ℹ️</span><span class="menu-label">Información de la cuenta</span></div>
+                            <span style="color:var(--tt-text-black);">➔</span>
+                        </div>
+                        <div class="menu-item" onclick="nextStep(6)">
+                            <div class="menu-item-left"><span class="menu-icon">🔒</span><span class="menu-label">Privacidad</span></div>
+                            <span style="color:var(--tt-text-black);">➔</span>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-item-left"><span class="menu-icon">🔑</span><span class="menu-label">Contraseña</span></div>
+                            <span style="color:var(--tt-text-black);">➔</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else if (step === 6) {
+            // Pestaña de Privacidad -> Interruptor Cuenta privada
+            container.innerHTML = `
+                <div class="app-header">
+                    <button class="btn-back" onclick="nextStep(5)">❮</button>
+                    <span class="header-title">Privacidad</span>
+                    <span style="width:24px;"></span>
+                </div>
+                <div class="app-body">
+                    <div class="section-title">Descubrimiento</div>
+                    <div class="menu-group">
+                        <div class="menu-item" style="align-items:flex-start;">
+                            <div>
+                                <div class="menu-label" style="font-weight:600;">Cuenta privada</div>
+                                <div class="menu-desc">Con una cuenta privada, solo los usuarios que apruebes podrán seguirte y ver tus vídeos.</div>
+                            </div>
+                            <label class="switch" onclick="stopTimer(); nextStep(7);">
+                                <input type="checkbox" id="tt-switch">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else if (step === 7) {
+            guideTitle.innerText = "¡Objetivo Conseguido!";
+            guideDesc.innerHTML = "Has activado la privacidad a tiempo. Lee el resumen antes de hacer el cuestionario.";
+
+            container.innerHTML = `
+                <div class="app-header">
+                    <span class="header-title">Aviso de Seguridad</span>
+                </div>
+                <div class="app-body">
+                    <div class="info-popup">
+                        🔒 <b>¿Qué implica activar la cuenta privada?</b>
+                        <ul>
+                            <li><b>Aprobación manual:</b> Nadie podrá seguirte sin que tú aceptes expresamente su solicitud.</li>
+                            <li><b>Protección de publicaciones:</b> Tus vídeos e historias no aparecerán en el buscador global ni en la pestaña "Para ti".</li>
+                            <li><b>Blindaje de datos:</b> Reduce tu huella digital y evita el acoso o uso no deseado de tus imágenes.</li>
+                            <li><b>Seguidores actuales:</b> Las personas que ya te seguían seguirán teniendo acceso a tu cuenta.</li>
+                        </ul>
+                        <button class="btn-confirm" onclick="nextStep(8)">Comenzar Cuestionario ➔</button>
+                    </div>
+                </div>
+            `;
+        } else if (step === 8) {
+            guideTitle.innerText = `Cuestionario (${currentQuestion + 1}/10)`;
+            guideDesc.innerHTML = "Responde las 10 preguntas sobre privacidad en redes.";
+
+            const qData = questions[currentQuestion];
+            let optionsHTML = "";
+
+            qData.options.forEach((opt, idx) => {
+                const isSelected = quizAnswers[currentQuestion] === idx ? "selected" : "";
+                optionsHTML += `
+                    <div class="quiz-option ${isSelected}" onclick="selectOption(${idx})">
+                        ${opt}
+                    </div>
+                `;
+            });
+
+            container.innerHTML = `
+                <div class="app-header">
+                    <span class="header-title">Evaluación de Privacidad</span>
+                </div>
+                <div class="app-body">
+                    <div class="quiz-container">
+                        <div style="font-weight:700; font-size:0.88rem; margin-bottom:12px; line-height:1.35;">
+                            ${qData.q}
+                        </div>
+                        <div>
+                            ${optionsHTML}
+                        </div>
+                        <button class="btn-confirm" style="margin-top:15px;" onclick="nextQuestion()">
+                            ${currentQuestion === 9 ? "Finalizar y Ver Nota" : "Siguiente Pregunta ➔"}
+                        </button>
+                    </div>
+                </div>
+            `;
+        } else if (step === 9) {
+            // Fondo de pantalla detrás del cuadro emergente cambia a color ROJO
+            phoneFrame.style.backgroundColor = "#dc2626";
+
+            let correctCount = 0;
+            quizAnswers.forEach((ans, idx) => {
+                if (ans === questions[idx].correct) correctCount++;
+            });
+
+            let scoreColor = "";
+            let levelLabel = "";
+
+            if (correctCount <= 3) {
+                scoreColor = "var(--score-blue)";
+                levelLabel = "Nivel Inicial / Se requiere repasar los conceptos";
+            } else if (correctCount <= 6) {
+                scoreColor = "var(--score-green)";
+                levelLabel = "Nivel Aceptable / Conocimiento básico de seguridad";
+            } else if (correctCount <= 9) {
+                scoreColor = "var(--score-orange)";
+                levelLabel = "Nivel Alto / Excelente control de tu privacidad";
+            } else {
+                scoreColor = "var(--score-red)";
+                levelLabel = "¡Nivel Experto / Dominio Total de la Privacidad!";
+            }
+
+            const percentage = (correctCount / 10) * 100;
+
+            guideTitle.innerText = "Resultado Final";
+            guideDesc.innerHTML = "Has completado la formación y la prueba de conocimientos.";
+
+            container.innerHTML = `
+                <div class="app-header" style="background:transparent; border-bottom:none;">
+                    <span class="header-title" style="color:#fff;">Resumen de Evaluación</span>
+                </div>
+                <div class="app-body" style="padding:15px; background:transparent;">
+                    <div class="result-box" style="background-color: ${scoreColor};">
+                        <div style="font-size:0.85rem; text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">Aciertos Conseguidos</div>
+                        <div class="result-score">${correctCount} / 10</div>
+                        <div style="font-size:1.1rem; font-weight:700; margin-bottom:5px;">${percentage}% De Acierto</div>
+                        <div style="font-size:0.8rem; opacity:0.9;">${levelLabel}</div>
+                    </div>
+
+                    <div style="background:#fff; border-radius:12px; padding:15px; border:1px solid var(--tt-border); font-size:0.8rem; color:#444;">
+                        <b>Criterio de Colores:</b>
+                        <ul style="margin:8px 0 0 0; padding-left:18px; line-height:1.5;">
+                            <li><span style="color:var(--score-blue); font-weight:bold;">0 a 3 aciertos:</span> Azul</li>
+                            <li><span style="color:var(--score-green); font-weight:bold;">4 a 6 aciertos:</span> Verde</li>
+                            <li><span style="color:var(--score-orange); font-weight:bold;">7 a 9 aciertos:</span> Naranja</li>
+                            <li><span style="color:var(--score-red); font-weight:bold;">10 aciertos:</span> Rojo</li>
+                        </ul>
+                    </div>
+
+                    <button class="btn-confirm" style="margin-top:15px;" onclick="restartAll()">Reiniciar Práctica Completa</button>
+                </div>
+            `;
+        }
+    }
+
+    function nextStep(s) {
+        step = s;
+        renderScreen();
+    }
+
+    function selectOption(optIndex) {
+        quizAnswers[currentQuestion] = optIndex;
+        renderScreen();
+    }
+
+    function nextQuestion() {
+        if (quizAnswers[currentQuestion] === null) {
+            alert("Por favor, selecciona una respuesta antes de continuar.");
+            return;
+        }
+
+        if (currentQuestion < 9) {
+            currentQuestion++;
+            renderScreen();
+        } else {
+            step = 9;
+            renderScreen();
+        }
+    }
+
+    function restartAll() {
+        step = 1;
+        currentQuestion = 0;
+        quizAnswers = Array(10).fill(null);
+        document.getElementById('timer-box').style.display = 'block';
+        startTimer();
+        renderScreen();
+    }
+
+    // Inicializar temporizador y primera pantalla
+    startTimer();
+    renderScreen();
+</script>
+
+</body>
+</html>
