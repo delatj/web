@@ -1,40 +1,42 @@
+NORMAS BÁSICAS DE CLASE
+1. Habla y trata con respeto a tus compañeros y profesor.
+2. No le levantes de tu sitio sin que el profesor te de permiso.
+3. Atiende cuando el profesor explica.
+4. Usa las herramientas o ordenadores de forma correcta, si desconoces su manejo
+pregunta al profesor,cuida el material y recicla lo que puedas.
+
+MATERIALES PARA CLASE
+1. Juego de regla,escuadra y cartabón o por lo menos una regla.
+2. Cuaderno o blog con hojas de cuadritos.
+3. Tijeras.
+4. Lápiz o portaminas, goma y bolígrafo.
+5. Calculadora (que habrá que traer cuando avise el profesor)
+6. Pegameento de barra.
+7. Cartulinas A4 (tamaño folio).
+
+
 ____________________________________________________________
 CLONADO
 No borrar clonados de los pen, porque al instalar cosas luego pesa mas y no se puede hacer el clonado.
 *** últimos programas a instalar...librecad/  freecad  /exelearning   /kturtle   
 (para instalar exelearning desde terminal:sudo apt-get install snapd   /   sudo snap install exelearning    /   y reiniciar)
-*** añadir carpetas test y web
+*** añadir carpeta WEB desde la web y extraer.
 *** borrar red casa
 *** cambiar nombre equipo
 *** conectar con epoptes en terminal cambiare de usuario con ... su dga  ...  flecha superior
 _____________________________________________________________
-chat gpt en el codigo de descargar html antes de las ultimas instrucciones
-     <\/script>
-</body>
-</html>
 ____________________________________________________________
 actualizar repositorios
 sudo apt-get update
 sudo apt-get upgrade
 ___________________________________
-
-
+_____________________________________________
 
 SUBIR BRILLO
 
 echo 9500 > /sys/class/backlight/intel_backlight/brightness
-
-OFRIS
-
-
-if [ $(uname -m) == "x86_64" ]; then deb="http://goo.gl/DleLl"; else deb="http://goo.gl/V94Qs"; fi && wget -q $deb -O ofris.deb && sudo dpkg -i ofris.deb && rm ofris.deb
-
-congelar con ofris... en terminal....ofris-en.......1 para congelar usuario, 4 para descongelar
-
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-
-cd Escritorio 
-sudo dd if=lubuntu.iso of=/dev/sdb
+_________________________________________________________________________
+_______________________________________________________________
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 APAGADO AUTOMÁTICO
 
@@ -156,20 +158,6 @@ escribimos
 ./install.sh
 
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-NORMAS BÁSICAS DE CLASE
-1. Habla y trata con respeto a tus compañeros y profesor.
-2. No le levantes de tu sitio sin que el profesor te de permiso.
-3. Atiende cuando el profesor explica.
-4. Usa las herramientas o ordenadores de forma correcta, si desconoces su manejo
-pregunta al profesor,cuida el material y recicla lo que puedas.
-
-MATERIALES PARA CLASE
-1. Juego de regla,escuadra y cartabón o por lo menos una regla.
-2. Cuaderno o blog con hojas de cuadritos.
-3. Tijeras.
-4. Lápiz o portaminas, goma y bolígrafo.
-5. Calculadora (que habrá que traer cuando avise el profesor)
-6. Pegameento de barra.
 
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
