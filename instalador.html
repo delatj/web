@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Instalación y Configuración - Linux Lite</title>
+    <style>
+        :root {
+            --primary-color: #3f51b5;
+            --bg-color: #2b2b2b;
+            --window-bg: #3c3f41;
+            --text-color: #ffffff;
+            --accent-color: #4caf50;
+            --error-color: #f44336;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .screen {
+            display: none;
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Ventanas de diálogo tipo Linux */
+        .window {
+            background-color: var(--window-bg);
+            border: 1px solid #555;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            width: 600px;
+            max-width: 90%;
+            padding: 25px;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .window-header {
+            font-size: 1.2em;
+            font-weight: bold;
+            border-bottom: 1px solid #555;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            color: #80cbd8;
+        }
+
+        .btn {
+            background-color: #4a4d4e;
+            color: white;
+            border: 1px solid #666;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 15px;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #5e6263;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: #2c387e;
+        }
+
+        .btn-primary:hover {
+            background-color: #303f9f;
+        }
+
+        input[type="text"], input[type="password"], select, input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0 15px 0;
+            background: #2b2b2b;
+            border: 1px solid #555;
+            color: white;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .info-box {
+            background-color: #1e1e1e;
+            border-left: 4px solid var(--primary-color);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .error-msg {
+            color: var(--error-color);
+            font-size: 0.9em;
+            margin-top: -10px;
+            margin-bottom: 10px;
+            display: none;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            background-color: #1e1e1e;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 20px 0;
+            border: 1px solid #555;
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 25px;
+            background-color: var(--accent-color);
+            transition: width 0.1s linear;
+        }
+
+        /* Escritorio simulación */
+        #desktop-screen {
+            background: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1200') no-repeat center center fixed;
+            background-size: cover;
+            position: relative;
+        }
+
+        #desktop-screen.red-bg {
+            background: #a91b1b !important;
+        }
+
+        .taskbar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+            box-sizing: border-box;
+        }
+
+        .taskbar-icons-left, .taskbar-icons-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .icon {
+            cursor: pointer;
+            font-size: 1.2em;
+        }
+
+        .item-list {
+            max-height: 180px;
+            overflow-y: auto;
+            border: 1px solid #555;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        .list-item {
+            padding: 10px;
+            background: #2b2b2b;
+            border-bottom: 1px solid #444;
+            cursor: pointer;
+        }
+
+        .list-item:hover {
+            background: #3e4244;
+        }
+
+        .list-item.selected {
+            background: var(--primary-color);
+        }
+
+        /* Cuestionario */
+        .quiz-option {
+            display: block;
+            margin: 8px 0;
+            cursor: pointer;
+        }
+
+        /* Ventana emergente Modal personalizada */
+        .custom-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .custom-modal-overlay.active {
+            display: flex;
+        }
+
+        .custom-modal {
+            background: var(--window-bg);
+            border: 1px solid #666;
+            border-radius: 8px;
+            width: 450px;
+            max-width: 85%;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            text-align: center;
+        }
+
+        .custom-modal-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #80cbd8;
+        }
+
+        .custom-modal-body {
+            font-size: 1em;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- MODAL INTEGRADO PARA NOTIFICACIONES -->
+    <div id="custom-modal" class="custom-modal-overlay">
+        <div class="custom-modal">
+            <div id="modal-title" class="custom-modal-title">Mensaje del Sistema</div>
+            <div id="modal-body" class="custom-modal-body">Contenido...</div>
+            <button id="modal-btn" class="btn btn-primary" onclick="closeCustomModal()">Aceptar</button>
+        </div>
+    </div>
+
+    <!-- VENTANA 1: Explicación teórica -->
+    <div id="screen-1" class="screen active">
+        <div class="window">
+            <div class="window-header">Procedimiento 1: Instalación de un Sistema Operativo</div>
+            <p>Para instalar un Sistema Operativo en un equipo informático, se deben seguir los siguientes pasos clave:</p>
+            <ol style="line-height: 1.6;">
+                <li><strong>Descargar la imagen:</strong> Se obtiene la imagen de CD o archivo <strong>ISO</strong> oficial del sistema operativo.</li>
+                <li><strong>Crear medio de arranque:</strong> Con un programa especial (como Rufus o Ventoy), se carga la ISO en un pendrive USB.</li>
+                <li><strong>Configurar el arranque (Boot Menu):</strong> Se inserta el USB en el ordenador, se reinicia y se pulsa repetidamente una tecla como <strong>F9, F12 o F2</strong> (según la marca de la placa base) para seleccionar el arranque desde el pendrive USB.</li>
+            </ol>
+            <div style="text-align: right;">
+                <button class="btn btn-primary" onclick="goToScreen(2)">Entendido, Continuar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VENTANA 2: Datos aleatorios asignados -->
+    <div id="screen-2" class="screen">
+        <div class="window">
+            <div class="window-header">Parámetros de Red y Dispositivos Asignados</div>
+            <p>Apunta bien estos datos. Son los parámetros asignados a tu práctica para configurar tu sistema:</p>
+            <div class="info-box">
+                <p><strong>📶 Nombre de la Red Wi-Fi:</strong> <span id="data-wifi-ssid" style="color:#4caf50;"></span></p>
+                <p><strong>🔑 Contraseña Wi-Fi:</strong> <span id="data-wifi-pass" style="color:#ff9800;"></span></p>
+                <p><strong>🎧 Auriculares Bluetooth:</strong> <span id="data-bt-name" style="color:#2196f3;"></span></p>
+            </div>
+            <p style="font-size:0.85em; color:#aaa;">Nota: Estos datos han sido generados aleatoriamente. Si reinicias la actividad, cambiarán.</p>
+            <div style="text-align: right;">
+                <button class="btn btn-primary" onclick="goToScreen(3)">Siguiente</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VENTANA 3: Carga de ISO -->
+    <div id="screen-3" class="screen">
+        <div class="window">
+            <div class="window-header">Cargar Imagen ISO del Sistema Operativo</div>
+            <p>Selecciona la imagen de instalación disponible en el equipo:</p>
+            <p style="font-size: 0.9em; color:#bbb;">Ubicación: Busca cualquier archivo de imagen de sistema operativo con extensión <code>.iso</code> (en la carpeta personal/estudiantes).</p>
+            <input type="file" id="iso-file-input" accept=".iso">
+            <div id="iso-error" class="error-msg">⚠️ No es un archivo adecuado de carga de sistema operativo. Debe seleccionar un archivo con extensión .iso.</div>
+            <div style="text-align: right;">
+                <button class="btn btn-primary" onclick="validateISO()">Cargar ISO e Iniciar Instalación</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VENTANA 4: Asistente de Instalación Linux Lite -->
+    <div id="screen-4" class="screen">
+        <div class="window">
+            <div class="window-header" id="install-step-title">Instalación de Linux Lite</div>
+            
+            <!-- Paso 1: Idioma -->
+            <div id="install-step-1">
+                <p>Selecciona el idioma del sistema:</p>
+                <select id="select-lang"></select>
+            </div>
+
+            <!-- Paso 2: Teclado -->
+            <div id="install-step-2" style="display:none;">
+                <p>Distribución del teclado:</p>
+                <select id="select-kbd"></select>
+            </div>
+
+            <!-- Paso 3: Zona Horaria -->
+            <div id="install-step-3" style="display:none;">
+                <p>Configuración del reloj (Zona horaria / Ciudad):</p>
+                <select id="select-tz"></select>
+            </div>
+
+            <!-- Paso 4: Usuario y Contraseña -->
+            <div id="install-step-4" style="display:none;">
+                <p>Crea la cuenta de usuario principal:</p>
+                <label>Nombre de equipo / Usuario:</label>
+                <input type="text" id="user-name" placeholder="Ej. alumno4a">
+                <label>Contraseña:</label>
+                <input type="password" id="user-pass" placeholder="Mínimo 8 caracteres">
+                <p style="font-size:0.8em; color:#ffeb3b; margin-top:-5px;">📌 Requisito de seguridad: Mínimo 8 caracteres, incluir mayúsculas, minúsculas, números y caracteres especiales.</p>
+                <div class="info-box" style="border-left-color: #ff9800;">
+                    <strong>⚠️ Importante:</strong> Anota bien el nombre de equipo y la contraseña. Te se pedirán más adelante.
+                </div>
+            </div>
+
+            <div id="wizard-error" class="error-msg"></div>
+
+            <div style="text-align: right; margin-top:20px;">
+                <button class="btn btn-primary" onclick="nextInstallStep()">Siguiente</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VENTANA 5: Progreso de Copia de Archivos -->
+    <div id="screen-5" class="screen">
+        <div class="window">
+            <div class="window-header">Instalando el Sistema Operativo...</div>
+            <p>Copiando archivos al disco duro y configurando el sistema base...</p>
+            <div class="progress-bar-container">
+                <div id="install-progress" class="progress-bar"></div>
+            </div>
+            <p id="install-status" style="font-size: 0.9em; color:#aaa;">Iniciando...</p>
+        </div>
+    </div>
+
+    <!-- VENTANA 6: Conexión Wi-Fi -->
+    <div id="screen-6" class="screen">
+        <div class="window">
+            <div class="window-header">Procedimiento 2: Configuración de Red Wi-Fi</div>
+            <p>Selecciona tu red e introduce la clave correcta asignada al principio:</p>
+            <div id="wifi-list" class="item-list"></div>
+            <div id="wifi-auth-section" style="display:none;">
+                <label>Contraseña para la red seleccionada:</label>
+                <input type="password" id="wifi-pass-input">
+            </div>
+            <div id="wifi-error" class="error-msg"></div>
+            <div style="text-align: right;">
+                <button class="btn btn-primary" onclick="connectWifi()">Conectar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VENTANA 7: Actualización de Seguridad -->
+    <div id="screen-7" class="screen">
+        <div class="window">
+            <div class="window-header">Procedimiento 3: Actualizar Sistema Operativo</div>
+            <p>🔒 <strong>Se han detectado actualizaciones del sistema que mejoran la seguridad.</strong></p>
+            <p>Para aplicar los cambios en el equipo <b id="display-hostname"></b>, confirme la contraseña de usuario creada previamente:</p>
+            <input type="password" id="update-pass-input" placeholder="Contraseña de usuario">
+            <div id="update-error" class="error-msg"></div>
+            <div style="text-align: right;">
+                <button class="btn btn-primary" onclick="startUpdate()">Autenticar y Actualizar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VENTANA 8: Progreso de Actualización -->
+    <div id="screen-8" class="screen">
+        <div class="window">
+            <div class="window-header">Descargando e instalando actualizaciones...</div>
+            <p>Obteniendo parches de seguridad del servidor oficial...</p>
+            <div class="progress-bar-container">
+                <div id="update-progress" class="progress-bar"></div>
+            </div>
+            <p id="update-status" style="font-size:0.9em; color:#aaa;">Iniciando actualización...</p>
+        </div>
+    </div>
+
+    <!-- VENTANA 9: ESCRITORIO SIMULADO LINUX LITE -->
+    <div id="desktop-screen" class="screen">
+        <!-- Notificación Bluetooth flotante -->
+        <div id="bt-dialog" class="window" style="display:none; position:absolute; top:20%; z-index:1000; width: 450px;">
+            <div class="window-header">Procedimiento 4: Dispositivo Bluetooth detectado</div>
+            <p>🎧 Se ha detectado un dispositivo Bluetooth cercano.</p>
+            <p>Selecciona los auriculares que se te asignaron en la tarjeta inicial:</p>
+            <div id="bt-list" class="item-list"></div>
+            <div id="bt-error" class="error-msg"></div>
+            <div style="text-align: right;">
+                <button class="btn btn-primary" onclick="connectBluetooth()">Vincular</button>
+            </div>
+        </div>
+
+        <!-- Barra de tareas -->
+        <div class="taskbar">
+            <div class="taskbar-icons-left">
+                <span class="icon" title="Menú de inicio">🐧 <strong>Menu</strong></span>
+                <span class="icon">📁</span>
+                <span class="icon">🌐</span>
+            </div>
+            <div class="taskbar-icons-right">
+                <span class="icon" id="icon-wifi-status" title="Red">📶</span>
+                <span class="icon" id="icon-bt-status" title="Bluetooth">🎧</span>
+                <span style="font-size: 0.85em;">12:00 PM</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- VENTANA 10: CUESTIONARIO TEST -->
+    <div id="screen-quiz" class="screen">
+        <div class="window" style="width: 800px; max-height: 90vh; overflow-y: auto;">
+            <div class="window-header">Cuestionario Final de Evaluación</div>
+            <p>Responde a las siguientes 10 preguntas sobre el proceso realizado:</p>
+            <form id="quiz-form"></form>
+            <div style="text-align: right; margin-top:20px;">
+                <button class="btn btn-primary" onclick="evaluateQuiz()">Terminar Evaluación</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VENTANA 11: RESULTADO FINAL -->
+    <div id="screen-results" class="screen">
+        <div class="window" style="text-align: center;">
+            <div class="window-header">Práctica Completada</div>
+            <h2 id="quiz-score" style="font-size: 2.8em; margin: 15px 0; font-weight: bold;"></h2>
+            <p>Has finalizado con éxito todos los procedimientos prácticos y la evaluación teórica.</p>
+            <button class="btn btn-primary" onclick="showRedDesktop()">Finalizar y Mostrar Escritorio de Validación</button>
+        </div>
+    </div>
+
+    <script>
+        // --- DATOS GLOBALES Y ESTADO ---
+        let targetWifi = "", targetWifiPass = "", targetBT = "";
+        let selectedWifi = "", selectedBT = "";
+        let createdUser = "", createdPass = "";
+        let currentInstallStep = 1;
+        let wifiAttempts = 0;
+        let updateAttempts = 0;
+        let btFailures = 0;
+        let modalCallback = null;
+        let finalScore = 0;
+
+        const languages = ["Español", "English", "Français", "Deutsch", "Italiano", "Português", "Pyccкий", "Català"];
+        const keyboards = ["Español", "Inglés (EE.UU.)", "Francés", "Alemán", "Italiano", "Português", "Ruso", "Español (Latinoamérica)"];
+        const timezones = ["Madrid", "Londres", "París", "Berlín", "Roma", "Nueva York", "Tokio", "Sídney"];
+
+        const questionBank = [
+            {
+                q: "¿Qué tipo de archivo se debe descargar para obtener la imagen de instalación de un Sistema Operativo?",
+                options: ["Un archivo ejecutable .EXE", "Una imagen de CD/DVD .ISO", "Un archivo comprimido .ZIP", "Un documento .PDF"],
+                correct: 1
+            },
+            {
+                q: "¿Qué tecla se suele presionar al encender el PC para abrir el menú de selección de arranque (Boot Menu)?",
+                options: ["Shift o Mayús", "F9, F12 o F2", "Alt + F4", "Ctrl + Alt + Supr"],
+                correct: 1
+            },
+            {
+                q: "Para crear un pendrive booteable USB a partir de una ISO se requiere:",
+                options: ["Copiar y pegar la ISO directamente", "Un programa especializado como Rufus o Ventoy", "Formatear el USB como MP3", "Cambiar la extensión del archivo a .txt"],
+                correct: 1
+            },
+            {
+                q: "¿Qué elementos debe combinar una buena contraseña para garantizar una alta seguridad?",
+                options: ["Solo números secuenciales", "Tu fecha de nacimiento y tu nombre", "Mayúsculas, minúsculas, números y caracteres especiales", "Cualquier palabra simple de más de 4 letras"],
+                correct: 2
+            },
+            {
+                q: "¿Por qué es importante seleccionar la ubicación correcta (ej. Madrid) durante la instalación?",
+                options: ["Para sincronizar la hora local y la zona horaria del sistema", "Para que el ordenador vaya más rápido", "Para cambiar el idioma del teclado", "Es un paso opcional sin impacto"],
+                correct: 0
+            },
+            {
+                q: "¿Cuál es el objetivo principal de aplicar las actualizaciones del sistema operativo tras instalarlo?",
+                options: ["Cambiar el fondo de pantalla", "Instalar juegos automáticamente", "Corregir vulnerabilidades de seguridad y errores", "Borrar el disco duro"],
+                correct: 2
+            },
+            {
+                q: "Para conectar un dispositivo de audio inalámbrico (auriculares) al equipo se utiliza la tecnología:",
+                options: ["Wi-Fi", "Ethernet", "Bluetooth", "Infrarrojos"],
+                correct: 2
+            },
+            {
+                q: "En la primera fase de la práctica, ¿dónde se debe buscar o almacenar el archivo de imagen .ISO?",
+                options: ["En el pendrive del profesor", "En la carpeta de estudiantes o carpeta personal", "Descargado directamente desde la calculadora", "En la papelera de reciclaje"],
+                correct: 1
+            },
+            {
+                q: "Si introduces incorrectamente las credenciales de administración durante una actualización crítica, el sistema normalmente:",
+                options: ["Deniega el acceso y no permite aplicar los parches", "Se rompe físicamente", "Formatea el equipo", "Regala la contraseña"],
+                correct: 0
+            },
+            {
+                q: "Dentro de la arquitectura IoT, ¿qué rol cumplen unos auriculares inalámbricos respecto al sistema operativo?",
+                options: ["Unidad Central de Proceso", "Dispositivo o periférico conectado mediante red de corto alcance", "Un sistema de alimentación ininterrumpida", "Un servidor web"],
+                correct: 1
+            }
+        ];
+
+        // --- SISTEMA DE MODAL PERSONALIZADO ---
+        function showCustomModal(title, text, callback = null, hideBtn = false) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-body').innerText = text;
+            modalCallback = callback;
+            const btn = document.getElementById('modal-btn');
+            btn.style.display = hideBtn ? 'none' : 'inline-block';
+            document.getElementById('custom-modal').classList.add('active');
+        }
+
+        function closeCustomModal() {
+            document.getElementById('custom-modal').classList.remove('active');
+            if (modalCallback) {
+                const cb = modalCallback;
+                modalCallback = null;
+                cb();
+            }
+        }
+
+        // --- INICIALIZACIÓN Y GENERACIÓN ALEATORIA ---
+        window.onload = function() {
+            resetAll();
+        };
+
+        function resetAll() {
+            const wifis = ["Aula_Digital_4A", "Fibra_Educacion_5G", "Wi-Fi_Escuela_24", "Red_TIC_Centro", "Informatica_IES"];
+            targetWifi = wifis[Math.floor(Math.random() * wifis.length)] + "_" + Math.floor(Math.random()*899 + 100);
+            
+            targetWifiPass = "Wifi" + Math.floor(Math.random()*8999 + 1000) + "*";
+
+            const bts = ["Audifonos_BT_TWS", "Headset_Student_Pro", "Auriculares_HD_IoT", "BT_Audio_Lite"];
+            targetBT = bts[Math.floor(Math.random() * bts.length)] + "_" + Math.floor(Math.random()*89 + 10);
+
+            document.getElementById("data-wifi-ssid").innerText = targetWifi;
+            document.getElementById("data-wifi-pass").innerText = targetWifiPass;
+            document.getElementById("data-bt-name").innerText = targetBT;
+
+            currentInstallStep = 1;
+            wifiAttempts = 0;
+            updateAttempts = 0;
+            btFailures = 0;
+            document.getElementById("desktop-screen").classList.remove("red-bg");
+            
+            // Limpiar ventana emergente previa de validación si existe
+            const oldResBox = document.getElementById('final-validation-window');
+            if(oldResBox) oldResBox.remove();
+
+            document.getElementById("bt-dialog").style.display = "none";
+            document.getElementById("iso-file-input").value = "";
+
+            populateSelects();
+            goToScreen(1);
+        }
+
+        function goToScreen(num) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            const target = document.getElementById(num === 'desktop' ? 'desktop-screen' : (typeof num === 'number' ? 'screen-' + num : num));
+            if(target) target.classList.add('active');
+        }
+
+        // --- PANTALLA 3: VALIDACIÓN ISO POR EXTENSIÓN ---
+        function validateISO() {
+            const input = document.getElementById('iso-file-input');
+            const err = document.getElementById('iso-error');
+            
+            if (input.files.length > 0) {
+                const fileName = input.files[0].name.toLowerCase();
+                if (fileName.endsWith(".iso")) {
+                    err.style.display = 'none';
+                    goToScreen(4);
+                    setupInstallWizard();
+                    return;
+                }
+            }
+            err.style.display = 'block';
+        }
+
+        // --- PANTALLA 4: ASISTENTE DE INSTALACIÓN ---
+        function populateSelects() {
+            const fill = (id, arr) => {
+                const sel = document.getElementById(id);
+                sel.innerHTML = "";
+                arr.forEach(item => {
+                    let opt = document.createElement('option');
+                    opt.value = item;
+                    opt.textContent = item;
+                    sel.appendChild(opt);
+                });
+            };
+            fill('select-lang', shuffleArray([...languages]));
+            fill('select-kbd', shuffleArray([...keyboards]));
+            fill('select-tz', shuffleArray([...timezones]));
+        }
+
+        function setupInstallWizard() {
+            currentInstallStep = 1;
+            showWizardStep(1);
+        }
+
+        function showWizardStep(step) {
+            document.getElementById('install-step-1').style.display = step === 1 ? 'block' : 'none';
+            document.getElementById('install-step-2').style.display = step === 2 ? 'block' : 'none';
+            document.getElementById('install-step-3').style.display = step === 3 ? 'block' : 'none';
+            document.getElementById('install-step-4').style.display = step === 4 ? 'block' : 'none';
+            
+            const titles = [
+                "Paso 1: Selección de Idioma",
+                "Paso 2: Distribución de Teclado",
+                "Paso 3: Configuración de la Zona Horaria",
+                "Paso 4: Crear Usuario y Contraseña de Sistema"
+            ];
+            document.getElementById('install-step-title').innerText = titles[step - 1];
+            document.getElementById('wizard-error').style.display = 'none';
+        }
+
+        function nextInstallStep() {
+            const err = document.getElementById('wizard-error');
+            err.style.display = 'none';
+
+            if (currentInstallStep === 1) {
+                if (document.getElementById('select-lang').value !== "Español") {
+                    showError(err, "⚠️ El idioma seleccionado no corresponde con las instrucciones dadas por el profesor (Debes elegir 'Español').");
+                    return;
+                }
+            } else if (currentInstallStep === 2) {
+                if (document.getElementById('select-kbd').value !== "Español") {
+                    showError(err, "⚠️ El teclado seleccionado no corresponde con las instrucciones dadas por el profesor (Debes elegir 'Español').");
+                    return;
+                }
+            } else if (currentInstallStep === 3) {
+                if (document.getElementById('select-tz').value !== "Madrid") {
+                    showError(err, "⚠️ La ciudad de referencia no corresponde con las instrucciones dadas por el profesor (Debes elegir 'Madrid').");
+                    return;
+                }
+            } else if (currentInstallStep === 4) {
+                const user = document.getElementById('user-name').value.trim();
+                const pass = document.getElementById('user-pass').value;
+
+                if (!user) {
+                    showError(err, "Por favor, introduce un nombre de equipo.");
+                    return;
+                }
+
+                const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+                if (!passRegex.test(pass)) {
+                    showError(err, "⚠️ La contraseña no cumple la directiva de seguridad: debe tener al menos 8 caracteres, mayúsculas, minúsculas, números y caracteres especiales.");
+                    return;
+                }
+
+                createdUser = user;
+                createdPass = pass;
+                
+                goToScreen(5);
+                runInstallationProgress();
+                return;
+            }
+
+            currentInstallStep++;
+            showWizardStep(currentInstallStep);
+        }
+
+        // --- PANTALLA 5: PROGRESO INSTALACIÓN (1 MINUTO) ---
+        function runInstallationProgress() {
+            let progress = 0;
+            const bar = document.getElementById('install-progress');
+            const status = document.getElementById('install-status');
+            const interval = setInterval(() => {
+                progress += 1;
+                bar.style.width = progress + '%';
+                
+                if(progress < 30) status.innerText = "Creando particiones de disco ext4...";
+                else if(progress < 70) status.innerText = "Copiando archivos del sistema operativo Linux Lite...";
+                else if(progress < 95) status.innerText = "Configurando cargador de arranque GRUB...";
+                else status.innerText = "Finalizando instalación...";
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        goToScreen(6);
+                        setupWifiScreen();
+                    }, 500);
+                }
+            }, 600);
+        }
+
+        // --- PANTALLA 6: CONFIGURACIÓN WI-FI ---
+        function setupWifiScreen() {
+            const listContainer = document.getElementById('wifi-list');
+            listContainer.innerHTML = "";
+            document.getElementById('wifi-auth-section').style.display = 'none';
+            document.getElementById('wifi-pass-input').value = "";
+            selectedWifi = "";
+
+            let fakeWifis = ["Movistar_3F28", "ORANGE_GUEST", "Vodafone_Home", "TP-Link_WiFi", "Red_Vecinos_5G", "DIGI_Fibra", "SUSHI_RESTAURANTE"];
+            let allWifis = shuffleArray([...fakeWifis, targetWifi]);
+
+            allWifis.forEach(ssid => {
+                let div = document.createElement('div');
+                div.className = 'list-item';
+                div.innerText = "📶 " + ssid;
+                div.onclick = function() {
+                    document.querySelectorAll('#wifi-list .list-item').forEach(e => e.classList.remove('selected'));
+                    div.classList.add('selected');
+                    selectedWifi = ssid;
+                    document.getElementById('wifi-auth-section').style.display = 'block';
+                };
+                listContainer.appendChild(div);
+            });
+        }
+
+        function connectWifi() {
+            const err = document.getElementById('wifi-error');
+            const passEntered = document.getElementById('wifi-pass-input').value;
+
+            if (!selectedWifi) {
+                showError(err, "Selecciona una red Wi-Fi de la lista.");
+                return;
+            }
+
+            if (selectedWifi === targetWifi && passEntered === targetWifiPass) {
+                showCustomModal("Conexión Establecida", "✅ Conectado correctamente a la red Wi-Fi.", () => {
+                    goToScreen(7);
+                    document.getElementById('display-hostname').innerText = createdUser;
+                });
+            } else {
+                wifiAttempts++;
+                if (wifiAttempts >= 2) {
+                    showCustomModal("Error Grave de Autenticación", "❌ Has superado el número de intentos permitidos. El sistema se reiniciará desde el principio.", () => {
+                        resetAll();
+                    });
+                } else {
+                    showError(err, `⚠️ Red o contraseña incorrecta. Te queda ${2 - wifiAttempts} intento.`);
+                }
+            }
+        }
+
+        // --- PANTALLA 7 Y 8: ACTUALIZACIÓN DE SISTEMA (1 MINUTO) ---
+        function startUpdate() {
+            const pass = document.getElementById('update-pass-input').value;
+            const err = document.getElementById('update-error');
+
+            if (pass === createdPass) {
+                showCustomModal("Autenticación Confirmada", "System Update: Autenticación correcta. Iniciando actualización...", () => {
+                    goToScreen(8);
+                    runUpdateProgress();
+                });
+            } else {
+                updateAttempts++;
+                if (updateAttempts >= 2) {
+                    showCustomModal("Seguridad del Sistema", "❌ Autenticación fallida en 2 intentos. Reiniciando simulación por seguridad.", () => {
+                        resetAll();
+                    });
+                } else {
+                    showError(err, `⚠️ Contraseña de usuario incorrecta. Te queda ${2 - updateAttempts} intento.`);
+                }
+            }
+        }
+
+        function runUpdateProgress() {
+            let progress = 0;
+            const bar = document.getElementById('update-progress');
+            const status = document.getElementById('update-status');
+            const interval = setInterval(() => {
+                progress += 1;
+                bar.style.width = progress + '%';
+
+                if(progress < 40) status.innerText = "Descargando parches de seguridad del kernel...";
+                else if(progress < 80) status.innerText = "Desempaquetando e instalando actualizaciones...";
+                else status.innerText = "Actualizando el gestor de paquetes APT...";
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    showCustomModal("Actualización Finalizada", "✅ Sistema operativo actualizado a la versión más reciente.", () => {
+                        goToScreen('desktop');
+                        setTimeout(showBluetoothDialog, 10000);
+                    });
+                }
+            }, 600);
+        }
+
+        // --- PANTALLA 9: DISPOSITIVO BLUETOOTH EN ESCRITORIO ---
+        function showBluetoothDialog() {
+            const btDialog = document.getElementById('bt-dialog');
+            const listContainer = document.getElementById('bt-list');
+            listContainer.innerHTML = "";
+            selectedBT = "";
+
+            let fakeBTs = ["AirPods_Pro_Fake", "JBL_Flip_5", "Sony_WH_1000XM4", "Mi_Smart_Band", "BT_Speaker_Gen", "Teclado_Inalambrico", "Mouse_BT_2.0"];
+            let allBTs = shuffleArray([...fakeBTs, targetBT]);
+
+            allBTs.forEach(dev => {
+                let div = document.createElement('div');
+                div.className = 'list-item';
+                div.innerText = "🎧 " + dev;
+                div.onclick = function() {
+                    document.querySelectorAll('#bt-list .list-item').forEach(e => e.classList.remove('selected'));
+                    div.classList.add('selected');
+                    selectedBT = dev;
+                };
+                listContainer.appendChild(div);
+            });
+
+            btDialog.style.display = 'block';
+        }
+
+        function connectBluetooth() {
+            const err = document.getElementById('bt-error');
+            if (!selectedBT) {
+                showError(err, "Selecciona un dispositivo de la lista.");
+                return;
+            }
+
+            if (selectedBT === targetBT) {
+                showCustomModal("Bluetooth Configurado", "✅ Dispositivo Bluetooth configurado y conectado correctamente.", () => {
+                    document.getElementById('bt-dialog').style.display = 'none';
+                    startQuizCountdown();
+                });
+            } else {
+                btFailures++;
+                if (btFailures >= 2) {
+                    showCustomModal("Error de Conexión IoT", "❌ Has seleccionado un dispositivo incorrecto dos veces. Se reiniciará el programa.", () => {
+                        resetAll();
+                    });
+                } else {
+                    showError(err, `⚠️ Este dispositivo no es el asignado. Te queda ${2 - btFailures} intento.`);
+                }
+            }
+        }
+
+        // --- TEMPORIZADOR DE 5 SEGUNDOS ANTES DEL TEST ---
+        function startQuizCountdown() {
+            let secondsLeft = 5;
+            showCustomModal("Evaluación Teórica", `Todos los pasos prácticos han sido completados. El cuestionario final se cargará en ${secondsLeft} segundos...`, null, true);
+
+            const interval = setInterval(() => {
+                secondsLeft--;
+                if (secondsLeft > 0) {
+                    document.getElementById('modal-body').innerText = `Todos los pasos prácticos han sido completados. El cuestionario final se cargará en ${secondsLeft} segundos...`;
+                } else {
+                    clearInterval(interval);
+                    closeCustomModal();
+                    startQuiz();
+                }
+            }, 1000);
+        }
+
+        // --- PANTALLA 10: CUESTIONARIO TEST ---
+        function startQuiz() {
+            goToScreen('screen-quiz');
+            const form = document.getElementById('quiz-form');
+            form.innerHTML = "";
+
+            let shuffledQuestions = shuffleArray([...questionBank]);
+
+            shuffledQuestions.forEach((item, index) => {
+                let qDiv = document.createElement('div');
+                qDiv.style.marginBottom = "20px";
+                qDiv.innerHTML = `<p><strong>${index + 1}. ${item.q}</strong></p>`;
+
+                let optionsWithOriginalIndex = item.options.map((opt, idx) => ({ text: opt, originalIndex: idx }));
+                let shuffledOptions = shuffleArray(optionsWithOriginalIndex);
+
+                shuffledOptions.forEach(optObj => {
+                    let label = document.createElement('label');
+                    label.className = 'quiz-option';
+                    label.innerHTML = `
+                        <input type="radio" name="q${index}" value="${optObj.originalIndex}" data-correct="${item.correct}">
+                        ${optObj.text}
+                    `;
+                    qDiv.appendChild(label);
+                });
+
+                form.appendChild(qDiv);
+            });
+        }
+
+        function evaluateQuiz() {
+            const form = document.getElementById('quiz-form');
+            let score = 0;
+            let total = questionBank.length;
+
+            for (let i = 0; i < total; i++) {
+                const selected = form.querySelector(`input[name="q${i}"]:checked`);
+                if (selected) {
+                    if (parseInt(selected.value) === parseInt(selected.getAttribute('data-correct'))) {
+                        score++;
+                    }
+                }
+            }
+
+            finalScore = score;
+            const scoreElement = document.getElementById('quiz-score');
+            scoreElement.innerText = `${score} / ${total} Aciertos`;
+
+            goToScreen('screen-results');
+        }
+
+        function showRedDesktop() {
+            goToScreen('desktop');
+            document.getElementById('desktop-screen').classList.add('red-bg');
+            
+            // Determinar color de la ventana según el número de aciertos
+            let windowBgColor = "#3c3f41"; // Color base por defecto
+            if (finalScore <= 3) {
+                windowBgColor = "#1976d2"; // Azul (0 - 3 aciertos)
+            } else if (finalScore <= 6) {
+                windowBgColor = "#2e7d32"; // Verde (4 - 6 aciertos)
+            } else if (finalScore <= 9) {
+                windowBgColor = "#ef6c00"; // Naranja (7 - 9 aciertos)
+            } else {
+                windowBgColor = "#c62828"; // Rojo (10 aciertos)
+            }
+
+            // Crear ventana flotante de validación final con el color de fondo dinámico
+            let resBox = document.createElement('div');
+            resBox.id = 'final-validation-window';
+            resBox.className = 'window';
+            resBox.style.position = 'absolute';
+            resBox.style.zIndex = '2000';
+            resBox.style.width = '420px';
+            resBox.style.backgroundColor = windowBgColor;
+            resBox.style.borderColor = '#ffffff';
+
+            resBox.innerHTML = `
+                <div class="window-header" style="color:#ffffff; border-bottom-color: rgba(255,255,255,0.4);">Validación Completada</div>
+                <p><strong>Estado:</strong> Fondo de escritorio rojo activo (Procedimientos prácticos completados).</p>
+                <p style="font-size: 1.2em;"><strong>Resultado Cuestionario:</strong> ${finalScore} / 10 aciertos</p>
+                <p style="font-size:0.85em; opacity: 0.9;">Muestra esta pantalla al profesor para evaluar tu práctica.</p>
+            `;
+            document.getElementById('desktop-screen').appendChild(resBox);
+        }
+
+        // --- FUNCIONES AUXILIARES ---
+        function showError(element, msg) {
+            element.innerText = msg;
+            element.style.display = 'block';
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+    </script>
+</body>
+</html>
