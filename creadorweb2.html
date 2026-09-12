@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- saved from url=(0045)https://delatj.github.io/web/creadorweb2.html -->
 <html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -91,7 +92,7 @@
     .recording { animation: recordPulse 1.5s infinite !important; background-color: #d32f2f !important; color: white !important; border-color: #b71c1c !important; }
   </style>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <script src="./Editor Web Pro - Info Tarea_files/pdf.min.js"></script>
 
 </head>
 <body>
@@ -109,14 +110,14 @@
       <button onclick="addTab()" style="background: #e6f4ea; color: #1b5e20;">➕ Pestaña</button>
       <button onclick="saveFile()" style="background: #fff3e0;">💾 Guardar</button>
       <button onclick="loadFile()" style="background: #e3f2fd;">📂 Abrir</button>
-      <button onclick="formatText('undo')">↩️ Deshacer</button>
+      <button onclick="formatText(&#39;undo&#39;)">↩️ Deshacer</button>
       <button class="btn-clear" onclick="superClearFormat()">🧽 Limpiar</button>
       <button onclick="showTaskInfo()" style="background: #e1bee7; color: #4a148c; font-weight: bold; margin-left: auto;">📝 Tarea</button>
     </div>
 
     <div class="tool-group">
       <span class="label-text">Texto:</span>
-      <select onchange="formatText('fontName', this.value)">
+      <select onchange="formatText(&#39;fontName&#39;, this.value)">
         <option value="Arial">Arial</option>
         <option value="Verdana">Verdana</option>
         <option value="Times New Roman">Times</option>
@@ -129,48 +130,48 @@
         <option value="45px">Grande</option>
         <option value="65px">Gigante</option>
       </select>
-      <button onclick="formatText('bold')"><b>N</b></button>
-      <button onclick="formatText('italic')"><i>K</i></button>
-      <button onclick="formatText('underline')"><u>S</u></button>
+      <button onclick="formatText(&#39;bold&#39;)"><b>N</b></button>
+      <button onclick="formatText(&#39;italic&#39;)"><i>K</i></button>
+      <button onclick="formatText(&#39;underline&#39;)"><u>S</u></button>
       <button class="btn-link" onclick="insertLink()">🔗 Link</button>
       <span style="margin: 0 5px; color: #ccc;">|</span>
-      <button onclick="formatText('justifyLeft')">⬅️</button>
-      <button onclick="formatText('justifyCenter')">↔️</button>
-      <button onclick="formatText('justifyRight')">➡️</button>
-      <button onclick="formatText('justifyFull')">≡</button>
+      <button onclick="formatText(&#39;justifyLeft&#39;)">⬅️</button>
+      <button onclick="formatText(&#39;justifyCenter&#39;)">↔️</button>
+      <button onclick="formatText(&#39;justifyRight&#39;)">➡️</button>
+      <button onclick="formatText(&#39;justifyFull&#39;)">≡</button>
     </div>
 
     <div class="tool-group">
       <span class="label-text">Letra:</span>
-      <button class="color-btn" style="background: #000000;" onclick="formatText('foreColor', '#000000')"></button>
-      <button class="color-btn" style="background: #d32f2f;" onclick="formatText('foreColor', '#d32f2f')"></button>
-      <button class="color-btn" style="background: #1976d2;" onclick="formatText('foreColor', '#1976d2')"></button>
-      <button class="color-btn" style="background: #388e3c;" onclick="formatText('foreColor', '#388e3c')"></button>
-      <button class="color-btn" style="background: #fbc02d;" onclick="formatText('foreColor', '#fbc02d')"></button>
-      <button class="color-btn" style="background: #8e24aa;" onclick="formatText('foreColor', '#8e24aa')"></button>
-      <button class="color-btn" style="background: #e64a19;" onclick="formatText('foreColor', '#e64a19')"></button>
+      <button class="color-btn" style="background: #000000;" onclick="formatText(&#39;foreColor&#39;, &#39;#000000&#39;)"></button>
+      <button class="color-btn" style="background: #d32f2f;" onclick="formatText(&#39;foreColor&#39;, &#39;#d32f2f&#39;)"></button>
+      <button class="color-btn" style="background: #1976d2;" onclick="formatText(&#39;foreColor&#39;, &#39;#1976d2&#39;)"></button>
+      <button class="color-btn" style="background: #388e3c;" onclick="formatText(&#39;foreColor&#39;, &#39;#388e3c&#39;)"></button>
+      <button class="color-btn" style="background: #fbc02d;" onclick="formatText(&#39;foreColor&#39;, &#39;#fbc02d&#39;)"></button>
+      <button class="color-btn" style="background: #8e24aa;" onclick="formatText(&#39;foreColor&#39;, &#39;#8e24aa&#39;)"></button>
+      <button class="color-btn" style="background: #e64a19;" onclick="formatText(&#39;foreColor&#39;, &#39;#e64a19&#39;)"></button>
       
       <span class="label-text" style="margin-left: 10px;">Fondo Txt:</span>
-      <button class="color-btn" style="background: #ffff00;" onclick="highlightText('#ffff00')" title="Amarillo"></button>
-      <button class="color-btn" style="background: #00ff00;" onclick="highlightText('#00ff00')" title="Verde"></button>
-      <button class="color-btn" style="background: #00ffff;" onclick="highlightText('#00ffff')" title="Cian"></button>
-      <button class="color-btn" style="background: #ff00ff;" onclick="highlightText('#ff00ff')" title="Magenta"></button>
-      <button class="color-btn" style="background: #ffc107;" onclick="highlightText('#ffc107')" title="Naranja"></button>
-      <button class="color-btn" style="background: #cfd8dc;" onclick="highlightText('#cfd8dc')" title="Gris"></button>
-      <button class="color-btn" style="background: #ffffff; border: 2px dashed #000;" onclick="highlightText('transparent')" title="Sin Fondo">🚫</button>
+      <button class="color-btn" style="background: #ffff00;" onclick="highlightText(&#39;#ffff00&#39;)" title="Amarillo"></button>
+      <button class="color-btn" style="background: #00ff00;" onclick="highlightText(&#39;#00ff00&#39;)" title="Verde"></button>
+      <button class="color-btn" style="background: #00ffff;" onclick="highlightText(&#39;#00ffff&#39;)" title="Cian"></button>
+      <button class="color-btn" style="background: #ff00ff;" onclick="highlightText(&#39;#ff00ff&#39;)" title="Magenta"></button>
+      <button class="color-btn" style="background: #ffc107;" onclick="highlightText(&#39;#ffc107&#39;)" title="Naranja"></button>
+      <button class="color-btn" style="background: #cfd8dc;" onclick="highlightText(&#39;#cfd8dc&#39;)" title="Gris"></button>
+      <button class="color-btn" style="background: #ffffff; border: 2px dashed #000;" onclick="highlightText(&#39;transparent&#39;)" title="Sin Fondo">🚫</button>
     </div>
 
     <div class="tool-group">
       <span class="label-text">Fondo Web:</span>
-      <button class="color-btn" style="background: #ffffff;" onclick="changeBg('#ffffff')" title="Blanco"></button>
-      <button class="color-btn" style="background: #cccccc;" onclick="changeBg('#cccccc')" title="Gris"></button>
-      <button class="color-btn" style="background: #90caf9;" onclick="changeBg('#90caf9')" title="Azul"></button>
-      <button class="color-btn" style="background: #a5d6a7;" onclick="changeBg('#a5d6a7')" title="Verde"></button>
-      <button class="color-btn" style="background: #fff59d;" onclick="changeBg('#fff59d')" title="Amarillo"></button>
-      <button class="color-btn" style="background: #ffcc80;" onclick="changeBg('#ffcc80')" title="Naranja"></button>
-      <button class="color-btn" style="background: #ef9a9a;" onclick="changeBg('#ef9a9a')" title="Rosa"></button>
-      <button class="color-btn" style="background: #ce93d8;" onclick="changeBg('#ce93d8')" title="Morado"></button>
-      <button class="color-btn" style="background: #bcaaa4;" onclick="changeBg('#bcaaa4')" title="Arena"></button>
+      <button class="color-btn" style="background: #ffffff;" onclick="changeBg(&#39;#ffffff&#39;)" title="Blanco"></button>
+      <button class="color-btn" style="background: #cccccc;" onclick="changeBg(&#39;#cccccc&#39;)" title="Gris"></button>
+      <button class="color-btn" style="background: #90caf9;" onclick="changeBg(&#39;#90caf9&#39;)" title="Azul"></button>
+      <button class="color-btn" style="background: #a5d6a7;" onclick="changeBg(&#39;#a5d6a7&#39;)" title="Verde"></button>
+      <button class="color-btn" style="background: #fff59d;" onclick="changeBg(&#39;#fff59d&#39;)" title="Amarillo"></button>
+      <button class="color-btn" style="background: #ffcc80;" onclick="changeBg(&#39;#ffcc80&#39;)" title="Naranja"></button>
+      <button class="color-btn" style="background: #ef9a9a;" onclick="changeBg(&#39;#ef9a9a&#39;)" title="Rosa"></button>
+      <button class="color-btn" style="background: #ce93d8;" onclick="changeBg(&#39;#ce93d8&#39;)" title="Morado"></button>
+      <button class="color-btn" style="background: #bcaaa4;" onclick="changeBg(&#39;#bcaaa4&#39;)" title="Arena"></button>
 
       <span style="margin: 0 10px; color: #ccc;">|</span>
       <button onclick="insertImage()" style="background: #f3e5f5;" title="Inserta 1, 2 o 3 imágenes">🖼️ Fotos</button>
@@ -179,7 +180,7 @@
       
       <button id="btnRecordAudio" onclick="toggleAudioRecording()" style="background: #f8bbd0; color: #880e4f;" title="Grabar audio con tu micrófono">🎙️ Grabar Audio</button>
 
-      <button type="button" class="n-btn" onclick="document.getElementById('pdf-input').click()" style="background-color: #e74c3c; color: white; border: none; padding: 4px 10px; cursor: pointer; margin-left: 10px;">📄 PDF a Fotos</button>
+      <button type="button" class="n-btn" onclick="document.getElementById(&#39;pdf-input&#39;).click()" style="background-color: #e74c3c; color: white; border: none; padding: 4px 10px; cursor: pointer; margin-left: 10px;">📄 PDF a Fotos</button>
       <input type="file" id="pdf-input" accept="application/pdf" style="display: none;" onchange="handlePDFUpload(event)">
 
     </div>
@@ -190,8 +191,8 @@
     </div>
   </div>
 
-  <div id="tab-container"></div>
-  <div id="editor-container"></div>
+  <div id="tab-container"><div class="tab active" id="btn-p-1"><span>Inicio</span><button class="close-tab" onclick="event.stopPropagation(); removeTab(&#39;p-1&#39;)">X</button></div></div>
+  <div id="editor-container"><div class="editor-pane active" id="p-1" contenteditable="true" style="background-color: rgb(255, 255, 255); display: block;"><h3 style="margin-top:0;">Inicio</h3><p>Empieza a escribir aquí...</p></div></div>
 
   <div id="taskModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:4000; justify-content:center; align-items:center;">
     <div class="info-modal-content">
@@ -297,28 +298,69 @@
       const url = prompt("Pega el enlace web (ej: https://www.google.com):");
       if(url) formatText('createLink', url);
     }
+ 
+   function changeFontSize(size) {
+  if (!size) return;
+  const activeEditor = document.querySelector(".editor-pane.active");
+  if (!activeEditor) return;
+  activeEditor.focus();
 
-    function changeFontSize(size) {
-      if(!size) return;
-      const activeEditor = document.querySelector(".editor-pane.active");
-      if(!activeEditor) return;
-      activeEditor.focus();
-      document.execCommand('fontSize', false, '7'); 
-      const fonts = activeEditor.querySelectorAll('font[size="7"]');
-      fonts.forEach(f => { f.removeAttribute('size'); f.style.fontSize = size; });
-      document.getElementById('fontSizeSelector').value = "";
-    }
+  const sel = window.getSelection();
+  if (!sel.rangeCount || sel.isCollapsed) return;
 
-    function superClearFormat() {
-      const activeEditor = document.querySelector(".editor-pane.active");
-      if(!activeEditor) return;
-      activeEditor.focus();
-      document.execCommand('removeFormat', false, null);
-      document.execCommand('unlink', false, null); 
-      highlightText('transparent');
-    }
+  const range = sel.getRangeAt(0);
 
-    function insertTable() {
+  // 1. Usar la API nativa para marcar el texto de forma precisa
+  document.execCommand('fontSize', false, '7');
+  
+  // 2. Localizar todos los elementos generados con tamaño 7
+  const fontTags = activeEditor.querySelectorAll('font[size="7"]');
+  
+  fontTags.forEach(fontEl => {
+    fontEl.removeAttribute('size');
+    // Forzar el tamaño visual con máxima prioridad CSS
+    fontEl.style.setProperty('font-size', size, 'important');
+    fontEl.style.setProperty('line-height', 'normal', 'important');
+
+    // Limpiar tamaños anidados hijos que puedan estar bloqueando la vista
+    fontEl.querySelectorAll('*').forEach(child => {
+      child.style.fontSize = '';
+    });
+  });
+
+  // 3. Resetear el selector
+  document.getElementById('fontSizeSelector').value = "";
+}
+function superClearFormat() {
+  const activeEditor = document.querySelector(".editor-pane.active");
+  if (!activeEditor) return;
+  activeEditor.focus();
+
+  const sel = window.getSelection();
+  if (!sel.rangeCount || sel.isCollapsed) {
+    alert("Por favor, selecciona primero el texto al que deseas quitarle el formato.");
+    return;
+  }
+
+  const range = sel.getRangeAt(0);
+
+  // 1. Extraer el texto plano seleccionando y eliminando todas las etiquetas HTML internas
+  const plainText = range.toString();
+
+  // 2. Reemplazar el contenido seleccionado por un nodo de texto totalmente limpio
+  range.deleteContents();
+  const textNode = document.createTextNode(plainText);
+  range.insertNode(textNode);
+
+  // 3. Reorganizar la selección sobre el nuevo texto plano
+  range.selectNodeContents(textNode);
+  sel.removeAllRanges();
+  sel.addRange(range);
+
+  // 4. Resetear el selector visual de tamaño de letra de la barra de herramientas
+  const sizeSelector = document.getElementById('fontSizeSelector');
+  if (sizeSelector) sizeSelector.value = "";
+}    function insertTable() {
       const rows = parseInt(prompt("Número de filas:", "3"));
       const cols = parseInt(prompt("Número de columnas:", "3"));
       if (!rows || !cols || isNaN(rows) || isNaN(cols)) return;
@@ -711,5 +753,6 @@
         fileReader.readAsArrayBuffer(file);
     }
   </script>
+
 
 </body></html>
