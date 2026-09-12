@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- saved from url=(0045)https://delatj.github.io/web/creadorweb2.html -->
-<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Editor Web Pro - Info Tarea</title>
   <style>
-    * { box-sizing: border-box; font-size: 1.1rem; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 10px; background-color: #e9ecef; }
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 10px; background-color: #e9ecef; font-size: 1.1rem; }
     h2 { text-align: center; color: #1a73e8; margin: 5px 0 10px 0; font-size: 1.5rem; }
 
     /* --- Barra de herramientas ULTRA COMPACTA --- */
@@ -15,7 +15,7 @@
       background: white; padding: 8px 12px; border-bottom: 3px solid #1a73e8;
       border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); margin-bottom: 15px;
     }
-    #toolbar * { font-size: 0.85rem; } /* Forzar letra pequeña solo en el menú */
+    #toolbar * { font-size: 0.85rem; }
     
     .tool-group { display: flex; flex-wrap: wrap; gap: 5px; padding: 4px 0; border-bottom: 1px solid #eee; align-items: center; }
     .tool-group:last-child { border-bottom: none; padding-bottom: 0; }
@@ -38,13 +38,13 @@
     .tab.active { background: #fff; border-color: #1a73e8; color: #1a73e8; font-weight: bold; }
     .close-tab { background: #ffcdd2; color: #b71c1c; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-size: 0.75rem; font-weight: bold; display: flex; align-items: center; justify-content: center; padding: 0; }
 
-    /* Área de Edición Fija */
+    /* Área de Edición Fija - SOLUCIÓN TAMAÑO DE LETRA: Permitir que los estilos inline escalen */
     .editor-pane {
       display: none; border: 3px solid #1a73e8; padding: 30px; min-height: 450px;
       background: #ffffff; border-radius: 0 0 10px 10px; outline: none; font-size: 1.2rem; line-height: 1.6;
     }
     
-    /* REGLA NUEVA: Ajuste automático de PDFs e Imágenes sueltas para que no se salgan de la pantalla */
+    /* Regla corregida: Solo aplicamos tamaño base al texto directo, dejando prioridad a los cambios de tamaño */
     .editor-pane img { max-width: 100%; height: auto; }
 
     /* Contenedores Multimedia y Tablas */
@@ -74,8 +74,6 @@
     }
     .btn-close-modal:hover { background: #d32f2f; color: white; }
 
-    /* Mejoras de Tablas */
-    .table-wrap table { font-family: inherit; }
     .table-controls {
       display: flex; gap: 5px; justify-content: flex-end;
       background: #f1f3f4; padding: 4px; border-bottom: 2px solid #ddd;
@@ -85,15 +83,12 @@
       padding: 3px 6px; font-size: 0.75rem; background: #fff;
       border: 1px solid #ccc; border-radius: 3px; cursor: pointer;
     }
-    .table-controls button:hover { background: #e8eaed; border-color: #1a73e8; }
 
-    /* Animación Grabación Audio */
     @keyframes recordPulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
     .recording { animation: recordPulse 1.5s infinite !important; background-color: #d32f2f !important; color: white !important; border-color: #b71c1c !important; }
   </style>
 
-  <script src="./Editor Web Pro - Info Tarea_files/pdf.min.js"></script>
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 </head>
 <body>
 
@@ -110,14 +105,14 @@
       <button onclick="addTab()" style="background: #e6f4ea; color: #1b5e20;">➕ Pestaña</button>
       <button onclick="saveFile()" style="background: #fff3e0;">💾 Guardar</button>
       <button onclick="loadFile()" style="background: #e3f2fd;">📂 Abrir</button>
-      <button onclick="formatText(&#39;undo&#39;)">↩️ Deshacer</button>
+      <button onclick="formatText('undo')">↩️ Deshacer</button>
       <button class="btn-clear" onclick="superClearFormat()">🧽 Limpiar</button>
       <button onclick="showTaskInfo()" style="background: #e1bee7; color: #4a148c; font-weight: bold; margin-left: auto;">📝 Tarea</button>
     </div>
 
     <div class="tool-group">
       <span class="label-text">Texto:</span>
-      <select onchange="formatText(&#39;fontName&#39;, this.value)">
+      <select onchange="formatText('fontName', this.value)">
         <option value="Arial">Arial</option>
         <option value="Verdana">Verdana</option>
         <option value="Times New Roman">Times</option>
@@ -130,48 +125,48 @@
         <option value="45px">Grande</option>
         <option value="65px">Gigante</option>
       </select>
-      <button onclick="formatText(&#39;bold&#39;)"><b>N</b></button>
-      <button onclick="formatText(&#39;italic&#39;)"><i>K</i></button>
-      <button onclick="formatText(&#39;underline&#39;)"><u>S</u></button>
+      <button onclick="formatText('bold')"><b>N</b></button>
+      <button onclick="formatText('italic')"><i>K</i></button>
+      <button onclick="formatText('underline')"><u>S</u></button>
       <button class="btn-link" onclick="insertLink()">🔗 Link</button>
       <span style="margin: 0 5px; color: #ccc;">|</span>
-      <button onclick="formatText(&#39;justifyLeft&#39;)">⬅️</button>
-      <button onclick="formatText(&#39;justifyCenter&#39;)">↔️</button>
-      <button onclick="formatText(&#39;justifyRight&#39;)">➡️</button>
-      <button onclick="formatText(&#39;justifyFull&#39;)">≡</button>
+      <button onclick="formatText('justifyLeft')">⬅️</button>
+      <button onclick="formatText('justifyCenter')">↔️</button>
+      <button onclick="formatText('justifyRight')">➡️</button>
+      <button onclick="formatText('justifyFull')">≡</button>
     </div>
 
     <div class="tool-group">
       <span class="label-text">Letra:</span>
-      <button class="color-btn" style="background: #000000;" onclick="formatText(&#39;foreColor&#39;, &#39;#000000&#39;)"></button>
-      <button class="color-btn" style="background: #d32f2f;" onclick="formatText(&#39;foreColor&#39;, &#39;#d32f2f&#39;)"></button>
-      <button class="color-btn" style="background: #1976d2;" onclick="formatText(&#39;foreColor&#39;, &#39;#1976d2&#39;)"></button>
-      <button class="color-btn" style="background: #388e3c;" onclick="formatText(&#39;foreColor&#39;, &#39;#388e3c&#39;)"></button>
-      <button class="color-btn" style="background: #fbc02d;" onclick="formatText(&#39;foreColor&#39;, &#39;#fbc02d&#39;)"></button>
-      <button class="color-btn" style="background: #8e24aa;" onclick="formatText(&#39;foreColor&#39;, &#39;#8e24aa&#39;)"></button>
-      <button class="color-btn" style="background: #e64a19;" onclick="formatText(&#39;foreColor&#39;, &#39;#e64a19&#39;)"></button>
+      <button class="color-btn" style="background: #000000;" onclick="formatText('foreColor', '#000000')"></button>
+      <button class="color-btn" style="background: #d32f2f;" onclick="formatText('foreColor', '#d32f2f')"></button>
+      <button class="color-btn" style="background: #1976d2;" onclick="formatText('foreColor', '#1976d2')"></button>
+      <button class="color-btn" style="background: #388e3c;" onclick="formatText('foreColor', '#388e3c')"></button>
+      <button class="color-btn" style="background: #fbc02d;" onclick="formatText('foreColor', '#fbc02d')"></button>
+      <button class="color-btn" style="background: #8e24aa;" onclick="formatText('foreColor', '#8e24aa')"></button>
+      <button class="color-btn" style="background: #e64a19;" onclick="formatText('foreColor', '#e64a19')"></button>
       
       <span class="label-text" style="margin-left: 10px;">Fondo Txt:</span>
-      <button class="color-btn" style="background: #ffff00;" onclick="highlightText(&#39;#ffff00&#39;)" title="Amarillo"></button>
-      <button class="color-btn" style="background: #00ff00;" onclick="highlightText(&#39;#00ff00&#39;)" title="Verde"></button>
-      <button class="color-btn" style="background: #00ffff;" onclick="highlightText(&#39;#00ffff&#39;)" title="Cian"></button>
-      <button class="color-btn" style="background: #ff00ff;" onclick="highlightText(&#39;#ff00ff&#39;)" title="Magenta"></button>
-      <button class="color-btn" style="background: #ffc107;" onclick="highlightText(&#39;#ffc107&#39;)" title="Naranja"></button>
-      <button class="color-btn" style="background: #cfd8dc;" onclick="highlightText(&#39;#cfd8dc&#39;)" title="Gris"></button>
-      <button class="color-btn" style="background: #ffffff; border: 2px dashed #000;" onclick="highlightText(&#39;transparent&#39;)" title="Sin Fondo">🚫</button>
+      <button class="color-btn" style="background: #ffff00;" onclick="highlightText('#ffff00')" title="Amarillo"></button>
+      <button class="color-btn" style="background: #00ff00;" onclick="highlightText('#00ff00')" title="Verde"></button>
+      <button class="color-btn" style="background: #00ffff;" onclick="highlightText('#00ffff')" title="Cian"></button>
+      <button class="color-btn" style="background: #ff00ff;" onclick="highlightText('#ff00ff')" title="Magenta"></button>
+      <button class="color-btn" style="background: #ffc107;" onclick="highlightText('#ffc107')" title="Naranja"></button>
+      <button class="color-btn" style="background: #cfd8dc;" onclick="highlightText('#cfd8dc')" title="Gris"></button>
+      <button class="color-btn" style="background: #ffffff; border: 2px dashed #000;" onclick="highlightText('transparent')" title="Sin Fondo">🚫</button>
     </div>
 
     <div class="tool-group">
       <span class="label-text">Fondo Web:</span>
-      <button class="color-btn" style="background: #ffffff;" onclick="changeBg(&#39;#ffffff&#39;)" title="Blanco"></button>
-      <button class="color-btn" style="background: #cccccc;" onclick="changeBg(&#39;#cccccc&#39;)" title="Gris"></button>
-      <button class="color-btn" style="background: #90caf9;" onclick="changeBg(&#39;#90caf9&#39;)" title="Azul"></button>
-      <button class="color-btn" style="background: #a5d6a7;" onclick="changeBg(&#39;#a5d6a7&#39;)" title="Verde"></button>
-      <button class="color-btn" style="background: #fff59d;" onclick="changeBg(&#39;#fff59d&#39;)" title="Amarillo"></button>
-      <button class="color-btn" style="background: #ffcc80;" onclick="changeBg(&#39;#ffcc80&#39;)" title="Naranja"></button>
-      <button class="color-btn" style="background: #ef9a9a;" onclick="changeBg(&#39;#ef9a9a&#39;)" title="Rosa"></button>
-      <button class="color-btn" style="background: #ce93d8;" onclick="changeBg(&#39;#ce93d8&#39;)" title="Morado"></button>
-      <button class="color-btn" style="background: #bcaaa4;" onclick="changeBg(&#39;#bcaaa4&#39;)" title="Arena"></button>
+      <button class="color-btn" style="background: #ffffff;" onclick="changeBg('#ffffff')" title="Blanco"></button>
+      <button class="color-btn" style="background: #cccccc;" onclick="changeBg('#cccccc')" title="Gris"></button>
+      <button class="color-btn" style="background: #90caf9;" onclick="changeBg('#90caf9')" title="Azul"></button>
+      <button class="color-btn" style="background: #a5d6a7;" onclick="changeBg('#a5d6a7')" title="Verde"></button>
+      <button class="color-btn" style="background: #fff59d;" onclick="changeBg('#fff59d')" title="Amarillo"></button>
+      <button class="color-btn" style="background: #ffcc80;" onclick="changeBg('#ffcc80')" title="Naranja"></button>
+      <button class="color-btn" style="background: #ef9a9a;" onclick="changeBg('#ef9a9a')" title="Rosa"></button>
+      <button class="color-btn" style="background: #ce93d8;" onclick="changeBg('#ce93d8')" title="Morado"></button>
+      <button class="color-btn" style="background: #bcaaa4;" onclick="changeBg('#bcaaa4')" title="Arena"></button>
 
       <span style="margin: 0 10px; color: #ccc;">|</span>
       <button onclick="insertImage()" style="background: #f3e5f5;" title="Inserta 1, 2 o 3 imágenes">🖼️ Fotos</button>
@@ -180,9 +175,8 @@
       
       <button id="btnRecordAudio" onclick="toggleAudioRecording()" style="background: #f8bbd0; color: #880e4f;" title="Grabar audio con tu micrófono">🎙️ Grabar Audio</button>
 
-      <button type="button" class="n-btn" onclick="document.getElementById(&#39;pdf-input&#39;).click()" style="background-color: #e74c3c; color: white; border: none; padding: 4px 10px; cursor: pointer; margin-left: 10px;">📄 PDF a Fotos</button>
+      <button type="button" class="n-btn" onclick="document.getElementById('pdf-input').click()" style="background-color: #e74c3c; color: white; border: none; padding: 4px 10px; cursor: pointer; margin-left: 10px;">📄 PDF a Fotos</button>
       <input type="file" id="pdf-input" accept="application/pdf" style="display: none;" onchange="handlePDFUpload(event)">
-
     </div>
 
     <div class="tool-group">
@@ -191,8 +185,9 @@
     </div>
   </div>
 
-  <div id="tab-container"><div class="tab active" id="btn-p-1"><span>Inicio</span><button class="close-tab" onclick="event.stopPropagation(); removeTab(&#39;p-1&#39;)">X</button></div></div>
-  <div id="editor-container"><div class="editor-pane active" id="p-1" contenteditable="true" style="background-color: rgb(255, 255, 255); display: block;"><h3 style="margin-top:0;">Inicio</h3><p>Empieza a escribir aquí...</p></div></div>
+  <!-- Pestañas generadas dinámicamente -->
+  <div id="tab-container"></div>
+  <div id="editor-container"></div>
 
   <div id="taskModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:4000; justify-content:center; align-items:center;">
     <div class="info-modal-content">
@@ -201,18 +196,12 @@
       
       <div style="color: #333; line-height: 1.5; padding-right: 15px;">
         <p>Para modificar el texto primero cambia si debes a negrita, cursiva y subrayado, luego el tamaño de letra y luego el resto.</p>
-        
         <p>En una pestaña pega un punto de la teoría del tema y haz que aproveche el ancho máximo de la página, las letras del título tienen que ir en color rojo, negrita y subrayado, centrado con letra comic sans y tamaño grande, también cambia el color de fondo de la web... <strong>1 puntos</strong>, después inserta 3 imágenes al mismo tiempo relacionadas con el tema de teoría (deja pulsada la tecla control para seleccionarlas al mismo tiempo)... <strong>1 puntos</strong></p>
-        
         <p>Repite el punto anterior dos veces más en otras dos pestañas... <strong>2 puntos cada una</strong>.</p>
-        
         <p>En otra pestaña pega las preguntas de test (con las respuestas FUERA DE LOS RECUADROS) y cámbialas a letra times a tamaño pequeño, color azul y negrita... <strong>2 puntos</strong></p>
-        
         <p>En otra pestaña crea una tabla con 2 columna y 2 filas, en la primera fila pon en una celda tu nombre y en otra tus apellidos, en la segunda fila en una ceda pon tu curso y en otra la fecha... <strong>1 punto</strong>.</p>
-        
         <p>En la última pestaña de la tabla pon debajo un link al pdf de teoría y otro al test de la unidad... <strong>1 punto</strong>.</p>
       </div>
-
     </div>
   </div>
 
@@ -220,8 +209,9 @@
     let tabCount = 0;
     let pageBgColor = "#ffffff";
 
+    // Carga inicial limpia de una sola pestaña
     window.onload = function() {
-      if(tabCount === 0) addTab("Inicio");
+      addTab("Inicio");
     };
 
     function showTaskInfo() { document.getElementById('taskModal').style.display = 'flex'; }
@@ -298,69 +288,64 @@
       const url = prompt("Pega el enlace web (ej: https://www.google.com):");
       if(url) formatText('createLink', url);
     }
- 
-   function changeFontSize(size) {
-  if (!size) return;
-  const activeEditor = document.querySelector(".editor-pane.active");
-  if (!activeEditor) return;
-  activeEditor.focus();
 
-  const sel = window.getSelection();
-  if (!sel.rangeCount || sel.isCollapsed) return;
+    /* CAMBIO DE TAMAÑO GARANTIZADO VISUALMENTE EN VIVO */
+    function changeFontSize(size) {
+      if (!size) return;
+      const activeEditor = document.querySelector(".editor-pane.active");
+      if (!activeEditor) return;
+      activeEditor.focus();
 
-  const range = sel.getRangeAt(0);
+      const sel = window.getSelection();
+      if (!sel.rangeCount || sel.isCollapsed) return;
 
-  // 1. Usar la API nativa para marcar el texto de forma precisa
-  document.execCommand('fontSize', false, '7');
-  
-  // 2. Localizar todos los elementos generados con tamaño 7
-  const fontTags = activeEditor.querySelectorAll('font[size="7"]');
-  
-  fontTags.forEach(fontEl => {
-    fontEl.removeAttribute('size');
-    // Forzar el tamaño visual con máxima prioridad CSS
-    fontEl.style.setProperty('font-size', size, 'important');
-    fontEl.style.setProperty('line-height', 'normal', 'important');
+      // Usar execCommand con marcador
+      document.execCommand('fontSize', false, '7');
+      
+      const fontTags = activeEditor.querySelectorAll('font[size="7"]');
+      fontTags.forEach(fontEl => {
+        fontEl.removeAttribute('size');
+        // Aplicar estilo inline directo con prioridad
+        fontEl.style.fontSize = size;
+        fontEl.style.lineHeight = "normal";
 
-    // Limpiar tamaños anidados hijos que puedan estar bloqueando la vista
-    fontEl.querySelectorAll('*').forEach(child => {
-      child.style.fontSize = '';
-    });
-  });
+        // Limpiar cualquier otro tamaño interior que bloquee la vista visual
+        fontEl.querySelectorAll('*').forEach(child => {
+          child.style.fontSize = 'inherit';
+        });
+      });
 
-  // 3. Resetear el selector
-  document.getElementById('fontSizeSelector').value = "";
-}
-function superClearFormat() {
-  const activeEditor = document.querySelector(".editor-pane.active");
-  if (!activeEditor) return;
-  activeEditor.focus();
+      document.getElementById('fontSizeSelector').value = "";
+    }
 
-  const sel = window.getSelection();
-  if (!sel.rangeCount || sel.isCollapsed) {
-    alert("Por favor, selecciona primero el texto al que deseas quitarle el formato.");
-    return;
-  }
+    /* LIMPIAR FORMATO EXTRAIENDO TEXTO PLANO */
+    function superClearFormat() {
+      const activeEditor = document.querySelector(".editor-pane.active");
+      if (!activeEditor) return;
+      activeEditor.focus();
 
-  const range = sel.getRangeAt(0);
+      const sel = window.getSelection();
+      if (!sel.rangeCount || sel.isCollapsed) {
+        alert("Por favor, selecciona primero el texto al que deseas quitarle el formato.");
+        return;
+      }
 
-  // 1. Extraer el texto plano seleccionando y eliminando todas las etiquetas HTML internas
-  const plainText = range.toString();
+      const range = sel.getRangeAt(0);
+      const plainText = range.toString();
 
-  // 2. Reemplazar el contenido seleccionado por un nodo de texto totalmente limpio
-  range.deleteContents();
-  const textNode = document.createTextNode(plainText);
-  range.insertNode(textNode);
+      range.deleteContents();
+      const textNode = document.createTextNode(plainText);
+      range.insertNode(textNode);
 
-  // 3. Reorganizar la selección sobre el nuevo texto plano
-  range.selectNodeContents(textNode);
-  sel.removeAllRanges();
-  sel.addRange(range);
+      range.selectNodeContents(textNode);
+      sel.removeAllRanges();
+      sel.addRange(range);
 
-  // 4. Resetear el selector visual de tamaño de letra de la barra de herramientas
-  const sizeSelector = document.getElementById('fontSizeSelector');
-  if (sizeSelector) sizeSelector.value = "";
-}    function insertTable() {
+      const sizeSelector = document.getElementById('fontSizeSelector');
+      if (sizeSelector) sizeSelector.value = "";
+    }
+
+    function insertTable() {
       const rows = parseInt(prompt("Número de filas:", "3"));
       const cols = parseInt(prompt("Número de columnas:", "3"));
       if (!rows || !cols || isNaN(rows) || isNaN(cols)) return;
@@ -390,28 +375,6 @@ function superClearFormat() {
         }
         table.appendChild(tr);
       }
-
-      table.addEventListener('keydown', function(e) {
-        if (e.key === 'Tab') {
-          const node = window.getSelection().anchorNode;
-          if (!node) return;
-          const currentTd = node.nodeType === 3 ? node.parentNode.closest('td') : node.closest('td');
-          if (!currentTd) return;
-          const tr = currentTd.parentElement;
-          const tbody = tr.parentElement;
-          if (tr === tbody.lastElementChild && currentTd === tr.lastElementChild) {
-            e.preventDefault(); addRow(this);
-            setTimeout(() => {
-               const newRow = tbody.lastElementChild;
-               const firstCell = newRow.firstElementChild;
-               const range = document.createRange();
-               const sel = window.getSelection();
-               range.setStart(firstCell, 0); range.collapse(true);
-               sel.removeAllRanges(); sel.addRange(range);
-            }, 10);
-          }
-        }
-      });
 
       wrapper.appendChild(table);
       const activeEditor = document.querySelector(".editor-pane.active");
@@ -489,12 +452,11 @@ function superClearFormat() {
     }
 
     function insertRawHTML() {
-      const htmlCode = prompt("Pega aquí tu código HTML (se insertará aislado para no romper el editor):");
+      const htmlCode = prompt("Pega aquí tu código HTML:");
       if(htmlCode) {
         const activeEditor = document.querySelector(".editor-pane.active");
         if(activeEditor) {
           activeEditor.focus();
-          
           const sel = window.getSelection();
           if (sel.rangeCount) {
             const wrapper = document.createElement("div");
@@ -506,7 +468,6 @@ function superClearFormat() {
             iframe.style.minHeight = "800px"; 
             iframe.style.border = "2px dashed #1a73e8";
             iframe.style.borderRadius = "8px";
-            iframe.style.backgroundColor = "transparent";
             iframe.srcdoc = htmlCode; 
             
             const delBtn = document.createElement("button");
@@ -531,17 +492,11 @@ function superClearFormat() {
             const p = document.createElement("p"); 
             p.innerHTML = "&#8203;"; 
             wrapper.after(p);
-            
-            range.setStart(p, 0);
-            range.collapse(true);
-            sel.removeAllRanges();
-            sel.addRange(range);
           }
         }
       }
     }
 
-    // --- NUEVO: LÓGICA DE GRABACIÓN DE AUDIO ---
     let mediaRecorder;
     let audioChunks = [];
     let isRecording = false;
@@ -561,13 +516,12 @@ function superClearFormat() {
 
           mediaRecorder.onstop = () => {
             const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-            // Convertimos el audio a Base64 para que se guarde dentro del HTML y no se pierda al descargar
             const reader = new FileReader();
             reader.readAsDataURL(audioBlob);
             reader.onloadend = () => {
               insertAudioToEditor(reader.result);
             };
-            stream.getTracks().forEach(track => track.stop()); // Apagar el micrófono del navegador
+            stream.getTracks().forEach(track => track.stop());
           };
 
           mediaRecorder.start();
@@ -575,8 +529,7 @@ function superClearFormat() {
           btn.innerHTML = "⏹️ Detener";
           btn.classList.add("recording");
         } catch (err) {
-          console.error("Error al acceder al micrófono:", err);
-          alert("No se pudo acceder al micrófono. Asegúrate de dar los permisos necesarios en tu navegador.");
+          alert("No se pudo acceder al micrófono.");
         }
       } else {
         mediaRecorder.stop();
@@ -599,7 +552,7 @@ function superClearFormat() {
       wrapper.innerHTML = `
         <div style="display:flex; align-items:center; gap:10px;">
           <audio controls src="${base64Audio}"></audio>
-          <button onclick="this.parentElement.parentElement.remove()" style="background:#ffcdd2; color:#b71c1c; border:none; padding:6px 10px; cursor:pointer; border-radius:4px; font-weight:bold;" title="Borrar Audio">❌</button>
+          <button onclick="this.parentElement.parentElement.remove()" style="background:#ffcdd2; color:#b71c1c; border:none; padding:6px 10px; cursor:pointer; border-radius:4px; font-weight:bold;">❌</button>
         </div>
       `;
 
@@ -613,7 +566,6 @@ function superClearFormat() {
         }
       }
     }
-    // ---------------------------------------------
 
     function saveFile() {
       const data = {
@@ -672,8 +624,7 @@ function superClearFormat() {
         .img-wrap { margin: 20px 0; border: 2px solid #ddd; padding: 15px; background: #fff; border-radius: 8px; }
         .img-row-container { display: flex; gap: 15px; width: 100%; justify-content: center; }
         .img-row-container img { flex: 1 1 0; min-width: 0; max-height: 500px; object-fit: contain; border-radius: 6px; }
-        
-        .sec img { max-width: 100%; height: auto; display: block; margin: 10px auto; } /* Mejora para centrar imágenes de PDF descargadas */
+        .sec img { max-width: 100%; height: auto; display: block; margin: 10px auto; }
 
         table { width: 100%; border-collapse: collapse; margin: 15px 0; }
         table td { padding: 8px; border: 1px solid #555; }
@@ -700,14 +651,12 @@ function superClearFormat() {
       a.click();
     }
 
-    // --- LÓGICA DE PDF MEJORADA ---
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
     async function handlePDFUpload(event) {
         const file = event.target.files[0];
         if (!file) return;
 
-        // Mostrar pantalla de carga
         const loadingOverlay = document.getElementById('loadingOverlay');
         const loadingText = document.getElementById('loadingText');
         loadingOverlay.style.display = 'flex';
@@ -716,7 +665,6 @@ function superClearFormat() {
         const fileReader = new FileReader();
         fileReader.onload = async function() {
             const typedarray = new Uint8Array(this.result);
-            
             try {
                 const activeEditor = document.querySelector(".editor-pane.active");
                 if(activeEditor) activeEditor.focus();
@@ -724,7 +672,7 @@ function superClearFormat() {
                 const pdf = await window.pdfjsLib.getDocument(typedarray).promise;
                 
                 for (let i = 1; i <= pdf.numPages; i++) {
-                    loadingText.innerText = `Procesando página ${i} de ${pdf.numPages}...`; // Actualizar texto
+                    loadingText.innerText = `Procesando página ${i} de ${pdf.numPages}...`;
                     const page = await pdf.getPage(i);
                     const viewport = page.getViewport({ scale: 2.0 }); 
                     
@@ -736,23 +684,18 @@ function superClearFormat() {
                     await page.render({ canvasContext: context, viewport: viewport }).promise;
                     
                     const imgData = canvas.toDataURL('image/png');
-                    
-                    // Insertamos la imagen formateada con un marco elegante mediante HTML en vez de insertImage básica
                     const imgHTML = `<img src="${imgData}" style="max-width: 100%; height: auto; display: block; margin: 15px auto; border: 1px solid #ccc; box-shadow: 0px 4px 10px rgba(0,0,0,0.15);">`;
                     document.execCommand('insertHTML', false, imgHTML + '<br>');
                 }
             } catch (error) {
-                console.error("Error al procesar el PDF:", error);
-                alert("Hubo un error al convertir el PDF. Es posible que el archivo esté protegido o no tenga un formato válido.");
+                alert("Hubo un error al convertir el PDF.");
             } finally {
-                // Ocultar pantalla de carga al terminar o dar error
                 loadingOverlay.style.display = 'none';
-                event.target.value = ''; // Resetear el input para poder subir el mismo PDF de nuevo si se desea
+                event.target.value = '';
             }
         };
         fileReader.readAsArrayBuffer(file);
     }
   </script>
-
-
-</body></html>
+</body>
+</html>
