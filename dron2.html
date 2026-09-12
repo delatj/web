@@ -1,284 +1,570 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dron Duel 3 - Test Evaluativo Tecnología y Digitalización</title>
+  <style>
+    :root {
+      --primary: #2ecc71;
+      --p1-color: #e74c3c;
+      --p2-color: #3498db;
+      --grid-size: 40px;
+      --criterio-13: #dd6b20;
+      --criterio-61: #d69e2e;
+      --criterio-42: #2b6cb0;
+      --criterio-43: #6b46c1;
+      --criterio-44: #2f855a;
+      --criterio-todos: #4a5568;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      background: #eee;
+      color: #333;
+    }
+
+    /* PANTALLA DE SELECCIÓN DE CRITERIO */
+    #pantalla-seleccion {
+      position: fixed;
+      inset: 0;
+      background: #f4f6f9;
+      z-index: 4000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .card-seleccion {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+      max-width: 650px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .btn-criterio {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+    .btn-criterio:hover { transform: scale(1.01); opacity: 0.9; }
+
+    /* ESTILOS DEL JUEGO DRON DUEL */
+    #split-container { position: fixed; inset: 0; display: flex; z-index: 1; }
+    .arena { 
+      flex: 1; position: relative; transition: background 0.8s ease; 
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+      padding-bottom: 50px; perspective: 1000px;
+      background-color: white; border: 1px solid #ccc;
+    }
+
+    .top-bar { 
+      position: fixed; top: 0; width: 100%; display: flex; justify-content: space-around; 
+      align-items: center; height: 140px; background: white; border-bottom: 3px solid #333; z-index: 200; 
+    }
+    .score-card { text-align: center; padding: 10px; min-width: 200px; }
+    .name-display { font-size: 1.1rem; font-weight: bold; color: #555; margin-bottom: 2px; }
+    .score-val { font-size: 2.5rem; font-weight: 900; color: #222; margin: 0; display: none; }
     
-    <title>Dron Duel - 30 Retos Cyber</title>
-    <style>
-        :root {
-            --primary: #2ecc71; --p1-color: #e74c3c; --p2-color: #3498db; --grid-size: 40px;
-        }
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; height: 100vh; overflow: hidden; background: #eee; color: #333; }
+    .multiplier { color: #e67e22; font-size: 2.5rem; font-weight: 900; margin: 0; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .res-final { color: black; font-weight: bold; font-size: 2em; }
 
-        #split-container { position: fixed; inset: 0; display: flex; z-index: 1; }
-        .arena { 
-            flex: 1; position: relative; transition: background 0.8s ease; 
-            display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
-            padding-bottom: 50px; perspective: 1000px;
-            background-color: white; border: 1px solid #ccc;
-        }
+    /* SECCIÓN CENTRAL BARRA SUPERIOR */
+    .center-top-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
 
-        /* Se aumentó la altura de la barra superior a 140px para acomodar el nuevo tamaño del texto */
-        .top-bar { position: fixed; top: 0; width: 100%; display: flex; justify-content: space-around; align-items: center; height: 140px; background: white; border-bottom: 3px solid #333; z-index: 200; }
-        .score-card { text-align: center; padding: 10px; min-width: 200px; }
-        .name-display { font-size: 1.1rem; font-weight: bold; color: #555; margin-bottom: 2px; }
-        .score-val { font-size: 2.5rem; font-weight: 900; color: #222; margin: 0; display: none; /* Oculto temporalmente si solo quieres ver el multiplicador, o se puede dejar */ }
-        
-        /* Multiplicador original y nueva clase para el resultado final */
-        .multiplier { color: #e67e22; font-size: 2.5rem; font-weight: 900; margin: 0; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .res-final { color: black; font-weight: bold; font-size: 2em; }
+    .badge-criterio {
+      font-size: 0.78rem;
+      font-weight: bold;
+      color: white;
+      background-color: #4a5568;
+      padding: 4px 10px;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      max-width: 320px;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
-        /* Se bajó el panel a 150px para que no choque con la barra superior ampliada */
-        .cmd-panel { 
-            position: absolute; top: 150px; width: 180px; 
-            background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(5px);
-            padding: 10px; border-radius: 12px; border: 2px solid rgba(0,0,0,0.1); 
-            z-index: 100; font-family: monospace; pointer-events: none;
-        }
-        .p1-panel { left: 20px; border-left: 5px solid var(--p1-color); }
-        .p2-panel { right: 20px; border-right: 5px solid var(--p2-color); }
-        
-        .cmd-scroll { height: 35px; overflow: hidden; color: #222; font-size: 1.4rem; background: rgba(0,0,0,0.05); padding: 5px; border-radius: 6px; text-align: center; font-weight: bold; }
+    .cmd-panel { 
+      position: absolute; top: 150px; width: 180px; 
+      background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(5px);
+      padding: 10px; border-radius: 12px; border: 2px solid rgba(0,0,0,0.1); 
+      z-index: 100; font-family: monospace; pointer-events: none;
+    }
+    .p1-panel { left: 20px; border-left: 5px solid var(--p1-color); }
+    .p2-panel { right: 20px; border-right: 5px solid var(--p2-color); }
+    
+    .cmd-scroll { height: 35px; overflow: hidden; color: #222; font-size: 1.4rem; background: rgba(0,0,0,0.05); padding: 5px; border-radius: 6px; text-align: center; font-weight: bold; }
 
-        .pista { 
-            width: 400px; height: 480px; position: relative; transform-style: preserve-3d; transform: rotateX(35deg);
-            background-image: linear-gradient(black 2px, transparent 2px), linear-gradient(90deg, black 2px, transparent 2px);
-            background-size: var(--grid-size) var(--grid-size); border: 4px solid #333; background-color: rgba(255,255,255,0.5);
-        }
-        .meta { position: absolute; width: 34px; height: 34px; border: 3px solid #333; border-radius: 50%; z-index: 5; background: rgba(255,255,0,0.4); }
-        
-        .dron-container { position: absolute; width: 40px; height: 40px; transform-style: preserve-3d; transition: all 0.35s; }
-        .dron-body { width: 34px; height: 34px; margin: 3px; border-radius: 6px; position: relative; transform-style: preserve-3d; box-shadow: 0 5px 10px rgba(0,0,0,0.3); }
-        .dron-front { position: absolute; top: 0; left: 50%; width: 14px; height: 8px; background: #222; margin-left: -7px; border-radius: 2px 2px 0 0; }
-        .p1-body { background: var(--p1-color); }
-        .p2-body { background: var(--p2-color); }
-        .helice { position: absolute; width: 30px; height: 2px; background: #fff; top: 50%; left: 50%; margin-left: -15px; animation: spin 0.1s infinite linear; opacity: 0; }
-        @keyframes spin { to { transform: rotateZ(360deg); } }
+    .pista { 
+      width: 400px; height: 480px; position: relative; transform-style: preserve-3d; transform: rotateX(35deg);
+      background-image: linear-gradient(black 2px, transparent 2px), linear-gradient(90deg, black 2px, transparent 2px);
+      background-size: var(--grid-size) var(--grid-size); border: 4px solid #333; background-color: rgba(255,255,255,0.5);
+    }
+    .meta { position: absolute; width: 34px; height: 34px; border: 3px solid #333; border-radius: 50%; z-index: 5; background: rgba(255,255,0,0.4); }
+    
+    .dron-container { position: absolute; width: 40px; height: 40px; transform-style: preserve-3d; transition: all 0.35s; }
+    .dron-body { width: 34px; height: 34px; margin: 3px; border-radius: 6px; position: relative; transform-style: preserve-3d; box-shadow: 0 5px 10px rgba(0,0,0,0.3); }
+    .dron-front { position: absolute; top: 0; left: 50%; width: 14px; height: 8px; background: #222; margin-left: -7px; border-radius: 2px 2px 0 0; }
+    .p1-body { background: var(--p1-color); }
+    .p2-body { background: var(--p2-color); }
+    .helice { position: absolute; width: 30px; height: 2px; background: #fff; top: 50%; left: 50%; margin-left: -15px; animation: spin 0.1s infinite linear; opacity: 0; }
+    @keyframes spin { to { transform: rotateZ(360deg); } }
 
-        #modal, .quiz-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 3000; }
-        .modal-content, .quiz-card { background: white; color: #333; padding: 30px; border-radius: 15px; text-align: center; width: 450px; border: 5px solid #333; }
-        .opt-btn { display: block; width: 100%; padding: 12px; margin: 10px 0; cursor: pointer; border: 2px solid #eee; border-radius: 8px; font-size: 1rem; font-weight: bold; text-align: left; }
-        .opt-btn:hover { background: #f9f9f9; border-color: #3498db; }
-    </style>
+    /* BOTÓN TEORÍA Y MODALES */
+    .btn-top-teoria {
+      background-color: #2b6cb0; color: white; border: none; padding: 10px 18px;
+      border-radius: 8px; font-weight: bold; cursor: pointer; z-index: 210; font-size: 0.95rem;
+    }
+
+    #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 3000; }
+    .modal-content { background: white; color: #333; padding: 30px; border-radius: 15px; text-align: center; width: 450px; border: 5px solid #333; }
+
+    .modal-eval {
+      display: none; position: fixed; inset: 0;
+      background-color: rgba(0, 0, 0, 0.75); z-index: 3500;
+      justify-content: center; align-items: center;
+    }
+    .modal-eval-content {
+      background-color: white; border-radius: 12px; width: 90%; max-width: 750px;
+      max-height: 85vh; overflow-y: auto; padding: 25px; position: relative; text-align: left;
+    }
+
+    .opcion-btn {
+      display: block; width: 100%; text-align: left; padding: 12px; margin: 8px 0;
+      border: 1px solid #e2e8f0; border-radius: 6px; background: #f7fafc; cursor: pointer; font-size: 0.95rem;
+    }
+    .opcion-btn:hover { background: #edf2f7; }
+
+    .btn-close-modal {
+      position: absolute; top: 15px; right: 20px; background: none; border: none;
+      font-size: 1.5rem; font-weight: bold; cursor: pointer; color: #718096;
+    }
+
+    .seccion-explicacion {
+      background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;
+      padding: 15px; margin-bottom: 20px; text-align: left;
+    }
+    .seccion-explicacion h3 { margin-top: 0; }
+    .seccion-explicacion ol { padding-left: 20px; }
+    .seccion-explicacion li { margin-bottom: 8px; line-height: 1.5; }
+  </style>
 </head>
 <body>
 
-    <div id="modal">
-        <div class="modal-content">
-            <h2>🛸 DRON DUEL: EDICIÓN COMPLETA</h2>
-            <p>30 Preguntas aleatorias con 3 opciones cada una.</p>
-            <input type="text" id="name1" value="ALUMNO 1" style="width:80%; padding:10px; margin:5px;">
-            <input type="text" id="name2" value="ALUMNO 2" style="width:80%; padding:10px; margin:5px;">
-            <button onclick="startGame()" style="margin-top:15px; padding:15px 40px; background:var(--primary); color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">INICIAR</button>
-        </div>
+   <!-- PANTALLA DE SELECCIÓN INICIAL DE CRITERIO -->
+  <div id="pantalla-seleccion">
+    <div class="card-seleccion">
+      <h2>🛸 Dron Duel - Test Evaluativo</h2>
+      <p>Selecciona el bloque temático sobre el que responderás cada 5 puntos logrados en la pista:</p>
+      <button class="btn-criterio" style="background: var(--criterio-13);" onclick="seleccionarCriterio(&#39;13&#39;, &#39;Criterio 1.3 (Tec y digital)/ 6.1 a 6.4 (Comput)&#39;, &#39;var(--criterio-13)&#39;)">Criterio 1.3 (Tec y digital)/ 6.1 a 6.4 (Comput): Protección, Salud Personal y Ética Digital</button>
+      <button class="btn-criterio" style="background: var(--criterio-61);" onclick="seleccionarCriterio(&#39;61&#39;, &#39;Criterio 6.1 (Tec y digit)/ 1.1 (Comput)&#39;, &#39;var(--criterio-61)&#39;)">Criterio 6.1 (Tec y digit)/ 1.1 (Comput): Componentes, Redes y Seguridad Operativa</button>
+      <button class="btn-criterio" style="background: var(--criterio-42);" onclick="seleccionarCriterio(&#39;42&#39;, &#39;Criterio 4.2 (Digital)&#39;, &#39;var(--criterio-42)&#39;)">Criterio 4.2 (Digital): Administración Digital, Comercio Electrónico y Brecha Social</button>
+      <button class="btn-criterio" style="background: var(--criterio-43);" onclick="seleccionarCriterio(&#39;43&#39;, &#39;Criterio 4.3 (Digital)&#39;, &#39;var(--criterio-43)&#39;)">Criterio 4.3 (Digital): Libertad de Expresión, Medios Digitales y Análisis Crítico</button>
+      <button class="btn-criterio" style="background: var(--criterio-44);" onclick="seleccionarCriterio(&#39;44&#39;, &#39;Criterio 4.4 / 6.1 (4º ESO)&#39;, &#39;var(--criterio-44)&#39;)">Criterio 4.4 (Digitalización)/ 6.1 (Tecnología): Sostenibilidad y Accesibilidad Técnica y Digital</button>
+      <button class="btn-criterio" style="background: var(--criterio-todos);" onclick="seleccionarCriterio(&#39;todos&#39;, &#39;Todos los Criterios Mezclados&#39;, &#39;var(--criterio-todos)&#39;)">🔀 Todos los Criterios Mezclados</button>
+    </div>
+  </div>
+
+  <!-- MODAL NOMBRES JUGADORES -->
+  <div id="modal" style="display: none;">
+    <div class="modal-content">
+      <h2>🛸 DRON DUEL</h2>
+      <input type="text" id="name1" value="ALUMNO 1" style="width:80%; padding:10px; margin:5px;">
+      <input type="text" id="name2" value="ALUMNO 2" style="width:80%; padding:10px; margin:5px;">
+      <button onclick="startGame()" style="margin-top:15px; padding:15px 40px; background:var(--primary); color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">INICIAR</button>
+    </div>
+  </div>
+
+  <!-- BARRA SUPERIOR -->
+  <div class="top-bar">
+    <div class="score-card">
+      <div id="label-n1" class="name-display">ALUMNO 1</div>
+      <div class="score-val" id="score1" style="display:block;">0</div>
+      <div id="calc-1" class="multiplier">[ 0 x 4 = <span class="res-final">0</span> ]</div>
     </div>
 
-    <div id="quiz-p1" class="quiz-overlay" style="display:none"></div>
-    <div id="quiz-p2" class="quiz-overlay" style="display:none"></div>
-
-    <div class="top-bar">
-        <div class="score-card">
-            <div id="label-n1" class="name-display">P1</div>
-            <div class="score-val" id="score1" style="display:block;">0</div>
-            <div id="calc-1" class="multiplier">[ 0 x 4 = <span class="res-final">0</span> ]</div>
-        </div>
-        <div style="align-self:center;">
-            <button onclick="enviarResultados()" style="padding:10px 20px; cursor:pointer; background:#333; color:white; border:none; border-radius:5px; font-weight:bold;">ENVIAR DATOS</button>
-        </div>
-        <div class="score-card">
-            <div id="label-n2" class="name-display">P2</div>
-            <div class="score-val" id="score2" style="display:block;">0</div>
-            <div id="calc-2" class="multiplier">[ 0 x 4 = <span class="res-final">0</span> ]</div>
-        </div>
+    <div class="center-top-panel">
+      <div id="badge-criterio" class="badge-criterio">CRITERIO: NO SELECCIONADO</div>
+      <button class="btn-top-teoria" onclick="abrirTeoria()">📖 Ver Teoría Desarrollada</button>
     </div>
 
-    <div id="split-container">
-        <div id="arena-p1" class="arena">
-            <div class="cmd-panel p1-panel"><small>P1 COMANDOS:</small><div id="list-p1" class="cmd-scroll"></div></div>
-            <div class="pista">
-                <div id="meta-p1" class="meta" style="border-color:var(--p1-color)"></div>
-                <div id="dron1" class="dron-container"><div class="dron-body p1-body"><div class="dron-front"></div><div class="helice"></div></div></div>
-            </div>
-        </div>
-        <div id="arena-p2" class="arena">
-            <div class="cmd-panel p2-panel"><small>P2 COMANDOS:</small><div id="list-p2" class="cmd-scroll"></div></div>
-            <div class="pista">
-                <div id="meta-p2" class="meta" style="border-color:var(--p2-color)"></div>
-                <div id="dron2" class="dron-container"><div class="dron-body p2-body"><div class="dron-front"></div><div class="helice"></div></div></div>
-            </div>
-        </div>
+    <div class="score-card">
+      <div id="label-n2" class="name-display">ALUMNO 2</div>
+      <div class="score-val" id="score2" style="display:block;">0</div>
+      <div id="calc-2" class="multiplier">[ 0 x 4 = <span class="res-final">0</span> ]</div>
     </div>
+  </div>
 
-    <script>
-        const GRID = 40;
-        const QUESTIONS = [
-            { q: "¿Qué es el Phishing?", a: ["Un deporte náutico", "Engaño por email para robar claves", "Un tipo de cable de red"], c: 1 },
-            { q: "¿Qué contraseña es más segura?", a: ["12345678", "pAssw0rd!", "D0m1ng0_2024*"], c: 2 },
-            { q: "Si recibes un link sospechoso de un amigo:", a: ["Lo abro porque confío en él", "Le pregunto por otro medio si él lo envió", "Lo borro inmediatamente sin mirar"], c: 1 },
-            { q: "¿Qué indica el candado en la barra de direcciones?", a: ["Que la web es 100% legal", "Que la conexión está cifrada (HTTPS)", "Que no puedes copiar el contenido"], c: 1 },
-            { q: "Sobre las redes Wi-Fi públicas:", a: ["Son totalmente seguras", "Son ideales para entrar al banco", "Son poco seguras para datos privados"], c: 2 },
-            { q: "¿Qué es el Ciberacoso?", a: ["Un juego de rol online", "Acoso u humillación a través de redes", "Tener muchos seguidores"], c: 1 },
-            { q: "La webcam de tu ordenador debería estar:", a: ["Siempre encendida por si acaso", "Tapada físicamente cuando no se usa", "Apuntando siempre a la ventana"], c: 1 },
-            { q: "¿Qué información NO debes compartir?", a: ["Tu música favorita", "Tu dirección y número de teléfono", "Tu color de ojos"], c: 1 },
-            { q: "¿Qué es un Malware?", a: ["Un software para editar fotos", "Cualquier programa malicioso (virus, etc)", "Un componente de la placa base"], c: 1 },
-            { q: "Si recibes un premio por SMS de un sorteo en el que no participaste:", a: ["Reclamo el premio rápido", "Es un intento de estafa", "Llamo al número para preguntar"], c: 1 },
-            { q: "¿Qué es el Grooming?", a: ["Un tipo de peinado moderno", "Adulto que engaña a menor online", "Cuidar a tu mascota virtual"], c: 1 },
-            { q: "Las redes sociales deben usarse para:", a: ["Compartir tus claves con amigos", "Ocio con configuración de privacidad", "Insultar a quien no te cae bien"], c: 1 },
-            { q: "¿Qué significa el 2FA?", a: ["Doble Factor de Autenticación", "Dos Ficheros Adjuntos", "Segunda Fase de Arranque"], c: 0 },
-            { q: "Tu perfil en redes sociales debería ser:", a: ["Público para ser famoso", "Privado (solo para conocidos)", "Con la dirección de tu casa"], c: 1 },
-            { q: "Si alguien te insulta en un videojuego online:", a: ["Le devuelvo el insulto", "Le ignoro, silencio y reporto", "Apago el router"], c: 1 },
-            { q: "¿Qué son las Fake News?", a: ["Noticias muy divertidas", "Noticias falsas para manipular", "Noticias sobre videojuegos"], c: 1 },
-            { q: "Actualizar el sistema operativo sirve para:", a: ["Gastar espacio y batería", "Cerrar agujeros de seguridad", "Que el ordenador vaya más lento"], c: 1 },
-            { q: "Un troyano es:", a: ["Un virus que se disfraza de programa útil", "Un programa para acelerar descargas", "Un antivirus gratuito"], c: 0 },
-            { q: "Si ves algo perturbador en internet:", a: ["No digo nada a nadie", "Se lo cuento a un adulto de confianza", "Lo comparto con todos mis contactos"], c: 1 },
-            { q: "¿Qué es la Huella Digital?", a: ["La marca de tu dedo en el móvil", "El rastro que dejas al navegar", "Un sistema de pago nuevo"], c: 1 },
-            { q: "El antivirus sirve para:", a: ["Limpiar el polvo del PC", "Detectar y eliminar amenazas", "Mejorar la velocidad de internet"], c: 1 },
-            { q: "¿Es seguro dar tu teléfono a desconocidos online?", a: ["Sí, para hacer amigos", "No, nunca", "Solo si me caen bien"], c: 1 },
-            { q: "¿Qué es el Ransomware?", a: ["Virus que secuestra tus archivos", "Un programa de edición de vídeo", "Un tipo de monitor"], c: 0 },
-            { q: "¿Se puede borrar algo de internet para siempre?", a: ["Sí, dándole a borrar", "Es casi imposible borrar el rastro total", "Solo si apagas el servidor"], c: 1 },
-            { q: "Los términos de uso de una App:", a: ["No hace falta leerlos nunca", "Es importante saber qué hacen con tus datos", "Son todos iguales"], c: 1 },
-            { q: "Un 'Hacker' ético es alguien que:", a: ["Roba contraseñas por diversión", "Busca fallos para ayudar a arreglarlos", "Bloquea páginas del gobierno"], c: 1 },
-            { q: "Compartir tu ubicación en tiempo real es:", a: ["Muy seguro en cualquier red", "Peligroso si es público", "Necesario para jugar"], c: 1 },
-            { q: "El Spam es:", a: ["Un virus muy potente", "Correo basura no deseado", "Un comando de programación"], c: 1 },
-            { q: "¿Qué es un Firewall?", a: ["Una pared resistente al fuego", "Un sistema de defensa de red", "Un cable de alta velocidad"], c: 1 },
-            { q: "Cerrar sesión en ordenadores públicos es:", a: ["Opcional si tengo prisa", "Fundamental para proteger mis cuentas", "Malo para el ordenador"], c: 1 }
-        ];
+  <!-- PISTAS DRON -->
+  <div id="split-container">
+    <div id="arena-p1" class="arena">
+      <div class="cmd-panel p1-panel"><small>P1 COMANDOS (W, A, D, Espacio):</small><div id="list-p1" class="cmd-scroll"></div></div>
+      <div class="pista">
+        <div id="meta-p1" class="meta" style="border-color: var(--p1-color); left: 243px; top: 243px;"></div>
+        <div id="dron1" class="dron-container" style="left: 0px; top: 0px;"><div class="dron-body p1-body" style="transform: rotateZ(0deg);"><div class="dron-front"></div><div class="helice" style="opacity: 0;"></div></div></div>
+      </div>
+    </div>
+    <div id="arena-p2" class="arena">
+      <div class="cmd-panel p2-panel"><small>P2 COMANDOS (Flechas, Enter):</small><div id="list-p2" class="cmd-scroll"></div></div>
+      <div class="pista">
+        <div id="meta-p2" class="meta" style="border-color: var(--p2-color); left: 203px; top: 283px;"></div>
+        <div id="dron2" class="dron-container" style="left: 80px; top: 320px;"><div class="dron-body p2-body" style="transform: rotateZ(360deg);"><div class="dron-front"></div><div class="helice" style="opacity: 0;"></div></div></div>
+      </div>
+    </div>
+  </div>
 
-        const state = {
-            p1: { x: 0, y: 0, angle: 0, score: 0, nextQuiz: 10, cmds: [], exec: false, name: "" },
-            p2: { x: 9, y: 11, angle: 180, score: 0, nextQuiz: 10, cmds: [], exec: false, name: "" },
-            metas: { p1: {x: 4, y: 4}, p2: {x: 5, y: 5} }
-        };
+  <!-- MODAL PREGUNTA EVALUATIVA -->
+  <div class="modal-eval" id="modalPregunta">
+    <div class="modal-eval-content">
+      <h3 id="pregunta-titulo">Reto Evaluativo</h3>
+      <p id="pregunta-texto" style="font-weight: 600; font-size: 1.05rem;"></p>
+      <div id="pregunta-opciones"></div>
+    </div>
+  </div>
 
-        function getColorByScore(score) {
-            const colors = ["white", "#d6eaf8", "#d5f5e3", "#fcf3cf", "#fadbd8"];
-            return colors[Math.min(4, Math.floor(score/10))];
+  <!-- MODAL TEORÍA -->
+  <div class="modal-eval" id="modalTeoria">
+    <div class="modal-eval-content">
+      <button class="btn-close-modal" onclick="cerrarTeoria()">×</button>
+      <h2>📘 Material Teórico Explicativo de Estudio</h2>
+      <div id="contenido-teoria"></div>
+    </div>
+  </div>
+
+  <script>
+    // BASE DE DATOS DE 50 PREGUNTAS
+    const preguntasBD = [
+      // 1.3
+      { cat: '13', q: "1. A la hora de usar un ordenador durante mucho tiempo, ¿qué postura corporal es la adecuada?", opts: [{ t: "Inclinarse hacia la pantalla para enfocar la vista.", c: false }, { t: "Mantener la espalda recta y la pantalla a la altura de los ojos..", c: true }, { t: "Sentarse con el cuello inclinado hacia abajo.", c: false }] },
+      { cat: '13', q: "2. ¿En qué consiste la regla 20-20-20 para prevenir la fatiga visual?", opts: [{ t: "Descansar la vista cada 20 minutos mirando a 20 pies (6m) durante 20 segundos.", c: true }, { t: "Parpadear 20 veces cada 20 minutos.", c: false }, { t: "Reducir el brillo un 20% cada 20 minutos.", c: false }] },
+      { cat: '13', q: "3. ¿Qué síntoma permite identificar un uso compulsivo o adictivo de la tecnología?", opts: [{ t: "Apagar los dispositivos antes de ir a dormir.", c: false }, { t: "La necesidad compulsiva de mirar el teléfono móvil constantemente.", c: true }, { t: "Utilizar herramientas de lectura para repasar los temas o contenidos de clase.", c: false }] },
+      { cat: '13', q: "4. Para proteger la privacidad y prevenir situaciones de ciberacoso o grooming se debe:", opts: [{ t: "No publicar datos íntimos ni fotos personales .", c: true }, { t: "Compartir la ubicación exacta en fotos de las redes sociales como Instagram.", c: false }, { t: "Aceptar solicitudes de perfiles anónimos.", c: false }] },
+      { cat: '13', q: "5. ¿Qué actitud ética se debe adoptar ante comentarios ofensivos o discriminatorios en redes?", opts: [{ t: "Responder con el mismo tono agresivo e insultar a la otra persona o amenazarla.", c: false }, { t: "Mantener una postura ética y rechazar cualquier tipo de discriminación.", c: true }, { t: "Compartir la publicación ofensiva.", c: false }] },
+      { cat: '13', q: "6. ¿Cómo se debe construir una contraseña para que sea una medida preventiva eficaz?", opts: [{ t: "Combinando mayúsculas, minúsculas, números y símbolos.", c: true }, { t: "Usar secuencias sencillas como la fecha de cumpleaños para poder recordarla.", c: false }, { t: "Utilizar la misma clave para todas las plataformas.", c: false }] },
+      { cat: '13', q: "7. ¿Por qué es peligroso conectarse a redes Wi-Fi públicas sin cifrado?", opts: [{ t: "Porque impiden descargas pesadas.", c: false }, { t: "Porque los datos transmitidos podrían ser interceptados por terceros.", c: true }, { t: "Porque agotan la batería en minutos y luego me puede hacer falta el móvil para volver a casa.", c: false }] },
+      { cat: '13', q: "8. ¿Cómo se logra el bienestar digital según el contenido de la unidad?", opts: [{ t: "Aprendiendo a desconectar y haciendo un uso equilibrado de la tecnología.", c: true }, { t: "Aumentando las horas de juego en red.", c: false }, { t: "Silenciando únicamente el correo institucional o evitando las notificaciones en el móvil.", c: false }] },
+      { cat: '13', q: "9. Para evitar que personas ajenas accedan a nuestras cuentas personales se recomienda:", opts: [{ t: "Crear contraseñas seguras y complejas combinando caracteres variados.", c: true }, { t: "Guardar un texto con las claves en el escritorio o en las nubes como Drive", c: false }, { t: "Facilitar las credenciales a compañeros.", c: false }] },
+      { cat: '13', q: "10. La protección de la salud visual en entornos digitales requiere:", opts: [{ t: "Realizar pausas regulares y aplicar la regla 20-20-20 mirando a lo lejos.", c: true }, { t: "Usar el brillo máximo a oscuras para poder ver bien y no dañarme la vista.", c: false }, { t: "Mantener los ojos fijos sin parpadear.", c: false }] },
+
+      // 6.1
+      { cat: '61', q: "11. ¿Cuál es la función de los periféricos de entrada y salida respectivamente?", opts: [{ t: "Los de entrada introducen datos y los de salida muestran la información procesada.", c: true }, { t: "Los de entrada muestran resultados a través de la pantalla y los de salida guardan datos.", c: false }, { t: "Ambos realizan almacenamiento permanente.", c: false }] },
+      { cat: '61', q: "12. ¿Qué diferencia principal existe entre la memoria RAM y un disco duro/SSD?", opts: [{ t: "La RAM borra sus datos al apagar, mientras el disco duro/SSD es permanente.", c: true }, { t: "La RAM guarda fotos y el disco procesa periféricos.", c: false }, { t: "El disco duro borra su información al reiniciar el ordenador menos cuando se va la luz.", c: false }] },
+      { cat: '61', q: "13. ¿Por qué es fundamental mantener el sistema operativo siempre actualizado?", opts: [{ t: "Para cambiar la apariencia del escritorio.", c: false }, { t: "Para corregir fallos y vulnerabilidades de seguridad.", c: true }, { t: "Para reinstalar el antivirus, esto se lleva a cabo cada vez que se reinicia el ordenador", c: false }] },
+      { cat: '61', q: "14. ¿Qué es una red LAN (Red de Área Local)?", opts: [{ t: "Una red de ordenadores en un espacio reducido como un hogar o instituto.", c: true }, { t: "Una red global que conecta países por cables submarinos como Internet.", c: false }, { t: "Un programa para enviar correos.", c: false }] },
+      { cat: '61', q: "15. ¿Qué red engloba grandes distancias geográficas siendo el mejor ejemplo internet?", opts: [{ t: "Una red LAN.", c: false }, { t: "Una red WAN.", c: true }, { t: "Un punto de acceso doméstico.", c: false }] },
+      { cat: '61', q: "16. ¿Cuál es la tarea técnica del router en una conexión digital?", opts: [{ t: "Dirigir los paquetes de datos entre nuestra red interna e internet.", c: true }, { t: "Guardar archivos sin energía como en casos de emergencia como fallos eléctricos.", c: false }, { t: "Imprimir reportes de red.", c: false }] },
+      { cat: '61', q: "17. ¿Para qué sirven los puntos de acceso en una instalación de red?", opts: [{ t: "Extienden la señal inalámbrica Wi-Fi a zonas sin cobertura.", c: true }, { t: "Aceleran la memoria RAM para que el ordenador siga yendo fluido.", c: false }, { t: "Analizan el disco en busca de malware.", c: false }] },
+      { cat: '61', q: "18. Hacer un uso seguro de un ordenador implica mantener activo:", opts: [{ t: "Un software antivirus para bloquear malware.", c: true }, { t: "El máximo rendimiento sin filtros en el navegador para que no se relentice.", c: false }, { t: "Un sistema público sin clave.", c: false }] },
+      { cat: '61', q: "19. Como medida de protección ante la pérdida imprevista de datos es vital:", opts: [{ t: "Realizar copias de seguridad (backup) periódicamente.", c: true }, { t: "Guardar archivos en carpeta compartida sin clave dentro del escritorio del ordenador.", c: false }, { t: "Apagar el monitor sin cerrar apps.", c: false }] },
+      { cat: '61', q: "20. Ante problemas sencillos de lentitud del sistema informático se recomienda:", opts: [{ t: "Liberar espacio en disco o reiniciar procesos colgados.", c: true }, { t: "Comprar un nuevo monitor con una mayor resolución el megapixels.", c: false }, { t: "Desconectar la luz mientras trabaja.", c: false }] },
+
+      // 4.2
+      { cat: '42', q: "21. ¿Qué son las Sedes Electrónicas de las administraciones públicas?", opts: [{ t: "Portales web oficiales para trámites las 24 horas del día.", c: true }, { t: "Oficinas físicas con cita previa donde poder realizar trámites administrativos o de la seguridad social.", c: false }, { t: "Páginas comerciales entre particulares.", c: false }] },
+      { cat: '42', q: "22. ¿Qué sistemas se emplean para garantizar la identidad en un trámite digital?", opts: [{ t: "Firma digital, DNI electrónico (DNIe) o sistema Cl@ve.", c: true }, { t: "Teléfono y correo personal.", c: false }, { t: "Nombre completo, dirección, DNI físico y código postal.", c: false }] },
+      { cat: '42', q: "23. Son ventajas directas de realizar gestiones a través de la administración digital:", opts: [{ t: "Ahorro de tiempo, registro inmediato y reducción de papel.", c: true }, { t: "Exención de impuestos.", c: false }, { t: "Aprobación asegurada de becas por haber utilizado medios online.", c: false }] },
+      { cat: '42', q: "24. En el comercio electrónico, ¿a qué se refiere el modelo B2C?", opts: [{ t: "Ventas directas de una empresa al consumidor final.", c: true }, { t: "Transacciones entre particulares conectado por aplicaciones de venta.", c: false }, { t: "Ventas entre organismos públicos.", c: false }] },
+      { cat: '42', q: "25. ¿Cómo sabemos que una tienda web para compras online es segura?", opts: [{ t: "Utiliza el protocolo HTTPS (icono de candado cerrado).", c: true }, { t: "Tiene fotos en alta resolución.", c: false }, { t: "Tiene un formulario de contacto en el que aparece la frase certificado por el ministerio de seguridad social.", c: false }] },
+      { cat: '42', q: "26. ¿Qué exige la autenticación reinforced de cliente (2FA) en compras en línea?", opts: [{ t: "Autorizar el pago desde el banco mediante huella, rostro o SMS.", c: true }, { t: "Introducir el número de tarjeta con el correspondiente código de verificación y fecha de caducidad.", c: false }, { t: "Enviar fotocopia del DNI por correo.", c: false }] },
+      { cat: '42', q: "27. ¿Cómo se define el concepto de brecha digital?", opts: [{ t: "Desigualdad entre quienes pueden usar las TIC y quienes no.", c: true }, { t: "Un fallo en la señal Wi-Fi.", c: false }, { t: "La diferencia de precio entre componentes de equipos informáticos o digitales de mayor calidad y los de menor calidad.", c: false }] },
+      { cat: '42', q: "28. La Brecha de Acceso ocurre concretamente cuando:", opts: [{ t: "Faltan recursos económicos o cobertura (fibra/5G).", c: true }, { t: "Falta formación en el uso de equipos digitales o idioma del software.", c: false }, { t: "Se olvidan las contraseñas.", c: false }] },
+      { cat: '42', q: "29. ¿Cuándo se manifiesta la llamada Brecha de Uso?", opts: [{ t: "Cuando hay dispositivos pero faltan competencias digitales básicas.", c: true }, { t: "Cuando cae una red social.", c: false }, { t: "Cuando falta espacio en disco de un móvil o en los espacios en la nube.", c: false }] },
+      { cat: '42', q: "30. La Brecha de Aprovechamiento surge cuando las personas:", opts: [{ t: "Usan internet solo para ocio y no para estudiar/trabajar.", c: true }, { t: "No pueden descargar rápido porque los dispositivos que tienen son viejos y obsoletos.", c: false }, { t: "Carecen de roaming al viajar.", c: false }] },
+
+      // 4.3
+      { cat: '43', q: "31. ¿Qué caracteriza a una persona que actúa como prosumidor?", opts: [{ t: "Produce y consume contenido digital simultáneamente.", c: true }, { t: "Mantiene redes físicas.", c: false }, { t: "Solo lee sin opinar ni interactuar para no faltar al respeto a nadie.", c: false }] },
+      { cat: '43', q: "32. ¿Cuáles son los límites legales explícitos de la libertad de expresión en internet?", opts: [{ t: "No se permiten delitos de odio, ciberacoso ni vulneración de intimidad.", c: true }, { t: "Prohibido criticar empresas o organismos estatales o autonómicos bajo riesgo de multa.", c: false }, { t: "Obligación de firmar con DNI.", c: false }] },
+      { cat: '43', q: "33. Evaluar la Objetividad al analizar críticamente una noticia consiste en:", opts: [{ t: "Comprobar si ofrece datos verificables o solo opiniones.", c: true }, { t: "Ver si tiene muchos comentarios respaldados por gente que conozco o que considero importante.", c: false }, { t: "Contar el número de imágenes.", c: false }] },
+      { cat: '43', q: "34. ¿Qué implica identificar la Ideología en un texto digital?", opts: [{ t: "Identificar la postura política, social o económica del autor.", c: true }, { t: "Ver si la web carga rápido.", c: false }, { t: "Revisar la ortografía.", c: false }] },
+      { cat: '43', q: "35. Descubrir la Intencionalidad de una publicación significa preguntarse:", opts: [{ t: "Si busca informar, vender, manipular o conseguir clics.", c: true }, { t: "El ancho de banda necesario.", c: false }, { t: "El lenguaje de programación usado no tenga  virus que pueden afectar a mi ordenador o móvil.", c: false }] },
+      { cat: '43', q: "36. ¿A qué nos referimos cuando analizamos los Sesgos de una información?", opts: [{ t: "A detectar manipulación u omisión intencionada de datos.", c: true }, { t: "A la velocidad de propagación.", c: false }, { t: "Al número de fuentes citadas que se puedan corroborar.", c: false }] },
+      { cat: '43', q: "37. ¿En qué consiste el sesgo de confirmación al consumir contenidos?", opts: [{ t: "Tendencia a leer solo lo que apoya nuestras ideas previas.", c: true }, { t: "Verificar dos veces la clave.", c: false }, { t: "Confirmar un perfil con DNI.", c: false }] },
+      { cat: '43', q: "38. ¿Por qué se debe verificar la Caducidad de una noticia en la red?", opts: [{ t: "Para evitar compartir datos antiguos fuera de contexto.", c: true }, { t: "Para verificar enlaces rotos que puedan afectar a mi ordenador o móvil.", c: false }, { t: "Para limpiar la caché.", c: false }] },
+      { cat: '43', q: "39. La principal oportunidad ciudadana que ofrece el entorno digital es:", opts: [{ t: "Difundir ideas y opiniones a nivel global en tiempo real.", c: true }, { t: "Trámites sin DNI.", c: false }, { t: "Descargas pirata ilimitadas en el ordenador.", c: false }] },
+      { cat: '43', q: "40. Aplicar el análisis crítico sobre la información en internet permite:", opts: [{ t: "Detectar bulos y desinformación mediante análisis estructurado.", c: true }, { t: "Duplicar la velocidad de conexión.", c: false }, { t: "Eliminar anuncios automáticos que pueden relentizar nuestro dispositivo móvil.", c: false }] },
+
+      // 4.4 / 6.1
+      { cat: '44', q: "41. La selección responsable de materiales al fabricar tecnología implica:", opts: [{ t: "Priorizar materiales renovables, reciclados o de bajo impacto.", c: true }, { t: "Elegir lo más barato sin evaluar procedencia para que no pierdan nivel adquisitivo.", c: false }, { t: "Aumentar plásticos del petróleo.", c: false }] },
+      { cat: '44', q: "42. En la fabricación industrial de objetos tecnológicos es fundamental:", opts: [{ t: "Optimizar agua y energía, reduciendo contaminantes y residuos.", c: true }, { t: "Maximizar producción sin control ambiental, porque el coste de producción será menor. ", c: false }, { t: "Usar máquinas antiguas pesadas.", c: false }] },
+      { cat: '44', q: "43. La accesibilidad universal en el diseño físico persigue:", opts: [{ t: "Principios ergonómicos para uso cómodo de cualquier persona.", c: true }, { t: "Reducir botones para ahorrar materia y así los dispositivos pesen menos.", c: false }, { t: "Uso exclusivo para expertos.", c: false }] },
+      { cat: '44', q: "44. En diseño de software y web, la accesibilidad garantizada incluye:", opts: [{ t: "Lectores de pantalla, subtítulos y contrastes adaptables.", c: true }, { t: "Fuentes decorativas pequeñas.", c: false }, { t: "Manuales solo en código técnico para poder profundizar en la programación.", c: false }] },
+      { cat: '44', q: "45. ¿Qué consecuencia ambiental tiene la extracción de coltán o litio?", opts: [{ t: "Destrucción de ecosistemas e impacto social negativo.", c: true }, { t: "Aumento de velocidad 5G y mejorando la conexión y velocidad de transmisión de datos.", c: false }, { t: "Reducción de consumo de servidores.", c: false }] },
+      { cat: '44', q: "46. La Economía Circular aplicada a la tecnología busca:", opts: [{ t: "Reparar, reutilizar piezas y reciclar en puntos limpios.", c: true }, { t: "Sustituir equipos cada año por otro que consumen menos electricidad.", c: false }, { t: "Tirar basura electrónica a la orgánica.", c: false }] },
+      { cat: '44', q: "47. ¿En qué consiste la Obsolescencia Programada?", opts: [{ t: "Fabricar productos diseñados para fallar o quedar obsoletos pronto.", c: true }, { t: "Actualizar licencias del sistema de manera automática sin el pago de nuevas cuotas o cantidades.", c: false }, { t: "Mantenimiento voluntario.", c: false }] },
+      { cat: '44', q: "48. Programar código optimizado ayuda al medio ambiente porque:", opts: [{ t: "Requiere menor procesamiento, reduciendo consumo de energía.", c: true }, { t: "Elimina el uso de baterías en móviles de última generación plegables.", c: false }, { t: "Aumenta el e-Waste.", c: false }] },
+      { cat: '44', q: "49. Para minimizar el impacto del e-Waste (basura electrónica) es vital:", opts: [{ t: "Llevar los componentes a puntos limpios para evitar contaminación.", c: true }, { t: "Incinerar o quemar circuitos electrónicos para reducir su cantidad y peligrosidad.", c: false }, { t: "Tirar pilas a la basura normal.", c: false }] },
+      { cat: '44', q: "50. Un diseño ecosocialmente responsable busca:", opts: [{ t: "Minimizar impactos negativos en sociedad y planeta en todo el ciclo de vida.", c: true }, { t: "Aumentar ventas reduciendo reduciendo los costes de producción al producir en serie.", c: false }, { t: "Priorizar velocidad sin mirar la huella ecológica.", c: false }] }
+    ];
+
+    // MATERIAL TEÓRICO COMPLETO EXPLICATIVO
+    const teoriaHTML = `
+      <div class="seccion-explicacion">
+        <h3 style="color:var(--criterio-13)">Criterio 1.3 (Tec y digital)/ 6.1 a 6.4(Comput): Protección, Salud Personal y Ética Digital</h3>
+        <ol>
+          <li><strong>Protección de la Salud Física y Ergonomía:</strong> A la hora de usar un ordenador o un dispositivo móvil durante mucho tiempo, es importante cuidar la postura corporal para evitar dolores de espalda o cuello. Se debe mantener la espalda recta, la pantalla a la altura de los ojos y los brazos apoyados en un ángulo de 90 grados. Además, para prevenir la fatiga visual, es fundamental aplicar la regla 20-20-20, que consiste en descansar la vista cada 20 minutos mirando a un objeto situado a 20 pies (unos 6 metros) durante 20 segundos.</li>
+          <li><strong>Bienestar Emocional y Seguridad en Redes:</strong> El bienestar digital se logra aprendiendo a desconectar y haciendo un uso equilibrado de la tecnología. Es necesario saber identificar conductas adictivas como la necesidad compulsiva de mirar el teléfono móvil constantemente. Para estar seguros, es imprescindible proteger nuestra privacidad no publicando datos íntimos ni fotos personales que puedan ser utilizados para el ciberacoso o el grooming. Asimismo, frente a comentarios ofensivos en redes, hay que mantener una postura ética y rechazar cualquier tipo de discriminación.</li>
+          <li><strong>Protección de Datos y Contraseñas:</strong> Para evitar que personas ajenas entren en nuestras cuentas privadas, es una medida preventiva esencial crear contraseñas seguras y complejas que combinen letras mayúsculas, minúsculas, números y símbolos. También es fundamental evitar conectarse a redes Wi-Fi públicas sin cifrado para acceder a servicios personales o bancarios, ya que los datos transmitidos podrían ser interceptados por terceros.</li>
+        </ol>
+      </div>
+
+      <div class="seccion-explicacion">
+        <h3 style="color:var(--criterio-61)">Criterio 6.1 (Tec y digit)/ 1.1 (Comput):: Componentes, Redes y Seguridad Operativa</h3>
+        <ol>
+          <li><strong>Funcionamiento del Hardware y del Sistema Operativo:</strong> Es importante saber que un equipo informático se divide en hardware (partes físicas) y software (programas). Los periféricos de entrada, como el teclado o el ratón, sirven para introducir datos, mientras que los periféricos de salida, como la pantalla o la impresora, nos muestran la información procesada. En el interior, la memoria RAM es un tipo de memoria temporal que borra sus datos al apagar el equipo, mientras que el disco duro o SSD se encarga del almacenamiento permanente de nuestros archivos. Mantener el sistema operativo siempre actualizado es fundamental para corregir fallos y vulnerabilidades de seguridad.</li>
+          <li><strong>Conceptos de Redes y Comunicaciones:</strong> Una red de ordenadores permite compartir información y recursos. Cuando los dispositivos están conectados en un espacio reducido como un hogar o un instituto, hablamos de una red LAN (Red de Área Local). Por el contrario, una red WAN engloba grandes distancias geográficas, siendo internet el mejor ejemplo de red WAN. El router es el dispositivo clave encargado de dirigir los paquetes de datos entre nuestra red interna e internet, mientras que los puntos de acceso extienden la señal inalámbrica Wi-Fi a zonas donde no llega con fuerza.</li>
+          <li><strong>Mantenimiento y Resolución de Problemas:</strong> Hacer un uso seguro de un ordenador implica tener instalado y activado un software antivirus para bloquear programas maliciosos (malware). Como medida de protección ante la pérdida imprevista de datos por averías o virus, es vital realizar copias de seguridad (backup) periódicamente en un disco externo o en la nube. Ante problemas sencillos de lentitud del sistema, liberar espacio en el disco duro o reiniciar los procesos colgados suele ser la primera solución efectiva.</li>
+        </ol>
+      </div>
+
+      <div class="seccion-explicacion">
+        <h3 style="color:var(--criterio-42)">Criterio 4.2 (Digital): Administración Digital, Comercio Electrónico y Brecha Social</h3>
+        <ol>
+          <li><strong>Trámites en la Administración Digital:</strong> Las Sedes Electrónicas son portales web oficiales que las administraciones públicas ponen a disposición de la ciudadanía para solicitar certificados, becas o consultar notas las 24 horas del día sin necesidad de acudir presencialmente. Para garantizar la identidad de quien realiza el trámite digital, se emplean sistemas de autenticación oficial como la firma digital, el DNI electrónico (DNIe) o el sistema Cl@ve. Estas gestiones ofrecen ventajas como el ahorro de tiempo, el registro oficial inmediato y la reducción drástica en el consumo de papel.</li>
+          <li><strong>Seguridad en el Comercio Electrónico:</strong> El comercio electrónico comprende las operaciones de compraventa a través de internet. El modelo B2C hace referencia a las ventas directas de una empresa al consumidor final, mientras que el modelo C2C se da entre particulares. Para comprar con seguridad, es necesario comprobar que la tienda web utilice el protocolo HTTPS (identificado con el icono de un candado cerrado). Además, las compras requieren la autenticación reinforced de cliente (2FA), que exige autorizar el pago desde la aplicación del banco mediante huella, rostro o un código enviado por SMS.</li>
+          <li><strong>Niveles de la Brecha Digital:</strong> La brecha digital es la desigualdad social que se produce entre quienes pueden usar las tecnologías de la información y quienes no. Se divide en tres niveles: la Brecha de Acceso ocurre cuando una persona no puede conectarse por falta de recursos económicos o por vivir en zonas rurales sin fibra ni 5G; la Brecha de Uso se da cuando se dispone de dispositivos pero faltan las competencias o formación digital básica; y la Brecha de Aprovechamiento surge cuando las personas usan internet exclusivamente para el ocio pero no saben sacarle partido para buscar trabajo o estudiar.</li>
+        </ol>
+      </div>
+
+      <div class="seccion-explicacion">
+        <h3 style="color:var(--criterio-43)">Criterio 4.3 (Digital): Libertad de Expresión, Medios Digitales y Análisis Crítico</h3>
+        <ol>
+          <li><strong>El Rol del Prosumidor y sus Límites:</strong> Con las redes sociales y plataformas web, cualquier persona ha dejado de ser un simple espectador para convertirse en un prosumidor, es decir, alguien que produce y consume contenido digital de forma simultánea. Esto da la oportunidad de difundir ideas y opiniones a nivel global en tiempo real. Sin embargo, la libertad de expresión en internet tiene límites legales muy claros: nunca está permitida la difusión de mensajes que constituyan delitos de odio, ciberacoso o la vulneración del derecho a la intimidad.</li>
+          <li><strong>Pautas para el Análisis Crítico de la Información:</strong> Para detectar bulos y desinformación en internet, es necesario analizar el contenido mediante cinco claves principales: la Objetividad (comprobar si la noticia ofrece datos verificables o solo opiniones personales), la Ideología (identificar la postura política, social o económica de quien escribe), la Intencionalidad (descubrir si el objetivo del texto es informar, vender algo, manipular la opinión o conseguir clics), los Sesgos (detectar la manipulación u omisión intencionada de datos, como en el sesgo de confirmación donde solo leemos lo que nos da la razón) y la Caducidad (verificar la fecha original de publicación para evitar compartir datos antiguos fuera de contexto).</li>
+        </ol>
+      </div>
+
+      <div class="seccion-explicacion">
+        <h3 style="color:var(--criterio-44)">Criterio 4.4 (Digitalización)/ 6.1 (4º Tecnología): Uso Responsable, Sostenibilidad y Accesibilidad Técnica y Digital</h3>
+        <ol>
+          <li><strong>Selección Sostenible de Materiales y Procesos de Fabricación:</strong> Para hacer un uso responsable de la tecnología en la fabricación de productos, es necesario aplicar criterios de sostenibilidad desde la fase de diseño. En la selección de materiales, se debe priorizar el uso de materiales renovables, reciclados (como plásticos PLA biodegradables) o de bajo impacto ambiental frente a materiales cuya extracción destruye ecosistemas, como ocurre con minerales críticos (coltán o litio). En los procesos de fabricación industrial o artesanal, es imprescindible optimizar el consumo de agua y energía, reduciendo al mínimo la emisión de sustancias contaminantes y la generación de residuos directos.</li>
+          <li><strong>Criterios de Accesibilidad Universal en el Diseño Físico y Digital:</strong> El diseño de productos tecnológicos debe incluir la accesibilidad universal para minimizar barreras físicas y sensoriales en la sociedad. A nivel físico (tecnología), implica aplicar principios ergonómicos para que herramientas, aparatos y objetos puedan ser manipulados cómodamente por cualquier persona, incluidas personas con movilidad reducida. A nivel digital (software y web), requiere integrar herramientas de apoyo como lectores de pantalla para personas con ceguera, subtitulado automático para deficiencias auditivas y contrastes de color adaptables.</li>
+          <li><strong>Gestión del Ciclo de Vida, Economía Circular y Desarrollo Ecosocial:</strong> Un desarrollo ecosocialmente responsable exige analizar el ciclo de vida completo del producto. Se debe rechazar la Obsolescencia Programada (diseñar productos para que fallen intencionadamente) e impulsar la Economía Circular, centrada en reparar antes de desechar, reutilizar piezas y reciclar componentes en puntos limpios para evitar la contaminación por e-Waste (basura electrónica). Asimismo, en el ámbito del software, se fomenta el uso de código eficiente para reducir el trabajo de procesamiento y el consumo energético de los servidores.</li>
+        </ol>
+      </div>
+    `;
+
+    // LÓGICA DRON DUEL Y EVALUACIÓN
+    const GRID = 40;
+    const colors = ['#ffffff', '#888888', '#87ceeb', '#0000ff', '#008000', '#ffff00', '#ffa500', '#ff0000'];
+    let criterioSeleccionado = 'todos';
+    let preguntasFiltradas = [];
+
+    const state = {
+      p1: { x: 0, y: 0, angle: 0, score: 0, cmds: [], exec: false, name: "", proximoUmbral: 5 },
+      p2: { x: 9, y: 11, angle: 180, score: 0, cmds: [], exec: false, name: "", proximoUmbral: 5 },
+      metas: { p1: {x: 4, y: 4}, p2: {x: 5, y: 5} }
+    };
+
+    function seleccionarCriterio(cat, nombreEtiqueta, colorCss) {
+      criterioSeleccionado = cat;
+
+      // Filtrar preguntas
+      preguntasFiltradas = cat === 'todos' 
+        ? [...preguntasBD] 
+        : preguntasBD.filter(p => p.cat === cat);
+
+      // Actualizar la etiqueta visible arriba
+      const badge = document.getElementById('badge-criterio');
+      badge.innerText = `CRITERIO: ${nombreEtiqueta}`;
+      badge.style.backgroundColor = colorCss;
+
+      document.getElementById('pantalla-seleccion').style.display = 'none';
+      document.getElementById('modal').style.display = 'flex';
+    }
+
+    function startGame() {
+      state.p1.name = document.getElementById('name1').value || "ALUMNO 1";
+      state.p2.name = document.getElementById('name2').value || "ALUMNO 2";
+      document.getElementById('label-n1').innerText = state.p1.name;
+      document.getElementById('label-n2').innerText = state.p2.name;
+      document.getElementById('modal').style.display = 'none';
+      moverMeta('p1'); moverMeta('p2');
+      updateVisuals('p1'); updateVisuals('p2');
+      updateScoreUI('p1'); updateScoreUI('p2');
+    }
+
+    function moverMeta(p) {
+      state.metas[p].x = Math.floor(Math.random() * 10);
+      state.metas[p].y = Math.floor(Math.random() * 12);
+      const m = document.getElementById('meta-' + p);
+      m.style.left = (state.metas[p].x * GRID + 3) + "px";
+      m.style.top = (state.metas[p].y * GRID + 3) + "px";
+    }
+
+    window.onkeydown = (e) => {
+      const k = e.code;
+      
+      // Jugador 1
+      if(!state.p1.exec) {
+        if(k === 'KeyW') addCmd('p1', '↑'); 
+        if(k === 'KeyA') addCmd('p1', '↶'); 
+        if(k === 'KeyD') addCmd('p1', '↷');
+        if(k === 'Space') ejecutar('p1');
+      }
+
+      // Jugador 2
+      if(!state.p2.exec) {
+        if(k === 'ArrowUp') addCmd('p2', '↑'); 
+        if(k === 'ArrowLeft') addCmd('p2', '↶'); 
+        if(k === 'ArrowRight') addCmd('p2', '↷');
+        if(k === 'Enter') ejecutar('p2');
+      }
+    };
+
+    function addCmd(p, type) {
+      state[p].cmds.push(type);
+      document.getElementById('list-' + p).innerText = state[p].cmds.join('');
+    }
+
+    async function ejecutar(p) {
+      if(state[p].cmds.length === 0) return;
+      state[p].exec = true;
+      const dX = state[p].x, dY = state[p].y, dA = state[p].angle;
+      const dEl = document.getElementById(p === 'p1' ? 'dron1' : 'dron2');
+      dEl.querySelector('.helice').style.opacity = 1;
+
+      for(let cmd of state[p].cmds) {
+        await new Promise(r => setTimeout(r, 300));
+        if(cmd === '↶') state[p].angle -= 90;
+        if(cmd === '↷') state[p].angle += 90;
+        if(cmd === '↑') {
+          const rad = state[p].angle * Math.PI / 180;
+          state[p].x += Math.round(Math.sin(rad));
+          state[p].y -= Math.round(Math.cos(rad));
         }
-
-        function startGame() {
-            state.p1.name = document.getElementById('name1').value || "ALUMNO 1";
-            state.p2.name = document.getElementById('name2').value || "ALUMNO 2";
-            document.getElementById('label-n1').innerText = state.p1.name;
-            document.getElementById('label-n2').innerText = state.p2.name;
-            document.getElementById('modal').style.display = 'none';
-            moverMeta('p1'); moverMeta('p2');
-            updateVisuals('p1'); updateVisuals('p2');
-            updateScoreUI('p1'); updateScoreUI('p2');
+        if(state[p].x < 0 || state[p].x > 9 || state[p].y < 0 || state[p].y > 11) {
+          state[p].x = dX; state[p].y = dY; state[p].angle = dA;
+          updateVisuals(p); break; 
         }
+        updateVisuals(p);
+      }
 
-        function moverMeta(p) {
-            state.metas[p].x = Math.floor(Math.random() * 10);
-            state.metas[p].y = Math.floor(Math.random() * 12);
-            const m = document.getElementById('meta-' + p);
-            m.style.left = (state.metas[p].x * GRID + 3) + "px";
-            m.style.top = (state.metas[p].y * GRID + 3) + "px";
+      await new Promise(r => setTimeout(r, 300));
+      dEl.querySelector('.helice').style.opacity = 0;
+
+      if(state[p].x === state.metas[p].x && state[p].y === state.metas[p].y) {
+        state[p].score++;
+        updateScoreUI(p);
+        moverMeta(p);
+
+        // DISPARADOR CADA 5 PUNTOS
+        if (state[p].score >= state[p].proximoUmbral) {
+          state[p].proximoUmbral += 5;
+          lanzarPregunta(p);
         }
+      } else {
+        state[p].x = dX; state[p].y = dY; state[p].angle = dA;
+        updateVisuals(p);
+      }
+      state[p].cmds = []; state[p].exec = false;
+      document.getElementById('list-' + p).innerText = "";
+    }
 
-        window.onkeydown = (e) => {
-            const k = e.code;
-            
-            // Controles del Jugador 1: Evaluamos solo el estado de ejecución del P1
-            if(!state.p1.exec) {
-                if(k === 'KeyW') addCmd('p1', '↑'); 
-                if(k === 'KeyA') addCmd('p1', '↶'); 
-                if(k === 'KeyD') addCmd('p1', '↷');
-                if(k === 'Space') ejecutar('p1');
-            }
+    function updateScoreUI(p) {
+      const num = p === 'p1' ? '1' : '2';
+      const score = state[p].score;
+      document.getElementById('score' + num).innerText = score;
+      document.getElementById('calc-' + num).innerHTML = `[ ${score} x 4 = <span class="res-final">${score * 4}</span> ]`;
+      
+      // Cambio de color según la escala solicitada
+      let cIndex;
+      if (score < 10) {
+        cIndex = 0; // Blanco
+      } else if (score < 20) {
+        cIndex = 1; // Gris
+      } else if (score < 30) {
+        cIndex = 2; // Celeste
+      } else if (score < 40) {
+        cIndex = 3; // Azul
+      } else if (score < 50) {
+        cIndex = 4; // Verde
+      } else if (score < 60) {
+        cIndex = 5; // Amarillo
+      } else if (score <= 80) {
+        cIndex = 6; // Naranja
+      } else {
+        cIndex = 7; // Rojo (> 100)
+      }
 
-            // Controles del Jugador 2: Evaluamos solo el estado de ejecución del P2
-            if(!state.p2.exec) {
-                if(k === 'ArrowUp') addCmd('p2', '↑'); 
-                if(k === 'ArrowLeft') addCmd('p2', '↶'); 
-                if(k === 'ArrowRight') addCmd('p2', '↷');
-                if(k === 'Enter') ejecutar('p2');
-            }
-        };
+      document.getElementById('arena-' + p).style.backgroundColor = colors[cIndex];
+    }
 
-        function addCmd(p, type) {
-            state[p].cmds.push(type);
-            document.getElementById('list-' + p).innerText = state[p].cmds.join('');
-        }
+    function updateVisuals(p) {
+      const d = document.getElementById(p === 'p1' ? 'dron1' : 'dron2');
+      d.style.left = (state[p].x * GRID) + "px";
+      d.style.top = (state[p].y * GRID) + "px";
+      d.querySelector('.dron-body').style.transform = `rotateZ(${state[p].angle}deg)`;
+    }
 
-        async function ejecutar(p) {
-            if(state[p].cmds.length === 0) return;
-            state[p].exec = true;
-            const dX = state[p].x, dY = state[p].y, dA = state[p].angle;
-            const dEl = document.getElementById(p === 'p1' ? 'dron1' : 'dron2');
-            dEl.querySelector('.helice').style.opacity = 1;
+    // MODAL DE EVALUACIÓN CON OPCIONES BARAJADAS
+    function lanzarPregunta(p) {
+      const modal = document.getElementById('modalPregunta');
+      const qIndex = Math.floor(Math.random() * preguntasFiltradas.length);
+      const q = preguntasFiltradas[qIndex];
 
-            for(let cmd of state[p].cmds) {
-                await new Promise(r => setTimeout(r, 300));
-                if(cmd === '↶') state[p].angle -= 90;
-                if(cmd === '↷') state[p].angle += 90;
-                if(cmd === '↑') {
-                    const rad = state[p].angle * Math.PI / 180;
-                    state[p].x += Math.round(Math.sin(rad));
-                    state[p].y -= Math.round(Math.cos(rad));
-                }
-                if(state[p].x < 0 || state[p].x > 9 || state[p].y < 0 || state[p].y > 11) {
-                    state[p].x = dX; state[p].y = dY; state[p].angle = dA;
-                    updateVisuals(p); break; 
-                }
-                updateVisuals(p);
-            }
+      document.getElementById('pregunta-titulo').innerText = `Reto Evaluativo para ${state[p].name}`;
+      document.getElementById('pregunta-texto').innerText = q.q;
+      const contenedorOpts = document.getElementById('pregunta-opciones');
+      contenedorOpts.innerHTML = '';
 
-            await new Promise(r => setTimeout(r, 300));
-            dEl.querySelector('.helice').style.opacity = 0;
+      // Crear una copia de las opciones y barajarlas
+      const opcionesBarajadas = [...q.opts];
+      for (let i = opcionesBarajadas.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [opcionesBarajadas[i], opcionesBarajadas[j]] = [opcionesBarajadas[j], opcionesBarajadas[i]];
+      }
 
-            if(state[p].x === state.metas[p].x && state[p].y === state.metas[p].y) {
-                state[p].score++;
-                updateScoreUI(p);
-                moverMeta(p);
-                if(state[p].score >= state[p].nextQuiz) launchQuiz(p);
-            } else {
-                state[p].x = dX; state[p].y = dY; state[p].angle = dA;
-                updateVisuals(p);
-            }
-            state[p].cmds = []; state[p].exec = false;
-            document.getElementById('list-' + p).innerText = "";
-        }
-
-        function updateScoreUI(p) {
-            const num = p === 'p1' ? '1' : '2';
-            document.getElementById('score' + num).innerText = state[p].score;
-            
-            // Inyecta el HTML con la clase especial .res-final para modificar tamaño y color del resultado
-            document.getElementById('calc-' + num).innerHTML = `[ ${state[p].score} x 4 = <span class="res-final">${state[p].score * 4}</span> ]`;
-            
-            document.getElementById('arena-' + p).style.backgroundColor = getColorByScore(state[p].score);
-        }
-
-        function launchQuiz(p) {
-            state[p].exec = true;
-            state[p].nextQuiz += 10;
-            const q = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
-            const overlay = document.getElementById('quiz-' + p);
-            overlay.style.display = 'flex';
-            overlay.innerHTML = `
-                <div class="quiz-card">
-                    <h3>🛡️ RETO CIBER: ${q.q}</h3>
-                    ${q.a.map((opt, i) => `<button class="opt-btn" onclick="answerQuiz('${p}', ${i}, ${q.c})">${i+1}. ${opt}</button>`).join('')}
-                </div>`;
-        }
-
-        function answerQuiz(p, idx, correct) {
-            if(idx !== correct) state[p].score = Math.max(0, state[p].score - 2);
-            document.getElementById('quiz-' + p).style.display = 'none';
-            state[p].exec = false;
+      opcionesBarajadas.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'opcion-btn';
+        btn.innerText = opt.t;
+        btn.onclick = () => {
+          if (opt.c) {
+            alert(`¡Correcto ${state[p].name}! Consigues +2 metas de bonificación.`);
+            state[p].score += 2;
             updateScoreUI(p);
-        }
+          } else {
+            alert(`Incorrecto ${state[p].name}. ¡Sigue intentándolo!`);
+          }
+          modal.style.display = 'none';
+        };
+        contenedorOpts.appendChild(btn);
+      });
 
-        function updateVisuals(p) {
-            const d = document.getElementById(p === 'p1' ? 'dron1' : 'dron2');
-            d.style.left = (state[p].x * GRID) + "px";
-            d.style.top = (state[p].y * GRID) + "px";
-            d.querySelector('.dron-body').style.transform = `rotateZ(${state[p].angle}deg)`;
-        }
+      modal.style.display = 'flex';
+    }
 
-        function enviarResultados() {
-            const scriptUrl = "https://script.google.com/macros/s/AKfycbwVPttSZrhwfWwSZpFo7KWjJ39vldQm3MPGykMWEPWOoF4UsZ24mC8YhgiaE-0xm_7G/exec";
-            const data = { player1: state.p1.name, score1: state.p1.score, player2: state.p2.name, score2: state.p2.score };
-            fetch(scriptUrl, { method: "POST", mode: "no-cors", body: JSON.stringify(data) })
-            .then(() => alert("Datos enviados a la hoja de cálculo."));
-        }
-    </script>
+    function abrirTeoria() {
+      document.getElementById('contenido-teoria').innerHTML = teoriaHTML;
+      document.getElementById('modalTeoria').style.display = 'flex';
+    }
+
+    function cerrarTeoria() {
+      document.getElementById('modalTeoria').style.display = 'none';
+    }
+  </script>
 
 </body></html>
