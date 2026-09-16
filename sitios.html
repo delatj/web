@@ -1,12 +1,11 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Planificador de Asientos de Aula</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="./Planificador de Asientos de Aula_files/jspdf.umd.min.js"></script>
+    <script src="./Planificador de Asientos de Aula_files/html2canvas.min.js"></script>
+    <script src="./Planificador de Asientos de Aula_files/xlsx.full.min.js"></script>
     <style>
         :root {
             --primary: #3b5998;
@@ -175,20 +174,26 @@
         .btn-generate:hover {
             background-color: #219653;
         }
-        .btn-landscape {
-            background-color: var(--secondary);
-        }
-        .btn-landscape:hover {
-            background-color: #5a7cab;
-        }
         .btn-warning {
             background-color: var(--warning);
         }
         .btn-warning:hover {
             background-color: #e67e22;
         }
+        .btn-project {
+            background-color: #8e44ad;
+        }
+        .btn-project:hover {
+            background-color: #7127a1;
+        }
+        .btn-guide {
+            background-color: #2980b9;
+        }
+        .btn-guide:hover {
+            background-color: #1f618d;
+        }
         .students-input {
-            min-height: 200px;
+            min-height: 180px;
             resize: vertical;
             font-family: monospace;
             padding: 15px;
@@ -236,17 +241,24 @@
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.2s;
             position: relative;
             flex: 1;
             word-break: break-word;
             overflow: hidden;
             text-align: center;
+            user-select: none;
         }
         .desk:hover {
             background: #dfe6e9;
             transform: translateY(-3px);
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .desk.selected {
+            border: 3px dashed var(--accent) !important;
+            transform: scale(1.04);
+            box-shadow: 0 0 12px rgba(231, 76, 60, 0.6);
+            background: #fadbd8 !important;
         }
         .desk.empty {
             background: var(--desk-color);
@@ -262,6 +274,7 @@
             position: absolute;
             top: 3px;
             left: 5px;
+            pointer-events: none;
         }
         .student-name {
             font-weight: 500;
@@ -270,13 +283,14 @@
             font-size: 1.2rem;
             line-height: 1.1;
             word-break: break-word;
-            white-space: pre-line;     /* Permite saltos de línea automáticos */
-            overflow-wrap: break-word; /* Permite cortar palabras largas */
+            white-space: pre-line;
+            overflow-wrap: break-word;
             padding: 2px 0;
+            pointer-events: none;
         }
         .teacher-area {
             background: #d6eaf8;
-            border-color: #3498db;
+            border: 2px solid #3498db;
             text-align: center;
             padding: 15px;
             margin-bottom: 15px;
@@ -311,20 +325,22 @@
         }
         .student-card {
             background: var(--light);
-            padding: 15px;
+            padding: 12px;
             border-radius: 8px;
             text-align: center;
-            cursor: move;
-            transition: all 0.3s;
+            cursor: pointer;
+            transition: all 0.2s;
             border: 1px solid #ddd;
             word-break: break-word;
+            user-select: none;
         }
         .student-card:hover {
             background: #dfe6e9;
-            transform: translateY(-3px);
+            transform: translateY(-2px);
         }
-        .student-card.assigned {
-            display: none;
+        .student-card.selected-card {
+            border: 2px solid var(--accent);
+            background: #fadbd8;
         }
         .desk-color-menu {
             position: absolute;
@@ -353,37 +369,60 @@
         .desk-color-btn.gray { background: #bdc3c7; }
         .desk-color-btn.white { background: #fff; border: 1px solid #ccc;}
         .desk-color-btn.green { background: #d5f5e3; }
-        .desk-color-btn:active, .desk-color-btn:focus { box-shadow: 0 0 8px #3b5998; }
-        @media (max-width: 1200px) {
-            .main-content {
-                flex-direction: column;
-            }
-            .config-panel, .classroom-container {
-                min-width: 100%;
-            }
-            .dimensions-config {
-                flex-direction: column;
-                gap: 10px;
-            }
-            .class-row {
-                flex-wrap: wrap;
-            }
-            .desk-group {
-                flex: 1 1 45%;
-            }
+
+        /* Estilos Ventana Modal de Guía */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
         }
-        @media (max-width: 768px) {
-            .desk-group {
-                flex: 1 1 100%;
-            }
-            .actions {
-                flex-direction: column;
-                align-items: center;
-            }
-            .actions button {
-                width: 100%;
-                max-width: 300px;
-            }
+        .modal-content {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--light);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .modal-header h2 {
+            color: var(--primary);
+        }
+        .close-btn {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #aaa;
+            cursor: pointer;
+            border: none;
+            background: none;
+            width: auto;
+            padding: 0;
+            margin: 0;
+        }
+        .close-btn:hover {
+            color: #000;
+        }
+        .guide-list {
+            margin-left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
     </style>
 </head>
@@ -391,10 +430,11 @@
     <div class="container">
         <header>
             <h1>Planificador de Asientos de Aula</h1>
-            <p class="description">Organiza a tus estudiantes en diferentes configuraciones de aula. Escribe los nombres o impórtalos desde Excel, arrástralos a los asientos y genera un PDF para imprimir.</p>
+            <p class="description">Organiza tu aula de forma visual. Puedes asignar y mover alumnos haciendo **clic** sobre ellos, guardar tu progreso o exportar el mapa en PDF.</p>
         </header>
         <div class="main-content">
             <div class="config-panel">
+                <button class="btn-guide" id="openGuide">📖 Guía de Uso del Planificador</button>
                 <div>
                     <h2 class="panel-title">Configuración del Aula</h2>
                     <div class="form-group">
@@ -423,10 +463,22 @@
                     <button id="applyLayout">Aplicar Configuración</button>
                 </div>
                 <div>
+                    <h2 class="panel-title">Guardar / Cargar Estado</h2>
+                    <div class="file-import">
+                        <button class="btn-project" id="saveProject">Guardar Proyecto (.json)</button>
+                        <label style="margin-top: 5px;">Cargar Proyecto previo:</label>
+                        <input type="file" id="loadProjectFile" accept=".json">
+                    </div>
+                </div>
+                <div>
                     <h2 class="panel-title">Gestión de Estudiantes</h2>
                     <div class="form-group">
                         <label for="studentsInput">Nombres de Estudiantes (uno por línea):</label>
-                        <textarea id="studentsInput" class="students-input" placeholder="Escribe un nombre por línea&#10;Ej:&#10;María González&#10;Carlos Rodríguez&#10;Ana Martínez"></textarea>
+                        <textarea id="studentsInput" class="students-input" placeholder="Escribe un nombre por línea
+Ej:
+María González
+Carlos Rodríguez
+Ana Martínez"></textarea>
                     </div>
                     <button id="loadStudents">Cargar Estudiantes</button>
                     <div class="file-import">
@@ -444,12 +496,12 @@
                 <div class="classroom-view">
                     <h2 class="panel-title">Distribución del Aula</h2>
                     <div class="classroom-layout" id="classroomLayout">
-                        <!-- El diseño del aula se generará aquí -->
+                        <!-- Estructura del aula -->
                     </div>
                 </div>
                 <div class="students-drag-area">
                     <h2 class="panel-title">Estudiantes para asignar</h2>
-                    <p>Arrastra los estudiantes a los asientos del aula. Los estudiantes asignados desaparecerán de esta lista.</p>
+                    <p>Haz clic en un estudiante sin asignar y luego en un asiento del aula para ubicarlo.</p>
                     <div class="students-grid" id="studentsGrid">
                         <!-- Los estudiantes se mostrarán aquí -->
                     </div>
@@ -461,6 +513,41 @@
             <button class="btn-warning" id="resetAll">Reiniciar Todo</button>
         </div>
     </div>
+
+    <!-- Modal Guía de Uso -->
+    <div class="modal" id="guideModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Guía de Funcionamiento</h2>
+                <button class="close-btn" id="closeGuide">&times;</button>
+            </div>
+            <ul class="guide-list">
+                <li><strong>Mover o Intercambiar Alumnos:</strong>
+                    <br>1. Haz <strong>clic izquierdo</strong> sobre la primera casilla (se marcará con un borde rojo).
+                    <br>2. Haz <strong>clic izquierdo</strong> en la casilla de destino. Los dos alumnos intercambiarán sus asientos (o se moverá si el sitio estaba libre).
+                </li>
+                <li><strong>Asignar Alumnos Sin Ubicar:</strong>
+                    <br>Haz clic sobre un alumno de la lista inferior de "Estudiantes para asignar" y luego haz clic en el pupitre donde deseas sentarlo.
+                </li>
+                <li><strong>Desasignar un Alumno:</strong>
+                    <br>Si quieres quitar a un alumno de un pupitre y devolverlo a la lista de pendientes, simplemente haz doble clic sobre el pupitre (o selecciona la casilla y quítalo).
+                </li>
+                <li><strong>Cambiar Color de Pupitre:</strong>
+                    <br>Haz <strong>clic derecho</strong> sobre un pupitre para elegir entre color Gris, Blanco o Verde.
+                </li>
+                <li><strong>Eliminar un Pupitre del Aula:</strong>
+                    <br>Haz <strong>doble clic</strong> rápido sobre un pupitre libre para eliminar esa mesa del plano.
+                </li>
+                <li><strong>Guardar y Continuar otro día:</strong>
+                    <br>Usa el botón <em>Guardar Proyecto (.json)</em> para descargar el plano actual. Para recuperarlo en el futuro, utiliza <em>Cargar Proyecto previo</em>.
+                </li>
+                <li><strong>Exportar a PDF:</strong>
+                    <br>Al presionar <em>Descargar PDF</em>, se generará una plantilla limpia. Las casillas vacías quedarán totalmente en blanco para que puedas escribir sobre ellas si lo necesitas.
+                </li>
+            </ul>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const layoutType = document.getElementById('layoutType');
@@ -478,16 +565,85 @@
             const mixedPattern = document.getElementById('mixedPattern');
             const studentsGrid = document.getElementById('studentsGrid');
             const commentsInput = document.getElementById('commentsInput');
+            const saveProjectBtn = document.getElementById('saveProject');
+            const loadProjectFile = document.getElementById('loadProjectFile');
+
+            const guideModal = document.getElementById('guideModal');
+            const openGuideBtn = document.getElementById('openGuide');
+            const closeGuideBtn = document.getElementById('closeGuide');
             
             let students = [];
             let deskAssignments = {};
             let deskColors = {};
             let deletedDesks = {};
             let currentLayout = 'pairs';
+            
+            // Control de selección por Clics
+            let selectedDeskId = null;
+            let selectedUnassignedStudentId = null;
+
+            // Abrir y Cerrar Modal
+            openGuideBtn.addEventListener('click', () => guideModal.style.display = 'flex');
+            closeGuideBtn.addEventListener('click', () => guideModal.style.display = 'none');
+            window.addEventListener('click', (e) => {
+                if (e.target === guideModal) guideModal.style.display = 'none';
+            });
 
             layoutType.addEventListener('change', function() {
                 mixedConfig.style.display = (this.value === 'mixed') ? 'block' : 'none';
                 currentLayout = this.value;
+            });
+
+            saveProjectBtn.addEventListener('click', function() {
+                const data = {
+                    students,
+                    deskAssignments,
+                    deskColors,
+                    deletedDesks,
+                    currentLayout,
+                    rows: rowsNumber.value,
+                    columns: columnsNumber.value,
+                    mixedPattern: mixedPattern.value,
+                    comments: commentsInput.value
+                };
+                const jsonStr = JSON.stringify(data, null, 2);
+                const blob = new Blob([jsonStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `plan-aula-${new Date().toISOString().slice(0,10)}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+
+            loadProjectFile.addEventListener('change', function(e) {
+                if (!e.target.files.length) return;
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    try {
+                        const data = JSON.parse(evt.target.result);
+                        students = data.students || [];
+                        deskAssignments = data.deskAssignments || {};
+                        deskColors = data.deskColors || {};
+                        deletedDesks = data.deletedDesks || {};
+                        currentLayout = data.currentLayout || 'pairs';
+                        layoutType.value = currentLayout;
+                        mixedConfig.style.display = (currentLayout === 'mixed') ? 'block' : 'none';
+                        rowsNumber.value = data.rows || 4;
+                        columnsNumber.value = data.columns || 3;
+                        mixedPattern.value = data.mixedPattern || '';
+                        commentsInput.value = data.comments || '';
+                        studentsInput.value = students.join('\n');
+                        resetSelections();
+                        renderClassroomLayout();
+                        renderStudentsGrid();
+                        alert('Proyecto cargado correctamente');
+                    } catch (err) {
+                        alert('Error al leer el archivo de proyecto JSON.');
+                    }
+                };
+                reader.readAsText(file);
             });
 
             loadStudentsBtn.addEventListener('click', function() {
@@ -497,6 +653,7 @@
                         .map(name => name.trim())
                         .filter(name => name.length > 0);
                     alert(`Se han cargado ${students.length} estudiantes`);
+                    resetSelections();
                     renderClassroomLayout();
                     renderStudentsGrid();
                 } else {
@@ -525,6 +682,7 @@
                         });
                         studentsInput.value = students.join('\n');
                         alert(`Se han importado ${students.length} estudiantes desde Excel`);
+                        resetSelections();
                         renderClassroomLayout();
                         renderStudentsGrid();
                     } catch (error) {
@@ -535,23 +693,40 @@
                 reader.readAsArrayBuffer(file);
             });
 
+            function resetSelections() {
+                selectedDeskId = null;
+                selectedUnassignedStudentId = null;
+            }
+
             function renderStudentsGrid() {
                 studentsGrid.innerHTML = '';
                 students.forEach((student, index) => {
                     if (Object.values(deskAssignments).includes(index)) return;
                     const studentCard = document.createElement('div');
                     studentCard.className = 'student-card';
+                    if (selectedUnassignedStudentId === index) {
+                        studentCard.classList.add('selected-card');
+                    }
                     studentCard.textContent = student;
                     studentCard.setAttribute('data-id', index);
-                    studentCard.draggable = true;
-                    studentCard.addEventListener('dragstart', function(e) {
-                        e.dataTransfer.setData('text/plain', this.getAttribute('data-id'));
+                    
+                    studentCard.addEventListener('click', function() {
+                        if (selectedUnassignedStudentId === index) {
+                            selectedUnassignedStudentId = null;
+                        } else {
+                            selectedUnassignedStudentId = index;
+                            selectedDeskId = null;
+                        }
+                        renderClassroomLayout();
+                        renderStudentsGrid();
                     });
+
                     studentsGrid.appendChild(studentCard);
                 });
             }
 
             applyLayoutBtn.addEventListener('click', function() {
+                resetSelections();
                 renderClassroomLayout();
             });
 
@@ -583,7 +758,6 @@
                 teacherArea.className = 'teacher-area';
                 teacherArea.textContent = 'Área del Profesor';
                 classroomLayout.appendChild(teacherArea);
-                initDragAndDrop();
             }
 
             function getLayoutConfig() {
@@ -615,6 +789,10 @@
                 desk.className = 'desk empty';
                 desk.setAttribute('data-desk-id', deskId);
 
+                if (selectedDeskId === String(deskId)) {
+                    desk.classList.add('selected');
+                }
+
                 if (deskColors[deskId]) {
                     desk.style.background = deskColors[deskId];
                 }
@@ -636,8 +814,15 @@
                 desk.appendChild(deskNumber);
                 desk.appendChild(studentName);
 
-                // Permitir eliminar el sitio con doble clic
+                // Lógica principal de intercambio por Clic
+                desk.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('desk-color-btn')) return;
+                    handleDeskClick(String(deskId));
+                });
+
+                // Doble clic para quitar sitio del aula
                 desk.addEventListener('dblclick', function(e) {
+                    e.stopPropagation();
                     if (confirm('¿Deseas borrar este sitio del aula?')) {
                         removeDesk(deskId);
                     }
@@ -650,6 +835,43 @@
                 });
 
                 return desk;
+            }
+
+            function handleDeskClick(deskId) {
+                // Caso 1: Teníamos un estudiante de la lista inferior seleccionado
+                if (selectedUnassignedStudentId !== null) {
+                    deskAssignments[deskId] = selectedUnassignedStudentId;
+                    selectedUnassignedStudentId = null;
+                } 
+                // Caso 2: Primer clic en un pupitre
+                else if (selectedDeskId === null) {
+                    selectedDeskId = deskId;
+                } 
+                // Caso 3: Segundo clic en el mismo pupitre (deseleccionar)
+                else if (selectedDeskId === deskId) {
+                    selectedDeskId = null;
+                } 
+                // Caso 4: Segundo clic en un pupitre distinto (Intercambio/Movimiento)
+                else {
+                    const studentA = deskAssignments[selectedDeskId];
+                    const studentB = deskAssignments[deskId];
+
+                    if (studentA !== undefined) {
+                        deskAssignments[deskId] = studentA;
+                    } else {
+                        delete deskAssignments[deskId];
+                    }
+
+                    if (studentB !== undefined) {
+                        deskAssignments[selectedDeskId] = studentB;
+                    } else {
+                        delete deskAssignments[selectedDeskId];
+                    }
+
+                    selectedDeskId = null;
+                }
+                renderClassroomLayout();
+                renderStudentsGrid();
             }
 
             function showDeskColorMenu(desk, deskId, event) {
@@ -666,6 +888,7 @@
                     btn.className = `desk-color-btn ${col.name}`;
                     btn.title = col.title;
                     btn.addEventListener('click', function(ev) {
+                        ev.stopPropagation();
                         deskColors[deskId] = col.value;
                         desk.style.background = col.value;
                         menu.remove();
@@ -691,49 +914,9 @@
                     delete deskColors[deskId];
                 }
                 deletedDesks[deskId] = true;
-                const deskElements = classroomLayout.querySelectorAll('.desk');
-                deskElements.forEach(desk => {
-                    if (desk.getAttribute('data-desk-id') == deskId) {
-                        desk.parentNode.removeChild(desk);
-                    }
-                });
-            }
-
-            function initDragAndDrop() {
-                const desks = document.querySelectorAll('.desk');
-                desks.forEach(desk => {
-                    desk.addEventListener('dragover', function(e) {
-                        e.preventDefault();
-                    });
-                    desk.addEventListener('drop', function(e) {
-                        e.preventDefault();
-                        const studentId = e.dataTransfer.getData('text/plain');
-                        if (studentId) {
-                            assignStudentToDesk(parseInt(studentId), this.getAttribute('data-desk-id'));
-                        }
-                    });
-                    desk.addEventListener('click', function() {
-                        const deskId = this.getAttribute('data-desk-id');
-                        if (deskAssignments[deskId] !== undefined) {
-                            delete deskAssignments[deskId];
-                            renderClassroomLayout();
-                            renderStudentsGrid();
-                        }
-                    });
-                });
-            }
-
-            function assignStudentToDesk(studentId, deskId) {
-                if (studentId >= 0 && studentId < students.length) {
-                    for (const assignedDesk in deskAssignments) {
-                        if (deskAssignments[assignedDesk] === studentId) {
-                            delete deskAssignments[assignedDesk];
-                        }
-                    }
-                    deskAssignments[deskId] = studentId;
-                    renderClassroomLayout();
-                    renderStudentsGrid();
-                }
+                if (selectedDeskId === String(deskId)) selectedDeskId = null;
+                renderClassroomLayout();
+                renderStudentsGrid();
             }
 
             function generatePDF() {
@@ -752,15 +935,37 @@
                 const classroomView = document.querySelector('.classroom-view').cloneNode(true);
 
                 classroomView.querySelectorAll('.desk').forEach(desk => {
-                    const deskId = desk.getAttribute('data-desk-id');
-                    if (deskColors[deskId]) {
-                        desk.style.background = deskColors[deskId];
-                    }
+                    desk.style.background = '#ffffff';
+                    desk.style.borderColor = '#bdc3c7';
+                    desk.style.color = '#333333';
                     desk.style.fontSize = '1.2rem';
                     desk.style.minWidth = '110px';
                     desk.style.minHeight = '110px';
                     desk.style.padding = '16px';
+                    desk.style.borderStyle = 'solid';
+
+                    const deskId = desk.getAttribute('data-desk-id');
+                    const isOccupied = deskAssignments[deskId] !== undefined;
+
+                    // Si está vacío en la plantilla PDF, no mostramos el texto "Disponible" ni el '#'
+                    if (!isOccupied) {
+                        const deskNum = desk.querySelector('.desk-number');
+                        if (deskNum) deskNum.textContent = '';
+                        const nameElem = desk.querySelector('.student-name');
+                        if (nameElem) nameElem.textContent = '';
+                    }
                 });
+
+                classroomView.querySelectorAll('.teacher-area').forEach(teacher => {
+                    teacher.style.background = '#ffffff';
+                    teacher.style.borderColor = '#3498db';
+                    teacher.style.color = '#2c3e50';
+                });
+
+                classroomView.querySelectorAll('.desk-number').forEach(num => {
+                    num.style.color = '#7f8c8d';
+                });
+
                 classroomView.querySelectorAll('.student-name').forEach(name => {
                     name.style.fontSize = '1.1rem';
                     name.style.lineHeight = '1.1';
@@ -769,10 +974,10 @@
                     name.style.wordBreak = 'break-word';
                     name.style.textAlign = 'center';
                     name.style.padding = '2px 0';
+                    name.style.color = '#333333';
                 });
 
                 pdfContainer.appendChild(classroomView);
-
                 pdfContainer.style.fontSize = '16px';
 
                 const tempContainer = document.createElement('div');
@@ -825,9 +1030,11 @@
                     deletedDesks = {};
                     studentsInput.value = '';
                     excelFile.value = '';
+                    loadProjectFile.value = '';
                     rowsNumber.value = 4;
                     columnsNumber.value = 3;
                     commentsInput.value = '';
+                    resetSelections();
                     renderClassroomLayout();
                     renderStudentsGrid();
                 }
