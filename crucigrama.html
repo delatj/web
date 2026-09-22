@@ -2,196 +2,728 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Generador de Sopa de Letras</title>
+  <title>Sopas de Letras y Teoría - Minilibros A4</title>
   <style>
+    /* Estilos Generales */
+    * {
+      box-sizing: border-box;
+    }
     body {
       font-family: Arial, sans-serif;
-      margin: 20px;
+      background-color: #f1f5f9;
+      color: #0f172a;
+      margin: 0;
+      padding: 20px;
+    }
+
+    /* Menú / Panel de Control */
+    .no-print-zone {
+      max-width: 1000px;
+      margin: 0 auto 30px auto;
+      background: #ffffff;
+      padding: 20px 25px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    }
+    h1 {
+      margin-top: 0;
+      color: #1e293b;
+      font-size: 24px;
       text-align: center;
     }
-    textarea {
-      width: 80%;
-      height: 150px;
-      margin: 10px 0;
-      font-size: 16px;
+    p.subtitle {
+      text-align: center;
+      color: #64748b;
+      margin-bottom: 20px;
     }
-    .button {
-      background-color: #4CAF50;
+    .print-btn-container {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .btn-print {
+      background-color: #10b981;
       color: white;
-      padding: 10px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      padding: 12px 24px;
       border: none;
+      border-radius: 6px;
       cursor: pointer;
-      text-align: center;
+      transition: background-color 0.2s;
     }
-    .button:hover {
-      background-color: #45a049;
+    .btn-print:hover {
+      background-color: #059669;
     }
-    table {
-      margin: 20px auto;
-      border-collapse: collapse;
+
+    /* Botones del Índice */
+    .index-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
     }
-    td {
-      width: 30px;
-      height: 30px;
-      text-align: center;
-      border: 1px solid #000;
-      font-size: 18px;
-    }
-    .extra-text {
-      margin-top: 20px;
+    .index-btn {
+      background-color: #3b82f6;
+      color: white;
+      padding: 12px 15px;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
       text-align: left;
-      padding: 10px;
-      border: 1px solid #000;
-      display: inline-block;
+      font-size: 13px;
+      transition: background-color 0.2s, transform 0.1s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .index-btn:hover {
+      background-color: #2563eb;
+      transform: translateY(-1px);
+    }
+
+    /* Estructura de Páginas A4 para Impresión (297mm x 210mm Horizontal) */
+    .a4-page {
+      width: 297mm;
+      height: 210mm;
+      background-color: white;
+      margin: 0 auto 30px auto;
+      padding: 8mm 12mm;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      page-break-after: always;
+      break-after: page;
+    }
+
+    .header-puzzle {
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .header-title {
+      font-size: 16px;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: #0f172a;
+    }
+    .header-sub {
+      font-size: 13px;
+      font-weight: bold;
+      color: #2563eb;
+    }
+
+    /* Sección Central: Sopa + Lista Reubicada */
+    .puzzle-body {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      justify-content: center;
+      margin: 4px 0;
+    }
+
+    /* Grilla de la Sopa de Letras (14x14) */
+    .wordsearch-grid {
+      display: grid;
+      grid-template-columns: repeat(14, 1fr);
+      gap: 1px;
+      background-color: #0f172a;
+      border: 2px solid #0f172a;
+      border-radius: 4px;
+      padding: 1px;
+    }
+    .cell {
+      width: 22px;
+      height: 22px;
+      background-color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Courier New', Courier, monospace;
+      font-weight: bold;
+      font-size: 13px;
+      color: #0f172a;
+      text-transform: uppercase;
+    }
+
+    /* Nueva Ubicación de la Lista de Palabras (Horizontal / Compacta) */
+    .word-list-container {
+      flex: 1;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 8px 12px;
+      background-color: #f8fafc;
+      max-height: 310px;
+    }
+    .word-list-container h3 {
+      margin-top: 0;
+      margin-bottom: 6px;
+      font-size: 13px;
+      text-transform: uppercase;
+      color: #1e293b;
+      border-bottom: 1.5px solid #cbd5e1;
+      padding-bottom: 4px;
+      text-align: center;
+    }
+    .word-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 12px;
+      padding-left: 20px;
+      margin: 0;
+    }
+    .word-list li {
+      font-size: 12px;
+      font-weight: bold;
+      color: #334155;
+      letter-spacing: 0.5px;
+    }
+
+    /* Sección Inferior: Fichas de Teoría con Letra Tamaño 12pt */
+    .theory-container {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 4px;
+      border-top: 2px solid #0f172a;
+      padding-top: 6px;
+    }
+    .theory-card {
+      border: 1px solid #94a3b8;
+      border-radius: 4px;
+      padding: 8px;
+      background-color: #fcfcfc;
+      display: flex;
+      flex-direction: column;
+    }
+    .theory-card-header {
+      font-size: 11px;
+      font-weight: bold;
+      background-color: #1e293b;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 3px;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .theory-card-title {
+      font-size: 13px;
+      font-weight: bold;
+      color: #0f172a;
+      margin-bottom: 6px;
+      line-height: 1.2;
+    }
+    .theory-card-text {
+      font-size: 12px; /* Solicitado: al menos tamaño 12 */
+      color: #1e293b;
+      line-height: 1.3;
+      flex: 1;
+    }
+
+    .footer-puzzle {
+      border-top: 1px dashed #94a3b8;
+      padding-top: 4px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #64748b;
+    }
+
+    /* Reglas de Impresión A4 Landscape */
+    @media print {
+      @page {
+        size: A4 landscape;
+        margin: 0;
+      }
+      body {
+        background: white;
+        padding: 0;
+        margin: 0;
+      }
+      .no-print-zone {
+        display: none !important;
+      }
+      .a4-page {
+        box-shadow: none;
+        border-radius: 0;
+        margin: 0;
+        width: 297mm;
+        height: 210mm;
+        page-break-after: always;
+        break-after: page;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>Generador de Sopa de Letras</h1>
-  <p>Introduce 10 palabras, cada una en una línea, y haz clic en "Generar Sopa de Letras".</p>
-  <textarea id="wordsInput" placeholder="Ejemplo:
-Taladro
-Martillo
-Sierra"></textarea>
-  <br>
-  <p>Pega un texto adicional que se mostrará organizado en el archivo generado:</p>
-  <textarea id="extraTextInput" placeholder="Introduce aquí un texto adicional."></textarea>
-  <br>
-  <button class="button" onclick="generateHTML()">Generar Sopa de Letras</button>
-  <br><br>
-  <a id="downloadLink" style="display: none;" class="button">Descargar Sopa de Letras</a>
+
+  <!-- ÍNDICE INTERACTIVO / NAVEGACIÓN -->
+  <div class="no-print-zone">
+    <h1>🧩 Sopas de Letras y Teoría Integrada - Minilibros A4</h1>
+    <p class="subtitle">3 palabras en diagonal ascendente por sopa + fichas teóricas a tamaño de letra 12[cite: 4]. Imprime todo con Control + P.</p>
+    
+    <div class="print-btn-container">
+      <button class="btn-print" onclick="window.print()">🖨️ Imprimir Todo en A4 (Control + P)</button>
+    </div>
+
+    <div class="index-grid" id="indexGrid"></div>
+  </div>
+
+  <!-- CONTENEDOR DE PÁGINAS A4 -->
+  <div id="puzzlesContainer"></div>
 
   <script>
-    function generateHTML() {
-      const input = document.getElementById("wordsInput").value.trim();
-      const extraText = document.getElementById("extraTextInput").value.trim();
-      const words = input.split("\n").map(word => word.trim().toUpperCase()).filter(Boolean);
+    // Datos integrados de Minilibros Teóricos (11 temas x 2 bloques x 4 páginas cada uno)[cite: 4]
+    const temasTeoria = [
+      {
+        nombre: "Ciberseguridad",
+        bloques: [
+          {
+            titulo: "Bloque 1 (Pág. 1 a 4)",
+            palabras: ["CIBERSEGURIDAD", "CONFIDENCIALIDAD", "FIREWALL", "ANTIVIRUS", "MALWARE", "RANSOMWARE", "DISCIPLINA", "AMENAZAS", "GUSANOS", "TROYANOS"],
+            paginas: [
+              { num: "Pág. 1", titulo: "1. CIBERSEGURIDAD", texto: "Disciplina que protege sistemas, redes y programas de ataques digitales o accesos no autorizados. Busca garantizar confidencialidad, integridad y disponibilidad." },
+              { num: "Pág. 2", titulo: "2. SEGURIDAD ACTIVA Y PASIVA", texto: "Activa: Medidas previas que previenen amenazas (firewalls y antivirus). Pasiva: Medidas que responden tras un incidente (copias de seguridad)." },
+              { num: "Pág. 3", titulo: "3. EXPOSICIÓN Y PELIGROS", texto: "Grado de vulnerabilidad ante amenazas por contraseñas débiles o malas prácticas. Los peligros abarcan virus, malware, phishing y robo de identidad." },
+              { num: "Pág. 4", titulo: "4. TIPOS DE MALWARE", texto: "Los virus se adjuntan a programas legítimos. Los gusanos se replican por la red. Los troyanos se disfrazan de software legítimo y el ransomware pide rescate." }
+            ]
+          },
+          {
+            titulo: "Bloque 2 (Pág. 5 a 8)",
+            palabras: ["PHISHING", "AUTENTICACION", "COPYRIGHT", "CREATIVE", "COMMONS", "DOMINIO", "INGENIERIA", "CONFIGURAR", "LICENCIAS", "PATRIMONIALES"],
+            paginas: [
+              { num: "Pág. 5", titulo: "5. PHISHING Y ANTIMALWARE", texto: "Phishing: Técnica de ingeniería social para engañar y obtener contraseñas. Antimalware: Programas diseñados para detectar y eliminar este software malicioso." },
+              { num: "Pág. 6", titulo: "6. PLATAFORMAS VIRTUALES", texto: "Es fundamental configurar perfiles de forma segura usando autenticación de dos factores, cifrado de datos y actualizaciones periódicas del sistema." },
+              { num: "Pág. 7", titulo: "7. PROPIEDAD INTELECTUAL", texto: "Leyes que protegen derechos de autor. Si un material tiene copyright o no indica nada, implica que tiene derechos reservados y exige permiso." },
+              { num: "Pág. 8", titulo: "8. LICENCIAS ABIERTAS", texto: "Creative Commons permite usar obras respetando condiciones (BY, SA, NC, ND). En dominio público los derechos patrimoniales del autor ya han expirado." }
+            ]
+          }
+        ]
+      },
+      {
+        nombre: "Datos Masivos",
+        bloques: [
+          {
+            titulo: "Bloque 1 (Pág. 1 a 4)",
+            palabras: ["BIGDATA", "METADATOS", "DESCRIPTIVOS", "ESTRUCTURALES", "SCRAPING", "ALMACENAMIENTO", "TENDENCIAS", "PATRONES", "GESTION", "INTEGRACION"],
+            paginas: [
+              { num: "Pág. 1", titulo: "1. DATOS MASIVOS", texto: "Conjuntos de información extremadamente grandes y complejos (big data) que superan herramientas convencionales. Permiten extraer patrones significativos." },
+              { num: "Pág. 2", titulo: "2. CLASIFICACIÓN METADATOS", texto: "Proporcionan información sobre otros datos. Se dividen en Descriptivos (contenido), Administrativos (creación) y Estructurales (organización)." },
+              { num: "Pág. 3", titulo: "3. USO DE METADATOS", texto: "Organización: Facilita búsqueda. Gestión: Ayuda en la administración y control. Interoperabilidad: Permite integrar información entre sistemas distintos." },
+              { num: "Pág. 4", titulo: "4. ALMACENAMIENTO Y SCRAPING", texto: "Se almacenan en los propios archivos o bases especializadas. El data scraping extrae automáticamente información no estructurada de sitios web." }
+            ]
+          },
+          {
+            titulo: "Bloque 2 (Pág. 5 a 8)",
+            palabras: ["RECOPILACION", "TRANSACCIONES", "PATRONES", "PERSONALIZACION", "INVENTARIO", "PRONOSTICOS", "CLIMA", "DEMANDAS", "EXPERIENCIA", "PUBLICIDAD"],
+            paginas: [
+              { num: "Pág. 5", titulo: "5. RECOPILACIÓN DE DATOS", texto: "En supermercados abarca transacciones de compras, historiales de clientes, datos de inventario y factores externos como el pronóstico del clima local." },
+              { num: "Pág. 6", titulo: "6. PATRONES Y OFERTAS", texto: "Análisis de tendencias de compra para comprender preferencias estacionales. Permite personalizar promociones y ofertas según la predicción del clima." },
+              { num: "Pág. 7", titulo: "7. OPTIMIZACIÓN INVENTARIO", texto: "El sistema optimiza el inventario al prever la demanda. Si hay un evento local, ajusta de forma automática los niveles de stock de productos clave." },
+              { num: "Pág. 8", titulo: "8. EXPERIENCIA DEL CLIENTE", texto: "Mejora la distribución de productos en la tienda física y ajusta la publicidad en línea de forma personalizada acorde al perfil del comprador." }
+            ]
+          }
+        ]
+      },
+      {
+        nombre: "Desarrollo Móvil",
+        bloques: [
+          {
+            titulo: "Bloque 1 (Pág. 1 a 4)",
+            palabras: ["DESARROLLO", "APLICACIONES", "INVENTOR", "EVENTOS", "PARADIGMA", "NOTIFICACIONES", "TABLETS", "BLOQUES", "PANTALLA", "DISPOSITIVO"],
+            paginas: [
+              { num: "Pág. 1", titulo: "1. DESARROLLO MÓVIL", texto: "Proceso de crear aplicaciones para smartphones o tablets con lenguajes de programación. Permite crear herramientas diarias, juegos y redes sociales." },
+              { num: "Pág. 2", titulo: "2. IDES Y BLOQUES", texto: "Los Entornos de Desarrollo Integrado facilitan la creación de apps. Algunos emplean bloques gráficos como MIT App Inventor en lugar de código escrito." },
+              { num: "Pág. 3", titulo: "3. PROGRAMACIÓN POR EVENTOS", texto: "Las acciones ocurren cuando sucede un evento determinado. Pueden ser desencadenados por tocar la pantalla, agitar el móvil o recibir alertas." },
+              { num: "Pág. 4", titulo: "4. DEFINICIÓN DE EVENTOS", texto: "Un evento es cualquier suceso detectado por la app. Ejemplos: pulsar un botón para enviar un mensaje, cambiar de canción o recibir un aviso." }
+            ]
+          },
+          {
+            titulo: "Bloque 2 (Pág. 5 a 8)",
+            palabras: ["SENSORES", "ACELEROMETRO", "GIROSCOPIO", "RESPUESTA", "REPRODUCCION", "PODOMETRO", "UBICACION", "ENTRADA", "SALIDA", "SEGUNDO"],
+            paginas: [
+              { num: "Pág. 5", titulo: "5. SENSORES Y EVENTOS", texto: "Componentes que detectan variables del entorno: acelerómetro (movimiento), GPS (ubicación) y giroscopio (orientación). Todos generan eventos." },
+              { num: "Pág. 6", titulo: "6. ENTRADA Y SALIDA (E/S)", texto: "Entrada (E): Recepción del evento (tocar pantalla). Salida (S): Respuesta ejecutada por la app (sonar una melodía o cambiar el color de fondo)." },
+              { num: "Pág. 7", titulo: "7. APLICACIÓN PRÁCTICA", texto: "En una app de música, al presionar 'Play' el dispositivo detecta la pulsación (entrada) e inicia de inmediato la reproducción de sonido (salida)." },
+              { num: "Pág. 8", titulo: "8. USO AVANZADO SENSORES", texto: "Permiten funciones complejas en segundo plano. Ejemplo: usar el acelerómetro para diseñar un podómetro o el GPS para seguir un trayecto en mapa." }
+            ]
+          }
+        ]
+      },
+      {
+        nombre: "Desarrollo Web",
+        bloques: [
+          {
+            titulo: "Bloque 1 (Pág. 1 a 4)",
+            palabras: ["DESARROLLADOR", "ESTRUCTURA", "USABILIDAD", "SERVIDORES", "ALMACENES", "NAVEGADOR", "ARQUITECTOS", "EDIFICIO", "PANTALLA", "ENTREGUEN"],
+            paginas: [
+              { num: "Pág. 1", titulo: "1. DESARROLLO WEB", texto: "Creación de sitios y aplicaciones para navegadores. Los desarrolladores actúan como arquitectos digitales organizando la estructura y apariencia." },
+              { num: "Pág. 2", titulo: "2. ESTRUCTURA WEB", texto: "Imagina la web como un edificio. Analizar la estructura implica entender la organización interna: secciones, imágenes, botones y bloques de texto." },
+              { num: "Pág. 3", titulo: "3. USABILIDAD WEB", texto: "Garantiza que la información luzca bien y sea intuitiva. Se analiza minuciosamente la pantalla para lograr una navegación ágil para los usuarios." },
+              { num: "Pág. 4", titulo: "4. SERVIDORES WEB", texto: "Son los almacenes digitales de Internet. Guardan las páginas web y las envían al navegador al solicitarlas, entregándolas al instante." }
+            ]
+          },
+          {
+            titulo: "Bloque 2 (Pág. 5 a 8)",
+            palabras: ["ANIMACION", "EFECTOS", "FORMATOS", "ANIMATE", "DINAMICAS", "HERRAMIENTAS", "PELICULAS", "POPULARES", "LUCES", "ASOMBROSO"],
+            paginas: [
+              { num: "Pág. 5", titulo: "5. TIPOS DE SERVIDORES", texto: "Existen diversos tipos de servidores especializados que trabajan juntos para alojar y servir páginas web al resto del mundo en todo momento." },
+              { num: "Pág. 6", titulo: "6. ANIMACIÓN WEB", texto: "Efectos visuales y elementos que se mueven dentro de una página. Funcionan como pequeñas películas que dinamizan la experiencia del usuario." },
+              { num: "Pág. 7", titulo: "7. FORMATOS ANIMACIÓN", texto: "GIF, SVG y CSS son formatos fundamentales que permiten añadir efectos y movimientos fluidos de forma ligera a las plataformas web." },
+              { num: "Pág. 8", titulo: "8. HERRAMIENTAS WEB", texto: "Software especializado como Adobe Animate, GSAP y bibliotecas CSS Animation facilitan la creación de animaciones profesionales e interactivas." }
+            ]
+          }
+        ]
+      },
+      {
+        nombre: "Fundamentos Computación Física",
+        bloques: [
+          {
+            titulo: "Bloque 1 (Pág. 1 a 4)",
+            palabras: ["COMPUTACION", "ACTUADORES", "TERMOSTATO", "PROCESADOR", "MEMORIA", "OPERACION", "ELECTRONICOS", "CEREBRO", "TEMPORAL", "INSTRUCCIONES"],
+            paginas: [
+              { num: "Pág. 1", titulo: "1. COMPUTACIÓN FÍSICA", texto: "Combina electrónica y software para interactuar con el entorno real mediante sensores (captan datos) y actuadores (ejecutan respuestas físicas)." },
+              { num: "Pág. 2", titulo: "2. APLICACIÓN Y SENSORES", texto: "Ejemplo: Termostato inteligente. Sus sensores miden la temperatura ambiental y los actuadores encienden o apagan la calefacción según la orden." },
+              { num: "Pág. 3", titulo: "3. SISTEMAS COMPUTACIÓN", texto: "Conjunto de componentes integrados para procesar datos (procesador como cerebro, memoria para almacenar y dispositivos de entrada/salida)." },
+              { num: "Pág. 4", titulo: "4. MEMORIAS Y OPERACIÓN", texto: "RAM (almacenamiento temporal) y ROM (memoria no volátil con datos de arranque). Al buscar en Google el sistema procesa datos y emite una salida." }
+            ]
+          },
+          {
+            titulo: "Bloque 2 (Pág. 5 a 8)",
+            palabras: ["MICROCONTROLADOR", "EMBEBIDOS", "LAVADORA", "HARDWARE", "SOFTWARE", "SEGURIDAD", "ELECTRICIDAD", "CABLES", "ALARGADERA", "HUMEDAD"],
+            paginas: [
+              { num: "Pág. 5", titulo: "5. MICROCONTROLADORES", texto: "Chip compacto que actúa como cerebro en dispositivos sencillos. Contiene procesador, memoria y pines de entrada/salida para sistemas embebidos." },
+              { num: "Pág. 6", titulo: "6. SISTEMAS EMBEBIDOS", texto: "Ejemplo cotidiano: Lavadora automática. Su microcontrolador interno decide tiempos, ciclos de lavado y velocidad del motor según el programa." },
+              { num: "Pág. 7", titulo: "7. HARDWARE Y SOFTWARE", texto: "Hardware: Componentes físicos (chips, cables, pantallas). Software: Instrucciones de programa. Son estrictamente interdependientes para funcionar." },
+              { num: "Pág. 8", titulo: "8. SEGURIDAD ELÉCTRICA", texto: "Medidas para prevenir accidentes: evitar sobrecargar alargaderas, desenchufar equipos antes de manipularlos y mantener entornos libres de humedad." }
+            ]
+          }
+        ]
+      },
+      {
+        nombre: "Inteligencia Artificial",
+        bloques: [
+          {
+            titulo: "Bloque 1 (Pág. 1 a 4)",
+            palabras: ["INTELIGENCIA", "APRENDIZAJE", "PERCEPCION", "ASISTENTES", "RESPONSABILIDAD", "ALGORITMICOS", "RAZONAMIENTO", "DIAGNOSTICO", "PREJUICIOS", "PRIVACIDAD"],
+            paginas: [
+              { num: "Pág. 1", titulo: "1. INTELIGENCIA ARTIFICIAL", texto: "Campo enfocado en crear programas capaces de realizar tareas complejas que requieren capacidad humana: aprendizaje, razonamiento y percepción." },
+              { num: "Pág. 2", titulo: "2. SITUACIÓN ACTUAL", texto: "Uso extendido en asistentes virtuales, diagnóstico médico y vehículos autónomos. Su rápido avance plantea serios desafíos éticos y sociales." },
+              { num: "Pág. 3", titulo: "3. ÉTICA Y SOCIEDAD", texto: "Debate sobre el desarrollo responsable. La responsabilidad social exige velar por que los sistemas sean justos, no dañinos y respeten derechos." },
+              { num: "Pág. 4", titulo: "4. SESGOS ALGORÍTMICOS", texto: "El mal diseño puede generar discriminación o sesgos en los resultados producidos por la IA, afectando directamente la privacidad de las personas." }
+            ]
+          },
+          {
+            titulo: "Bloque 2 (Pág. 5 a 8)",
+            palabras: ["AGENTES", "DECISIONES", "AUTOMATICO", "CAPTCHA", "ETIQUETADO", "REFUERZO", "PATRONES", "RECOMPENSAS", "IMAGENES", "ENTORNO"],
+            paginas: [
+              { num: "Pág. 5", titulo: "5. AGENTES INTELIGENTES", texto: "Entidades que perciben el entorno y toman decisiones para lograr objetivos. Siguen el ciclo: percepción, procesamiento y actuación." },
+              { num: "Pág. 6", titulo: "6. APRENDIZAJE AUTOMÁTICO", texto: "Machine Learning permite a las máquinas aprender patrones sin ser programadas explícitamente. Se usa en reconocimiento facial y filtros de spam." },
+              { num: "Pág. 7", titulo: "7. ENTRENAMIENTO CAPTCHA", texto: "Los test CAPTCHA (identificar farolas o pasos de peatones) se utilizan para etiquetar datos e instruir algoritmos de visión de coches autónomos." },
+              { num: "Pág. 8", titulo: "8. APRENDIZAJE REFUERZO", texto: "El agente aprende interactuando con su entorno recibiendo recompensas o castigos. Se aplica ampliamente en robótica y toma de decisiones." }
+            ]
+          }
+        ]
+      },
+      {
+        nombre: "Interactividad en la Red",
+        bloques: [
+          {
+            titulo: "Bloque 1 (Pág. 1 a 4)",
+            palabras: ["EXPRESION", "ETIQUETA", "PROPIEDAD", "COPYLEFT", "LICENCIAS", "ATRIBUCION", "LIMITES", "CORTESIA", "PATENTES", "REQUISITOS"],
+            paginas: [
+              { num: "Pág. 1", titulo: "1. EXPRESIÓN Y ETIQUETA", texto: "Libertad de opinión bajo límites éticos. Netiqueta: Normas de cortesía y comportamiento responsable necesarias para comunicarse en medios digitales." },
+              { num: "Pág. 2", titulo: "2. PROPIEDAD INTELECTUAL", texto: "Protege patentes, derechos de autor y marcas. Si una obra no aclara su licencia, implica derechos reservados y no puede difundirse sin autorización." },
+              { num: "Pág. 3", titulo: "3. COPYLEFT Y LICENCIAS", texto: "Copyleft permite usar y distribuir obras exigiendo mantener la misma libertad en obras derivadas. Las licencias abiertas autorizan su reutilización." },
+              { num: "Pág. 4", titulo: "4. CONDICIONES CC", texto: "Creative Commons define 4 reglas básicas: BY (Atribución), SA (Compartir Igual), NC (No Comercial) y ND (Sin Obras Derivadas)." }
+            ]
+          },
+          {
+            titulo: "Bloque 2 (Pág. 5 a 8)",
+            palabras: ["PERIODISMO", "BLOGOSFERA", "ESTRATEGIAS", "VERIFICACION", "CHEQUEADORES", "EDUCACION", "MULTIMEDIA", "AUDIENCIA", "FALSAS", "MEDIATICA"],
+            paginas: [
+              { num: "Pág. 5", titulo: "5. PERIODISMO Y BLOGS", texto: "El periodismo digital produce información multimedia. La blogosfera abarca la comunidad global de blogs para debatir e intercambiar conocimientos." },
+              { num: "Pág. 6", titulo: "6. COMUNICACIÓN Y CRÍTICA", texto: "El uso crítico de la red implica comprobar fuentes, detectar noticias falsas (fake news) e identificar posibles sesgos antes de compartir información." },
+              { num: "Pág. 7", titulo: "7. VERIFICACIÓN HECHOS", texto: "Fact-checking: Métodos para confirmar la autenticidad de los datos. Incluye la búsqueda inversa de imágenes y consulta a organismos verificadores." },
+              { num: "Pág. 8", titulo: "8. EDUCACIÓN MEDIÁTICA", texto: "Desarrolla habilidades críticas para el consumo inteligente de contenidos en la red, capacitando a los ciudadanos contra la desinformación." }
+            ]
+          }
+        ]
+      },
+      {
+        nombre: "Internet de las Cosas IoT",
+        bloques: [
+          {
+            titulo: "Bloque 1 (Pág. 1 a 4)",
+            palabras: ["INTERNET", "OBJETOS", "DISPOSITIVOS", "SENSORES", "INSTRUCCIONES", "COMUNICACION", "LAMPARAS", "JUGUETES", "GLOBAL", "TELEFONO"],
+            paginas: [
+              { num: "Pág. 1", titulo: "1. ¿QUÉ ES EL IOT?", texto: "Permite que objetos cotidianos (lámparas, electrodomésticos) se conecten a Internet para transmitir información y comunicarse de forma autónoma." },
+              { num: "Pág. 2", titulo: "2. DISPOSITIVOS E INTERNET", texto: "Objetos equipados con tecnología para intercambiar datos. Internet es la gran red global que facilita esta interconexión y comunicación constante." },
+              { num: "Pág. 3", titulo: "3. SENSORES Y CHIPS", texto: "Componentes electrónicos internos que permiten enviar y recibir órdenes. Por ejemplo, un chip en un juguete para responder al recibir un abrazo." },
+              { num: "Pág. 4", titulo: "4. FUNCIONAMIENTO IOT", texto: "Al estar conectados, los dispositivos reciben instrucciones remotas. Una bombilla inteligente puede encenderse o programarse desde el móvil." }
+            ]
+          },
+          {
+            titulo: "Bloque 2 (Pág. 5 a 8)",
+            palabras: ["TRANSMITIR", "BLUETOOTH", "DISTANCIAS", "INTERACTIVOS", "NOTIFIQUE", "REMOTO", "AURICULARES", "TARJETAS", "INTRUSIONES", "FRESQUITA"],
+            paginas: [
+              { num: "Pág. 5", titulo: "5. COMUNICACIÓN WI-FI", texto: "La tecnología Wi-Fi permite a los objetos IoT conectarse a redes locales para transmitir volúmenes de datos con gran velocidad y estabilidad." },
+              { num: "Pág. 6", titulo: "6. BLUETOOTH Y SIM", texto: "Bluetooth gestiona conexiones de corto alcance (auriculares o pulseras). Las tarjetas SIM otorgan conectividad móvil directa en cualquier lugar." },
+              { num: "Pág. 7", titulo: "7. ALARMAS Y JUGUETES", texto: "Aplicaciones prácticas: Sistemas de seguridad que alertan al móvil sobre intromisiones o juguetes interactivos adaptativos." },
+              { num: "Pág. 8", titulo: "8. CONTROL REMOTO HOGAR", texto: "Domótica avanzada: Encender la climatización desde el smartphone minutos antes de llegar a casa para encontrar la estancia a temperatura ideal." }
+            ]
+          }
+        ]
+      },
+      {
+        nombre: "Introducción Programación Ilustrado",
+        bloques: [
+          {
+            titulo: "Bloque 1 (Pág. 1 a 4)",
+            palabras: ["PROGRAMACION", "BLOQUES", "SECUENCIA", "ALGORITMO", "ENTRADAS", "SALIDAS", "INSTRUCCIONES", "SCRATCH", "ORDEN", "INTERFAZ"],
+            paginas: [
+              { num: "Pág. 1", titulo: "1. INTRODUCCIÓN", texto: "Creación de instrucciones que la computadora ejecuta ordenadamente para resolver problemas o estructurar videojuegos y herramientas digitales." },
+              { num: "Pág. 2", titulo: "2. LENGUAJES DE BLOQUES", texto: "Permiten programar arrastrando piezas gráficas que encajan entre sí (Scratch, Blockly), evitando errores sintácticos de código escrito." },
+              { num: "Pág. 3", titulo: "3. ALGORITMOS Y SECUENCIAS", texto: "Algoritmo: Conjunto de pasos lógicos organizados. Secuencia: Orden estricto en que el ordenador debe ejecutar cada una de las instrucciones." },
+              { num: "Pág. 4", titulo: "4. ENTRADAS Y SALIDAS", texto: "Mecanismos de interacción. Entradas: Datos que introduce el usuario (pulsar un botón). Salidas: Respuestas mostradas en la pantalla." }
+            ]
+          },
+          {
+            titulo: "Bloque 2 (Pág. 5 a 8)",
+            palabras: ["INTERFACES", "SCRATCH", "EVENTOS", "BUCLES", "CONDICIONALES", "VARIABLES", "TEXTUALES", "BANDERA", "PUNTUACION", "OPERADORES"],
+            paginas: [
+              { num: "Pág. 5", titulo: "5. INTERFACES Y CÓDIGO", texto: "Interfaces gráficas (GUI) emplean ventanas y botones. Lenguajes textuales (Python, JavaScript) requieren escribir sentencias de código con palabras." },
+              { num: "Pág. 6", titulo: "6. EVENTOS Y BUCLES", texto: "Eventos: Disparadores de acciones ('al hacer clic en bandera verde'). Bucles: Estructuras que repiten una orden un número determinado de veces." },
+              { num: "Pág. 7", titulo: "7. CONDICIONALES Y SENSORES", texto: "Condicionales: Ejecutan órdenes solo si se cumple una regla ('si toca el borde...'). Sensores: Detectan interacción con otros objetos o punteros." },
+              { num: "Pág. 8", titulo: "8. VARIABLES Y OPERADORES", texto: "Variables: Espacios que almacenan datos cambiantes (puntuación del juego). Operadores: Realizan cálculos matemáticos y comparaciones de datos." }
+            ]
+          }
+        ]
+      },
+      {
+        nombre: "Robótica",
+        bloques: [
+          {
+            titulo: "Bloque 1 (Pág. 1 a 4)",
+            palabras: ["MAQUINA", "REGLAS", "PRIMERA", "SEGUNDA", "TERCERA", "PROTECCION", "MECANICO", "HUMANO", "CONFLICTO", "EXISTENCIA"],
+            paginas: [
+              { num: "Pág. 1", titulo: "1. CONCEPTO DE ROBOT", texto: "Máquina programable capaz de realizar tareas de forma autónoma, moverse y ejecutar órdenes físicas como un asistente mecánico especializado." },
+              { num: "Pág. 2", titulo: "2. LEYES DE LA ROBÓTICA", texto: "Conjunto de reglas fundamentales formuladas para garantizar la seguridad humana y el correcto comportamiento de los sistemas robóticos." },
+              { num: "Pág. 3", titulo: "3. PRIMERA Y SEGUNDA LEY", texto: "1ª Ley: Un robot no puede dañar a un humano ni permitir que sufra daño. 2ª Ley: Debe obedecer las órdenes humanas salvo si vulneran la primera ley." },
+              { num: "Pág. 4", titulo: "4. TERCERA LEY ROBÓTICA", texto: "3ª Ley: Un robot debe proteger su propia existencia siempre que esta autoprotección no entre en conflicto con la primera o la segunda ley." }
+            ]
+          },
+          {
+            titulo: "Bloque 2 (Pág. 5 a 8)",
+            palabras: ["REALIMENTACION", "CONTROL", "ACTUADORES", "LOCOMOCION", "MANIPULACION", "INDUSTRIALES", "DECISIONES", "NEUMATICOS", "INSECTO", "SERVICIOS"],
+            paginas: [
+              { num: "Pág. 5", titulo: "5. SENSORES Y CPU", texto: "Partes clave: Sensores (recolectan datos del entorno) y Unidad Central de Proceso / CPU (interpreta la información obtenida y toma decisiones)." },
+              { num: "Pág. 6", titulo: "6. ACTUADORES ROBÓTICOS", texto: "Mecanismos encargados de ejecutar físicamente las decisiones tomadas por la CPU. Pueden ser motores eléctricos, hidráulicos o neumáticos." },
+              { num: "Pág. 7", titulo: "7. LOCOMOCIÓN Y MANIPULACIÓN", texto: "Sistemas para desplazarse (ruedas, orugas, patas articuladas) y herramientas de agarre (brazos y pinzas mecánicas para manipular objetos)." },
+              { num: "Pág. 8", titulo: "8. TIPOS DE ROBOTS", texto: "Industriales: Ensamblaje en fábricas automatizadas. Servicios: Tareas domésticas, asistencia médica, reparto y limpieza automatizada de suelos." }
+            ]
+          }
+        ]
+      },
+      {
+        nombre: "Seguridad y Protección de Datos",
+        bloques: [
+          {
+            titulo: "Bloque 1 (Pág. 1 a 4)",
+            palabras: ["IDENTIDAD", "REPUTACION", "PRIVACIDAD", "HUELLA", "RASTREABLE", "AJUSTES", "VIRTUAL", "ACCESIBLE", "FILTROS", "DOCUMENTOS"],
+            paginas: [
+              { num: "Pág. 1", titulo: "1. IDENTIDAD Y REPUTACIÓN", texto: "Identidad digital: Imagen global proyectada en internet. Reputación: Valoración y percepción que tienen los demás sobre nuestro comportamiento." },
+              { num: "Pág. 2", titulo: "2. PRIVACIDAD Y HUELLA", texto: "Privacidad: Control sobre la propia información. Huella digital: Rastro permanente dejado por búsquedas, compras y publicaciones." },
+              { num: "Pág. 3", titulo: "3. IMPACTO DE LA HUELLA", texto: "La huella es indeleble y consultable por terceros. Impacta directamente en la seguridad personal, en oportunidades futuras y en la reputación." },
+              { num: "Pág. 4", titulo: "4. AJUSTES DE PRIVACIDAD", texto: "Configuración estricta en redes sociales: restringir acceso a desconocidos, evitar publicar documentos oficiales y revisar etiquetas públicas." }
+            ]
+          },
+          {
+            titulo: "Bloque 2 (Pág. 5 a 8)",
+            palabras: ["SUPLANTACION", "CIBERACOSO", "REPERCUSIONES", "PREVENTIVAS", "CONTRAS", "PRECAUCIONES", "LABORALES", "SUPERVISE", "CONTRASEÑAS", "EQUILIBRADA"],
+            paginas: [
+              { num: "Pág. 5", titulo: "5. GESTIÓN DE IDENTIDAD", texto: "Proteger la información compartida es indispensable para prevenir delitos cibernéticos, robos de identidad y situaciones de ciberacoso escolar." },
+              { num: "Pág. 6", titulo: "6. REPERCUSIONES WEB", texto: "Las huellas en línea condicionan el futuro laboral y social. Una reputación sólida genera oportunidades; la imprudencia comporta riesgos." },
+              { num: "Pág. 7", titulo: "7. MEDIDAS PREVENTIVAS", texto: "Reglas clave: no compartir claves, revisar perfiles con frecuencia, desconfiar de contactos anónimos y controlar la difusión de fotos." },
+              { num: "Pág. 8", titulo: "8. PRESENCIA EQUILIBRADA", texto: "Internet facilita la comunicación pero exige precaución. La formación continua en seguridad digital es esencial para una navegación protegida." }
+            ]
+          }
+        ]
+      }
+    ];
 
-      if (words.length !== 10) {
-        alert("Por favor, introduce exactamente 10 palabras, cada una en una línea.");
-        return;
+    // Algoritmo de Sopa de Letras con 3 palabras en Diagonal Ascendente (de abajo hacia arriba)
+    function crearGrillaSopa(palabras) {
+      const size = 14;
+      let grid = Array(size).fill(null).map(() => Array(size).fill(''));
+      
+      // Direcciones estándar (Horizontales, Verticales, Diagonales Descendentes)
+      const dirsEstandar = [
+        [0, 1],   // Horizontal Dcha
+        [1, 0],   // Vertical Abajo
+        [1, 1],   // Diagonal Abajo-Dcha
+        [0, -1]   // Horizontal Izqda
+      ];
+
+      // Direcciones Diagonales Ascendentes (DE ABAJO A ARRIBA)
+      const dirsDiagAscendentes = [
+        [-1, 1],  // Diagonal Arriba-Dcha (de abajo-izqda hacia arriba-dcha)
+        [-1, -1]  // Diagonal Arriba-Izqda (de abajo-dcha hacia arriba-izqda)
+      ];
+
+      // Elegir 3 palabras al azar para colocarlas forzosamente en diagonal de abajo a arriba
+      let indicesDiagonales = [];
+      while (indicesDiagonales.length < 3) {
+        let idx = Math.floor(Math.random() * palabras.length);
+        if (!indicesDiagonales.includes(idx)) {
+          indicesDiagonales.push(idx);
+        }
       }
 
-      const gridSize = 15;
-      const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-      const grid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(''));
+      palabras.forEach((palabra, index) => {
+        let colocada = false;
+        let intentos = 0;
 
-      // Función para colocar palabras en la sopa de letras
-      function placeWords() {
-        words.forEach(word => {
-          let placed = false;
-          while (!placed) {
-            const direction = Math.random() < 0.33 ? "H" : Math.random() < 0.5 ? "V" : "D";
-            const startRow = Math.floor(Math.random() * gridSize);
-            const startCol = Math.floor(Math.random() * gridSize);
+        // Determinar qué conjunto de direcciones usar para esta palabra
+        let listaDirecciones = indicesDiagonales.includes(index) ? dirsDiagAscendentes : dirsEstandar;
 
-            if (direction === "H" && startCol + word.length <= gridSize) {
-              if (grid[startRow].slice(startCol, startCol + word.length).every(cell => cell === '')) {
-                for (let i = 0; i < word.length; i++) {
-                  grid[startRow][startCol + i] = word[i];
-                }
-                placed = true;
+        while (!colocada && intentos < 300) {
+          intentos++;
+          const dir = listaDirecciones[Math.floor(Math.random() * listaDirecciones.length)];
+          const filaInicio = Math.floor(Math.random() * size);
+          const colInicio = Math.floor(Math.random() * size);
+
+          let finFila = filaInicio + dir[0] * (palabra.length - 1);
+          let finCol = colInicio + dir[1] * (palabra.length - 1);
+
+          if (finFila >= 0 && finFila < size && finCol >= 0 && finCol < size) {
+            let posible = true;
+            for (let i = 0; i < palabra.length; i++) {
+              let f = filaInicio + dir[0] * i;
+              let c = colInicio + dir[1] * i;
+              if (grid[f][c] !== '' && grid[f][c] !== palabra[i]) {
+                posible = false;
+                break;
               }
-            } else if (direction === "V" && startRow + word.length <= gridSize) {
-              if (grid.slice(startRow, startRow + word.length).every(row => row[startCol] === '')) {
-                for (let i = 0; i < word.length; i++) {
-                  grid[startRow + i][startCol] = word[i];
-                }
-                placed = true;
+            }
+
+            if (posible) {
+              for (let i = 0; i < palabra.length; i++) {
+                let f = filaInicio + dir[0] * i;
+                let c = colInicio + dir[1] * i;
+                grid[f][c] = palabra[i];
               }
-            } else if (direction === "D" && startRow + word.length <= gridSize && startCol + word.length <= gridSize) {
-              let canPlace = true;
-              for (let i = 0; i < word.length; i++) {
-                if (grid[startRow + i][startCol + i] !== '') {
-                  canPlace = false;
-                  break;
-                }
-              }
-              if (canPlace) {
-                for (let i = 0; i < word.length; i++) {
-                  grid[startRow + i][startCol + i] = word[i];
-                }
-                placed = true;
-              }
+              colocada = true;
             }
           }
-        });
-      }
+        }
+      });
 
-      // Rellenar espacios vacíos con letras aleatorias
-      function fillEmptySpaces() {
-        for (let row = 0; row < gridSize; row++) {
-          for (let col = 0; col < gridSize; col++) {
-            if (grid[row][col] === '') {
-              grid[row][col] = alphabet[Math.floor(Math.random() * alphabet.length)];
-            }
+      // Rellenar espacios libres con letras aleatorias A-Z
+      const letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+          if (grid[r][c] === '') {
+            grid[r][c] = letras[Math.floor(Math.random() * letras.length)];
           }
         }
       }
 
-      placeWords();
-      fillEmptySpaces();
-
-      // Crear el archivo HTML con la sopa de letras y el texto adicional organizado
-      let htmlContent = `
-        <!DOCTYPE html>
-        <html lang="es">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Sopa de Letras</title>
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              text-align: center;
-              margin: 20px;
-            }
-            table {
-              margin: 20px auto;
-              border-collapse: collapse;
-            }
-            td {
-              width: 30px;
-              height: 30px;
-              text-align: center;
-              border: 1px solid #000;
-              font-size: 18px;
-            }
-            .extra-text {
-              margin-top: 20px;
-              text-align: left;
-              padding: 10px;
-              border: 1px solid #000;
-              display: inline-block;
-            }
-          </style>
-        </head>
-        <body>
-          <h1>Sopa de Letras</h1>
-          <table>`;
-      for (let row = 0; row < gridSize; row++) {
-        htmlContent += "<tr>";
-        for (let col = 0; col < gridSize; col++) {
-          htmlContent += `<td>${grid[row][col]}</td>`;
-        }
-        htmlContent += "</tr>";
-      }
-      htmlContent += `
-          </table>
-          <p>Palabras a buscar: ${words.join(", ")}</p>
-          <div class="extra-text"><h3>Texto adicional:</h3><p>${extraText.replace(/\n/g, "<br>")}</p></div>
-        </body>
-        </html>`;
-
-      // Crear un blob y enlace para descargar el archivo
-      const blob = new Blob([htmlContent], { type: "text/html" });
-      const link = document.getElementById("downloadLink");
-      link.href = URL.createObjectURL(blob);
-      link.download = "sopa_de_letras.html";
-      link.style.display = "inline-block";
+      return grid;
     }
+
+    // Inicialización y renderizado completo
+    window.onload = function() {
+      const indexGrid = document.getElementById('indexGrid');
+      const puzzlesContainer = document.getElementById('puzzlesContainer');
+
+      let puzzleCounter = 1;
+
+      temasTeoria.forEach((tema, tIndex) => {
+        tema.bloques.forEach((bloque, bIndex) => {
+          const puzzleId = `puzzle-${tIndex}-${bIndex}`;
+
+          // 1. Agregar Botón al Índice Superior
+          const btn = document.createElement('button');
+          btn.className = 'index-btn';
+          btn.innerHTML = `<span>${tema.nombre}</span> <span style="opacity:0.8;">${bloque.titulo}</span>`;
+          btn.onclick = () => {
+            document.getElementById(puzzleId).scrollIntoView({ behavior: 'smooth' });
+          };
+          indexGrid.appendChild(btn);
+
+          // 2. Generar Sopa de Letras
+          const grid = crearGrillaSopa(bloque.palabras);
+
+          const pageDiv = document.createElement('div');
+          pageDiv.className = 'a4-page';
+          pageDiv.id = puzzleId;
+
+          // HTML Sopa
+          let gridHtml = '<div class="wordsearch-grid">';
+          for (let r = 0; r < 14; r++) {
+            for (let c = 0; c < 14; c++) {
+              gridHtml += `<div class="cell">${grid[r][c]}</div>`;
+            }
+          }
+          gridHtml += '</div>';
+
+          // HTML Lista de Palabras
+          let listHtml = '<ul class="word-list">';
+          bloque.palabras.forEach(pal => {
+            listHtml += `<li>${pal}</li>`;
+          });
+          listHtml += '</ul>';
+
+          // HTML Fichas Teóricas (Letra Tamaño 12pt)
+          let theoryHtml = '<div class="theory-container">';
+          bloque.paginas.forEach(p => {
+            theoryHtml += `
+              <div class="theory-card">
+                <div class="theory-card-header">
+                  <span>TEORÍA</span>
+                  <span>${p.num}</span>
+                </div>
+                <div class="theory-card-title">${p.titulo}</div>
+                <div class="theory-card-text">${p.texto}</div>
+              </div>
+            `;
+          });
+          theoryHtml += '</div>';
+
+          // Ensamblado A4 Final
+          pageDiv.innerHTML = `
+            <div class="header-puzzle">
+              <div class="header-title">Tema: ${tema.nombre}</div>
+              <div class="header-sub">Sopa de Letras #${puzzleCounter} - ${bloque.titulo}</div>
+            </div>
+
+            <div class="puzzle-body">
+              ${gridHtml}
+              <div class="word-list-container">
+                <h3>10 Palabras a buscar (3 en diagonal de abajo a arriba ↖↗)</h3>
+                ${listHtml}
+              </div>
+            </div>
+
+            ${theoryHtml}
+
+            <div class="footer-puzzle">
+              <span>Nombre del alumno/a: ____________________________________</span>
+              <span>Fecha: ____________</span>
+              <span>Curso: ________</span>
+            </div>
+          `;
+
+          puzzlesContainer.appendChild(pageDiv);
+          puzzleCounter++;
+        });
+      });
+    };
   </script>
 </body>
 </html>
-
