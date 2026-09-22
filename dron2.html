@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- saved from url=(0039)https://delatj.github.io/web/dron2.html -->
 <html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -240,6 +241,9 @@
   <!-- MODAL PREGUNTA EVALUATIVA -->
   <div class="modal-eval" id="modalPregunta">
     <div class="modal-eval-content">
+      <!-- BOTÓN AÑADIDO: No modifica el CSS global y se apoya sobre la posición relativa del contenedor -->
+      <button onclick="abrirTeoria()" style="position: absolute; top: 20px; right: 20px; background-color: #2b6cb0; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.9rem; z-index: 10;">📖 Ver Teoría</button>
+      
       <h3 id="pregunta-titulo">Reto Evaluativo</h3>
       <p id="pregunta-texto" style="font-weight: 600; font-size: 1.05rem;"></p>
       <div id="pregunta-opciones"></div>
@@ -543,11 +547,13 @@
         btn.innerText = opt.t;
         btn.onclick = () => {
           if (opt.c) {
-            alert(`¡Correcto ${state[p].name}! Consigues +2 metas de bonificación.`);
-            state[p].score += 2;
+            alert(`¡Correcto ${state[p].name}! No sumas puntos adicionales.`);
+            // No suma puntos al acertar
             updateScoreUI(p);
           } else {
-            alert(`Incorrecto ${state[p].name}. ¡Sigue intentándolo!`);
+            alert(`Incorrecto ${state[p].name}. ¡Pierdes 5 puntos!`);
+            state[p].score -= 5;
+            updateScoreUI(p);
           }
           modal.style.display = 'none';
         };
