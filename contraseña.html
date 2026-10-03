@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Protector de Archivos (HTML y PDF)</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #f8fafc;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 40px;
+      width: 100%;
+      max-width: 540px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #38bdf8;
+      text-align: center;
+    }
+
+    p.subtitle {
+      color: #94a3b8;
+      font-size: 0.95rem;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    /* Pestañas / Tabs */
+    .tabs {
+      display: flex;
+      background: rgba(15, 23, 42, 0.6);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 24px;
+      border: 1px solid #334155;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background: #0284c7;
+      color: #fff;
+    }
+
+    .drop-zone {
+      border: 2px dashed #475569;
+      border-radius: 12px;
+      padding: 30px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: rgba(15, 23, 42, 0.4);
+      margin-bottom: 20px;
+    }
+
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.05);
+    }
+
+    .drop-zone svg {
+      width: 48px;
+      height: 48px;
+      fill: #38bdf8;
+      margin-bottom: 12px;
+    }
+
+    .drop-zone p {
+      color: #cbd5e1;
+      font-size: 0.95rem;
+    }
+
+    .file-info {
+      margin-top: 8px;
+      font-weight: 600;
+      color: #38bdf8;
+      word-break: break-all;
+    }
+
+    input[type="file"] { display: none; }
+
+    .input-group { margin-bottom: 24px; }
+
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #cbd5e1;
+      margin-bottom: 8px;
+    }
+
+    input[type="password"] {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid #475569;
+      background: #0f172a;
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="password"]:focus { border-color: #38bdf8; }
+
+    .action-btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 8px;
+      border: none;
+      background: #0284c7;
+      color: white;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .action-btn:hover { background: #0369a1; }
+    .action-btn:active { transform: scale(0.99); }
+    .action-btn:disabled { background: #475569; cursor: not-allowed; }
+
+    .status {
+      margin-top: 16px;
+      font-size: 0.9rem;
+      text-align: center;
+      min-height: 20px;
+    }
+    .status.error { color: #f87171; }
+    .status.success { color: #4ade80; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Protector de Archivos</h1>
+    <p class="subtitle">Protege tus HTML y PDF mediante cifrado AES-GCM</p>
+
+    <div class="tabs">
+      <button class="tab-btn active" id="tabHtml" onclick="switchMode('html')">Archivo HTML</button>
+      <button class="tab-btn" id="tabPdf" onclick="switchMode('pdf')">Archivo PDF</button>
+    </div>
+
+    <div class="drop-zone" id="dropZone">
+      <svg viewBox="0 0 24 24">
+        <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+      </svg>
+      <p id="dropText">Arrastra tu archivo HTML aquí o haz clic para buscar</p>
+      <div class="file-info" id="fileName"></div>
+      <input type="file" id="fileInput" accept=".html,.htm">
+    </div>
+
+    <div class="input-group">
+      <label for="password">Contraseña de acceso</label>
+      <input type="password" id="password" placeholder="Escribe una contraseña para el archivo">
+    </div>
+
+    <button class="action-btn" id="protectBtn" disabled>Proteger y Descargar</button>
+    <div class="status" id="status"></div>
+  </div>
+
+  <script>
+    let currentMode = 'html'; // 'html' | 'pdf'
+    let selectedFileBuffer = null; // ArrayBuffer o string
+    let selectedFileName = '';
+
+    const dropZone = document.getElementById('dropZone');
+    const dropText = document.getElementById('dropText');
+    const fileInput = document.getElementById('fileInput');
+    const fileNameDisplay = document.getElementById('fileName');
+    const passwordInput = document.getElementById('password');
+    const protectBtn = document.getElementById('protectBtn');
+    const statusDisplay = document.getElementById('status');
+    const tabHtml = document.getElementById('tabHtml');
+    const tabPdf = document.getElementById('tabPdf');
+
+    function switchMode(mode) {
+      currentMode = mode;
+      selectedFileBuffer = null;
+      selectedFileName = '';
+      fileNameDisplay.textContent = '';
+      passwordInput.value = '';
+      showStatus('', '');
+      validateForm();
+
+      if (mode === 'html') {
+        tabHtml.classList.add('active');
+        tabPdf.classList.remove('active');
+        fileInput.accept = '.html,.htm';
+        dropText.textContent = 'Arrastra tu archivo HTML aquí o haz clic para buscar';
+      } else {
+        tabPdf.classList.add('active');
+        tabHtml.classList.remove('active');
+        fileInput.accept = '.pdf';
+        dropText.textContent = 'Arrastra tu archivo PDF aquí o haz clic para buscar';
+      }
+    }
+
+    // Drag & Drop
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length) handleFile(e.target.files[0]);
+    });
+
+    function handleFile(file) {
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (currentMode === 'html' && ext !== 'html' && ext !== 'htm') {
+        showStatus('Por favor, selecciona un archivo HTML válido.', 'error');
+        return;
+      }
+      if (currentMode === 'pdf' && ext !== 'pdf') {
+        showStatus('Por favor, selecciona un archivo PDF válido.', 'error');
+        return;
+      }
+
+      selectedFileName = file.name;
+      const reader = new FileReader();
+
+      if (currentMode === 'html') {
+        reader.onload = (e) => {
+          selectedFileBuffer = new TextEncoder().encode(e.target.result);
+          fileNameDisplay.textContent = `HTML cargado: ${file.name}`;
+          showStatus('', '');
+          validateForm();
+        };
+        reader.readAsText(file);
+      } else {
+        reader.onload = (e) => {
+          selectedFileBuffer = new Uint8Array(e.target.result);
+          fileNameDisplay.textContent = `PDF cargado: ${file.name}`;
+          showStatus('', '');
+          validateForm();
+        };
+        reader.readAsArrayBuffer(file);
+      }
+    }
+
+    passwordInput.addEventListener('input', validateForm);
+
+    function validateForm() {
+      protectBtn.disabled = !(selectedFileBuffer && passwordInput.value.trim().length > 0);
+    }
+
+    function showStatus(text, type) {
+      statusDisplay.textContent = text;
+      statusDisplay.className = `status ${type}`;
+    }
+
+    // Cifrado mediante Web Crypto API
+    async function encryptData(bytes, password) {
+      const enc = new TextEncoder();
+      const salt = crypto.getRandomValues(new Uint8Array(16));
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+
+      const keyMaterial = await crypto.subtle.importKey(
+        'raw', enc.encode(password), { name: 'PBKDF2' }, false, ['deriveKey']
+      );
+
+      const key = await crypto.subtle.deriveKey(
+        { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+        keyMaterial,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt']
+      );
+
+      const encrypted = await crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv },
+        key,
+        bytes
+      );
+
+      return {
+        salt: Array.from(salt),
+        iv: Array.from(iv),
+        ciphertext: Array.from(new Uint8Array(encrypted))
+      };
+    }
+
+    protectBtn.addEventListener('click', async () => {
+      const password = passwordInput.value.trim();
+      if (!selectedFileBuffer || !password) return;
+
+      showStatus('Cifrando archivo...', '');
+      protectBtn.disabled = true;
+
+      try {
+        const encryptedObj = await encryptData(selectedFileBuffer, password);
+        const payloadJSON = JSON.stringify(encryptedObj);
+        
+        let standaloneHTML = currentMode === 'html' 
+          ? generateProtectedHTML(payloadJSON) 
+          : generateProtectedPDF(payloadJSON, selectedFileName);
+
+        const blob = new Blob([standaloneHTML], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `protegido_${selectedFileName}.html`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        showStatus('¡Archivo protegido y descargado con éxito!', 'success');
+      } catch (err) {
+        showStatus('Error al cifrar el archivo.', 'error');
+        console.error(err);
+      } finally {
+        protectBtn.disabled = false;
+      }
+    });
+
+    // Plantilla para HTML Protegido
+    function generateProtectedHTML(payloadJSON) {
+      return `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Acceso Protegido - HTML</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+    body { background: #0f172a; color: #f8fafc; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .card { background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 32px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; }
+    h2 { margin-bottom: 8px; color: #38bdf8; }
+    p { color: #94a3b8; font-size: 0.9rem; margin-bottom: 20px; }
+    input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #fff; font-size: 1rem; margin-bottom: 16px; outline: none; }
+    input:focus { border-color: #38bdf8; }
+    button { width: 100%; padding: 12px; border-radius: 8px; border: none; background: #0284c7; color: white; font-size: 1rem; font-weight: 600; cursor: pointer; }
+    button:hover { background: #0369a1; }
+    .error { color: #f87171; font-size: 0.875rem; margin-top: 12px; display: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>HTML Protegido</h2>
+    <p>Ingresa la contraseña para desbloquear</p>
+    <input type="password" id="pass" placeholder="Contraseña">
+    <button onclick="unlock()">Desbloquear</button>
+    <div class="error" id="errMsg">Contraseña incorrecta</div>
+  </div>
+  <script>
+    const payload = ${payloadJSON};
+    async function unlock() {
+      const password = document.getElementById('pass').value;
+      const errMsg = document.getElementById('errMsg');
+      errMsg.style.display = 'none';
+      try {
+        const enc = new TextEncoder();
+        const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(password), { name: 'PBKDF2' }, false, ['deriveKey']);
+        const key = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt: new Uint8Array(payload.salt), iterations: 100000, hash: 'SHA-256' }, keyMaterial, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+        const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: new Uint8Array(payload.iv) }, key, new Uint8Array(payload.ciphertext));
+        const htmlContent = new TextDecoder().decode(decrypted);
+        document.open(); document.write(htmlContent); document.close();
+      } catch (e) { errMsg.style.display = 'block'; }
+    }
+    document.getElementById('pass').addEventListener('keypress', (e) => { if (e.key === 'Enter') unlock(); });
+  <\/script>
+</body>
+</html>`;
+    }
+
+    // Plantilla para PDF Protegido (Con visor integrado de alta calidad)
+    function generateProtectedPDF(payloadJSON, filename) {
+      return `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>PDF Protegido - ${filename}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+    body { background: #0f172a; color: #f8fafc; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .card { background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 32px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+    h2 { margin-bottom: 8px; color: #38bdf8; }
+    p { color: #94a3b8; font-size: 0.9rem; margin-bottom: 20px; }
+    input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #fff; font-size: 1rem; margin-bottom: 16px; outline: none; }
+    input:focus { border-color: #38bdf8; }
+    button { width: 100%; padding: 12px; border-radius: 8px; border: none; background: #0284c7; color: white; font-size: 1rem; font-weight: 600; cursor: pointer; }
+    button:hover { background: #0369a1; }
+    .error { color: #f87171; font-size: 0.875rem; margin-top: 12px; display: none; }
+    iframe { width: 100vw; height: 100vh; border: none; display: none; }
+  </style>
+</head>
+<body>
+  <div class="card" id="lockCard">
+    <h2>Documento PDF Protegido</h2>
+    <p>Ingresa la contraseña para visualizar el PDF</p>
+    <input type="password" id="pass" placeholder="Contraseña">
+    <button onclick="unlock()">Visualizar PDF</button>
+    <div class="error" id="errMsg">Contraseña incorrecta</div>
+  </div>
+
+  <iframe id="pdfViewer"></iframe>
+
+  <script>
+    const payload = ${payloadJSON};
+    async function unlock() {
+      const password = document.getElementById('pass').value;
+      const errMsg = document.getElementById('errMsg');
+      errMsg.style.display = 'none';
+      try {
+        const enc = new TextEncoder();
+        const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(password), { name: 'PBKDF2' }, false, ['deriveKey']);
+        const key = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt: new Uint8Array(payload.salt), iterations: 100000, hash: 'SHA-256' }, keyMaterial, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+        const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: new Uint8Array(payload.iv) }, key, new Uint8Array(payload.ciphertext));
+        
+        // Crear Blob y mostrar en visor
+        const blob = new Blob([decrypted], { type: 'application/pdf' });
+        const objectUrl = URL.createObjectURL(blob);
+        
+        const iframe = document.getElementById('pdfViewer');
+        document.getElementById('lockCard').style.display = 'none';
+        iframe.style.display = 'block';
+        iframe.src = objectUrl;
+      } catch (e) { errMsg.style.display = 'block'; }
+    }
+    document.getElementById('pass').addEventListener('keypress', (e) => { if (e.key === 'Enter') unlock(); });
+  <\/script>
+</body>
+</html>`;
+    }
+  </script>
+</body>
+</html>
