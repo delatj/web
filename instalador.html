@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
+<!-- saved from url=(0044)https://delatj.github.io/web/instalador.html -->
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulador de Instalación y Configuración - Linux Lite</title>
     <style>
@@ -273,9 +273,9 @@
             <div class="window-header">Parámetros de Red y Dispositivos Asignados</div>
             <p>Apunta bien estos datos. Son los parámetros asignados a tu práctica para configurar tu sistema:</p>
             <div class="info-box">
-                <p><strong>📶 Nombre de la Red Wi-Fi:</strong> <span id="data-wifi-ssid" style="color:#4caf50;"></span></p>
-                <p><strong>🔑 Contraseña Wi-Fi:</strong> <span id="data-wifi-pass" style="color:#ff9800;"></span></p>
-                <p><strong>🎧 Auriculares Bluetooth:</strong> <span id="data-bt-name" style="color:#2196f3;"></span></p>
+                <p><strong>📶 Nombre de la Red Wi-Fi:</strong> <span id="data-wifi-ssid" style="color:#4caf50;">Aula_Digital_4A_779</span></p>
+                <p><strong>🔑 Contraseña Wi-Fi:</strong> <span id="data-wifi-pass" style="color:#ff9800;">Wifi4058*</span></p>
+                <p><strong>🎧 Auriculares Bluetooth:</strong> <span id="data-bt-name" style="color:#2196f3;">BT_Audio_Lite_54</span></p>
             </div>
             <p style="font-size:0.85em; color:#aaa;">Nota: Estos datos han sido generados aleatoriamente. Si reinicias la actividad, cambiarán.</p>
             <div style="text-align: right;">
@@ -306,19 +306,19 @@
             <!-- Paso 1: Idioma -->
             <div id="install-step-1">
                 <p>Selecciona el idioma del sistema:</p>
-                <select id="select-lang"></select>
+                <select id="select-lang"><option value="Español">Español</option><option value="Italiano">Italiano</option><option value="Pyccкий">Pyccкий</option><option value="English">English</option><option value="Català">Català</option><option value="Português">Português</option><option value="Français">Français</option><option value="Deutsch">Deutsch</option></select>
             </div>
 
             <!-- Paso 2: Teclado -->
             <div id="install-step-2" style="display:none;">
                 <p>Distribución del teclado:</p>
-                <select id="select-kbd"></select>
+                <select id="select-kbd"><option value="Alemán">Alemán</option><option value="Inglés (EE.UU.)">Inglés (EE.UU.)</option><option value="Português">Português</option><option value="Italiano">Italiano</option><option value="Español (Latinoamérica)">Español (Latinoamérica)</option><option value="Francés">Francés</option><option value="Ruso">Ruso</option><option value="Español">Español</option></select>
             </div>
 
             <!-- Paso 3: Zona Horaria -->
             <div id="install-step-3" style="display:none;">
                 <p>Configuración del reloj (Zona horaria / Ciudad):</p>
-                <select id="select-tz"></select>
+                <select id="select-tz"><option value="París">París</option><option value="Sídney">Sídney</option><option value="Tokio">Tokio</option><option value="Londres">Londres</option><option value="Nueva York">Nueva York</option><option value="Berlín">Berlín</option><option value="Madrid">Madrid</option><option value="Roma">Roma</option></select>
             </div>
 
             <!-- Paso 4: Usuario y Contraseña -->
@@ -442,7 +442,7 @@
     <div id="screen-results" class="screen">
         <div class="window" style="text-align: center;">
             <div class="window-header">Práctica Completada</div>
-            <h2 id="quiz-score" style="font-size: 2.8em; margin: 15px 0; font-weight: bold;"></h2>
+            <h2 id="quiz-score" style="font-size: 5.8em; margin: 15px 0; font-weight: bold;"></h2>
             <p>Has finalizado con éxito todos los procedimientos prácticos y la evaluación teórica.</p>
             <button class="btn btn-primary" onclick="showRedDesktop()">Finalizar y Mostrar Escritorio de Validación</button>
         </div>
@@ -943,7 +943,7 @@
             resBox.innerHTML = `
                 <div class="window-header" style="color:#ffffff; border-bottom-color: rgba(255,255,255,0.4);">Validación Completada</div>
                 <p><strong>Estado:</strong> Fondo de escritorio rojo activo (Procedimientos prácticos completados).</p>
-                <p style="font-size: 1.2em;"><strong>Resultado Cuestionario:</strong> ${finalScore} / 10 aciertos</p>
+                <p style="font-size: 3.2em;"><strong>Resultado Cuestionario:</strong> ${finalScore} / 10 aciertos</p>
                 <p style="font-size:0.85em; opacity: 0.9;">Muestra esta pantalla al profesor para evaluar tu práctica.</p>
             `;
             document.getElementById('desktop-screen').appendChild(resBox);
@@ -963,5 +963,5 @@
             return array;
         }
     </script>
-</body>
-</html>
+
+</body></html>
