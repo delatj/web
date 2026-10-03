@@ -220,17 +220,25 @@
     </div>
   </div>
 
-  <!-- PISTAS DRON -->
+<!-- PISTAS DRON -->
   <div id="split-container">
     <div id="arena-p1" class="arena">
-      <div class="cmd-panel p1-panel"><small>P1 COMANDOS (W, A, D, Espacio):</small><div id="list-p1" class="cmd-scroll"></div></div>
+      <div class="cmd-panel p1-panel">
+        <div id="dron-name-p1" style="font-weight: bold; font-size: 1.1rem; text-align: center; margin-bottom: 4px; color: #111;"></div>
+        <small>P1 COMANDOS (W, A, D, Espacio):</small>
+        <div id="list-p1" class="cmd-scroll"></div>
+      </div>
       <div class="pista">
         <div id="meta-p1" class="meta" style="border-color: var(--p1-color); left: 243px; top: 243px;"></div>
         <div id="dron1" class="dron-container" style="left: 0px; top: 0px;"><div class="dron-body p1-body" style="transform: rotateZ(0deg);"><div class="dron-front"></div><div class="helice" style="opacity: 0;"></div></div></div>
       </div>
     </div>
     <div id="arena-p2" class="arena">
-      <div class="cmd-panel p2-panel"><small>P2 COMANDOS (Flechas, Enter):</small><div id="list-p2" class="cmd-scroll"></div></div>
+      <div class="cmd-panel p2-panel">
+        <div id="dron-name-p2" style="font-weight: bold; font-size: 1.1rem; text-align: center; margin-bottom: 4px; color: #111;"></div>
+        <small>P2 COMANDOS (Flechas, Enter):</small>
+        <div id="list-p2" class="cmd-scroll"></div>
+      </div>
       <div class="pista">
         <div id="meta-p2" class="meta" style="border-color: var(--p2-color); left: 203px; top: 283px;"></div>
         <div id="dron2" class="dron-container" style="left: 80px; top: 320px;"><div class="dron-body p2-body" style="transform: rotateZ(360deg);"><div class="dron-front"></div><div class="helice" style="opacity: 0;"></div></div></div>
@@ -404,12 +412,16 @@
       state.p2.name = document.getElementById('name2').value || "ALUMNO 2";
       document.getElementById('label-n1').innerText = state.p1.name;
       document.getElementById('label-n2').innerText = state.p2.name;
+      
+      // AÑADIR ESTAS DOS LÍNEAS:
+      document.getElementById('dron-name-p1').innerText = state.p1.name;
+      document.getElementById('dron-name-p2').innerText = state.p2.name;
+
       document.getElementById('modal').style.display = 'none';
       moverMeta('p1'); moverMeta('p2');
       updateVisuals('p1'); updateVisuals('p2');
       updateScoreUI('p1'); updateScoreUI('p2');
     }
-
     function moverMeta(p) {
       state.metas[p].x = Math.floor(Math.random() * 10);
       state.metas[p].y = Math.floor(Math.random() * 12);
