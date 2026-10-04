@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Memoria Técnica y Cuestionario por Criterio</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --border: #cbd5e1;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --warning: #d97706;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background: var(--bg); color: var(--text); padding: 20px; max-width: 1200px; margin: 0 auto; }
+
+        header {
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        header h1 { font-size: 1.6rem; }
+        header p { margin-top: 4px; opacity: 0.9; font-size: 0.9rem; }
+
+        .step-progress {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .step-progress::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--border);
+            z-index: 1;
+            transform: translateY(-50%);
+        }
+
+        .step-node {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            z-index: 2;
+            transition: all 0.3s;
+            border: 2px solid var(--border);
+        }
+
+        .step-node.active { background: var(--primary); color: white; border-color: var(--primary-dark); }
+        .step-node.completed { background: var(--success); color: white; border-color: #15803d; }
+
+        .tab-window {
+            display: none;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .tab-window.active { display: block; }
+
+        .tab-window h2 {
+            font-size: 1.3rem;
+            color: #1e3a8a;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 10px;
+            margin-bottom: 16px;
+        }
+
+        .form-group { margin-bottom: 16px; }
+        label { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; }
+        input[type="text"], select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            background-color: #fff;
+        }
+
+        .canvas-wrapper {
+            width: 100%;
+            max-height: 620px;
+            overflow: auto;
+            border: 2px solid #94a3b8;
+            border-radius: 8px;
+            background: #ffffff;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        .canvas-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            background: #f1f5f9;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 12px;
+        }
+
+        svg.drawing-grid {
+            background: #ffffff;
+            cursor: crosshair;
+            display: block;
+        }
+
+        .grid-point-main { fill: #475569; transition: r 0.15s, fill 0.15s; }
+        .grid-point-sub { fill: #cbd5e1; transition: r 0.15s, fill 0.15s; }
+
+        .grid-point-main:hover, .grid-point-sub:hover { fill: var(--primary); r: 6; }
+
+        .drawn-line { stroke: #2563eb; stroke-width: 3.5; stroke-linecap: round; }
+
+        .solution-line {
+            stroke: #dc2626;
+            stroke-width: 3;
+            stroke-dasharray: 6 4;
+            stroke-linecap: round;
+            opacity: 0.9;
+            pointer-events: none;
+            animation: pulseSolution 0.5s infinite alternate;
+        }
+
+        @keyframes pulseSolution {
+            from { opacity: 0.5; }
+            to { opacity: 1; }
+        }
+
+        .drawing-tools {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+            justify-content: center;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .attempts-badge {
+            background: #e2e8f0;
+            color: var(--text);
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 0.88rem;
+            font-weight: bold;
+            border: 1px solid var(--border);
+        }
+
+        .feedback-msg {
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 0.92rem;
+            font-weight: 600;
+            display: none;
+            width: 100%;
+            text-align: center;
+        }
+        .feedback-msg.success { background: #dcfce7; color: #166534; border: 1px solid #86efac; display: block; }
+        .feedback-msg.error { background: #fef2f2; color: #991b1b; border: 1px solid #fca5a5; display: block; }
+        .feedback-msg.warning { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; display: block; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
+        th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+        th { background: #f8fafc; font-weight: 600; }
+        tr.total-row { background: #eff6ff; font-weight: bold; }
+
+        select.correct { border: 2px solid var(--success); background-color: #f0fdf4; }
+        select.incorrect { border: 2px solid var(--danger); background-color: #fef2f2; }
+
+        .nav-buttons { display: flex; justify-content: space-between; margin-top: 20px; gap: 10px; }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .btn:hover { background: var(--primary-dark); }
+        .btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+        .btn-secondary { background: #64748b; }
+        .btn-secondary:hover { background: #475569; }
+        .btn-danger { background: var(--danger); }
+        .btn-danger:hover { background: #b91c1c; }
+        .btn-success { background: var(--success); }
+        .btn-success:hover { background: #15803d; }
+        .btn-warning { background: var(--warning); color: white; }
+        .btn-warning:hover { background: #b45309; }
+
+        .score-box {
+            text-align: center;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 2px solid var(--border);
+            background: #ffffff;
+        }
+
+        .student-display-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #1e3a8a;
+            margin-bottom: 6px;
+        }
+
+        .criterion-badge-display {
+            display: inline-block;
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            border: 1px solid #bae6fd;
+            margin-bottom: 12px;
+        }
+
+        .score-number {
+            font-size: 6.4rem;
+            font-weight: 900;
+            line-height: 1;
+            margin: 12px 0;
+            transition: color 0.3s;
+        }
+
+        .quiz-filter-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .theory-box {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: none;
+            font-size: 0.93rem;
+            line-height: 1.6;
+            color: #1e293b;
+        }
+
+        .theory-box.active { display: block; }
+        .theory-box h3 { color: #0369a1; margin-bottom: 10px; font-size: 1.2rem; }
+        .theory-box h4 { color: #0284c7; margin-top: 16px; margin-bottom: 6px; font-size: 1.05rem; }
+        .theory-box p { margin-bottom: 10px; }
+        .theory-box ul { margin-left: 20px; margin-bottom: 10px; }
+
+        .question-card {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .question-title { font-weight: bold; font-size: 0.95rem; margin-bottom: 10px; color: #1e293b; }
+
+        .options-list { list-style: none; }
+        .options-list li { margin-bottom: 8px; }
+        .options-list label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: normal;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 6px;
+            background: white;
+            border: 1px solid var(--border);
+            transition: background 0.15s;
+        }
+        .options-list label:hover { background: #f1f5f9; }
+        .options-list input[type="radio"] { cursor: pointer; }
+
+        @media print {
+            body { background: white; padding: 0; }
+            header, .step-progress, .nav-buttons, .no-print, .drawing-tools, .quiz-filter-container { display: none !important; }
+            .tab-window { display: block !important; border: none; box-shadow: none; padding: 0; margin-bottom: 20px; page-break-inside: avoid; }
+            .canvas-wrapper { max-height: none; overflow: visible; border: none; }
+            select { border: none; appearance: none; -webkit-appearance: none; font-weight: bold; padding: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Simulador y Memoria Técnica de Proyecto (Dibujo-Prisma)</h1>
+        <p>Prisma Pop-Up en Tarjeta A4 con Minilibro y Bolsillo Integrado</p>
+    </header>
+
+    <div class="step-progress no-print">
+        <div class="step-node active" id="node-0">0</div>
+        <div class="step-node" id="node-1">1</div>
+        <div class="step-node" id="node-2">2</div>
+        <div class="step-node" id="node-3">3</div>
+        <div class="step-node" id="node-4">4</div>
+        <div class="step-node" id="node-5">5</div>
+        <div class="step-node" id="node-6">6</div>
+    </div>
+
+    <form id="memory-form" onsubmit="return false;">
+        <!-- VENTANA 0: SELECCIÓN PREVIA DEL CRITERIO -->
+        <div class="tab-window active" id="window-0">
+            <h2>Paso Previo: Selección del Criterio de Evaluación</h2>
+            <p style="margin-bottom:16px; color:var(--text-muted);">
+                Selecciona el criterio específico asignado para realizar el cuestionario de teoría durante la práctica:
+            </p>
+            <div class="form-group">
+                <label for="selectedCriterion">Criterio a evaluar:</label>
+                <select id="selectedCriterion">
+                    <option value="productos">1. Productos y Materiales (Criterio 2.1)</option>
+                    <option value="fabricacion">2. Fabricación, Herramientas y Seguridad (Criterio 2.2)</option>
+                    <option value="difusion">3. Difusión, Comunicación y Trabajo en Equipo (Criterios 3.1 y 3.2)</option>
+                </select>
+            </div>
+            <div class="nav-buttons">
+                <div></div>
+                <button type="button" class="btn" onclick="confirmCriterionSelection()">Comenzar Memoria &rarr;</button>
+            </div>
+        </div>
+
+        <!-- VENTANA 1 -->
+        <div class="tab-window" id="window-1">
+            <h2>Ventana 1: Datos Generales del Alumnado</h2>
+            <div class="form-group">
+                <label>Nombre del Alumno/a:</label>
+                <input type="text" id="studentName" placeholder="Escribe tu nombre y apellidos..." required>
+            </div>
+            <div class="form-group">
+                <label>Curso y Grupo:</label>
+                <input type="text" id="studentGroup" placeholder="Ej: 2º ESO A" required>
+            </div>
+            <div class="nav-buttons">
+                <button type="button" class="btn btn-secondary" onclick="showWindow(0)">&larr; Anterior</button>
+                <button type="button" class="btn" onclick="nextWindow(1)">Siguiente: Dibujar Pieza &rarr;</button>
+            </div>
+        </div>
+
+        <!-- VENTANA 2 -->
+        <div class="tab-window" id="window-2">
+            <h2>Ventana 2: Dibujo Técnico de la Pieza Pop-Up (20% de la nota)</h2>
+            <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:8px;">
+                Dibuja la plantilla exacta alineada en la parte superior de la rejilla:<br>
+                - <strong>Cuerpo central:</strong> Ancho de 10 cm (20 divisiones, de x=10 a x=30).<br>
+                - <strong>Franjas verticales:</strong> Superior (8 div = 4 cm), Media (8 div = 4 cm), Inferior (8 div = 4 cm).<br>
+                - <strong>Triángulos laterales:</strong> Puntas a 3,5 cm (7 divisiones) a la izquierda (x=3) y derecha (x=37) en la franja media.<br>
+                - <strong>Líneas internas:</strong> Incluye las líneas verticales que cierran el rectángulo central en la franja media.<br>
+                <strong>Escala:</strong> Puntos oscuros = 1 cm (2 divisiones) | División entre puntos = 0,5 cm.
+            </p>
+
+            <div class="canvas-container">
+                <div class="canvas-wrapper">
+                    <svg id="svg-prisma" class="drawing-grid" width="1000" height="700" viewBox="0 0 1000 700"></svg>
+                </div>
+                <div class="drawing-tools">
+                    <button type="button" id="btn-validate-prisma" class="btn btn-success" onclick="validateDrawing('prisma')">✔ Validar Dibujo</button>
+                    <button type="button" class="btn btn-danger" onclick="undoLastLine('prisma')">Deshacer Línea</button>
+                    <button type="button" class="btn btn-secondary" onclick="clearCanvas('prisma')">Borrar Todo</button>
+                    <span id="attempts-prisma" class="attempts-badge">Intentos: 0 / 5</span>
+                </div>
+                <div id="feedback-prisma" class="feedback-msg"></div>
+            </div>
+
+            <div class="nav-buttons">
+                <button type="button" class="btn btn-secondary" onclick="prevWindow(2)">&larr; Anterior</button>
+                <button type="button" class="btn" onclick="nextWindow(2)">Siguiente: Dibujar Bolsillo &rarr;</button>
+            </div>
+        </div>
+
+        <!-- VENTANA 3 -->
+        <div class="tab-window" id="window-3">
+            <h2>Ventana 3: Dibujo Técnico del Bolsillo (20% de la nota)</h2>
+            <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:8px;">
+                Dibuja el desarrollo plano del bolsillo:<br>
+                - <strong>Cuerpo central:</strong> 9 cm de ancho × 9 cm de alto.<br>
+                - <strong>Solapas laterales:</strong> 1 cm de ancho cada una (ancho total con solapas = 11 cm).<br>
+                - <strong>Solapa inferior:</strong> 7 cm de ancho, centrada en la base (1 cm libre a cada lado), × 1 cm de alto.<br>
+                <strong>Escala:</strong> Puntos oscuros = 1 cm | División entre puntos = 0,5 cm.
+            </p>
+
+            <div class="canvas-container">
+                <div class="canvas-wrapper">
+                    <svg id="svg-bolsillo" class="drawing-grid" width="1000" height="600" viewBox="0 0 1000 600"></svg>
+                </div>
+                <div class="drawing-tools">
+                    <button type="button" id="btn-validate-bolsillo" class="btn btn-success" onclick="validateDrawing('bolsillo')">✔ Validar Dibujo</button>
+                    <button type="button" class="btn btn-danger" onclick="undoLastLine('bolsillo')">Deshacer Línea</button>
+                    <button type="button" class="btn btn-secondary" onclick="clearCanvas('bolsillo')">Borrar Todo</button>
+                    <span id="attempts-bolsillo" class="attempts-badge">Intentos: 0 / 5</span>
+                </div>
+                <div id="feedback-bolsillo" class="feedback-msg"></div>
+            </div>
+
+            <div class="nav-buttons">
+                <button type="button" class="btn btn-secondary" onclick="prevWindow(3)">&larr; Anterior</button>
+                <button type="button" class="btn" onclick="nextWindow(3)">Siguiente: Presupuesto &rarr;</button>
+            </div>
+        </div>
+
+        <!-- VENTANA 4 -->
+        <div class="tab-window" id="window-4">
+            <h2>Ventana 4: Presupuesto e Identificación de Materiales</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th width="15%">Unidades</th>
+                        <th width="25%">Coste Estimado (€)</th>
+                        <th>Material / Herramienta</th>
+                    </tr>
+                </thead>
+                <tbody id="budget-body"></tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td colspan="2">Presupuesto Total Estimado</td>
+                        <td>3.65 €</td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <div class="nav-buttons">
+                <button type="button" class="btn btn-secondary" onclick="prevWindow(4)">&larr; Anterior</button>
+                <button type="button" class="btn" onclick="nextWindow(4)">Siguiente: Hoja de Proceso &rarr;</button>
+            </div>
+        </div>
+
+        <!-- VENTANA 5 -->
+        <div class="tab-window" id="window-5">
+            <h2>Ventana 5: Orden de la Hoja de Proceso</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th width="15%">Secuencia</th>
+                        <th>Operación a Realizar</th>
+                    </tr>
+                </thead>
+                <tbody id="process-body"></tbody>
+            </table>
+
+            <div class="nav-buttons">
+                <button type="button" class="btn btn-secondary" onclick="prevWindow(5)">&larr; Anterior</button>
+                <button type="button" class="btn btn-success" onclick="calculateResults()">Calcular Resultados y Finalizar &rarr;</button>
+            </div>
+        </div>
+
+        <!-- VENTANA 6 -->
+        <div class="tab-window" id="window-6">
+            <h2>Ventana 6: Evaluación Global y Cuestionario de Criterios</h2>
+            
+            <div id="score-container" class="score-box">
+                <div id="student-display" class="student-display-name">Alumno: -</div>
+                
+                <!-- NOMBRE DEL TEST / CRITERIO SELECCIONADO -->
+                <div id="criterion-display" class="criterion-badge-display">Criterio: Sin Seleccionar</div>
+
+                <p style="font-weight:600; color:var(--text-muted);">Calificación Global del Proyecto y Memoria</p>
+                <div id="score-percentage" class="score-number">0%</div>
+                <p id="score-text">Revisa el desglose de tu evaluación a continuación.</p>
+            </div>
+            <div id="detailed-feedback" style="margin-bottom:20px; font-size:0.95rem;"></div>
+
+            <!-- SECCIÓN TEORÍA Y TIPO TEST -->
+            <div class="no-print" style="margin-top:24px; border-top:2px dashed var(--border); padding-top:20px;">
+                <h3>Cuestionario de Conocimientos Técnicos por Criterio</h3>
+                <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:12px;">
+                    Usa las opciones a continuación para revisar la teoría o cargar el cuestionario del criterio asignado:
+                </p>
+
+                <div class="quiz-filter-container">
+                    <button type="button" id="btn-quiz-productos" class="btn btn-secondary" onclick="loadQuizCategory('productos')">1. Productos y Materiales (Criterio 2.1)</button>
+                    <button type="button" id="btn-quiz-fabricacion" class="btn btn-secondary" onclick="loadQuizCategory('fabricacion')">2. Fabricación (Criterio 2.2)</button>
+                    <button type="button" id="btn-quiz-difusion" class="btn btn-secondary" onclick="loadQuizCategory('difusion')">3. Difusión (Criterios 3.1 y 3.2)</button>
+                    <button type="button" class="btn btn-warning" onclick="toggleTheory()">📖 Mostrar / Ocultar Teoría Completa</button>
+                </div>
+
+                <!-- CAJA DE TEORÍA DETALLADA Y AMPLIADA -->
+                <div id="theory-container" class="theory-box">
+                    <h3>📖 Guía Teórica Detallada de Apoyo</h3>
+                    
+                    <h4>1. Criterio 2.1: Productos y Materiales</h4>
+                    <p>El diseño de productos tecnológicos busca resolver problemas técnicos reales mediante el análisis del impacto ambiental y el ciclo de vida de los materiales.</p>
+                    <ul>
+                        <li><strong>Origen de la cartulina y el papel:</strong> Proceden de la pulpa de celulosa vegetal obtenida del procesado de la madera de los árboles. El reciclaje de 1 tonelada de papel evita la tala de unos 17 árboles y reduce el consumo de agua en un 50%.</li>
+                        <li><strong>Gramaje y rigidez:</strong> La cartulina A4 tiene un gramaje estándar de entre 180 y 220 g/m², lo que proporciona la rigidez necesaria para soportar estructuras tridimensionales articuladas en mecanismos Pop-Up sin deformarse. Un folio común tiene un gramaje de solo 80 g/m².</li>
+                        <li><strong>Ciclo de vida y ecodiseño:</strong> El ciclo de vida comprende desde la extracción de la materia prima, la fabricación y el uso, hasta su posterior valorización o gestión de residuos final. El ecodiseño busca minimizar el impacto medioambiental reduciendo el uso de recursos no renovables.</li>
+                        <li><strong>Consumo responsable e inclusividad:</strong> Consiste en ajustar las compras a las necesidades reales del proyecto para evitar el desperdicio. El diseño inclusivo garantiza que los objetos sean accesibles, seguros y fáciles de manipular por cualquier usuario, independientemente de sus capacidades motrices.</li>
+                    </ul>
+
+                    <h4>2. Criterio 2.2: Fabricación, Herramientas y Seguridad</h4>
+                    <p>La correcta ejecución práctica requiere combinar precisión en el trazado, técnicas de corte de calidad y el cumplimiento estricto de las normas de seguridad del taller.</p>
+                    <ul>
+                        <li><strong>Trazado y plegado con regla:</strong> Las líneas continuas representan bordes de corte, mientras que las líneas discontinuas señalan doblados. Apoyar firmemente la regla metálica sobre la cartulina antes de marcar la hendidura con la punta roma de un bolígrafo o plegadera asegura un pliegue sin arrugas ni desviaciones.</li>
+                        <li><strong>Propiedades de los adhesivos en barra:</strong> El pegamento en barra está formulado con resinas sintéticas en base acuosa sin disolventes orgánicos nocivos. Su baja humedad evita que la cartulina y el papel se ondulen o decoloren durante la fijación de las solapas.</li>
+                        <li><strong>Función del troquelado y mecanismos con cuerda:</strong> La perforación manual con punzón o taladradora crea orificios circulares por donde discurre el hilo de algodón o sintético, permitiendo transmitir la fuerza de tracción al abrir la tarjeta para desplegar el prisma Pop-Up.</li>
+                        <li><strong>Normas de seguridad e higiene:</strong> Durante el uso de tijeras o cúter, las manos deben situarse siempre detrás del filo cortante. Las piezas cortadas sobrantes se deben clasificar de forma inmediata en el contenedor azul de reciclaje de papel para mantener limpia la zona de trabajo.</li>
+                    </ul>
+
+                    <h4>3. Criterio 3.1 y 3.2: Difusión, Comunicación y Trabajo en Equipo</h4>
+                    <p>La transmisión efectiva de las ideas técnicas y la colaboración estructurada en el aula son pilares fundamentales para el desarrollo de proyectos.</p>
+                    <ul>
+                        <li><strong>Comunicación asertiva en equipo:</strong> Consiste en expresar opiniones, dudas y discrepancias con claridad, respeto y firmeza sin caer en posturas agresivas ni pasivas. Fomenta un reparto equitativo de roles según las fortalezas individuales.</li>
+                        <li><strong>Documentación y lenguaje técnico normalizado:</strong> La memoria técnica debe emplear terminología estandarizada para evitar errores de interpretación. El uso de símbolos normalizados y hojas de proceso ordenadas garantiza que cualquier otra persona pueda reproducir el proyecto.</li>
+                        <li><strong>Lenguaje inclusivo y no sexista:</strong> Garantiza la visibilidad de todas las personas en la redacción técnica y las presentaciones verbales, utilizando términos neutros o colectivos en lugar del masculino genérico.</li>
+                        <li><strong>Estrategias de exposición oral:</strong> Para divulgar con éxito un proyecto técnico es imprescindible planificar y cronometrar el discurso, modular la entonación para mantener la atención, utilizar una postura corporal erguida y apoyarse en maquetas físicas o presentaciones gráficas visuales.</li>
+                    </ul>
+                </div>
+
+                <!-- CONTENEDOR DE PREGUNTAS TIPO TEST -->
+                <div id="quiz-questions-container">
+                    <p style="font-style:italic; color:var(--text-muted);">El cuestionario se cargará automáticamente al pulsar sobre el botón correspondiente o al llegar a esta pantalla.</p>
+                </div>
+
+                <div id="quiz-actions" style="display:none; margin-top:16px;">
+                    <button type="button" id="btn-evaluate-quiz" class="btn btn-success" onclick="evaluateQuiz()">✔ Validar y Finalizar Cuestionario Test</button>
+                    <span id="quiz-score-badge" style="margin-left:12px; font-weight:bold;"></span>
+                </div>
+            </div>
+
+            <div class="nav-buttons no-print" style="margin-top:30px;">
+                <button type="button" id="btn-fix-or-reset" class="btn btn-secondary" onclick="handleFixOrReset()">&circlearrowleft; Corregir Errores</button>
+                <button type="button" class="btn btn-success" onclick="window.print()">Imprimir / Guardar Memoria PDF</button>
+            </div>
+        </div>
+    </form>
+
+    <script>
+        const GRID_STEP = 20;
+
+        const state = {
+            prisma: { selectedPoint: null, lines: [], isCorrect: false, attempts: 0, solutionTimer: null, width: 1000, height: 700 },
+            bolsillo: { selectedPoint: null, lines: [], isCorrect: false, attempts: 0, solutionTimer: null, width: 1000, height: 600 }
+        };
+
+        let lastFirstErrorWindow = 4;
+        let testScorePct = 0;
+        let isQuizLocked = false;
+        let activeCriterionKey = "productos";
+
+        const criterionLabels = {
+            productos: "Productos y Materiales",
+            fabricacion: "Fabricación y Seguridad",
+            difusion: "Difusión y Trabajo en Equipo"
+        };
+
+        const targetPrismaSegments = [
+            {x1: 10, y1: 2,  x2: 30, y2: 2},
+            {x1: 10, y1: 2,  x2: 10, y2: 10},
+            {x1: 30, y1: 2,  x2: 30, y2: 10},
+            {x1: 10, y1: 10, x2: 30, y2: 10},
+            {x1: 10, y1: 18, x2: 30, y2: 18},
+            {x1: 10, y1: 18, x2: 10, y2: 26},
+            {x1: 30, y1: 18, x2: 30, y2: 26},
+            {x1: 10, y1: 26, x2: 30, y2: 26},
+            {x1: 10, y1: 10, x2: 10, y2: 18},
+            {x1: 30, y1: 10, x2: 30, y2: 18},
+            {x1: 10, y1: 10, x2: 3,  y2: 14},
+            {x1: 10, y1: 18, x2: 3,  y2: 14},
+            {x1: 30, y1: 10, x2: 37, y2: 14},
+            {x1: 30, y1: 18, x2: 37, y2: 14}
+        ];
+
+        const targetBolsilloSegments = [
+            {x1: 6,  y1: 6,  x2: 24, y2: 6},
+            {x1: 24, y1: 6,  x2: 24, y2: 24},
+            {x1: 24, y1: 24, x2: 6,  y2: 24},
+            {x1: 6,  y1: 24, x2: 6,  y2: 6},
+            {x1: 4,  y1: 6,  x2: 6,  y2: 6},
+            {x1: 4,  y1: 6,  x2: 4,  y2: 24},
+            {x1: 4,  y1: 24, x2: 6,  y2: 24},
+            {x1: 24, y1: 6,  x2: 26, y2: 6},
+            {x1: 26, y1: 6,  x2: 26, y2: 24},
+            {x1: 24, y1: 24, x2: 26, y2: 24},
+            {x1: 8,  y1: 24, x2: 8,  y2: 26},
+            {x1: 8,  y1: 26, x2: 22, y2: 26},
+            {x1: 22, y1: 26, x2: 22, y2: 24}
+        ];
+
+        function confirmCriterionSelection() {
+            activeCriterionKey = document.getElementById('selectedCriterion').value;
+            updateCriterionDisplay();
+            loadQuizCategory(activeCriterionKey);
+            showWindow(1);
+        }
+
+        function updateCriterionDisplay() {
+            const badge = document.getElementById('criterion-display');
+            badge.innerText = `Criterio Evaluado: ${criterionLabels[activeCriterionKey]}`;
+        }
+
+        function setupGrid(svgId, width, height) {
+            const svg = document.getElementById(svgId);
+            svg.innerHTML = '';
+
+            for (let x = 0; x <= width; x += GRID_STEP) {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                const isMain = (x % (GRID_STEP * 2) === 0);
+                line.setAttribute('x1', x); line.setAttribute('y1', 0);
+                line.setAttribute('x2', x); line.setAttribute('y2', height);
+                line.setAttribute('stroke', isMain ? '#cbd5e1' : '#f1f5f9');
+                line.setAttribute('stroke-width', isMain ? '1.5' : '1');
+                svg.appendChild(line);
+            }
+            for (let y = 0; y <= height; y += GRID_STEP) {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                const isMain = (y % (GRID_STEP * 2) === 0);
+                line.setAttribute('x1', 0); line.setAttribute('y1', y);
+                line.setAttribute('x2', width); line.setAttribute('y2', y);
+                line.setAttribute('stroke', isMain ? '#cbd5e1' : '#f1f5f9');
+                line.setAttribute('stroke-width', isMain ? '1.5' : '1');
+                svg.appendChild(line);
+            }
+
+            const linesGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            linesGroup.setAttribute('id', `${svgId}-lines`);
+            svg.appendChild(linesGroup);
+
+            const solGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            solGroup.setAttribute('id', `${svgId}-solution`);
+            svg.appendChild(solGroup);
+
+            for (let x = GRID_STEP; x < width; x += GRID_STEP) {
+                for (let y = GRID_STEP; y < height; y += GRID_STEP) {
+                    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    const isMain = (x % (GRID_STEP * 2) === 0 && y % (GRID_STEP * 2) === 0);
+                    
+                    circle.setAttribute('cx', x);
+                    circle.setAttribute('cy', y);
+                    circle.setAttribute('r', isMain ? '3.5' : '2');
+                    circle.onclick = () => handlePointClick(svgId.replace('svg-', ''), x, y, circle, isMain);
+                    svg.appendChild(circle);
+                }
+            }
+        }
+
+        function handlePointClick(type, x, y, element, isMain) {
+            const canvasState = state[type];
+
+            if (!canvasState.selectedPoint) {
+                canvasState.selectedPoint = { x, y, element, isMain };
+                element.style.fill = '#2563eb';
+                element.setAttribute('r', '6');
+            } else {
+                const p1 = canvasState.selectedPoint;
+                const p2 = { x, y };
+
+                if (p1.x !== p2.x || p1.y !== p2.y) {
+                    canvasState.lines.push({
+                        x1: p1.x / GRID_STEP, y1: p1.y / GRID_STEP,
+                        x2: p2.x / GRID_STEP, y2: p2.y / GRID_STEP,
+                        rawX1: p1.x, rawY1: p1.y, rawX2: p2.x, rawY2: p2.y
+                    });
+                    renderLines(type);
+                }
+
+                p1.element.style.fill = '';
+                p1.element.setAttribute('r', p1.isMain ? '3.5' : '2');
+                canvasState.selectedPoint = null;
+            }
+        }
+
+        function renderLines(type) {
+            const group = document.getElementById(`svg-${type}-lines`);
+            group.innerHTML = '';
+            state[type].lines.forEach(l => {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', l.rawX1); line.setAttribute('y1', l.rawY1);
+                line.setAttribute('x2', l.rawX2); line.setAttribute('y2', l.rawY2);
+                line.setAttribute('class', 'drawn-line');
+                group.appendChild(line);
+            });
+        }
+
+        function undoLastLine(type) {
+            state[type].lines.pop();
+            renderLines(type);
+            document.getElementById(`feedback-${type}`).className = 'feedback-msg';
+        }
+
+        function clearCanvas(type) {
+            state[type].lines = [];
+            state[type].isCorrect = false;
+            if (state[type].selectedPoint) {
+                const p = state[type].selectedPoint;
+                p.element.style.fill = '';
+                p.element.setAttribute('r', p.isMain ? '3.5' : '2');
+                state[type].selectedPoint = null;
+            }
+            renderLines(type);
+            document.getElementById(`feedback-${type}`).className = 'feedback-msg';
+        }
+
+        function createOffscreenCanvas(width, height) {
+            const cvs = document.createElement('canvas');
+            cvs.width = width;
+            cvs.height = height;
+            return cvs;
+        }
+
+        function drawSegmentsToCanvas(ctx, segments, strokeWidth) {
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = strokeWidth;
+            ctx.lineCap = 'round';
+
+            segments.forEach(seg => {
+                ctx.beginPath();
+                const x1 = seg.rawX1 !== undefined ? seg.rawX1 : seg.x1 * GRID_STEP;
+                const y1 = seg.rawY1 !== undefined ? seg.rawY1 : seg.y1 * GRID_STEP;
+                const x2 = seg.rawX2 !== undefined ? seg.rawX2 : seg.x2 * GRID_STEP;
+                const y2 = seg.rawY2 !== undefined ? seg.rawY2 : seg.y2 * GRID_STEP;
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+            });
+        }
+
+        function validateDrawing(type) {
+            const canvasState = state[type];
+            const feedback = document.getElementById(`feedback-${type}`);
+            const btn = document.getElementById(`btn-validate-${type}`);
+            const badge = document.getElementById(`attempts-${type}`);
+
+            if (canvasState.attempts >= 5) return;
+
+            const userLines = canvasState.lines;
+            const target = (type === 'prisma') ? targetPrismaSegments : targetBolsilloSegments;
+
+            if (userLines.length === 0) {
+                feedback.className = 'feedback-msg warning';
+                feedback.innerText = '⚠ El lienzo está vacío. Dibuja antes de validar.';
+                return;
+            }
+
+            const width = canvasState.width;
+            const height = canvasState.height;
+
+            const cvsTarget = createOffscreenCanvas(width, height);
+            const ctxTarget = cvsTarget.getContext('2d');
+            drawSegmentsToCanvas(ctxTarget, target, 6);
+            const targetData = ctxTarget.getImageData(0, 0, width, height).data;
+
+            const cvsUser = createOffscreenCanvas(width, height);
+            const ctxUser = cvsUser.getContext('2d');
+            drawSegmentsToCanvas(ctxUser, userLines, 6);
+            const userData = ctxUser.getImageData(0, 0, width, height).data;
+
+            const cvsTol = createOffscreenCanvas(width, height);
+            const ctxTol = cvsTol.getContext('2d');
+            drawSegmentsToCanvas(ctxTol, target, 16);
+            const tolData = ctxTol.getImageData(0, 0, width, height).data;
+
+            let totalTargetPixels = 0;
+            let coveredTargetPixels = 0;
+            let totalUserPixels = 0;
+            let userPixelsOutsideMargin = 0;
+
+            for (let i = 3; i < targetData.length; i += 4) {
+                const isTarget = targetData[i] > 128;
+                const isUser = userData[i] > 128;
+                const isWithinMargin = tolData[i] > 128;
+
+                if (isTarget) {
+                    totalTargetPixels++;
+                    if (isUser) coveredTargetPixels++;
+                }
+
+                if (isUser) {
+                    totalUserPixels++;
+                    if (!isWithinMargin) userPixelsOutsideMargin++;
+                }
+            }
+
+            const coveragePct = (totalTargetPixels > 0) ? (coveredTargetPixels / totalTargetPixels) : 0;
+            const extraLinesPct = (totalUserPixels > 0) ? (userPixelsOutsideMargin / totalUserPixels) : 0;
+
+            const isCorrectCoverage = coveragePct >= 0.85;
+            const isCleanDrawing = extraLinesPct <= 0.25;
+
+            if (isCorrectCoverage && isCleanDrawing) {
+                canvasState.isCorrect = true;
+                feedback.className = 'feedback-msg success';
+                feedback.innerText = '¡Excelente! Plano validado correctamente.';
+                
+                document.getElementById(`svg-${type}-solution`).innerHTML = '';
+                if (canvasState.solutionTimer) clearTimeout(canvasState.solutionTimer);
+
+            } else {
+                canvasState.isCorrect = false;
+                canvasState.attempts++;
+                badge.innerText = `Intentos: ${canvasState.attempts} / 5`;
+
+                if (canvasState.attempts >= 5) {
+                    btn.disabled = true;
+                    feedback.className = 'feedback-msg error';
+                    feedback.innerText = '❌ Has consumido los 5 intentos de validación permitidos.';
+                } else {
+                    feedback.className = 'feedback-msg error';
+                    if (!isCorrectCoverage) {
+                        feedback.innerText = `❌ Dibujo incompleto (cobertura: ${Math.round(coveragePct * 100)}%). Revisa las líneas que te faltan. (Intento ${canvasState.attempts}/5)`;
+                    } else {
+                        feedback.innerText = `❌ Dibujo con demasiadas líneas fuera de lugar. Corrige las líneas sobrantes. (Intento ${canvasState.attempts}/5)`;
+                    }
+                    showSolutionHint(type);
+                }
+            }
+        }
+
+        function showSolutionHint(type) {
+            const solGroup = document.getElementById(`svg-${type}-solution`);
+            const target = (type === 'prisma') ? targetPrismaSegments : targetBolsilloSegments;
+            
+            if (state[type].solutionTimer) clearTimeout(state[type].solutionTimer);
+
+            solGroup.innerHTML = '';
+            target.forEach(l => {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', l.x1 * GRID_STEP); line.setAttribute('y1', l.y1 * GRID_STEP);
+                line.setAttribute('x2', l.x2 * GRID_STEP); line.setAttribute('y2', l.y2 * GRID_STEP);
+                line.setAttribute('class', 'solution-line');
+                solGroup.appendChild(line);
+            });
+
+            state[type].solutionTimer = setTimeout(() => { solGroup.innerHTML = ''; }, 20000);
+        }
+
+        const baseBudgetData = [
+            { units: "2", cost: "0.30 €", priceGroup: "0.30", validAnswers: ["Cartulina tamaño A4"] },
+            { units: "3", cost: "0.45 €", priceGroup: "0.45", validAnswers: ["Folio blanco"] },
+            { units: "1", cost: "0.40 €", priceGroup: "0.40", validAnswers: ["Bolígrafo o lápiz"] },
+            { units: "1", cost: "1.00 €", priceGroup: "1.00", validAnswers: ["Regla", "Tijeras"] },
+            { units: "1", cost: "1.00 €", priceGroup: "1.00", validAnswers: ["Regla", "Tijeras"] },
+            { units: "1", cost: "0.50 €", priceGroup: "0.50", validAnswers: ["Pegamento de barra"] }
+        ];
+
+        const budgetOptions = [
+            "Cartulina tamaño A4", "Folio blanco", "Bolígrafo o lápiz",
+            "Regla", "Tijeras", "Pegamento de barra", "Cartulina tamaño A3", "Cuerda o Hilo"
+        ];
+
+        const correctSteps = [
+            { step: 1, text: "Doblar la cartulina A4 por la mitad, dibujar y recortar el bolsillo y pegarlo en una de las mitades." },
+            { step: 2, text: "Hacer nuestro mini libro y colocarlo dentro del bolsillo." },
+            { step: 3, text: "Dibujar el prisma, recortarlo y hacerle los agujeros." },
+            { step: 4, text: "Pasar la cuerda por los agujeros y pegar el prisma en la otra mitad de la cartulina." },
+            { step: 5, text: "Comprobar que el plegado del prisma es correcto." }
+        ];
+
+        let currentBudgetData = [];
+
+        function shuffle(array) {
+            let arrCopy = [...array];
+            for (let i = arrCopy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arrCopy[i], arrCopy[j]] = [arrCopy[j], arrCopy[i]];
+            }
+            return arrCopy;
+        }
+
+        function initTables() {
+            currentBudgetData = shuffle(baseBudgetData);
+            const bBody = document.getElementById('budget-body');
+            bBody.innerHTML = '';
+            currentBudgetData.forEach((item, index) => {
+                const options = shuffle(budgetOptions);
+                options.unshift("-- Selecciona el material --");
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${item.units}</strong></td>
+                    <td><strong>${item.cost}</strong></td>
+                    <td>
+                        <select id="budget-select-${index}">
+                            ${options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+                        </select>
+                    </td>
+                `;
+                bBody.appendChild(tr);
+            });
+
+            const pBody = document.getElementById('process-body');
+            pBody.innerHTML = '';
+            const shuffledTexts = shuffle(correctSteps.map(s => s.text));
+            shuffledTexts.unshift("-- Selecciona la operación correspondiente --");
+
+            correctSteps.forEach((stepObj, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>Paso ${stepObj.step}</strong></td>
+                    <td>
+                        <select id="step-select-${index}" data-correct="${stepObj.text}">
+                            ${shuffledTexts.map(text => `<option value="${text}">${text}</option>`).join('')}
+                        </select>
+                    </td>
+                `;
+                pBody.appendChild(tr);
+            });
+        }
+
+        function showWindow(n) {
+            document.querySelectorAll('.tab-window').forEach(w => w.classList.remove('active'));
+            document.querySelectorAll('.step-node').forEach((node, idx) => {
+                node.classList.remove('active');
+                if (idx < n) node.classList.add('completed');
+                else node.classList.remove('completed');
+                if (idx === n) node.classList.add('active');
+            });
+            document.getElementById(`window-${n}`).classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        function nextWindow(current) {
+            if (current === 1) {
+                if (!document.getElementById('studentName').value || !document.getElementById('studentGroup').value) {
+                    alert('Por favor, completa tu nombre y curso antes de continuar.');
+                    return;
+                }
+            }
+            showWindow(current + 1);
+        }
+
+        function prevWindow(current) { showWindow(current - 1); }
+
+        function calculateResults() {
+            let errorList = [];
+            lastFirstErrorWindow = 6;
+
+            const sName = document.getElementById('studentName').value || "No especificado";
+            const sGroup = document.getElementById('studentGroup').value || "";
+            document.getElementById('student-display').innerText = `Alumno/a: ${sName} (${sGroup})`;
+
+            updateCriterionDisplay();
+
+            let prismaPoints = state.prisma.isCorrect ? 20 : 0;
+            let bolsilloPoints = state.bolsillo.isCorrect ? 20 : 0;
+
+            if (!state.prisma.isCorrect) {
+                errorList.push("El plano del <strong>Prisma Pop-Up (Ventana 2)</strong> no está validado correctamente.");
+                if (lastFirstErrorWindow > 2) lastFirstErrorWindow = 2;
+            }
+            if (!state.bolsillo.isCorrect) {
+                errorList.push("El plano del <strong>Bolsillo (Ventana 3)</strong> no está validado correctamente.");
+                if (lastFirstErrorWindow > 3) lastFirstErrorWindow = 3;
+            }
+
+            let tableTotalCount = currentBudgetData.length + correctSteps.length;
+            let tableCorrectCount = 0;
+
+            const selectedByPriceGroup = {};
+            currentBudgetData.forEach((item, index) => {
+                const sel = document.getElementById(`budget-select-${index}`);
+                const val = sel.value;
+                const group = item.priceGroup;
+
+                if (!selectedByPriceGroup[group]) {
+                    selectedByPriceGroup[group] = [];
+                }
+                selectedByPriceGroup[group].push({ index, val, element: sel, validAnswers: item.validAnswers });
+            });
+
+            Object.keys(selectedByPriceGroup).forEach(group => {
+                const entries = selectedByPriceGroup[group];
+                const usedAnswersInGroup = new Set();
+
+                entries.forEach(entry => {
+                    if (entry.validAnswers.includes(entry.val) && !usedAnswersInGroup.has(entry.val)) {
+                        entry.element.className = "correct";
+                        usedAnswersInGroup.add(entry.val);
+                        tableCorrectCount++;
+                    } else {
+                        entry.element.className = "incorrect";
+                    }
+                });
+            });
+
+            correctSteps.forEach((stepObj, index) => {
+                const sel = document.getElementById(`step-select-${index}`);
+                if (sel.value === sel.dataset.correct) {
+                    sel.className = "correct";
+                    tableCorrectCount++;
+                } else { sel.className = "incorrect"; }
+            });
+
+            if (tableCorrectCount < tableTotalCount) {
+                errorList.push(`Tienes fallos en la <strong>tabla de materiales o en el orden del proceso</strong> (${tableCorrectCount}/${tableTotalCount} aciertos).`);
+                if (lastFirstErrorWindow > 4) lastFirstErrorWindow = 4;
+            }
+
+            let tablesPoints = (tableCorrectCount / tableTotalCount) * 30;
+            let testPoints = (testScorePct / 100) * 30;
+
+            const globalScore = Math.round(prismaPoints + bolsilloPoints + tablesPoints + testPoints);
+
+            showWindow(6);
+
+            const scoreNum = document.getElementById('score-percentage');
+            const scoreText = document.getElementById('score-text');
+            const feedbackDetail = document.getElementById('detailed-feedback');
+            const fixOrResetBtn = document.getElementById('btn-fix-or-reset');
+
+            scoreNum.innerText = `${globalScore}%`;
+
+            if (globalScore < 20) {
+                scoreNum.style.color = "#64748b";
+            } else if (globalScore >= 20 && globalScore < 40) {
+                scoreNum.style.color = "#2563eb";
+            } else if (globalScore >= 40 && globalScore < 60) {
+                scoreNum.style.color = "#16a34a";
+            } else if (globalScore >= 60 && globalScore < 80) {
+                scoreNum.style.color = "#ca8a04";
+            } else if (globalScore >= 80 && globalScore < 90) {
+                scoreNum.style.color = "#ea580c";
+            } else {
+                scoreNum.style.color = "#dc2626";
+            }
+
+            if (errorList.length === 0 && globalScore >= 90) {
+                scoreText.innerText = "¡Excelente trabajo! Has completado los planos, la memoria técnica y el test a la perfección.";
+                feedbackDetail.innerHTML = "<p style='color:var(--success); font-weight:bold;'>✔ Planos validados y respuestas totalmente correctas.</p>";
+                fixOrResetBtn.innerText = "↺ Volver a Empezar Todo";
+            } else {
+                scoreText.innerText = "Revisa los elementos pendientes o con errores detallados a continuación:";
+                
+                let htmlMsg = "<ul style='margin-left:20px; color:#991b1b;'>";
+                errorList.forEach(err => { htmlMsg += `<li>${err}</li>`; });
+                htmlMsg += "</ul>";
+
+                feedbackDetail.innerHTML = htmlMsg;
+                fixOrResetBtn.innerText = "✎ Volver a Corregir Planos o Memoria";
+            }
+        }
+
+        function handleFixOrReset() {
+            if (lastFirstErrorWindow < 6) {
+                showWindow(lastFirstErrorWindow);
+            } else {
+                resetToStart();
+            }
+        }
+
+        function resetToStart() {
+            state.prisma.attempts = 0;
+            state.bolsillo.attempts = 0;
+            isQuizLocked = false;
+            testScorePct = 0;
+
+            document.getElementById('btn-validate-prisma').disabled = false;
+            document.getElementById('btn-validate-bolsillo').disabled = false;
+            document.getElementById('attempts-prisma').innerText = 'Intentos: 0 / 5';
+            document.getElementById('attempts-bolsillo').innerText = 'Intentos: 0 / 5';
+            
+            document.getElementById('btn-quiz-productos').disabled = false;
+            document.getElementById('btn-quiz-fabricacion').disabled = false;
+            document.getElementById('btn-quiz-difusion').disabled = false;
+
+            clearCanvas('prisma');
+            clearCanvas('bolsillo');
+            initTables();
+            showWindow(0);
+        } 
+
+        /* --- BANCO DE PREGUNTAS TIPO TEST --- */
+        const quizBank = {
+            productos: [
+                { q: "¿De dónde procede la pulpa de celulosa vegetal para hacer el papel y la cartulina?", options: ["Del procesado de la madera de los árboles", "De derivados del petróleo sintético producidos en refinerías", "De minerales extraídos de rocas arcillosas"], correct: 0 },
+                { q: "El reciclaje de 1 tonelada de papel evita la tala de aproximadamente:", options: ["Unos 17 árboles y reduce el consumo de agua en un 50%", "Unos 50 árboles y reduce el consumo de agua un 10%", "Unos 5 árboles sin ahorro de agua"], correct: 0 },
+                { q: "¿Qué gramaje estándar tiene la cartulina A4?", options: ["Entre 180 y 220 g/m²", "De solo 80 g/m²", "Entre 400 y 500 g/m²"], correct: 0 },
+                { q: "El gramaje de un folio común de papel es de:", options: ["Solo 80 g/m²", "180 g/m²", "250 g/m²"], correct: 0 },
+                { q: "¿Qué busca el ecodiseño en la selección de materiales?", options: ["Minimizar el impacto medioambiental reduciendo el uso de recursos no renovables", "Duplicar la cantidad de plástico consumido durante el prodecso de fabricación porque es más duradero", "Incrementar el peso final del producto"], correct: 0 },
+                { q: "¿Qué comprende el ciclo de vida de un producto tecnológico?", options: ["Desde la extracción de materia prima, fabricación y uso, hasta la gestión de residuos", "Únicamente el momento de la venta en tienda", "Exclusivamente el boceto dibujado en el cuaderno"], correct: 0 },
+                { q: "¿En qué consiste el consumo responsable?", options: ["Ajustar las compras a las necesidades reales del proyecto para evitar el desperdicio", "Comprar el doble de material por precaución, para no gastar mas dinero en tener que ir de nuevo a comprar", "Adquirir productos importados no reciclables"], correct: 0 },
+                { q: "El diseño inclusivo garantiza que los objetos sean:", options: ["Accesibles, seguros y fáciles de manipular por cualquier usuario", "Diseñados exclusivamente para técnicos expertos, con planos especificos y detallados", "Especialmente difíciles de desmontar"], correct: 0 },
+                { q: "¿Por qué la cartulina A4 soporta la estructura del Pop-Up sin deformarse?", options: ["Por su rigidez dada por un gramaje de entre 180 y 220 g/m²", "Porque contiene láminas de acero interior que le an firmeza y aportan rigidez", "Por estar plastificada por ambas caras"], correct: 0 },
+                { q: "Un objetivo ético clave de la evaluación del impacto ambiental es:", options: ["Evitar el desperdicio de recursos y favorecer la valorización", "Promover el uso de plásticos de un solo uso, para no tener que gastar agua en el reciclado", "Aumentar los costes de producción sin justificación"], correct: 0 }
+            ],
+            fabricacion: [
+                { q: "En el dibujo técnico de nuestros proyectos escolares, ¿qué suelen representan las líneas discontinuas?", options: ["Señalan doblados o pliegues", "Representan bordes de corte", "Son guías de pegamento únicamente"], correct: 0 },
+                { q: "En el dibujo técnico de nuestros proyectos escolares, ¿qué suelen representan las líneas continuas?", options: ["Representan bordes de corte", "Señalan doblados", "Muestran zonas de cuerda"], correct: 0 },
+                { q: "¿Por qué el pegamento en barra evita que la cartulina se ondule?", options: ["Por su baja humedad al estar formulado con resinas en base acuosa sin disolventes", "Porque seca aplicando calor con un decapador", "Porque contiene disolventes orgánicos fuertes y de un solo uso que secan muy rápido"], correct: 0 },
+                { q: "¿Qué herramienta se recomienda para marcar la hendidura del pliegue antes de doblar?", options: ["La punta roma de un bolígrafo o plegadera sobre la regla", "Un cúter afilado cortando a mitad de espesor", "Unas tijeras de electricidad ue son fáciles de manipular"], correct: 0 },
+                { q: "¿Qué función cumple el troquelado manual con punzón en la pieza Pop-Up?", options: ["Crear orificios circulares por donde discurre el hilo o cuerda", "Recortar las solapas laterales del bolsillo donde se introduce el minilibro de la teoría del tema", "Decorar el borde de la portada"], correct: 0 },
+                { q: "Durante el uso de tijeras o cúter en el taller, ¿dónde deben situarse las manos?", options: ["Siempre detrás del filo cortante", "Directamente sobre la línea de corte", "Sosteniendo la hoja metálica por delante"], correct: 0 },
+                { q: "¿En qué contenedor se deben clasificar las piezas de cartulina sobrantes?", options: ["En el contenedor azul de reciclaje de papel", "En el contenedor amarillo de envases como latas o botes de plástico", "En la papelera de restos orgánicos"], correct: 0 },
+                { q: "¿Qué elemento transmite la fuerza de tracción para desplegar el prisma al abrir la tarjeta?", options: ["El hilo o cuerda de algodón o sintético", "El exceso de pegamento en barra", "La solapas inferior del bolsillo en el que colocmos el minilibro"], correct: 0 },
+                { q: "Para asegurar un pliegue sin arrugas ni desviaciones es necesario:", options: ["Apoyar firmemente la regla metálica sobre la cartulina antes de marcar", "Plegar la cartulina a mano alzada sin marcar para qu quede la pieza más limpia", "Humedecer la cartulina con agua antes de doblar"], correct: 0 },
+                { q: "El propósito de mantener limpia la zona de trabajo retirando recortes es:", options: ["Garantizar las normas de seguridad e higiene en el taller", "Hacer que el pegamento seque más rápido mediante un secador  de pelo o decapante", "Evitar tener que usar regla en la siguiente fase"], correct: 0 }
+            ],
+            difusion: [
+                { q: "¿En qué consiste la comunicación asertiva en el trabajo en equipo?", options: ["Expresar opiniones, dudas y discrepancias con claridad, respeto y firmeza", "Imponer las ideas propias elevando la voz al habllar con otras personas", "Aceptar todas las opiniones sin dar nunca el propio punto de vista"], correct: 0 },
+                { q: "¿Por qué se exige terminología estandarizada y normalizada en la memoria técnica?", options: ["Para evitar errores de interpretación y permitir que cualquiera reproduzca el proyecto", "Para hacer el documento más largo y difícil de leer, con términos científicos más complejos", "Para sustituir la necesidad de incluir planos"], correct: 0 },
+                { q: "El uso de lenguaje inclusivo y no sexista busca:", options: ["Garantizar la visibilidad de todas las personas utilizando términos neutros o colectivos", "Eliminar los nombres de las herramientas y aplicaciones informáticas", "Utilizar únicamente diminutivos informales"], correct: 0 },
+                { q: "¿Cuál es una estrategia indispensable para una exposición oral de éxito?", options: ["Planificar y cronometrar el discurso, modulando la entonación", "Leer el texto completo en voz baja mirando al suelo", "Hablar a la máxima velocidad posible para acabar pronto, para poder usar el tiempo en otras tareas asiganadas"], correct: 0 },
+                { q: "¿Qué recurso apoya visualmente la explicación durante la difusión oral?", options: ["Maquetas físicas o presentaciones gráficas visuales", "Páginas con texto en letra muy pequeña", "Listas de precios sin imágenes de los materiales usados en el proyecto"], correct: 0 },
+                { q: "¿Qué documento de la memoria garantiza el reparto ordenado de tareas?", options: ["La Hoja de Proceso ordenada secuencialmente", "El recibo de compra del material y herramientas necesarias para el proyecto", "La lista de notas del grupo"], correct: 0 },
+                { q: "Un beneficio directo del reparto equitativo de roles en un equipo es:", options: ["Aprovechar y valorar las fortalezas individuales de cada integrante", "Que una sola persona asuma todo el trabajo gráfico y de represenación como los planos", "Evitar reunirse durante el desarrollo del proyecto"], correct: 0 },
+                { q: "¿Qué actitud postural se recomienda durante la divulgación oral de la solución?", options: ["Una postura corporal erguida mirando a la audiencia", "Permanecer de espaldas al público", "Apoyarse sobre la mesa con los brazos cruzados porque así se transmite traquilidad"], correct: 0 },
+                { q: "El uso de símbolos normalizados en los planos permite:", options: ["Transmitir la idea técnica de forma gráfica y universal", "Evitar el uso de reglas graduadas", "Ocultar los detalles de montaje para que no puedan ser copiados por otras empresas"], correct: 0 },
+                { q: "El objetivo final de la fase de difusión técnica es:", options: ["Transmitir con claridad las soluciones desarrolladas y defender sus ventajas", "Guardar la memoria en una carpeta sin mostrarla", "Vender el producto al mayor precio posible, lo reportaría mayores beneficios"], correct: 0 }
+            ]
+        };
+
+        let currentActiveQuiz = [];
+
+        function toggleTheory() {
+            const container = document.getElementById('theory-container');
+            container.classList.toggle('active');
+        }
+
+        function loadQuizCategory(categoryKey) {
+            if (isQuizLocked) {
+                alert('El cuestionario test ya ha sido validado y bloqueado.');
+                return;
+            }
+
+            activeCriterionKey = categoryKey;
+            updateCriterionDisplay();
+
+            const container = document.getElementById('quiz-questions-container');
+            const actions = document.getElementById('quiz-actions');
+            document.getElementById('quiz-score-badge').innerText = '';
+
+            const questionsRaw = quizBank[categoryKey];
+            currentActiveQuiz = shuffle(questionsRaw).slice(0, 10);
+
+            container.innerHTML = '';
+            actions.style.display = 'block';
+
+            currentActiveQuiz.forEach((qObj, qIndex) => {
+                const optionsIndexed = qObj.options.map((optText, origIdx) => ({ text: optText, isCorrect: origIdx === qObj.correct }));
+                const shuffledOptions = shuffle(optionsIndexed);
+
+                const card = document.createElement('div');
+                card.className = 'question-card';
+                card.id = `quiz-qcard-${qIndex}`;
+
+                let optionsHTML = '';
+                shuffledOptions.forEach((opt) => {
+                    optionsHTML += `
+                        <li>
+                            <label>
+                                <input type="radio" name="quiz-ans-${qIndex}" value="${opt.isCorrect ? '1' : '0'}" data-text="${opt.text}">
+                                ${opt.text}
+                            </label>
+                        </li>
+                    `;
+                });
+
+                card.innerHTML = `
+                    <div class="question-title">${qIndex + 1}. ${qObj.q}</div>
+                    <ul class="options-list">
+                        ${optionsHTML}
+                    </ul>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function evaluateQuiz() {
+            if (isQuizLocked) return;
+
+            let correctCount = 0;
+            currentActiveQuiz.forEach((qObj, qIndex) => {
+                const selected = document.querySelector(`input[name="quiz-ans-${qIndex}"]:checked`);
+
+                if (selected && selected.value === '1') {
+                    correctCount++;
+                }
+
+                // Deshabilitar las opciones de esta pregunta sin añadir clases visuales ni marcas de error/acierto
+                const radios = document.querySelectorAll(`input[name="quiz-ans-${qIndex}"]`);
+                radios.forEach(r => r.disabled = true);
+            });
+
+            testScorePct = Math.round((correctCount / currentActiveQuiz.length) * 100);
+            
+            // BLOQUEO DEFINITIVO TRAS VALIDAR
+            isQuizLocked = true;
+            document.getElementById('btn-evaluate-quiz').disabled = true;
+            document.getElementById('btn-quiz-productos').disabled = true;
+            document.getElementById('btn-quiz-fabricacion').disabled = true;
+            document.getElementById('btn-quiz-difusion').disabled = true;
+
+            const scoreBadge = document.getElementById('quiz-score-badge');
+            scoreBadge.innerText = `Cuestionario Validado: ${correctCount} / 10 aciertos (${testScorePct}%) - Test Bloqueado`;
+            scoreBadge.style.color = 'var(--primary)';
+
+            calculateResults();
+        }
+
+        setupGrid('svg-prisma', 1000, 700);
+        setupGrid('svg-bolsillo', 1000, 600);
+        initTables();
+    </script>
+</body>
+</html>
