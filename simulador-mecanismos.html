@@ -938,62 +938,62 @@
     const rawQuestions = [
       {
         q: "¿Cómo se define formalmente un mecanismo?",
-        a: "Un mecanismo es un conjunto de elementos rígidos y móviles unidos entre sí, cuyo propósito es recibir energía a la entrada y transformarla o transmitirla para realizar un trabajo a la salida.",
-        b: "Es un circuito electrónico cerrado diseñado para disipar calor mediante la regulación del voltaje continuo.",
+        a: "Un mecanismo es un conjunto de elementos, cuyo propósito es recibir energía a la entrada y transformarla o transmitirla para realizar un trabajo a la salida.",
+        b: "Es un circuito electrónico cerrado diseñado para disipar calor mediante la regulación del voltaje continuo y un amperaje variable dependiendo de la temperatura.",
         c: "Es una estructura fija inamovible compuesta de materiales sintéticos aislantes."
       },
       {
         q: "¿Qué principio cumplen las máquinas simples?",
-        a: "Cumplen el principio de conservación de la energía, donde el trabajo de entrada equivale al trabajo de salida (sin fricción).",
-        b: "Aumentan la energía total del sistema multiplicando la potencia por diez.",
+        a: "Cumplen el principio de conservación de la energía, donde el trabajo de entrada equivale al trabajo de salida.",
+        b: "Aumentan la energía total del sistema multiplicando la potencia por diez siempre que la temperatura se pueda disipar.",
         c: "Transforman energía eléctrica en radiación electromagnética de alta frecuencia."
       },
       {
         q: "¿En qué consiste una palanca de 1º género?",
-        a: "El punto de apoyo (fulcro) se encuentra situado entre la fuerza aplicada (potencia) y la resistencia.",
+        a: "El punto de apoyo se encuentra situado entre la fuerza aplicada y la resistencia.",
         b: "La resistencia se sitúa entre el punto de apoyo y la potencia.",
         c: "La potencia se sitúa entre el fulcro y la resistencia."
       },
       {
         q: "¿Qué caracteriza a una palanca de 2º género?",
-        a: "La Resistencia se encuentra en el centro, entre el punto de apoyo y la Potencia (ej. Carretilla).",
+        a: "La Resistencia se encuentra en el centro, entre el punto de apoyo y la Potencia.",
         b: "El punto de apoyo está en un extremo y la Potencia en el centro.",
         c: "La Potencia siempre es menor que la distancia al fulcro."
       },
       {
         q: "¿Qué caracteriza a una palanca de 3º género?",
-        a: "La Potencia se aplica en el centro, entre el fulcro y la Resistencia (ej. Pinzas de depilar).",
+        a: "La Potencia se aplica en el centro, entre el fulcro y la Resistencia.",
         b: "El fulcro está siempre situado justo en el centro exacto.",
         c: "Permite reducir la fuerza aplicada a la mitad de forma automática."
       },
       {
         q: "¿Qué función realiza una polea fija?",
         a: "Solo cambia la dirección de la fuerza, no proporciona ventaja mecánica.",
-        b: "Reduce a la mitad la fuerza necesaria para levantar la carga.",
+        b: "Reduce a la mitad la fuerza necesaria para levantar la carga, peso o resistencia.",
         c: "Multiplica por cuatro la velocidad lineal del cable."
       },
       {
         q: "¿Qué ventaja ofrece el uso de un polipasto o poleas móviles?",
         a: "Reduce la fuerza necesaria para elevar una carga proporcionalmente al número de poleas móviles.",
-        b: "Aumenta el peso de la estructura para dar estabilidad.",
+        b: "Aumenta el peso de la estructura para dar estabilidad y rigidez cuando se tiene que levantar pesos grandes.",
         c: "Invierte el sentido de rotación del motor eléctrico continuamente."
       },
       {
         q: "¿Cuál es la principal ventaja de la transmisión por engranajes frente a las correas?",
         a: "Transmiten el movimiento circular de forma exacta sin deslizamiento entre los dientes.",
-        b: "Son mucho más silenciosos y no requieren lubricación previa.",
+        b: "Son mucho más silenciosos y no requieren lubricación previa siempre que se trabaje con temperaturas pequeñas.",
         c: "Permiten unir ejes separados por varios metros de distancia."
       },
       {
         q: "En una transmisión por correa, si la polea motora es más pequeña que la conducida:",
         a: "Se obtiene un sistema reductor de velocidad y aumentador de par.",
-        b: "La velocidad de salida aumenta significativamente.",
+        b: "La velocidad de salida aumenta significativamente con respecto a la entrada.",
         c: "El sentido de giro del eje conducido se invierte automáticamente."
       },
       {
         q: "¿En qué consiste el sistema de tornillo sin fin y corona?",
         a: "Permite transmitir movimiento entre ejes perpendiculares logrando una altísima reducción de velocidad.",
-        b: "Es un sistema que multiplica la velocidad lineal por mil.",
+        b: "Es un sistema que multiplica la velocidad lineal por mil. que es el número de dientes que suele tener la corona",
         c: "Está formado por dos ruedas de goma lisa que giran a la misma velocidad."
       },
       {
@@ -1005,14 +1005,14 @@
       {
         q: "¿Cómo interactúan la leva y el seguidor?",
         a: "La leva gira y su perfil empuja a una varilla (seguidor) logrando un movimiento lineal específico.",
-        b: "El seguidor gira a gran velocidad haciendo oscilar a la leva fija.",
+        b: "El seguidor gira a gran velocidad haciendo oscilar a la leva fija el movimiento rectilíneos alternativos.",
         c: "Es un sistema magnético sin contacto mecánico directo."
       },
       {
         q: "¿Qué función cumple el mecanismo de piñón y cremallera?",
         a: "Convierte el movimiento de rotación del piñón en un desplazamiento lineal de la cremallera.",
         b: "Transforma la presión hidráulica en un giro angular de 90 grados.",
-        c: "Permite conectar ejes paralelos muy alejados."
+        c: "Permite conectar ejes paralelos muy alejados por sus extremos con conexiones de pernos o pasadores."
       },
       {
         q: "¿Cuál es la utilidad de una junta cardán?",
@@ -1022,14 +1022,14 @@
       },
       {
         q: "¿Cómo se calcula la relación de transmisión (i) en engranajes?",
-        a: "i = Z1 / Z2 (Dientes del engranaje motriz entre dientes del conducido).",
+        a: "i = Z1 / Z2.",
         b: "i = Z2 · Z1 / 100.",
         c: "i = Fuerza de entrada dividida por la velocidad inicial."
       },
       {
         q: "Un tren de engranajes se utiliza principalmente para:",
         a: "Conseguir grandes relaciones de transmisión o ajustar el sentido de giro de los ejes.",
-        b: "Aumentar el rozamiento y frenar suavemente las máquinas.",
+        b: "Aumentar el rozamiento y frenar suavemente las máquinas evitando el rozamiento y el uso de mucha lubricación.",
         c: "Evitar el uso de aceite o lubricantes sintéticos."
       },
       {
@@ -1040,14 +1040,14 @@
       },
       {
         q: "¿Cómo se previene el desgaste prematuro por rozamiento?",
-        a: "Mediante el uso de rodamientos y lubricación (aceites o grasas).",
+        a: "Mediante el uso de rodamientos y lubricación.",
         b: "Aplicando agua helada continuamente sobre los dientes.",
         c: "Aumentando la presión de contacto entre las ruedas."
       },
       {
         q: "Si dos engranajes están directamente acoplados, sus sentidos de giro son:",
         a: "Opuestos (uno gira en sentido horario y el otro antihorario).",
-        b: "Exactamente iguales en todo momento.",
+        b: "Exactamente iguales en todo momento (girando los dos en el sentido horario).",
         c: "Perpendiculares a la base del motor."
       },
       {

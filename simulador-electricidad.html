@@ -39,7 +39,7 @@
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Curso y Grupo</label>
-          <input type="text" id="modalStudentGroup" value="4º ESO - Grupo A/B" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+          <input type="text" id="modalStudentGroup" value="Grupo" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
         </div>
         <button type="submit" class="w-full py-3 bg-sky-600 hover:bg-sky-500 text-white font-bold text-sm rounded-lg shadow-lg transition">
           Comenzar Cuaderno Técnico
@@ -67,10 +67,6 @@
         <div class="flex justify-between"><span>Cálculos Magnitudes (30%):</span> <strong id="modalCalcScore">0.0 / 10</strong></div>
         <div class="flex justify-between"><span>Test Teórico (40%):</span> <strong id="modalTestScore">0.0 / 10</strong></div>
       </div>
-
-      <button onclick="closeFinalModal()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm rounded-xl transition">
-        Cerrar y Ver Resultados
-      </button>
     </div>
   </div>
 
@@ -142,7 +138,7 @@
           </button>
           <button id="btnValidateCanvas" onclick="validateCanvasCircuit()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-md transition flex items-center gap-1">
             <span>Validar Esquemas</span>
-            <span class="text-[10px] bg-emerald-800 px-1.5 py-0.5 rounded-full" id="validateCanvasClicksLeft">3</span>
+            <span class="text-[10px] bg-emerald-800 px-1.5 py-0.5 rounded-full" id="validateCanvasClicksLeft">1</span>
           </button>
           <button onclick="clearCurrentCanvas()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs rounded-md transition">
             Limpiar Pestaña Actual
@@ -206,7 +202,7 @@
           <span id="calcScoreBadge" class="px-3 py-1 bg-slate-800 border border-slate-700 text-sky-400 text-xs font-bold rounded-full">Nota: -- / 10</span>
           <button id="btnValidateCalc" onclick="validateCalcQuestions()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-md transition no-print flex items-center gap-1">
             <span>Validar Cálculos</span>
-            <span class="text-[10px] bg-emerald-800 px-1.5 py-0.5 rounded-full" id="validateCalcClicksLeft">3</span>
+            <span class="text-[10px] bg-emerald-800 px-1.5 py-0.5 rounded-full" id="validateCalcClicksLeft">1</span>
           </button>
         </div>
       </div>
@@ -230,7 +226,7 @@
           </button>
           <button id="btnValidateTest" onclick="checkTestAnswers()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-md transition flex items-center gap-1">
             <span>Comprobar Aciertos</span>
-            <span class="text-[10px] bg-emerald-800 px-1.5 py-0.5 rounded-full" id="validateTestClicksLeft">3</span>
+            <span class="text-[10px] bg-emerald-800 px-1.5 py-0.5 rounded-full" id="validateTestClicksLeft">1</span>
           </button>
         </div>
       </div>
@@ -390,9 +386,9 @@
     };
 
     /* CONTROL DE BOTONES Y USOS */
-    let canvasClicksLeft = 3;
-    let calcClicksLeft = 3;
-    let testClicksLeft = 3;
+    let canvasClicksLeft = 1;
+    let calcClicksLeft = 1;
+    let testClicksLeft = 1;
     let finalBtnClicksLeft = 1;
 
     /* ESTADO DEL CANVAS DIVIDIDO EN DOS CIRCUITOS/PESTAÑAS */
@@ -659,7 +655,7 @@
     /* VALIDACIÓN EVALUADA DE AMBOS LIENZOS SEPARADOS */
     function validateCanvasCircuit() {
       if (canvasClicksLeft <= 0) {
-        alert("Has agotado las 3 opciones de validación del esquema.");
+        alert("Has agotado tu única opción de validación del esquema.");
         return;
       }
       canvasClicksLeft--;
@@ -900,7 +896,7 @@
 
     function validateCalcQuestions() {
       if (calcClicksLeft <= 0) {
-        alert("Has agotado las 3 opciones de validación para los cálculos.");
+        alert("Has agotado tu única opción de validación para los cálculos.");
         return;
       }
       calcClicksLeft--;
@@ -1161,7 +1157,7 @@
 
     function checkTestAnswers() {
       if (testClicksLeft <= 0) {
-        alert("Has agotado las 3 opciones de comprobación para el examen teórico.");
+        alert("Has agotado tu única opción de comprobación para el examen teórico.");
         return;
       }
       testClicksLeft--;
@@ -1247,10 +1243,6 @@
       }
 
       document.getElementById('finalScoreModal').classList.remove('hidden');
-    }
-
-    function closeFinalModal() {
-      document.getElementById('finalScoreModal').classList.add('hidden');
     }
 
     /* Initialize everything on DOM load */
