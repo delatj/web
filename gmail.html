@@ -2,435 +2,242 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simulador de Correo Escolar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Simulador de Correo</title>
+  <!-- Servicio de envío EmailJS -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <style>
+    :root {
+      --primary: #4a90e2;
+      --bg: #f0f4f8;
+      --text: #2d3748;
+    }
+
     * {
       box-sizing: border-box;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Comic Sans MS', 'Chalkboard SE', 'Segoe UI', sans-serif;
+      user-select: none;
     }
 
     body {
       margin: 0;
-      background-color: #f6f8fc;
-      color: #1f1f1f;
-    }
-
-    /* Pantalla de Login */
-    #login-screen {
+      padding: 15px;
+      background-color: var(--bg);
+      color: var(--text);
       display: flex;
-      flex-direction: column;
-      align-items: center;
       justify-content: center;
-      height: 100vh;
-      background: #ffffff;
+      align-items: center;
+      min-height: 100vh;
     }
 
-    .login-card {
-      border: 2px solid #e0e0e0;
-      padding: 30px;
-      border-radius: 16px;
-      text-align: center;
-      max-width: 400px;
-      width: 90%;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    }
-
-    .login-card h2 {
-      color: #ea4335;
-      font-size: 26px;
-      margin-bottom: 20px;
-    }
-
-    select, input, button {
+    .container {
+      background: white;
       width: 100%;
-      padding: 14px;
-      margin: 10px 0;
-      font-size: 18px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
-
-    button.btn-main {
-      background-color: #1a73e8;
-      color: white;
-      font-weight: bold;
-      border: none;
-      cursor: pointer;
-    }
-
-    button.btn-main:hover {
-      background-color: #1557b0;
-    }
-
-    /* Interfaz Principal */
-    #app-screen {
-      display: none;
-      height: 100vh;
-      flex-direction: column;
+      max-width: 500px;
+      padding: 25px;
+      border-radius: 20px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
     }
 
     header {
-      background: #ffffff;
-      padding: 12px 24px;
-      border-bottom: 1px solid #e0e0e0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .logo {
-      font-size: 22px;
-      font-weight: bold;
-      color: #ea4335;
-    }
-
-    .user-info {
-      font-size: 16px;
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .btn-logout {
-      background: #f1f3f4;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 20px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    .main-container {
-      display: flex;
-      flex: 1;
-      overflow: hidden;
-    }
-
-    /* Barra lateral */
-    sidebar {
-      width: 240px;
-      background: #ffffff;
-      padding: 16px;
-      border-right: 1px solid #e0e0e0;
-    }
-
-    .btn-compose {
-      background-color: #c2e7ff;
-      color: #001d35;
-      padding: 16px 24px;
-      border-radius: 16px;
-      font-weight: bold;
-      font-size: 18px;
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      text-align: center;
+      background: var(--primary);
+      color: white;
+      padding: 15px;
+      border-radius: 15px;
       margin-bottom: 20px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 6px;
+      font-size: 1.1rem;
+    }
+
+    input, select, textarea {
       width: 100%;
-    }
-
-    /* Lista de correos */
-    .content-area {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
-    }
-
-    .mail-item {
-      background: white;
-      padding: 16px;
+      padding: 12px;
+      font-size: 1.1rem;
+      border: 2px solid #cbd5e0;
       border-radius: 12px;
-      border: 1px solid #e0e0e0;
-      margin-bottom: 10px;
+      outline: none;
     }
 
-    .mail-sender {
-      font-weight: bold;
-      font-size: 16px;
-      color: #1a73e8;
-    }
-
-    .mail-subject {
-      font-size: 18px;
-      font-weight: 600;
-      margin: 4px 0;
-    }
-
-    .mail-body {
-      color: #5f6368;
-      font-size: 15px;
-    }
-
-    /* Modal Redactar */
-    .modal {
-      display: none;
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 420px;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-      border: 1px solid #ccc;
-      z-index: 100;
-    }
-
-    .modal-header {
-      background: #f2f6fc;
-      padding: 12px 16px;
-      border-radius: 12px 12px 0 0;
-      font-weight: bold;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .modal-body {
-      padding: 16px;
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
     }
 
     textarea {
-      width: 100%;
-      height: 120px;
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
       resize: none;
+      height: 100px;
     }
 
-    .close-btn {
+    .emoji-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 15px;
+      overflow-x: auto;
+    }
+
+    .emoji-btn {
+      font-size: 1.5rem;
+      background: #edf2f7;
+      border: none;
+      border-radius: 10px;
+      padding: 6px 12px;
       cursor: pointer;
+    }
+
+    .btn-send {
+      width: 100%;
+      background: #2ed573;
+      color: white;
+      font-size: 1.3rem;
       font-weight: bold;
+      border: none;
+      border-radius: 12px;
+      padding: 15px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(46, 213, 115, 0.3);
+    }
+
+    .btn-send:active {
+      transform: scale(0.98);
     }
   </style>
 </head>
 <body>
 
-  <!-- PANTALLA DE INICIO DE SESIÓN -->
-  <div id="login-screen">
-    <div class="login-card">
-      <h2>✉️ Correo Escolar</h2>
-      <p style="font-size: 16px; color: #666;">Selecciona tu usuario e introduce la clave:</p>
-      
-      <select id="user-select">
-        <option value="">-- ¿Quién eres? --</option>
-        <option value="lucia@escuela.com">Lucía</option>
-        <option value="maria@escuela.com">María</option>
-        <option value="pablo@escuela.com">Pablo</option>
-        <option value="profesor@escuela.com">Profe</option>
-      </select>
-
-      <input type="password" id="password-input" placeholder="Contraseña (1234)">
-      
-      <button class="btn-main" onclick="login()">Entrar al Correo</button>
-      <p id="error-msg" style="color: red; display: none; margin-top: 10px;">Contraseña incorrecta</p>
-    </div>
-  </div>
-
-  <!-- PANTALLA PRINCIPAL DEL CORREO -->
-  <div id="app-screen">
+  <div class="container">
     <header>
-      <div class="logo">✉️ Mi Correo Escolar</div>
-      <div class="user-info">
-        <span id="current-user-display"></span>
-        <button class="btn-logout" onclick="logout()">Salir 🚪</button>
-      </div>
+      <h1>📧 Correo de Clase</h1>
     </header>
 
-    <div class="main-container">
-      <sidebar>
-        <button class="btn-compose" onclick="openModal()">✏️ Redactar</button>
-        <div style="font-size: 16px; font-weight: bold; color: #1a73e8; padding: 10px;">
-          📥 Entrada <span style="font-size: 12px; color: green;">● En línea</span>
-        </div>
-      </sidebar>
-
-      <div class="content-area" id="inbox-list">
-        <p style="color: #777;">Cargando mensajes...</p>
-      </div>
+    <!-- Quién envía -->
+    <div class="form-group">
+      <label for="student">¿Quién eres?</label>
+      <select id="student">
+        <option value="">-- Selecciona tu nombre --</option>
+        <option value="Alba">Alba</option>
+        <option value="Rocio">Rocio</option>
+        <option value="Aitana">Aitana</option>
+        <option value="Marta">Marta</option>
+      </select>
     </div>
-  </div>
 
-  <!-- MODAL DE REDACCIÓN -->
-  <div class="modal" id="compose-modal">
-    <div class="modal-header">
-      <span>Nuevo Mensaje</span>
-      <span class="close-btn" onclick="closeModal()">✖</span>
+    <!-- Código de la alumna -->
+    <div class="form-group">
+      <label for="passcode">Tu código secreto:</label>
+      <input type="number" id="passcode" placeholder="Escribe tu número" autocomplete="off">
     </div>
-    <div class="modal-body">
-      <label for="recipient-select" style="font-size: 14px; font-weight: bold;">Para:</label>
-      <select id="recipient-select"></select>
 
-      <input type="text" id="email-subject" placeholder="Asunto (Ejemplo: Hola)">
-      <textarea id="email-body" placeholder="Escribe tu mensaje aquí..."></textarea>
-      
-      <button class="btn-main" id="btn-send" onclick="sendEmail()">Enviar 🚀</button>
+    <!-- Destinatario fijo (solo lectura) -->
+    <div class="form-group">
+      <label>Para:</label>
+      <input type="text" value="etorjap986@g.educaand.es" disabled style="background: #e2e8f0; font-weight: bold;">
     </div>
+
+    <!-- Asunto -->
+    <div class="form-group">
+      <label for="subject">Asunto:</label>
+      <input type="text" id="subject" placeholder="Ej: Hola profe, Mi dibujo..." autocomplete="off">
+    </div>
+
+    <!-- Mensaje -->
+    <div class="form-group">
+      <label for="message">Mensaje:</label>
+      <textarea id="message" placeholder="Escribe aquí tu mensaje..."></textarea>
+    </div>
+
+    <!-- Emojis rápidos -->
+    <div class="emoji-bar">
+      <button class="emoji-btn" onclick="addEmoji('😀')">😀</button>
+      <button class="emoji-btn" onclick="addEmoji('👍')">👍</button>
+      <button class="emoji-btn" onclick="addEmoji('❤️')">❤️</button>
+      <button class="emoji-btn" onclick="addEmoji('⭐')">⭐</button>
+      <button class="emoji-btn" onclick="addEmoji('🎉')">🎉</button>
+      <button class="emoji-btn" onclick="addEmoji('👋')">👋</button>
+    </div>
+
+    <button class="btn-send" onclick="enviarCorreo()">Enviar Mensaje 🚀</button>
   </div>
 
   <script>
-    const USERS = [
-      { name: "Lucía", email: "lucia@escuela.com", pass: "1234" },
-      { name: "María", email: "maria@escuela.com", pass: "1234" },
-      { name: "Pablo", email: "pablo@escuela.com", pass: "1234" },
-      { name: "Profe", email: "profesor@escuela.com", pass: "1234" }
-    ];
+    // Configuración de las alumnas y sus códigos
+    const credenciales = {
+      "Alba": "1",
+      "Rocio": "2",
+      "Aitana": "3",
+      "Marta": "4"
+    };
 
-    // Endpoint directo para lectura y escritura compartida
-    const BIN_ID = "66f7f2b1e4104c34e1903e11"; 
-    const API_URL = `https://api.jsonbin.io/v3/b/66f7f2b1e4104c34e1903e11`;
-    const API_KEY = "$2a$10$Q1zX4QGfX4gM7S7S4E5Z.u5G8W3d8q2O9Z5E0E4D5C6B7A8";
+    // 🔴 REEMPLAZA ESTE VALOR CON TU PUBLIC KEY DE EMAILJS
+    const PUBLIC_KEY_EMAILJS = "TU_PUBLIC_KEY";
 
-    let currentUser = null;
-    let pollInterval = null;
-
-    function login() {
-      const selectedEmail = document.getElementById('user-select').value;
-      const inputPass = document.getElementById('password-input').value;
-      const errorMsg = document.getElementById('error-msg');
-
-      const user = USERS.find(u => u.email === selectedEmail && u.pass === inputPass);
-
-      if (user) {
-        currentUser = user;
-        errorMsg.style.display = 'none';
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('app-screen').style.display = 'flex';
-        document.getElementById('current-user-display').innerText = `👤 ${user.name}`;
-        
-        setupRecipientOptions();
-        loadInbox();
-        
-        // Comprobar mensajes automáticamente cada 3 segundos
-        pollInterval = setInterval(loadInbox, 3000);
-      } else {
-        errorMsg.style.display = 'block';
-      }
+    if (typeof emailjs !== "undefined") {
+      emailjs.init(PUBLIC_KEY_EMAILJS);
     }
 
-    function logout() {
-      currentUser = null;
-      if (pollInterval) clearInterval(pollInterval);
-      document.getElementById('password-input').value = '';
-      document.getElementById('app-screen').style.display = 'none';
-      document.getElementById('login-screen').style.display = 'flex';
+    function addEmoji(emoji) {
+      const msgArea = document.getElementById('message');
+      msgArea.value += emoji;
+      msgArea.focus();
     }
 
-    async function fetchEmails() {
-      try {
-        const res = await fetch(`${API_URL}/latest`, {
-          headers: { 'X-Master-Key': API_KEY }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          return data.record || [];
-        }
-      } catch (e) {
-        console.error("Error al obtener mensajes:", e);
-      }
-      return [];
-    }
+    function enviarCorreo() {
+      const alumna = document.getElementById('student').value;
+      const codigo = document.getElementById('passcode').value.trim();
+      const asunto = document.getElementById('subject').value.trim() || "(Sin asunto)";
+      const texto = document.getElementById('message').value.trim();
 
-    async function loadInbox() {
-      const emails = await fetchEmails();
-      const inboxList = document.getElementById('inbox-list');
-
-      const myEmails = emails.filter(e => e.to === currentUser.email);
-
-      if (myEmails.length === 0) {
-        inboxList.innerHTML = '<p style="color: #777; font-size: 18px;">No tienes mensajes en tu bandeja de entrada.</p>';
+      // Validación 1: Selección de alumna
+      if (!alumna) {
+        alert("⚠️ Por favor, selecciona tu nombre.");
         return;
       }
 
-      inboxList.innerHTML = myEmails.slice().reverse().map(email => `
-        <div class="mail-item">
-          <div class="mail-sender">De: ${email.fromName} (${email.from})</div>
-          <div class="mail-subject">${escapeHtml(email.subject)}</div>
-          <div class="mail-body">${escapeHtml(email.body)}</div>
-        </div>
-      `).join('');
-    }
-
-    function setupRecipientOptions() {
-      const select = document.getElementById('recipient-select');
-      select.innerHTML = USERS
-        .filter(u => u.email !== currentUser.email)
-        .map(u => `<option value="${u.email}">${u.name}</option>`)
-        .join('');
-    }
-
-    function openModal() {
-      document.getElementById('compose-modal').style.display = 'block';
-    }
-
-    function closeModal() {
-      document.getElementById('compose-modal').style.display = 'none';
-      document.getElementById('email-subject').value = '';
-      document.getElementById('email-body').value = '';
-    }
-
-    async function sendEmail() {
-      const recipientEmail = document.getElementById('recipient-select').value;
-      const subject = document.getElementById('email-subject').value || '(Sin asunto)';
-      const body = document.getElementById('email-body').value;
-      const btnSend = document.getElementById('btn-send');
-
-      if (!body.trim()) {
-        alert("Escribe un mensaje antes de enviar.");
+      // Validación 2: Código numérico correcto
+      if (credenciales[alumna] !== codigo) {
+        alert("❌ El código secreto no es correcto. ¡Revisa tu número!");
         return;
       }
 
-      btnSend.disabled = true;
-      btnSend.innerText = "Enviando...";
-
-      try {
-        // 1. Leer mensajes existentes
-        const emails = await fetchEmails();
-
-        // 2. Crear nuevo mensaje
-        const newEmail = {
-          id: Date.now(),
-          from: currentUser.email,
-          fromName: currentUser.name,
-          to: recipientEmail,
-          subject: subject,
-          body: body
-        };
-
-        emails.push(newEmail);
-
-        // 3. Guardar la lista actualizada
-        const res = await fetch(API_URL, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Master-Key': API_KEY
-          },
-          body: JSON.stringify(emails)
-        });
-
-        if (res.ok) {
-          alert("¡Correo enviado con éxito! 🚀");
-          closeModal();
-          loadInbox();
-        } else {
-          alert("No se pudo guardar el correo. Revisa la conexión.");
-        }
-      } catch (err) {
-        alert("Error de conexión al enviar.");
-      } finally {
-        btnSend.disabled = false;
-        btnSend.innerText = "Enviar 🚀";
+      // Validación 3: Texto del mensaje
+      if (!texto) {
+        alert("⚠️ Escribe un mensaje antes de enviar.");
+        return;
       }
-    }
 
-    function escapeHtml(str) {
-      return str.replace(/[&<>"']/g, function(m) {
-        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
-      });
+      // Parámetros que se envían por correo a tu dirección de Educaand
+      const templateParams = {
+        to_email: "etorjap986@g.educaand.es",
+        from_name: alumna,
+        subject: asunto,
+        message: texto
+      };
+
+      // Envío del correo
+      // 🔴 REEMPLAZA "TU_SERVICE_ID" Y "TU_TEMPLATE_ID" POR LOS TUYOS
+      emailjs.send("TU_SERVICE_ID", "TU_TEMPLATE_ID", templateParams)
+        .then(function() {
+          alert("¡Genial! 🚀 Tu mensaje ha sido enviado al profesor.");
+          document.getElementById('subject').value = '';
+          document.getElementById('message').value = '';
+          document.getElementById('passcode').value = '';
+        }, function(error) {
+          alert("Error al enviar el mensaje. Inténtalo de nuevo.");
+          console.error("EmailJS Error:", error);
+        });
     }
   </script>
 </body>
