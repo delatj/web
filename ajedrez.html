@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- saved from url=(0041)https://delatj.github.io/web/ajedrez.html -->
 <html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     
     <title>Ajedrez Pro - Mate, Enroque y Máquina Inteligente</title>
@@ -10,7 +11,7 @@
             --legal: rgba(46, 204, 113, 0.4);
             --danger: #e74c3c;
         }
-        body { background: var(--dark); color: white; margin: 0; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+        body { background: var(--dark); color: white; margin: 0; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; overflow: hidden; transition: background 0.3s ease; }
         .sidebar { width: 350px; background: var(--panel); padding: 20px; display: flex; flex-direction: column; box-shadow: 4px 0 10px rgba(0,0,0,0.5); z-index: 100; }
         .score-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center; }
         .score-row { display: flex; justify-content: space-between; font-size: 1.2rem; margin: 5px 0; }
@@ -19,7 +20,7 @@
         .white-turn { background: #fff; color: #333; }
         .black-turn { background: #333; color: #fff; border: 2px solid #000; }
         #check-status { background: var(--danger); color: white; text-align: center; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 20px; display: none; }
-        #game-container { flex-grow: 1; display: flex; justify-content: center; align-items: center; background: #333; }
+        #game-container { flex-grow: 1; display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.2); }
         #board { display: grid; grid-template-columns: repeat(8, 75px); grid-template-rows: repeat(8, 75px); border: 10px solid #222; }
         .sq { width: 75px; height: 75px; display: flex; align-items: center; justify-content: center; font-size: 50px; cursor: pointer; position: relative; user-select: none; }
         .white-sq { background: var(--light-sq); }
@@ -41,6 +42,20 @@
         .mb-dot { width: 6px; height: 6px; background: #2ecc71; border-radius: 50%; position: absolute; }
         .mb-cap { width: 6px; height: 6px; background: #e74c3c; border-radius: 50%; position: absolute; }
         .rule-row { display: flex; align-items: center; gap: 15px; margin: 12px 0; background: #f8f9fa; padding: 10px; border-radius: 8px; border-left: 4px solid #3498db; }
+        
+        .reward-msg {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #e74c3c;
+            margin: 15px 0;
+            text-transform: uppercase;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
     </style>
 </head>
 <body>
@@ -93,32 +108,32 @@
             <span style="font-size:0.8rem; color:#7f8c8d; display:block; margin-bottom:10px;"> Leyenda: Puntos Verdes (Movimiento) | Puntos Rojos (Captura disponible)</span>
 
             <div class="rule-row">
-                <div class="mini-board" data-piece="p"></div>
+                <div class="mini-board" data-piece="p"><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"><div class="mb-dot"></div></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"><div class="mb-cap"></div></div><div class="mb-sq mb-w"><div class="mb-dot"></div></div><div class="mb-sq mb-b"><div class="mb-cap"></div></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b" style="color: rgb(0, 0, 0); font-weight: bold;">♙</div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"></div></div>
                 <div><strong>Peón:</strong> Avanza 1 casilla adelante (o 2 en su primer movimiento). Captura únicamente en las diagonales frontales inmediatas.</div>
             </div>
 
             <div class="rule-row">
-                <div class="mini-board" data-piece="r"></div>
+                <div class="mini-board" data-piece="r"><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"><div class="mb-dot"></div></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"><div class="mb-dot"></div></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"><div class="mb-dot"></div></div><div class="mb-sq mb-b"><div class="mb-dot"></div></div><div class="mb-sq mb-w" style="color: rgb(0, 0, 0); font-weight: bold;">♖</div><div class="mb-sq mb-b"><div class="mb-dot"></div></div><div class="mb-sq mb-w"><div class="mb-dot"></div></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"><div class="mb-dot"></div></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"><div class="mb-dot"></div></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"></div></div>
                 <div><strong>Torre:</strong> Se desplaza de forma ilimitada en líneas rectas de manera horizontal o vertical.</div>
             </div>
 
             <div class="rule-row">
-                <div class="mini-board" data-piece="n"></div>
+                <div class="mini-board" data-piece="n"><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"><div class="mb-dot"></div></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"><div class="mb-dot"></div></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"><div class="mb-dot"></div></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"><div class="mb-dot"></div></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w" style="color: rgb(0, 0, 0); font-weight: bold;">♘</div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"><div class="mb-dot"></div></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"><div class="mb-dot"></div></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"><div class="mb-dot"></div></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"><div class="mb-dot"></div></div><div class="mb-sq mb-w"></div></div>
                 <div><strong>Caballo:</strong> Se mueve en forma de "L" (2 casillas en un eje y 1 en el perpendicular). Es la única pieza capaz de saltar a otras.</div>
             </div>
 
             <div class="rule-row">
-                <div class="mini-board" data-piece="b"></div>
+                <div class="mini-board" data-piece="b"><div class="mb-sq mb-w"><div class="mb-dot"></div></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"><div class="mb-dot"></div></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"><div class="mb-dot"></div></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"><div class="mb-dot"></div></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w" style="color: rgb(0, 0, 0); font-weight: bold;">♗</div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"><div class="mb-dot"></div></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"><div class="mb-dot"></div></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"><div class="mb-dot"></div></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"><div class="mb-dot"></div></div></div>
                 <div><strong>Alfil:</strong> Se desplaza todas las casillas libres que desee, pero únicamente en direcciones diagonales.</div>
             </div>
 
             <div class="rule-row">
-                <div class="mini-board" data-piece="q"></div>
+                <div class="mini-board" data-piece="q"><div class="mb-sq mb-w"><div class="mb-dot"></div></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"><div class="mb-dot"></div></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"><div class="mb-dot"></div></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"><div class="mb-dot"></div></div><div class="mb-sq mb-b"><div class="mb-dot"></div></div><div class="mb-sq mb-w"><div class="mb-dot"></div></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"><div class="mb-dot"></div></div><div class="mb-sq mb-b"><div class="mb-dot"></div></div><div class="mb-sq mb-w" style="color: rgb(0, 0, 0); font-weight: bold;">♕</div><div class="mb-sq mb-b"><div class="mb-dot"></div></div><div class="mb-sq mb-w"><div class="mb-dot"></div></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"><div class="mb-dot"></div></div><div class="mb-sq mb-b"><div class="mb-dot"></div></div><div class="mb-sq mb-w"><div class="mb-dot"></div></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"><div class="mb-dot"></div></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"><div class="mb-dot"></div></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"><div class="mb-dot"></div></div></div>
                 <div><strong>Dama (Reina):</strong> La pieza más poderosa. Combina libremente los movimientos lineales de la Torre y los diagonales del Alfil.</div>
             </div>
 
             <div class="rule-row">
-                <div class="mini-board" data-piece="k"></div>
+                <div class="mini-board" data-piece="k"><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"><div class="mb-dot"></div></div><div class="mb-sq mb-b"><div class="mb-dot"></div></div><div class="mb-sq mb-w"><div class="mb-dot"></div></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"><div class="mb-dot"></div></div><div class="mb-sq mb-w" style="color: rgb(0, 0, 0); font-weight: bold;">♔</div><div class="mb-sq mb-b"><div class="mb-dot"></div></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"><div class="mb-dot"></div></div><div class="mb-sq mb-b"><div class="mb-dot"></div></div><div class="mb-sq mb-w"><div class="mb-dot"></div></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"></div><div class="mb-sq mb-b"></div><div class="mb-sq mb-w"></div></div>
                 <div><strong>Rey:</strong> Se desplaza sólo 1 casilla en cualquier dirección (horizontal, vertical o diagonal). Protege tu partida salvándolo del peligro.</div>
             </div>
 
@@ -129,7 +144,7 @@
                 <li><strong>Tablas:</strong> Empate automático si ocurre un Rey Ahogado o si se detecta <strong>Falta de Material suficiente</strong> para forzar un mate.</li>
             </ul>
         </div>
-        <button class="btn-send" style="background:#34495e; margin-top:15px;" onclick="document.getElementById('rules-modal').style.display='none'">CERRAR REGLAS</button>
+        <button class="btn-send" style="background:#34495e; margin-top:15px;" onclick="document.getElementById(&#39;rules-modal&#39;).style.display=&#39;none&#39;">CERRAR REGLAS</button>
     </div>
 </div>
 
@@ -144,7 +159,7 @@
     <div id="difficulty-badge" style="background: rgba(0,0,0,0.2); text-align: center; padding: 10px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; font-size: 0.95rem; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.1); display: none;"></div>
     
     <button class="btn-send" onclick="location.reload()">REINICIAR</button>
-    <button class="btn-send" style="background: #3498db; margin-top: 10px;" onclick="document.getElementById('rules-modal').style.display='flex'">REGLAS DE JUEGO</button>
+    <button class="btn-send" style="background: #3498db; margin-top: 10px;" onclick="document.getElementById(&#39;rules-modal&#39;).style.display=&#39;flex&#39;">REGLAS DE JUEGO</button>
 </div>
 
 <div id="game-container"><div id="board"></div></div>
@@ -437,18 +452,46 @@
             checkStatus.style.display = 'none';
             const winMsg = document.getElementById('win-msg');
             
-            let modoTexto = state.gameMode === 'pve' ? `MODO: JUGADOR VS MÁQUINA (NIVEL ${state.aiDifficulty})` : "MODO: JUGADOR VS JUGADOR";
-            let metaInfo = `<br><span style="font-size:1.1rem; font-weight:normal; color:#555; display:block; margin-top:15px; border-top:1px dashed #ccc; padding-top:10px;">` +
-                           `${modoTexto}<br>` +
-                           `Blancas [${state.names.white}]: ${state.scores.white} pts<br>` +
-                           `Negras [${state.names.black}]: ${state.scores.black} pts</span>`;
+            let extraMsg = '';
 
             if(sinMaterial) {
+                let modoTexto = state.gameMode === 'pve' ? `MODO: JUGADOR VS MÁQUINA (NIVEL ${state.aiDifficulty})` : "MODO: JUGADOR VS JUGADOR";
+                let metaInfo = `<br><span style="font-size:1.1rem; font-weight:normal; color:#555; display:block; margin-top:15px; border-top:1px dashed #ccc; padding-top:10px;">` +
+                               `${modoTexto}<br>` +
+                               `Blancas [${state.names.white}]: ${state.scores.white} pts<br>` +
+                               `Negras [${state.names.black}]: ${state.scores.black} pts</span>`;
                 winMsg.innerHTML = `¡TABLAS POR MATERIAL INSUFICIENTE!${metaInfo}`;
             } else if(inCheck) {
+                const winnerColor = state.turn === 'white' ? 'black' : 'white';
                 const winner = state.turn === 'white' ? state.names.black : state.names.white;
-                winMsg.innerHTML = `¡JAQUE MATE!<br>🏆 GANA ${winner.toUpperCase()}${metaInfo}`;
+
+                // Lógica de recompensas por victoria contra la máquina
+                if (state.gameMode === 'pve' && winnerColor === 'white') {
+                    if (state.aiDifficulty === 1) {
+                        state.scores.white += 10;
+                        document.getElementById('score-w').innerText = state.scores.white;
+                    } else if (state.aiDifficulty === 2) {
+                        extraMsg = `<div class="reward-msg">¡HAS GANADO 100 PUNTOS!</div>`;
+                        document.body.style.background = '#e74c3c';
+                    } else if (state.aiDifficulty === 3) {
+                        extraMsg = `<div class="reward-msg">¡HAS GANADO 200 PUNTOS!</div>`;
+                        document.body.style.background = '#e74c3c';
+                    }
+                }
+
+                let modoTexto = state.gameMode === 'pve' ? `MODO: JUGADOR VS MÁQUINA (NIVEL ${state.aiDifficulty})` : "MODO: JUGADOR VS JUGADOR";
+                let metaInfo = `<br><span style="font-size:1.1rem; font-weight:normal; color:#555; display:block; margin-top:15px; border-top:1px dashed #ccc; padding-top:10px;">` +
+                               `${modoTexto}<br>` +
+                               `Blancas [${state.names.white}]: ${state.scores.white} pts<br>` +
+                               `Negras [${state.names.black}]: ${state.scores.black} pts</span>`;
+
+                winMsg.innerHTML = `¡JAQUE MATE!<br>🏆 GANA ${winner.toUpperCase()}${extraMsg}${metaInfo}`;
             } else {
+                let modoTexto = state.gameMode === 'pve' ? `MODO: JUGADOR VS MÁQUINA (NIVEL ${state.aiDifficulty})` : "MODO: JUGADOR VS JUGADOR";
+                let metaInfo = `<br><span style="font-size:1.1rem; font-weight:normal; color:#555; display:block; margin-top:15px; border-top:1px dashed #ccc; padding-top:10px;">` +
+                               `${modoTexto}<br>` +
+                               `Blancas [${state.names.white}]: ${state.scores.white} pts<br>` +
+                               `Negras [${state.names.black}]: ${state.scores.black} pts</span>`;
                 winMsg.innerHTML = `¡TABLAS POR AHOGADO!${metaInfo}`;
             }
             document.getElementById('status-overlay').style.display = 'flex';
