@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simulador de Correo Escolar Red</title>
+  <title>Simulador de Correo Escolar - Firebase</title>
   <style>
     * {
       box-sizing: border-box;
@@ -233,7 +233,7 @@
   <!-- PANTALLA PRINCIPAL DEL CORREO -->
   <div id="app-screen">
     <header>
-      <div class="logo">✉️ Mi Correo en Red</div>
+      <div class="logo">✉️ Mi Correo Escolar</div>
       <div class="user-info">
         <span id="current-user-display"></span>
         <button class="btn-logout" onclick="logout()">Salir 🚪</button>
@@ -244,12 +244,12 @@
       <sidebar>
         <button class="btn-compose" onclick="openModal()">✏️ Redactar</button>
         <div style="font-size: 16px; font-weight: bold; color: #1a73e8; padding: 10px;">
-          📥 Entrada <span id="status-tag" style="font-size: 12px; color: green;">● En línea</span>
+          📥 Entrada <span style="font-size: 12px; color: green;">● En vivo</span>
         </div>
       </sidebar>
 
       <div class="content-area" id="inbox-list">
-        <p style="color: #777;">Cargando mensajes en tiempo real...</p>
+        <p style="color: #777;">Cargando mensajes...</p>
       </div>
     </div>
   </div>
@@ -262,9 +262,7 @@
     </div>
     <div class="modal-body">
       <label for="recipient-select" style="font-size: 14px; font-weight: bold;">Para:</label>
-      <select id="recipient-select">
-        <!-- Opciones dinámicas -->
-      </select>
+      <select id="recipient-select"></select>
 
       <input type="text" id="email-subject" placeholder="Asunto (Ejemplo: Hola)">
       <textarea id="email-body" placeholder="Escribe tu mensaje aquí..."></textarea>
@@ -273,7 +271,12 @@
     </div>
   </div>
 
+  <!-- Carga de SDK de Firebase en tiempo real sin requerir instalación -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
   <script>
+    // Configuración de usuarios
     const USERS = [
       { name: "Lucía", email: "lucia@escuela.com", pass: "1234" },
       { name: "María", email: "maria@escuela.com", pass: "1234" },
@@ -281,11 +284,15 @@
       { name: "Profe", email: "profesor@escuela.com", pass: "1234" }
     ];
 
-    // Canal público temporal en kvdb.io para conectar múltiples tablets sin API Key
-    const SERVER_URL = "https://kvdb.io/4yC3fJ6uM9mX8Y2qZ7N1wE/aula_correo_messages";
+    // Conexión a la base de datos temporal de Firebase
+    const firebaseConfig = {
+      databaseURL: "https://simulador-correo-aula-default-rtdb.europe-west1.firebasedatabase.app"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
     let currentUser = null;
-    let pollInterval = null;
 
     function login() {
       const selectedEmail = document.getElementById('user-select').value;
@@ -302,10 +309,7 @@
         document.getElementById('current-user-display').innerText = `👤 ${user.name}`;
         
         setupRecipientOptions();
-        loadInbox();
-        
-        // Comprobar mensajes automáticamente cada 4 segundos
-        pollInterval = setInterval(loadInbox, 4000);
+        listenToInbox();
       } else {
         errorMsg.style.display = 'block';
       }
@@ -313,39 +317,45 @@
 
     function logout() {
       currentUser = null;
-      if (pollInterval) clearInterval(pollInterval);
+      db.ref('emails').off(); // Detener escuchador
       document.getElementById('password-input').value = '';
       document.getElementById('app-screen').style.display = 'none';
       document.getElementById('login-screen').style.display = 'flex';
     }
 
-    async function loadInbox() {
-      try {
-        const response = await fetch(SERVER_URL);
-        let emails = [];
-        if (response.ok) {
-          emails = await response.json();
-        }
+    // Escuchador en TIEMPO REAL instantáneo
+    function listenToInbox() {
+      const inboxList = document.getElementById('inbox-list');
+      
+      db.ref('emails').on('value', (snapshot) => {
+        const data = snapshot.val();
+        inboxList.innerHTML = '';
 
-        const myEmails = emails.filter(e => e.to === currentUser.email);
-        const inboxList = document.getElementById('inbox-list');
-
-        if (myEmails.length === 0) {
-          inboxList.innerHTML = '<p style="color: #777; font-size: 18px;">No tienes mensajes nuevos.</p>';
+        if (!data) {
+          inboxList.innerHTML = '<p style="color: #777; font-size: 18px;">No tienes mensajes en tu bandeja de entrada.</p>';
           return;
         }
 
-        inboxList.innerHTML = myEmails.slice().reverse().map(email => `
-          <div class="mail-item">
+        const emailList = Object.values(data);
+        const myEmails = emailList.filter(e => e.to === currentUser.email);
+
+        if (myEmails.length === 0) {
+          inboxList.innerHTML = '<p style="color: #777; font-size: 18px;">No tienes mensajes en tu bandeja de entrada.</p>';
+          return;
+        }
+
+        // Mostrar del más reciente al más antiguo
+        myEmails.reverse().forEach(email => {
+          const item = document.createElement('div');
+          item.className = 'mail-item';
+          item.innerHTML = `
             <div class="mail-sender">De: ${email.fromName} (${email.from})</div>
             <div class="mail-subject">${escapeHtml(email.subject)}</div>
             <div class="mail-body">${escapeHtml(email.body)}</div>
-          </div>
-        `).join('');
-
-      } catch (err) {
-        console.log("Esperando conexión de mensajes...", err);
-      }
+          `;
+          inboxList.appendChild(item);
+        });
+      });
     }
 
     function setupRecipientOptions() {
@@ -366,56 +376,36 @@
       document.getElementById('email-body').value = '';
     }
 
-    async function sendEmail() {
+    function sendEmail() {
       const recipientEmail = document.getElementById('recipient-select').value;
       const subject = document.getElementById('email-subject').value || '(Sin asunto)';
       const body = document.getElementById('email-body').value;
       const btnSend = document.getElementById('btn-send');
 
       if (!body.trim()) {
-        alert("Escribe un mensaje antes de enviar.");
+        alert("Por favor, escribe un mensaje antes de enviar.");
         return;
       }
 
       btnSend.disabled = true;
-      btnSend.innerText = "Enviando...";
 
-      try {
-        // Obtener historial existente
-        let emails = [];
-        const res = await fetch(SERVER_URL);
-        if (res.ok) {
-          emails = await res.json();
-        }
-
-        // Añadir nuevo mensaje
-        const newEmail = {
-          id: Date.now(),
-          from: currentUser.email,
-          fromName: currentUser.name,
-          to: recipientEmail,
-          subject: subject,
-          body: body
-        };
-
-        emails.push(newEmail);
-
-        // Guardar en la nube compartida
-        await fetch(SERVER_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(emails)
-        });
-
-        alert("¡Correo enviado con éxito a la otra tablet! 🚀");
+      const newEmailRef = db.ref('emails').push();
+      newEmailRef.set({
+        id: Date.now(),
+        from: currentUser.email,
+        fromName: currentUser.name,
+        to: recipientEmail,
+        subject: subject,
+        body: body,
+        timestamp: Date.now()
+      }).then(() => {
+        alert("¡Correo enviado con éxito! 🚀");
         closeModal();
-        loadInbox();
-      } catch (err) {
-        alert("Error al enviar. Comprueba que la tablet tiene conexión Wi-Fi.");
-      } finally {
+      }).catch((error) => {
+        alert("Error al enviar el correo. Comprueba la conexión Wi-Fi.");
+      }).finally(() => {
         btnSend.disabled = false;
-        btnSend.innerText = "Enviar 🚀";
-      }
+      });
     }
 
     function escapeHtml(str) {
