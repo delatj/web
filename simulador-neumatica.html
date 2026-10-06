@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Examen y Simulador Avanzado - Tecnología</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+      line-height: 1.3;
+      font-size: 13px;
+      padding-bottom: 40px;
+    }
+
+    /* PANTALLA PREVIA (MODAL / OVERLAY) */
+    #welcome-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .welcome-card {
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      width: 100%;
+      max-width: 450px;
+      text-align: center;
+    }
+
+    .welcome-card h2 {
+      font-size: 1.4rem;
+      color: #1e293b;
+      margin-bottom: 8px;
+    }
+
+    .welcome-card p {
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-bottom: 20px;
+    }
+
+    .input-group-welcome {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+
+    .input-group-welcome label {
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: #334155;
+    }
+
+    .input-group-welcome input {
+      padding: 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      outline: none;
+    }
+
+    .input-group-welcome input:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    }
+
+    .btn-start {
+      width: 100%;
+      padding: 12px;
+      font-size: 1rem;
+      font-weight: bold;
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-start:hover {
+      background-color: #1d4ed8;
+    }
+
+    /* CONTENIDO PRINCIPAL */
+    #main-content {
+      display: none;
+    }
+
+    /* BANNER DE RESULTADO FINAL DESTACADO */
+    .final-score-banner {
+      display: none;
+      max-width: 1000px;
+      margin: 16px auto;
+      background-color: #ffffff;
+      border: 2px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+
+    .final-score-banner h2 {
+      font-size: 1.2rem;
+      color: #334155;
+      margin-bottom: 6px;
+    }
+
+    .final-score-banner .student-name-display {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #0f172a;
+      margin-bottom: 12px;
+    }
+
+    .final-score-banner .grade-display {
+      font-size: 3.5rem;
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .final-score-banner .grade-details {
+      font-size: 0.9rem;
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    /* COLORES SEGÚN NOTA */
+    .score-color-grey   { color: #64748b !important; }
+    .score-color-blue   { color: #2563eb !important; }
+    .score-color-green  { color: #16a34a !important; }
+    .score-color-yellow { color: #d97706 !important; }
+    .score-color-orange { color: #ea580c !important; }
+    .score-color-red    { color: #dc2626 !important; }
+
+    /* Encabezado */
+    .header-container {
+      background-color: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 14px 20px;
+      margin: 12px auto;
+      max-width: 1000px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .header-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #1e293b;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      text-align: center;
+      letter-spacing: 0.5px;
+    }
+
+    .student-info {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .info-field {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .info-field label {
+      font-weight: 700;
+      color: #334155;
+      white-space: nowrap;
+      font-size: 0.85rem;
+    }
+
+    .info-field input {
+      flex: 1;
+      border: none;
+      border-bottom: 2px dashed #94a3b8;
+      padding: 3px 6px;
+      font-size: 0.9rem;
+      outline: none;
+      background: transparent;
+    }
+
+    .score-breakdown {
+      display: flex;
+      gap: 16px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      background-color: #f1f5f9;
+      padding: 8px 14px;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+    }
+
+    /* Tabla de Plantilla de Respuestas */
+    .answer-grid-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #475569;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+
+    .answer-grid-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 4px;
+    }
+
+    .answer-grid-table th, .answer-grid-table td {
+      border: 1px solid #94a3b8;
+      text-align: center;
+      padding: 3px 0;
+      font-size: 0.75rem;
+    }
+
+    .answer-grid-table th {
+      background-color: #f1f5f9;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .answer-grid-table td {
+      height: 24px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    /* SECCIÓN PRÁCTICA */
+    .practical-section {
+      max-width: 1000px;
+      margin: 16px auto;
+      background-color: #ffffff;
+      border: 2px solid #2563eb;
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #2563eb;
+      color: #ffffff;
+      padding: 8px 16px;
+      border-radius: 6px;
+      margin-bottom: 14px;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .sim-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .sim-box {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .sim-title {
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: #1e293b;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .canvas-container {
+      position: relative;
+      background: #ffffff;
+      border: 1px solid #94a3b8;
+      border-radius: 6px;
+      height: 280px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+      background-size: 15px 15px;
+    }
+
+    canvas {
+      background-color: transparent;
+    }
+
+    .controls-panel {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .btn-sm {
+      padding: 5px 10px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border-radius: 4px;
+      border: 1px solid #94a3b8;
+      background: #ffffff;
+      color: #334155;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-sm:hover:not(:disabled) {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .btn-sm:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-actuate {
+      background-color: #0284c7;
+      color: white;
+      border: none;
+      padding: 6px 14px;
+      font-weight: 700;
+    }
+
+    .btn-actuate:hover {
+      background-color: #0369a1;
+    }
+
+    .calc-container {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 12px;
+      height: 280px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      font-size: 0.82rem;
+    }
+
+    .calc-problem {
+      line-height: 1.4;
+      color: #334155;
+    }
+
+    .calc-problem strong {
+      color: #0f172a;
+    }
+
+    .calc-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .calc-input-group input {
+      padding: 6px 8px;
+      font-size: 0.85rem;
+      border: 1px solid #94a3b8;
+      border-radius: 4px;
+      width: 100%;
+    }
+
+    .calc-status-list {
+      font-size: 0.75rem;
+      background: #f1f5f9;
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .status-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2px;
+    }
+
+    .status-ok {
+      color: #16a34a;
+      font-weight: bold;
+    }
+
+    .status-pending {
+      color: #dc2626;
+      font-weight: bold;
+    }
+
+    /* Contenedor del Test */
+    .quiz-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 14px;
+    }
+
+    .question-card {
+      background-color: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 8px 10px;
+    }
+
+    .question-text {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 6px;
+    }
+
+    .options-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .option-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      padding: 3px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .option-item:hover {
+      background-color: #f1f5f9;
+    }
+
+    .option-label {
+      font-size: 0.78rem;
+      color: #334155;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    /* Botones de acción */
+    .actions-bar {
+      max-width: 1000px;
+      margin: 16px auto;
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .btn {
+      background-color: #2563eb;
+      color: #ffffff;
+      border: none;
+      padding: 9px 16px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-success { background-color: #16a34a; }
+    .btn-success:hover:not(:disabled) { background-color: #15803d; }
+  </style>
+</head>
+<body>
+
+  <!-- PANTALLA PREVIA DE IDENTIFICACIÓN -->
+  <div id="welcome-screen">
+    <div class="welcome-card">
+      <h2>Examen de Neumática e Hidráulica</h2>
+      <p>Por favor, introduce tus datos para comenzar la prueba.</p>
+      
+      <div class="input-group-welcome">
+        <div>
+          <label for="student-name-input">Nombre y Apellidos:</label>
+          <input type="text" id="student-name-input" placeholder="Ej: Juan Pérez García">
+        </div>
+        <div>
+          <label for="student-course-input">Curso y Grupo:</label>
+          <input type="text" id="student-course-input" placeholder="Ej: 4º ESO B">
+        </div>
+      </div>
+
+      <button class="btn-start" onclick="startExam()">Comenzar Examen</button>
+    </div>
+  </div>
+
+  <!-- CONTENIDO PRINCIPAL DEL EXAMEN -->
+  <div id="main-content">
+
+    <!-- BANNER DE RESULTADO FINAL DESTACADO -->
+    <div class="final-score-banner" id="final-score-banner">
+      <h2>CALIFICACIÓN FINAL DEL EXAMEN</h2>
+      <div class="student-name-display" id="banner-student-info">--</div>
+      <div class="grade-display" id="banner-score">0.0</div>
+      <div class="grade-details" id="banner-details">Test: 0/6 | Práctica: 0/4</div>
+    </div>
+
+    <!-- ENCABEZADO -->
+    <div class="header-container">
+      <div class="header-title">Examen Práctico de Neumática e Hidráulica</div>
+      
+      <div class="student-info">
+        <div class="info-field">
+          <label>Alumno/a:</label>
+          <input type="text" id="header-student-name" readonly>
+        </div>
+        <div class="info-field">
+          <label>Curso:</label>
+          <input type="text" id="header-student-course" readonly style="max-width: 120px;">
+        </div>
+        <div class="score-breakdown">
+          <span>Test: <span id="test-score-val">0.0</span>/6 pts</span>
+          <span>Práctica: <span id="sim-score-val">0.0</span>/4 pts</span>
+          <span>Nota: <span id="total-score-val">--</span>/10</span>
+        </div>
+      </div>
+
+      <div class="answer-grid-title">Tabla de Respuestas del Test (Cada 2 mal restan 1 bien)</div>
+      <table class="answer-grid-table">
+        <thead>
+          <tr>
+            <th>Preg.</th>
+            <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th>
+            <th>11</th><th>12</th><th>13</th><th>14</th><th>15</th><th>16</th><th>17</th><th>18</th><th>19</th><th>20</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th>Rpta.</th>
+            <td id="cell-1"></td><td id="cell-2"></td><td id="cell-3"></td><td id="cell-4"></td><td id="cell-5"></td>
+            <td id="cell-6"></td><td id="cell-7"></td><td id="cell-8"></td><td id="cell-9"></td><td id="cell-10"></td>
+            <td id="cell-11"></td><td id="cell-12"></td><td id="cell-13"></td><td id="cell-14"></td><td id="cell-15"></td>
+            <td id="cell-16"></td><td id="cell-17"></td><td id="cell-18"></td><td id="cell-19"></td><td id="cell-20"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECCIÓN PRÁCTICA Y SIMULADOR -->
+    <div class="practical-section">
+      <div class="section-header">
+        <span>Parte Práctica: Simulación Neumática y Cálculo de Cilindros</span>
+        <span>Puntuación: 4.0 Puntos (3.0 Cálculo + 1.0 Simulador)</span>
+      </div>
+
+      <div class="sim-layout">
+        <!-- BLOQUE 1: SIMULADOR TÉCNICO INTERACTIVO -->
+        <div class="sim-box">
+          <div class="sim-title">
+            <span>1. Banco de Ensayos Neumático</span>
+          </div>
+          <div class="controls-panel">
+            <label style="font-size:0.75rem; font-weight:bold;">Seleccionar Actuador:</label>
+            <select id="cyl-type" onchange="initSimCanvas()" style="font-size:0.78rem; padding:3px 6px; border-radius:4px; border:1px solid #cbd5e1;">
+              <option value="simple">Cilindro Simple Efecto (Retorno Muelle)</option>
+              <option value="doble">Cilindro Doble Efecto (Avance / Retorno)</option>
+            </select>
+            <button class="btn-sm btn-actuate" onmousedown="pressPulsador()" onmouseup="releasePulsador()" touchstart="pressPulsador()" touchend="releasePulsador()">
+               Accionar Válvula
+            </button>
+          </div>
+          <div class="canvas-container">
+            <canvas id="simCanvas" width="450" height="270"></canvas>
+          </div>
+          <p style="font-size: 0.72rem; color: #475569;">
+            * Mantén pulsado para pilotar la válvula. Debes probar obligatoriamente el accionamiento en ambos cilindros (Simple y Doble efecto) para obtener 1.0 pto (0.5 pts cada uno).
+          </p>
+        </div>
+
+        <!-- BLOQUE 2: PROBLEMA DE CÁLCULO DE CILINDRO DE SIMPLE EFECTO -->
+        <div class="sim-box">
+          <div class="sim-title">
+            <span>2. Cálculo Cilindro Simple Efecto</span>
+          </div>
+          
+          <div class="calc-container">
+            <div class="calc-problem">
+              Una máquina utiliza un cilindro hidráulico/neumático de simple efecto con un émbolo de 
+              <strong id="pistonDiameter">--</strong> mm de diámetro. La presión de trabajo es de 
+              <strong id="pressureWork">--</strong> kPa.
+              <br><br>
+              <strong>Se pide calcular:</strong> Fuerza en el avance (en Newtons).
+            </div>
+
+            <div class="calc-input-group">
+              <label for="answerA1"><strong>Fuerza de avance (N):</strong></label>
+              <input type="number" id="answerA1" step="any" placeholder="Introduce el resultado en Newtons...">
+            </div>
+
+            <div class="controls-panel" style="margin-top: 4px;">
+              <button class="btn-sm btn-success" id="validateBtn">Validar Cálculo</button>
+              <button class="btn-sm" id="showTheoryBtn">Ver Teoría</button>
+              <button class="btn-sm" id="showAnswersBtn">Mostrar Respuestas</button>
+            </div>
+
+            <div class="calc-status-list">
+              <div class="status-item">
+                <span>Cálculo de Fuerza (3.0 pts):</span>
+                <span id="st-calc" class="status-pending">Pendiente</span>
+              </div>
+              <div class="status-item">
+                <span>Uso Cilindro Simple Efecto (0.5 pts):</span>
+                <span id="st-se" class="status-pending">No probado</span>
+              </div>
+              <div class="status-item">
+                <span>Uso Cilindro Doble Efecto (0.5 pts):</span>
+                <span id="st-de" class="status-pending">No probado</span>
+              </div>
+            </div>
+          </div>
+
+          <p style="font-size: 0.72rem; color: #475569;">
+            * Solo dispones de 1 intento para validar el cálculo (Tolerancia admitida del ±5%).
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- BARRA DE ACCIONES -->
+    <div class="actions-bar">
+      <button class="btn btn-success" id="checkAnswersBtn" onclick="checkAnswers()">Comprobar y Calcular Nota Final</button>
+    </div>
+
+    <!-- CONTENEDOR DEL TEST -->
+    <div class="quiz-container" id="quiz-container"></div>
+  </div>
+
+  <script>
+    // PREGUNTAS DEL TEST
+    const questionsData = [
+      {
+        question: "1. ¿Cómo se definen formalmente los circuitos neumáticos?",
+        options: [
+          "Los circuitos neumáticos son instalaciones que se emplean para generar, transmitir y transformar fuerzas y movimientos por medio del aire comprimido.",
+          "Son redes eléctricas de alta tensión diseñadas para canalizar calor a través de tuberías de plástico o metal rellenas de gas nitrógeno o hidrógeno a baja velocidad.",
+          "Constituyen sistemas mecánicos rígidos articulados exclusivamente para elevar grandes masas mediante el uso de palancas y poleas manuales."
+        ]
+      },
+      {
+        question: "2. ¿De qué elementos básicos se compone un circuito neumático?",
+        options: [
+          "Se compone de un generador de aire comprimido, tuberías y conductos de transporte, actuadores para realizar un trabajo útil y elementos de control como las válvulas distribuidoras.",
+          "Consta de un motor de gasolina, transformadores eléctricos de potencia, alternadores de corriente continua y resistencias variables para limitar o controlar la velocidad del fluido.",
+          "Está formado por una bomba hidráulica de agua limpia, mangueras elásticas de caucho, fusibles térmicos de seguridad y disipadores de aluminio de gran tamaño."
+        ]
+      },
+      {
+        question: "3. ¿Qué función realizan los compresores y qué instrumentos acompañan al depósito?",
+        options: [
+          "Los compresores elevan la presión del aire atmosférico al valor de servicio deseado. El aire se almacena en un depósito dotado de manómetro de regulación, válvula de seguridad y termómetro.",
+          "Los compresores transforman el aire en vapor de agua hirviendo. El fluido se almacena en un tanque dotado de un interruptor magnetotérmico, un potenciómetro y un voltímetro digital.",
+          "Los compresores absorben la humedad del ambiente sin cambiar la presión. El aire se guarda en un contenedor dotado de un fusible, una resistencia NTC y un diodo LED."
+        ]
+      },
+      {
+        question: "4. ¿Cuál es el papel del filtro y qué nombre recibe todo este conjunto inicial?",
+        options: [
+          "El filtro extrae todas las impurezas y la humedad condensable del aire circulante. Todo este conjunto inicial de elementos conforma el denominado circuito de control o preparación del aire.",
+          "El filtro aumenta la temperatura del gas para evitar el congelamiento. Todo este conjunto inicial de elementos conforma el denominado bloque de conmutación electrónica secundaria.",
+          "El filtro mezcla el aire comprimido con aceite viscoso para frenar el flujo. Todo este conjunto inicial de elementos conforma el denominado sistema de escape y descarga directa."
+        ]
+      },
+      {
+        question: "5. ¿Cómo funcionan los actuadores neumático tipo cilindro al recibir presión?",
+        options: [
+          "Al recibir la presión del aire comprimido, se desplaza un vástago o barra deslizante capaz de accionar elementos mecánicos externos para transformar la energía neumática en trabajo útil.",
+          "Al recibir la presión del aire comprimido, giran sobre su propio eje a altas revoluciones mediante un conjunto de piñones internos para generar corriente eléctrica directa.",
+          "Al recibir la presión del aire comprimido, absorben la masa gaseosa cerrando la entrada principal para mantener detenido el sistema sin producir desplazamiento mecánico."
+        ]
+      },
+      {
+        question: "6. ¿Qué caracteriza a un cilindro de simple efecto?",
+        options: [
+          "Posee una única conexión neumática. Ejerce fuerza en un solo sentido, mientras que el retorno del vástago se efectúa de manera automática mediante la acción de un muelle interno.",
+          "Tiene dos entradas de aire opuestas. Ejerce fuerza controlada en ambos sentidos mediante la inyección alternada de aceite sintético bajo presión extrema.",
+          "Dispone de tres vías de alimentación neumática (entrada, salida, actuador). Ejerce fuerza constante en sentido rotatorio mientras el retorno del vástago se activa mediante un solenoide eléctrico."
+        ]
+      },
+      {
+        question: "7. ¿Cómo opera un cilindro de doble efecto?",
+        options: [
+          "Dispone de dos entradas de aire que mueven el émbolo en ambas direcciones. Proporciona una fuerza útil y controlada tanto en la carrera de avance como en la de retorno.",
+          "Cuenta con una sola entrada neumática y un resorte. Proporciona fuerza únicamente durante la carrera de avance mientras que el retorno depende de la fuerza de la gravedad recibida.",
+          "Tiene tres conexiones cerradas y un pistón fijo. Proporciona un movimiento de vibración lineal continua de alta frecuencia en una sola dirección sin retorno posible."
+        ]
+      },
+      {
+        question: "8. ¿Qué son los motores neumáticos y qué tipo de movimiento generan?",
+        options: [
+          "Son dispositivos que transforman la energía neumática del aire a presión en un movimiento rotativo o de giro mecánico continuo, con opciones de funcionamiento en uno o dos sentidos.",
+          "Son unidades que convierten la fuerza eléctrica de una batería de litio de larga duración en un desplazamiento lineal alternativo de corta distancia con aceleración constante sin rotación.",
+          "Son elementos pasivos que transforman la energía térmica del aire ambiente en vibraciones acústicas de alta frecuencia diseñadas para limpiar los conductos del circuito."
+        ]
+      },
+      {
+        question: "9. ¿Qué función tienen las válvulas distribuidoras y cómo se esquematizan?",
+        options: [
+          "Gobiernan la puesta en marcha, paradas, direcciones de flujo y niveles de presión o caudal. Sus posiciones se esquematizan mediante cuadrados yuxtapuestos con líneas y flechas internas.",
+          "Filtran las partículas sólidas del aire atmosférico antes de entrar al depósito. Sus posiciones se esquematizan mediante círculos concéntricos cruzados por líneas de puntos.",
+          "Elevan la temperatura del aire comprimido para evitar pérdidas de carga. Sus posiciones se esquematizan mediante triángulos superpuestos con símbolos magnéticos en los extremos."
+        ]
+      },
+      {
+        question: "10. ¿Qué tipos de válvulas destacan dentro de los circuitos neumáticos?",
+        options: [
+          "Destacan las válvulas 2/2 y 3/2 normalmente cerradas con retorno por muelle, la válvula 5/2 pilotada por aire de forma bilateral y las diferentes válvulas selectoras y de escape rápido.",
+          "Destacan las válvulas hidráulicas de retención por bola metálica, los grifos manuales de paso cónico de bronce y las válvulas solenoides de tres vías con enfriamiento líquido continuo.",
+          "Destacan las válvulas de mariposa de plástico rígido, los termostatos regulables por mercurio y los obturadores neumotécnicos de seguridad para gases de alta combustión."
+        ]
+      },
+      {
+        question: "11. ¿Cuál es el funcionamiento y utilidad de un regulador de flujo?",
+        options: [
+          "Controla y estrangula el paso del aire en un sentido mientras permite su libre circulación en el sentido opuesto, aunando las funciones de regulación de velocidad y bloqueo selectivo.",
+          "Aumenta la velocidad del gas en ambas direcciones por igual, permitiendo elevar la aceleración del vástago sin importar el sentido de circulación del aire comprimido en el circuito neumático.",
+          "Bloquea por completo el paso del fluido en ambas direcciones, actuando como un tapón rígido diseñado para detener de emergencia la presión total del compresor."
+        ]
+      },
+      {
+        question: "12. ¿Qué fluido emplean los circuitos hidráulicos y qué ventajas ofrece?",
+        options: [
+          "Emplean un líquido incompresible, habitualmente aceite mineral, en lugar de aire, permitiendo alcanzar presiones muy elevadas e intensificar grandes fuerzas en los mecanismos de trabajo.",
+          "Emplean aire atmosférico purificado y seco, en lugar de líquidos, permitiendo reducir las perdidas por fricción interna en tuberías de gran longitud a baja presión.",
+          "Emplean gas nitrógeno o hidrógeno comprimido a alta temperatura, en lugar de lubricante, permitiendo generar movimientos de oscilación de gran velocidad en espacios reducidos."
+        ]
+      },
+      {
+        question: "13. ¿Qué componentes fundamentales constituyen un circuito hidráulico?",
+        options: [
+          "Incluye un depósito de aceite, una bomba hidráulica impulsada por un motor, filtros para mantener limpio el fluido, una válvula de alivio o limitadora de presión, elementos de control y actuadores.",
+          "Incluye un compresor de aire seco, una caldereta de vapor a alta presión, un condensador eléctrico, fusibles de seguridad de fusión lenta y relés electromecánicos rectos que proporciona seguridad al circuito.",
+          "Incluye un alternador trifásico, tuberías de cobre sin aislamiento, una resistencia variable por calor, termómetros de líquido expansivo y colectores de escape directo."
+        ]
+      },
+      {
+        question: "14. ¿En qué sectores se aplican los sistemas hidráulicos según el texto?",
+        options: [
+          "Se aplican en maquinaria de transporte, excavación, grúas y frenos de camiones, así como en líneas de producción automatizadas, robótica, sector plástico, alimentario y aeronáutico.",
+          "Se aplican en la fabricación exclusiva de electrodomésticos portátiles de bajo consumo o categoría energética AAA, relojería de precisión, dispositivos móviles de telefonía y pantallas digitales.",
+          "Se aplican en la distribución doméstica de gas natural a baja presión, redes de cableado telefónico aéreo, sistemas de iluminación urbana y antenas de radioaficionado."
+        ]
+      },
+      {
+        question: "15. ¿Por medio de qué elemento transmite energía un circuito neumático?",
+        options: [
+          "por medio del aire comprimido.",
+          "por medio de un aceite vegetal.",
+          "por medio de corriente continua."
+        ]
+      },
+      {
+        question: "16. ¿Qué instrumentos de medición y seguridad se ubican en el depósito neumático?",
+        options: [
+          "manómetro de regulación, válvula de seguridad y termómetro.",
+          "voltímetro digital, fusible térmico y amperímetro de cuadro.",
+          "caudalímetro magnético, termostato de gas y relé de protección."
+        ]
+      },
+      {
+        question: "17. ¿Mediante qué elemento interno regresa el vástago en un cilindro de simple efecto?",
+        options: [
+          "mediante la acción de un muelle interno.",
+          "mediante la inyección de aire por la vía trasera.",
+          "mediante la fuerza magnética de un electroimán."
+        ]
+      },
+      {
+        question: "18. ¿Qué forma geométrica esquematiza las posiciones de una válvula distribuidora?",
+        options: [
+          "mediante cuadrados yuxtapuestos con líneas y flechas internas.",
+          "mediante círculos concéntricos aislados con puntos centrales.",
+          "mediante triángulos escalenos unidos por líneas discontinuas."
+        ]
+      },
+      {
+        question: "19. ¿Qué líquido incompresible se utiliza habitualmente en hidráulica?",
+        options: [
+          "habitualmente aceite mineral,",
+          "habitualmente agua destilada,",
+          "habitualmente alcohol etílico,"
+        ]
+      },
+      {
+        question: "20. ¿Qué válvula se encarga de proteger el circuito hidráulico limitando la presión?",
+        options: [
+          "una válvula de alivio o limitadora de presión,",
+          "una válvula de escape rápido y purga manual,",
+          "una válvula selectora de doble efecto neumático,"
+        ]
+      }
+    ];
+
+    let currentCorrectAnswers = {};
+
+    // VARIABLES DE CONTROL DE PRÁCTICA
+    let exactForceValue = 0;
+    let calcCorrect = false;
+    let testedSimple = false;
+    let testedDoble = false;
+
+    // INICIO DE EXAMEN (VENTANA PREVIA)
+    function startExam() {
+      const name = document.getElementById('student-name-input').value.trim();
+      const course = document.getElementById('student-course-input').value.trim();
+
+      if (!name || !course) {
+        alert("Por favor, rellena tu nombre y curso antes de comenzar.");
+        return;
+      }
+
+      document.getElementById('header-student-name').value = name;
+      document.getElementById('header-student-course').value = course;
+
+      document.getElementById('welcome-screen').style.display = 'none';
+      document.getElementById('main-content').style.display = 'block';
+
+      renderQuiz();
+      initSimCanvas();
+      initExactProblem();
+      setupProblemEvents();
+    }
+
+    function renderQuiz() {
+      const quizContainer = document.getElementById('quiz-container');
+      quizContainer.innerHTML = '';
+      currentCorrectAnswers = {};
+
+      const optionLetters = ['a', 'b', 'c'];
+
+      questionsData.forEach((qItem, qIndex) => {
+        const questionCard = document.createElement('div');
+        questionCard.className = 'question-card';
+
+        const qTitle = document.createElement('div');
+        qTitle.className = 'question-text';
+        qTitle.innerText = qItem.question;
+        questionCard.appendChild(qTitle);
+
+        const correctText = qItem.options[0];
+        const qNum = qIndex + 1;
+
+        const optionsList = document.createElement('ul');
+        optionsList.className = 'options-list';
+
+        qItem.options.forEach((optText, optIndex) => {
+          const letter = optionLetters[optIndex];
+          if (optText === correctText) {
+            currentCorrectAnswers[qNum] = letter;
+          }
+
+          const optLi = document.createElement('li');
+          optLi.className = 'option-item';
+
+          const inputRadio = document.createElement('input');
+          inputRadio.type = 'radio';
+          inputRadio.name = `question_${qNum}`;
+          inputRadio.id = `q_${qNum}_opt_${optIndex}`;
+          inputRadio.value = letter;
+
+          inputRadio.addEventListener('change', () => {
+            document.getElementById(`cell-${qNum}`).innerText = letter.toUpperCase();
+          });
+
+          const label = document.createElement('label');
+          label.className = 'option-label';
+          label.htmlFor = `q_${qNum}_opt_${optIndex}`;
+          label.innerText = `${letter}) ${optText}`;
+
+          optLi.appendChild(inputRadio);
+          optLi.appendChild(label);
+          optionsList.appendChild(optLi);
+        });
+
+        questionCard.appendChild(optionsList);
+        quizContainer.appendChild(questionCard);
+      });
+    }
+
+    function calculatePracticalScore() {
+      let simScore = 0;
+      if (calcCorrect) simScore += 3.0;
+      if (testedSimple) simScore += 0.5;
+      if (testedDoble) simScore += 0.5;
+      return simScore;
+    }
+
+    function updatePracticalUI() {
+      const currentScore = calculatePracticalScore();
+      document.getElementById('sim-score-val').innerText = currentScore.toFixed(1);
+    }
+
+    function checkAnswers() {
+      const checkBtn = document.getElementById('checkAnswersBtn');
+      if (checkBtn.disabled) return;
+
+      // Deshabilitar botón de comprobar nota definitivamente (solo 1 intento)
+      checkBtn.disabled = true;
+
+      // Bloquear todas las preguntas para que no se puedan cambiar
+      const radios = document.querySelectorAll('#quiz-container input[type="radio"]');
+      radios.forEach(radio => radio.disabled = true);
+
+      let correctCount = 0;
+      let wrongCount = 0;
+
+      for (let i = 1; i <= 20; i++) {
+        const selectedOption = document.querySelector(`input[name="question_${i}"]:checked`);
+        if (selectedOption) {
+          if (selectedOption.value === currentCorrectAnswers[i]) {
+            correctCount++;
+          } else {
+            wrongCount++;
+          }
+        }
+      }
+
+      let netScore = correctCount - (wrongCount * 0.5);
+      if (netScore < 0) netScore = 0;
+
+      const testScore = ((netScore / 20) * 6);
+      const simScore = calculatePracticalScore(); 
+      const totalScore = testScore + simScore;
+
+      // Actualizar cabecera
+      document.getElementById('test-score-val').innerText = testScore.toFixed(2);
+      document.getElementById('sim-score-val').innerText = simScore.toFixed(1);
+      document.getElementById('total-score-val').innerText = totalScore.toFixed(1);
+
+      // MOSTRAR BANNER DESTACADO
+      const name = document.getElementById('header-student-name').value;
+      const course = document.getElementById('header-student-course').value;
+
+      const banner = document.getElementById('final-score-banner');
+      const scoreElem = document.getElementById('banner-score');
+      
+      document.getElementById('banner-student-info').innerText = `${name} (${course})`;
+      scoreElem.innerText = totalScore.toFixed(1);
+      document.getElementById('banner-details').innerText = `Test: ${testScore.toFixed(2)}/6.0 pts | Práctica: ${simScore.toFixed(1)}/4.0 pts`;
+
+      // ASIGNACIÓN DE COLOR SEGÚN NOTA
+      scoreElem.className = "grade-display"; // reset
+      if (totalScore >= 0 && totalScore < 2) {
+        scoreElem.classList.add('score-color-grey');
+      } else if (totalScore >= 2 && totalScore < 4) {
+        scoreElem.classList.add('score-color-blue');
+      } else if (totalScore >= 4 && totalScore < 6) {
+        scoreElem.classList.add('score-color-green');
+      } else if (totalScore >= 6 && totalScore < 8) {
+        scoreElem.classList.add('score-color-yellow');
+      } else if (totalScore >= 8 && totalScore < 10) {
+        scoreElem.classList.add('score-color-orange');
+      } else if (totalScore >= 10) {
+        scoreElem.classList.add('score-color-red');
+      }
+
+      banner.style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /* ==========================================================================
+       PROBLEMA DE CÁLCULO ALEATORIO CON TOLERANCIA DEL ±5%
+       ========================================================================== */
+    function initExactProblem() {
+      // Generación totalmente aleatoria de datos dentro de rangos técnicos realistas
+      const d = (Math.floor(Math.random() * 17) + 4) * 5; 
+      const p = (Math.floor(Math.random() * 39) + 2) * 250; 
+
+      // Cálculo del valor teórico exacto: F = P * S
+      const radiusM = (d / 2) / 1000;
+      const area = Math.PI * radiusM * radiusM;
+      const pressurePa = p * 1000;
+      exactForceValue = Math.round(pressurePa * area);
+
+      document.getElementById("pistonDiameter").textContent = d;
+      document.getElementById("pressureWork").textContent = p;
+      document.getElementById("answerA1").value = "";
+      document.getElementById("answerA1").disabled = false;
+      document.getElementById("validateBtn").disabled = false;
+      
+      calcCorrect = false;
+      document.getElementById("st-calc").className = "status-pending";
+      document.getElementById("st-calc").textContent = "Pendiente";
+      updatePracticalUI();
+    }
+
+    function setupProblemEvents() {
+      document.getElementById("validateBtn").onclick = function () {
+        const answerA1 = parseFloat(document.getElementById("answerA1").value);
+
+        if (isNaN(answerA1)) {
+          alert("Por favor, introduce un número válido para la fuerza.");
+          return;
+        }
+
+        // Deshabilitar un solo intento de validación
+        document.getElementById("validateBtn").disabled = true;
+        document.getElementById("answerA1").disabled = true;
+
+        // Rango de tolerancia del 5% hacia arriba y hacia abajo
+        const minAllowed = exactForceValue * 0.95;
+        const maxAllowed = exactForceValue * 1.05;
+
+        if (answerA1 >= minAllowed && answerA1 <= maxAllowed) {
+          calcCorrect = true;
+          document.getElementById("st-calc").className = "status-ok";
+          document.getElementById("st-calc").textContent = "Acertado (+3.0 pts)";
+          alert("¡Cálculo Correcto! Se ha otorgado 3.0 puntos.");
+        } else {
+          calcCorrect = false;
+          document.getElementById("st-calc").className = "status-pending";
+          document.getElementById("st-calc").textContent = "Incorrecto";
+          alert("El valor introducido no se encuentra dentro del rango de tolerancia admitido (±5%).");
+        }
+        updatePracticalUI();
+      };
+
+      document.getElementById("showTheoryBtn").onclick = function () {
+        alert(
+          "EXPLICACIÓN Y TEORÍA DEL PROBLEMA:\n\n" +
+          "Para calcular la Fuerza de avance de un cilindro neumático o hidráulico:\n\n" +
+          "1. FÓRMULA PRINCIPAL:\n" +
+          "   Fuerza (F) = Presión (P) x Superficie (S)\n\n" +
+          "2. PASO A PASO:\n" +
+          "   - Pasa la Presión de kilopascales (kPa) a Pascales (Pa):\n" +
+          "     P (Pa) = Presión (kPa) x 1.000\n\n" +
+          "   - Pasa el Diámetro de mm a metros (m):\n" +
+          "     Radio (r en metros) = (Diámetro en mm / 2) / 1000\n\n" +
+          "   - Calcula la Superficie (S en m²):\n" +
+          "     Superficie = Pi x r²\n\n" +
+          "   - Calcula la Fuerza (F en Newtons):\n" +
+          "     Fuerza = P (Pa) x S (m²)\n\n" +
+          "   * Se admite una tolerancia del ±5% sobre el resultado exacto."
+        );
+      };
+
+      document.getElementById("showAnswersBtn").onclick = function () {
+        const key = prompt("Introduce la clave de profesor para ver la respuesta:");
+        if (key && key.trim() === "1979") {
+          const minA = Math.round(exactForceValue * 0.95);
+          const maxA = Math.round(exactForceValue * 1.05);
+          alert(`Respuesta exactas:\n\nValor teórico = ${exactForceValue} N\nRango admitido (±5%) = [${minA} N - ${maxA} N]`);
+        } else if (key !== null) {
+          alert("Clave incorrecta.");
+        }
+      };
+    }
+
+    /* ==========================================================================
+       SIMULADOR VECTORIAL DE BANCO DE ENSAYOS
+       ========================================================================== */
+    let simCanvas, simCtx;
+    let pistonPos = 0;
+    let isActuated = false;
+
+    function initSimCanvas() {
+      simCanvas = document.getElementById('simCanvas');
+      if (!simCanvas) return;
+      simCtx = simCanvas.getContext('2d');
+      drawSim();
+    }
+
+    function pressPulsador() { 
+      isActuated = true; 
+      const type = document.getElementById('cyl-type').value;
+      if (type === 'simple' && !testedSimple) {
+        testedSimple = true;
+        document.getElementById('st-se').className = "status-ok";
+        document.getElementById('st-se').textContent = "Probado (+0.5 pts)";
+        updatePracticalUI();
+      } else if (type === 'doble' && !testedDoble) {
+        testedDoble = true;
+        document.getElementById('st-de').className = "status-ok";
+        document.getElementById('st-de').textContent = "Probado (+0.5 pts)";
+        updatePracticalUI();
+      }
+      animateSim(); 
+    }
+
+    function releasePulsador() { isActuated = false; animateSim(); }
+
+    function animateSim() {
+      if (isActuated) {
+        if (pistonPos < 100) pistonPos += 4;
+      } else {
+        if (pistonPos > 0) pistonPos -= 4;
+      }
+      drawSim();
+      if ((isActuated && pistonPos < 100) || (!isActuated && pistonPos > 0)) {
+        requestAnimationFrame(animateSim);
+      }
+    }
+
+    function drawSim() {
+      if (!simCtx) return;
+      const type = document.getElementById('cyl-type').value;
+      simCtx.clearRect(0, 0, simCanvas.width, simCanvas.height);
+
+      const cylX = 110, cylY = 35, cylW = 200, cylH = 70;
+      const strokePos = (pistonPos / 100) * 125;
+
+      simCtx.fillStyle = '#e2e8f0';
+      simCtx.fillRect(cylX, cylY, cylW, cylH);
+      simCtx.strokeStyle = '#1e293b';
+      simCtx.lineWidth = 2.5;
+      simCtx.strokeRect(cylX, cylY, cylW, cylH);
+
+      if (isActuated) {
+        simCtx.fillStyle = 'rgba(239, 68, 68, 0.25)';
+        simCtx.fillRect(cylX + 2, cylY + 2, 12 + strokePos, cylH - 4);
+      }
+
+      const pistonX = cylX + 10 + strokePos;
+      simCtx.fillStyle = '#475569';
+      simCtx.fillRect(pistonX, cylY + 4, 16, cylH - 8);
+      simCtx.fillStyle = '#0f172a';
+      simCtx.fillRect(pistonX + 2, cylY + 4, 3, cylH - 8);
+      simCtx.fillRect(pistonX + 11, cylY + 4, 3, cylH - 8);
+
+      simCtx.fillStyle = '#cbd5e1';
+      simCtx.fillRect(pistonX + 16, cylY + (cylH / 2) - 8, 140, 16);
+      simCtx.strokeStyle = '#475569';
+      simCtx.lineWidth = 1.5;
+      simCtx.strokeRect(pistonX + 16, cylY + (cylH / 2) - 8, 140, 16);
+
+      simCtx.fillStyle = '#94a3b8';
+      simCtx.fillRect(cylX + cylW - 12, cylY, 12, cylH);
+      simCtx.strokeRect(cylX + cylW - 12, cylY, 12, cylH);
+
+      if (type === 'simple') {
+        simCtx.beginPath();
+        simCtx.strokeStyle = '#64748b';
+        simCtx.lineWidth = 2;
+        let startX = pistonX + 16;
+        let endX = cylX + cylW - 12;
+        let coils = 12;
+        let step = (endX - startX) / coils;
+        for (let i = 0; i < coils; i++) {
+          let currX = startX + i * step;
+          let currY = (i % 2 === 0) ? cylY + 8 : cylY + cylH - 8;
+          if (i === 0) simCtx.moveTo(currX, cylY + cylH / 2);
+          else simCtx.lineTo(currX, currY);
+        }
+        simCtx.lineTo(endX, cylY + cylH / 2);
+        simCtx.stroke();
+
+        simCtx.fillStyle = '#0f172a';
+        simCtx.fillRect(cylX + cylW - 35, cylY - 8, 10, 8);
+        simCtx.font = '10px Arial';
+        simCtx.fillText("Escape", cylX + cylW - 42, cylY - 12);
+      } else {
+        simCtx.fillStyle = '#0284c7';
+        simCtx.fillRect(cylX + cylW - 35, cylY + cylH, 12, 12);
+        simCtx.strokeStyle = '#0f172a';
+        simCtx.strokeRect(cylX + cylW - 35, cylY + cylH, 12, 12);
+        simCtx.font = '10px Arial';
+        simCtx.fillText("B", cylX + cylW - 32, cylY + cylH + 24);
+      }
+
+      simCtx.fillStyle = '#0284c7';
+      simCtx.fillRect(cylX + 20, cylY + cylH, 12, 12);
+      simCtx.strokeStyle = '#0f172a';
+      simCtx.strokeRect(cylX + 20, cylY + cylH, 12, 12);
+      simCtx.font = '10px Arial';
+      simCtx.fillText("A", cylX + 24, cylY + cylH + 24);
+
+      const valX = 175, valY = 175, valW = 70, valH = 40;
+
+      simCtx.strokeStyle = '#0f172a';
+      simCtx.lineWidth = 2;
+      simCtx.fillStyle = isActuated ? '#ffffff' : '#f1f5f9';
+      simCtx.fillRect(valX, valY, valW/2, valH);
+      simCtx.strokeRect(valX, valY, valW/2, valH);
+
+      simCtx.fillStyle = isActuated ? '#f1f5f9' : '#ffffff';
+      simCtx.fillRect(valX + valW/2, valY, valW/2, valH);
+      simCtx.strokeRect(valX + valW/2, valY, valW/2, valH);
+
+      simCtx.fillStyle = isActuated ? '#16a34a' : '#dc2626';
+      simCtx.fillRect(valX - 14, valY + 12, 14, 16);
+      simCtx.strokeRect(valX - 14, valY + 12, 14, 16);
+
+      simCtx.beginPath();
+      simCtx.strokeStyle = '#475569';
+      for(let k=0; k<5; k++) {
+        simCtx.lineTo(valX + valW + (k*3), valY + 10 + (k%2==0? 0 : 20));
+      }
+      simCtx.stroke();
+
+      simCtx.beginPath();
+      simCtx.lineWidth = 3;
+      if (isActuated) {
+        simCtx.strokeStyle = '#ef4444';
+        simCtx.setLineDash([]);
+      } else {
+        simCtx.strokeStyle = '#0284c7';
+        simCtx.setLineDash([4, 4]);
+      }
+      simCtx.moveTo(cylX + 26, cylY + cylH + 12);
+      simCtx.lineTo(cylX + 26, valY - 10);
+      simCtx.lineTo(valX + 17, valY - 10);
+      simCtx.lineTo(valX + 17, valY);
+      simCtx.stroke();
+      simCtx.setLineDash([]);
+
+      if (type === 'doble') {
+        simCtx.beginPath();
+        simCtx.lineWidth = 3;
+        if (!isActuated) {
+          simCtx.strokeStyle = '#ef4444';
+          simCtx.setLineDash([]);
+        } else {
+          simCtx.strokeStyle = '#0284c7';
+          simCtx.setLineDash([4, 4]);
+        }
+        simCtx.moveTo(cylX + cylW - 29, cylY + cylH + 12);
+        simCtx.lineTo(cylX + cylW - 29, valY - 18);
+        simCtx.lineTo(valX + 52, valY - 18);
+        simCtx.lineTo(valX + 52, valY);
+        simCtx.stroke();
+        simCtx.setLineDash([]);
+      }
+
+      simCtx.fillStyle = '#0f172a';
+      simCtx.font = 'bold 11px Arial';
+      simCtx.fillText(isActuated ? "ESTADO: VÁLVULA PILOTADA (AIRE A PRESIÓN)" : "ESTADO: REPOSO (RETORNO POR MUELLE / ESCAPE)", 80, 250);
+    }
+  </script>
+</body>
+</html>
