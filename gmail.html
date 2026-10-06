@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simulador de Correo Escolar - Firebase</title>
+  <title>Simulador de Correo Escolar</title>
   <style>
     * {
       box-sizing: border-box;
@@ -244,7 +244,7 @@
       <sidebar>
         <button class="btn-compose" onclick="openModal()">✏️ Redactar</button>
         <div style="font-size: 16px; font-weight: bold; color: #1a73e8; padding: 10px;">
-          📥 Entrada <span style="font-size: 12px; color: green;">● En vivo</span>
+          📥 Entrada <span style="font-size: 12px; color: green;">● En línea</span>
         </div>
       </sidebar>
 
@@ -271,12 +271,7 @@
     </div>
   </div>
 
-  <!-- Carga de SDK de Firebase en tiempo real sin requerir instalación -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
   <script>
-    // Configuración de usuarios
     const USERS = [
       { name: "Lucía", email: "lucia@escuela.com", pass: "1234" },
       { name: "María", email: "maria@escuela.com", pass: "1234" },
@@ -284,15 +279,13 @@
       { name: "Profe", email: "profesor@escuela.com", pass: "1234" }
     ];
 
-    // Conexión a la base de datos temporal de Firebase
-    const firebaseConfig = {
-      databaseURL: "https://simulador-correo-aula-default-rtdb.europe-west1.firebasedatabase.app"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    // Endpoint directo para lectura y escritura compartida
+    const BIN_ID = "66f7f2b1e4104c34e1903e11"; 
+    const API_URL = `https://api.jsonbin.io/v3/b/66f7f2b1e4104c34e1903e11`;
+    const API_KEY = "$2a$10$Q1zX4QGfX4gM7S7S4E5Z.u5G8W3d8q2O9Z5E0E4D5C6B7A8";
 
     let currentUser = null;
+    let pollInterval = null;
 
     function login() {
       const selectedEmail = document.getElementById('user-select').value;
@@ -309,7 +302,10 @@
         document.getElementById('current-user-display').innerText = `👤 ${user.name}`;
         
         setupRecipientOptions();
-        listenToInbox();
+        loadInbox();
+        
+        // Comprobar mensajes automáticamente cada 3 segundos
+        pollInterval = setInterval(loadInbox, 3000);
       } else {
         errorMsg.style.display = 'block';
       }
@@ -317,45 +313,45 @@
 
     function logout() {
       currentUser = null;
-      db.ref('emails').off(); // Detener escuchador
+      if (pollInterval) clearInterval(pollInterval);
       document.getElementById('password-input').value = '';
       document.getElementById('app-screen').style.display = 'none';
       document.getElementById('login-screen').style.display = 'flex';
     }
 
-    // Escuchador en TIEMPO REAL instantáneo
-    function listenToInbox() {
-      const inboxList = document.getElementById('inbox-list');
-      
-      db.ref('emails').on('value', (snapshot) => {
-        const data = snapshot.val();
-        inboxList.innerHTML = '';
-
-        if (!data) {
-          inboxList.innerHTML = '<p style="color: #777; font-size: 18px;">No tienes mensajes en tu bandeja de entrada.</p>';
-          return;
-        }
-
-        const emailList = Object.values(data);
-        const myEmails = emailList.filter(e => e.to === currentUser.email);
-
-        if (myEmails.length === 0) {
-          inboxList.innerHTML = '<p style="color: #777; font-size: 18px;">No tienes mensajes en tu bandeja de entrada.</p>';
-          return;
-        }
-
-        // Mostrar del más reciente al más antiguo
-        myEmails.reverse().forEach(email => {
-          const item = document.createElement('div');
-          item.className = 'mail-item';
-          item.innerHTML = `
-            <div class="mail-sender">De: ${email.fromName} (${email.from})</div>
-            <div class="mail-subject">${escapeHtml(email.subject)}</div>
-            <div class="mail-body">${escapeHtml(email.body)}</div>
-          `;
-          inboxList.appendChild(item);
+    async function fetchEmails() {
+      try {
+        const res = await fetch(`${API_URL}/latest`, {
+          headers: { 'X-Master-Key': API_KEY }
         });
-      });
+        if (res.ok) {
+          const data = await res.json();
+          return data.record || [];
+        }
+      } catch (e) {
+        console.error("Error al obtener mensajes:", e);
+      }
+      return [];
+    }
+
+    async function loadInbox() {
+      const emails = await fetchEmails();
+      const inboxList = document.getElementById('inbox-list');
+
+      const myEmails = emails.filter(e => e.to === currentUser.email);
+
+      if (myEmails.length === 0) {
+        inboxList.innerHTML = '<p style="color: #777; font-size: 18px;">No tienes mensajes en tu bandeja de entrada.</p>';
+        return;
+      }
+
+      inboxList.innerHTML = myEmails.slice().reverse().map(email => `
+        <div class="mail-item">
+          <div class="mail-sender">De: ${email.fromName} (${email.from})</div>
+          <div class="mail-subject">${escapeHtml(email.subject)}</div>
+          <div class="mail-body">${escapeHtml(email.body)}</div>
+        </div>
+      `).join('');
     }
 
     function setupRecipientOptions() {
@@ -376,36 +372,59 @@
       document.getElementById('email-body').value = '';
     }
 
-    function sendEmail() {
+    async function sendEmail() {
       const recipientEmail = document.getElementById('recipient-select').value;
       const subject = document.getElementById('email-subject').value || '(Sin asunto)';
       const body = document.getElementById('email-body').value;
       const btnSend = document.getElementById('btn-send');
 
       if (!body.trim()) {
-        alert("Por favor, escribe un mensaje antes de enviar.");
+        alert("Escribe un mensaje antes de enviar.");
         return;
       }
 
       btnSend.disabled = true;
+      btnSend.innerText = "Enviando...";
 
-      const newEmailRef = db.ref('emails').push();
-      newEmailRef.set({
-        id: Date.now(),
-        from: currentUser.email,
-        fromName: currentUser.name,
-        to: recipientEmail,
-        subject: subject,
-        body: body,
-        timestamp: Date.now()
-      }).then(() => {
-        alert("¡Correo enviado con éxito! 🚀");
-        closeModal();
-      }).catch((error) => {
-        alert("Error al enviar el correo. Comprueba la conexión Wi-Fi.");
-      }).finally(() => {
+      try {
+        // 1. Leer mensajes existentes
+        const emails = await fetchEmails();
+
+        // 2. Crear nuevo mensaje
+        const newEmail = {
+          id: Date.now(),
+          from: currentUser.email,
+          fromName: currentUser.name,
+          to: recipientEmail,
+          subject: subject,
+          body: body
+        };
+
+        emails.push(newEmail);
+
+        // 3. Guardar la lista actualizada
+        const res = await fetch(API_URL, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Master-Key': API_KEY
+          },
+          body: JSON.stringify(emails)
+        });
+
+        if (res.ok) {
+          alert("¡Correo enviado con éxito! 🚀");
+          closeModal();
+          loadInbox();
+        } else {
+          alert("No se pudo guardar el correo. Revisa la conexión.");
+        }
+      } catch (err) {
+        alert("Error de conexión al enviar.");
+      } finally {
         btnSend.disabled = false;
-      });
+        btnSend.innerText = "Enviar 🚀";
+      }
     }
 
     function escapeHtml(str) {
