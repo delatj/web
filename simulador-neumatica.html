@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
+<!-- saved from url=(0053)https://delatj.github.io/web/simulador-neumatica.html -->
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Examen y Simulador Avanzado - Tecnología</title>
   <style>
@@ -531,6 +531,14 @@
   <!-- CONTENIDO PRINCIPAL DEL EXAMEN -->
   <div id="main-content">
 
+    <!-- TEMPORIZADOR MARCHA ATRÁS -->
+    <style>
+      #examTimer { position: fixed; top: 12px; right: 12px; z-index: 900; background: #0f172a; color: #fbbf24; font-weight: 800; font-size: 0.95rem; padding: 8px 14px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.25); }
+      #examTimer.timer-low { color: #f87171; }
+      @media print { #examTimer { display: none; } }
+    </style>
+    <div id="examTimer" title="Tiempo restante">⏱ <span id="examTimerText">10:00</span></div>
+
     <!-- BANNER DE RESULTADO FINAL DESTACADO -->
     <div class="final-score-banner" id="final-score-banner">
       <h2>CALIFICACIÓN FINAL DEL EXAMEN</h2>
@@ -546,11 +554,11 @@
       <div class="student-info">
         <div class="info-field">
           <label>Alumno/a:</label>
-          <input type="text" id="header-student-name" readonly>
+          <input type="text" id="header-student-name" readonly="">
         </div>
         <div class="info-field">
           <label>Curso:</label>
-          <input type="text" id="header-student-course" readonly style="max-width: 120px;">
+          <input type="text" id="header-student-course" readonly="" style="max-width: 120px;">
         </div>
         <div class="score-breakdown">
           <span>Test: <span id="test-score-val">0.0</span>/6 pts</span>
@@ -862,6 +870,62 @@
       initSimCanvas();
       initExactProblem();
       setupProblemEvents();
+      startExamTimer();
+    }
+
+    /* TEMPORIZADOR MARCHA ATRÁS (10 MINUTOS) */
+    const EXAM_DURATION_MS = 10 * 60 * 1000;
+    let examInterval = null;
+    let examDeadline = null;
+
+    function formatExamTime(ms) {
+      const total = Math.max(0, Math.ceil(ms / 1000));
+      const m = String(Math.floor(total / 60)).padStart(2, '0');
+      const sec = String(total % 60).padStart(2, '0');
+      return `${m}:${sec}`;
+    }
+
+    function startExamTimer() {
+      if (examInterval) return;
+      examDeadline = Date.now() + EXAM_DURATION_MS;
+      updateExamTimer();
+      examInterval = setInterval(updateExamTimer, 250);
+    }
+
+    function updateExamTimer() {
+      const left = examDeadline - Date.now();
+      document.getElementById('examTimerText').innerText = formatExamTime(left);
+      if (left <= 60000) document.getElementById('examTimer').classList.add('timer-low');
+      if (left <= 0) {
+        clearInterval(examInterval);
+        examInterval = null;
+        finishExamByTime();
+      }
+    }
+
+    /* Al acabar el tiempo: se valida lo pendiente (sin avisos) y sale la nota directamente */
+    function finishExamByTime() {
+      const checkBtn = document.getElementById('checkAnswersBtn');
+      if (checkBtn.disabled) return; // la nota ya se había calculado
+      const originalAlert = window.alert;
+      window.alert = function() {};
+      try {
+        const validateBtn = document.getElementById('validateBtn');
+        if (validateBtn && !validateBtn.disabled) validateBtn.click();
+        checkAnswers();
+      } finally {
+        window.alert = originalAlert;
+      }
+    }
+
+    // Mezcla aleatoria (Fisher-Yates) sin modificar el array original
+    function shuffleArray(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
     }
 
     function renderQuiz() {
@@ -871,13 +935,14 @@
 
       const optionLetters = ['a', 'b', 'c'];
 
-      questionsData.forEach((qItem, qIndex) => {
+      // Cada vez que se abre el examen cambia el orden de las preguntas y el de sus respuestas
+      shuffleArray(questionsData).forEach((qItem, qIndex) => {
         const questionCard = document.createElement('div');
         questionCard.className = 'question-card';
 
         const qTitle = document.createElement('div');
         qTitle.className = 'question-text';
-        qTitle.innerText = qItem.question;
+        qTitle.innerText = `${qIndex + 1}. ${qItem.question.replace(/^\d+\.\s*/, '')}`;
         questionCard.appendChild(qTitle);
 
         const correctText = qItem.options[0];
@@ -886,7 +951,7 @@
         const optionsList = document.createElement('ul');
         optionsList.className = 'options-list';
 
-        qItem.options.forEach((optText, optIndex) => {
+        shuffleArray(qItem.options).forEach((optText, optIndex) => {
           const letter = optionLetters[optIndex];
           if (optText === correctText) {
             currentCorrectAnswers[qNum] = letter;
@@ -939,6 +1004,7 @@
 
       // Deshabilitar botón de comprobar nota definitivamente (solo 1 intento)
       checkBtn.disabled = true;
+      if (examInterval) { clearInterval(examInterval); examInterval = null; }
 
       // Bloquear todas las preguntas para que no se puedan cambiar
       const radios = document.querySelectorAll('#quiz-container input[type="radio"]');
@@ -958,7 +1024,7 @@
         }
       }
 
-      let netScore = correctCount - (wrongCount * 0.5);
+      let netScore = correctCount - Math.floor(wrongCount / 2);
       if (netScore < 0) netScore = 0;
 
       const testScore = ((netScore / 20) * 6);
@@ -1269,5 +1335,5 @@
       simCtx.fillText(isActuated ? "ESTADO: VÁLVULA PILOTADA (AIRE A PRESIÓN)" : "ESTADO: REPOSO (RETORNO POR MUELLE / ESCAPE)", 80, 250);
     }
   </script>
-</body>
-</html>
+
+</body></html>
