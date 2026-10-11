@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- saved from url=(0045)https://delatj.github.io/web/subir-notas.html -->
 <html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -38,7 +39,7 @@
 
     <div class="app-container">
         <h1>IMPORTANTE NO PONER NADA EN LA COLUMNA DE COMENTARIOS PORQUE LUEGO APARECE</h1>
-        <p>Sube tus CSV. (los títulos de las columnas de notas que empiezan por p= proyectos, los c = pruebas y lo t = tareas), PARA LAS PRENOTAS PULSA LA PALABRA NOTAS EN EL HTML NOTAS_ALUMNOS.</p>
+        <p>Sube tus CSV. Los títulos de las columnas de notas empiezan por <b>T</b> (tareas), <b>C</b> (controles / pruebas de extracción) o <b>P</b> (proyectos) seguido del criterio de evaluación: <b>T1.2</b>, <b>C1.2</b>, <b>P1.1/P1.2/P1.3</b> (una actividad puede contar en varios criterios). PARA LAS PRENOTAS PULSA LA PALABRA NOTAS EN EL HTML NOTAS_ALUMNOS.</p>
         
         <label class="drop-zone" for="csvFiles" id="dropArea">
             <span>📁</span>
@@ -77,12 +78,51 @@
             }
         }
 
+        // ===== Utilidades para criterios de evaluación =====
+        function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+        function fmt(n) { return (Math.round(n * 100) / 100).toString(); }
+        function numVal(v) {
+            if (v === undefined || v === null) return 0;
+            const n = parseFloat(String(v).trim().replace(',', '.'));
+            return isNaN(n) ? 0 : n;
+        }
+        // Lee una cabecera tipo "T1.2", "C 1.2" o "P1.1/P1.2/P1.3" (también "P1.1/1.2").
+        // La primera letra marca el tipo (T, C, P); los números son los criterios a los que cuenta.
+        function parseCabecera(h) {
+            const t = h.trim();
+            const ini = t.charAt(0).toUpperCase();
+            const tipo = (ini === 'T' || ini === 'C' || ini === 'P') ? ini : (ini === 'M' ? 'M' : 'O');
+            const criterios = [];
+            if (tipo === 'T' || tipo === 'C' || tipo === 'P') {
+                const partes = t.split('/');
+                for (let k = 0; k < partes.length; k++) {
+                    const re = k === 0 ? /^[TCPtcp]\s*(\d+(?:[.,]\d+)*)/ : /^\s*(?:[TCPtcp]\s*)?(\d+(?:[.,]\d+)*)/;
+                    const m = partes[k].match(re);
+                    if (m) {
+                        const c = m[1].replace(/,/g, '.');
+                        if (criterios.indexOf(c) === -1) criterios.push(c);
+                    } else if (k === 0) { break; }
+                }
+            }
+            return { header: t, tipo: tipo, criterios: criterios };
+        }
+        function cmpCriterio(a, b) {
+            const x = a.split('.').map(Number), y = b.split('.').map(Number);
+            for (let i = 0; i < Math.max(x.length, y.length); i++) {
+                const d = (x[i] || 0) - (y[i] || 0);
+                if (d !== 0) return d;
+            }
+            return 0;
+        }
+        const NOMBRE_TIPO = { T: 'Tareas', C: 'Pruebas / Controles', P: 'Proyectos' };
+        const COLOR_TIPO = { T: '#cce5ff', C: '#f8d7da', P: '#d4edda', M: '#e2d9f3', O: '#ffe5b4' };
         async function generarYDescargar() {
             if (fileInput.files.length === 0) return;
 
             const files = Array.from(fileInput.files);
             let tabsHTML = "";
             let tablesHTML = "";
+            let statsAll = [];
 
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
@@ -92,46 +132,47 @@
                 const activeClass = i === 0 ? "active" : "";
                 
                 tabsHTML += '<div class="tab ' + activeClass + '" id="tab-btn-' + i + '" onclick="cambiarPestana(' + i + ')">' + tabName + '</div>\n';
-                tablesHTML += '<div class="tab-content ' + activeClass + '" id="tab-content-' + i + '">\n<table>\n';
+                tablesHTML += '<div class="tab-content ' + activeClass + '" id="tab-content-' + i + '">\n';
 
                 const firstLineCols = lines[0].split(';');
-                let columnHeaders = [];
-                let columnColors = [];
+                let cols = [];   // posición 0 = CÓDIGO (igual que las notas de cada alumno)
                 let typeCols = { T: [], C: [], P: [] };
 
                 if (firstLineCols.length > 1) {
-                    const anonymousColumns = firstLineCols.slice(1);
-                    
-                    anonymousColumns.forEach((col, colIndex) => {
-                        let valorCelda = col.trim();
+                    firstLineCols.slice(1).forEach((col, colIndex) => {
                         if (colIndex === 0) {
-                            columnHeaders.push("CÓDIGO");
-                            columnColors.push("#ffffff");
+                            cols.push({ header: 'CÓDIGO', tipo: 'ID', criterios: [] });
                         } else {
-                            columnHeaders.push(valorCelda);
-                            let inicial = valorCelda.charAt(0).toUpperCase();
-                            let colorFondo = "#ffe5b4"; 
-                            if (inicial === 'T') { colorFondo = "#cce5ff"; typeCols.T.push(colIndex); }
-                            else if (inicial === 'M') { colorFondo = "#e2d9f3"; }
-                            else if (inicial === 'C') { colorFondo = "#f8d7da"; typeCols.C.push(colIndex); }
-                            else if (inicial === 'P') { colorFondo = "#d4edda"; typeCols.P.push(colIndex); }
-                            columnColors.push(colorFondo);
+                            const info = parseCabecera(col);
+                            cols.push(info);
+                            if (typeCols[info.tipo]) typeCols[info.tipo].push(colIndex);
                         }
                     });
                 }
 
-                function calcAvg(cols, indices) {
-                    if (indices.length === 0) return null;
-                    let sum = 0; 
-                    indices.forEach(idx => {
-                        let val = cols[idx];
-                        if(val && val.trim() !== "") {
-                            let num = parseFloat(val.replace(',', '.')); 
-                            if (!isNaN(num)) { sum += num; }
-                        }
+                // Criterios detectados y qué columnas de cada tipo cuentan en cada uno
+                let todosCriterios = [];
+                cols.forEach(c => c.criterios.forEach(k => { if (todosCriterios.indexOf(k) === -1) todosCriterios.push(k); }));
+                todosCriterios.sort(cmpCriterio);
+
+                const indicesDe = (tipo, crit) => {
+                    const r = [];
+                    cols.forEach((c, idx) => {
+                        if (c.tipo !== tipo) return;
+                        if (crit === null ? c.criterios.length === 0 : c.criterios.indexOf(crit) !== -1) r.push(idx);
                     });
-                    return sum / indices.length; 
-                }
+                    return r;
+                };
+                // Sumatorio y media de un grupo de columnas (lo no entregado cuenta como 0)
+                const statsGrupo = (vals, indices) => {
+                    let s = 0;
+                    indices.forEach(ix => { s += numVal(vals[ix]); });
+                    return { sum: s, avg: indices.length ? s / indices.length : null };
+                };
+                const grupos = todosCriterios.map(k => ({ k: k, T: indicesDe('T', k), C: indicesDe('C', k), P: indicesDe('P', k) }));
+                const sinCriterio = { T: indicesDe('T', null), C: indicesDe('C', null), P: indicesDe('P', null) };
+                const otrasCols = [];
+                cols.forEach((c, idx) => { if (idx > 0 && (c.tipo === 'M' || c.tipo === 'O')) otrasCols.push(idx); });
 
                 let parsedStudents = [];
                 let maxAvgs = { T: 0, C: 0, P: 0 };
@@ -139,55 +180,164 @@
                 for (let r = 1; r < lines.length; r++) {
                     const columns = lines[r].split(';');
                     if (columns.length > 1) {
-                        const rawName = columns[0].trim(); 
-                        const anonymousColumns = columns.slice(1); 
-                        
-                        let avgT = calcAvg(anonymousColumns, typeCols.T);
-                        let avgC = calcAvg(anonymousColumns, typeCols.C);
-                        let avgP = calcAvg(anonymousColumns, typeCols.P);
-                        
+                        const rawName = columns[0].trim();
+                        const anonymousColumns = columns.slice(1);
+
+                        let avgT = typeCols.T.length ? statsGrupo(anonymousColumns, typeCols.T).avg : null;
+                        let avgC = typeCols.C.length ? statsGrupo(anonymousColumns, typeCols.C).avg : null;
+                        let avgP = typeCols.P.length ? statsGrupo(anonymousColumns, typeCols.P).avg : null;
+
                         if (avgT !== null && avgT > maxAvgs.T) maxAvgs.T = avgT;
                         if (avgC !== null && avgC > maxAvgs.C) maxAvgs.C = avgC;
                         if (avgP !== null && avgP > maxAvgs.P) maxAvgs.P = avgP;
-                        
-                        parsedStudents.push({ 
-                            cols: anonymousColumns, 
-                            avgT: avgT, avgC: avgC, avgP: avgP, 
-                            realName: rawName 
+
+                        parsedStudents.push({
+                            cols: anonymousColumns,
+                            avgT: avgT, avgC: avgC, avgP: avgP,
+                            realName: rawName
                         });
                     }
                 }
 
+                // Máximo de cada columna: en tareas, la mayor nota de la clase (= 100); en pruebas y proyectos, 100 fijo
+                let maxCol = {};
+                cols.forEach((c, idx) => {
+                    if (c.tipo !== 'T' && c.tipo !== 'C' && c.tipo !== 'P') return;
+                    // Pruebas (C) y proyectos (P) van sobre 100 fijo; solo las tareas (T) se comparan con el máximo de la clase
+                    if (c.tipo !== 'T') { maxCol[idx] = 100; return; }
+                    let m = 0;
+                    parsedStudents.forEach(st => { const v = numVal(st.cols[idx]); if (v > m) m = v; });
+                    maxCol[idx] = m;
+                });
+                // Máximo sumatorio de puntos de cada grupo (tipo + criterio) entre todos los alumnos
+                const maxSumaGrupo = (indices, tipo) => {
+                    if (tipo !== 'T') return 100 * indices.length;   // C y P: cada columna vale 100
+                    let m = 0;
+                    parsedStudents.forEach(st => { const sm = statsGrupo(st.cols, indices).sum; if (sm > m) m = sm; });
+                    return m;
+                };
+                let maxGrupo = {};
+                grupos.forEach(g => { maxGrupo[g.k] = {}; ['T', 'C', 'P'].forEach(tp => { if (g[tp].length) maxGrupo[g.k][tp] = maxSumaGrupo(g[tp], tp); }); });
+                let maxSin = {};
+                ['T', 'C', 'P'].forEach(tp => { if (sinCriterio[tp].length) maxSin[tp] = maxSumaGrupo(sinCriterio[tp], tp); });
+                const pct = (v, max) => max > 0 ? (v / max) * 100 : 0;
+                // Nota (sobre 100) de un grupo: sumatorio del alumno / mejor sumatorio de la clase
+                const notaGrupo = (stu, indices, maxSum) => {
+                    const sm = statsGrupo(stu.cols, indices).sum;
+                    return { sum: sm, max: maxSum, pct: pct(sm, maxSum) };
+                };
+
+                const celdaNota = (v) => {
+                    const s = (v === undefined || v === null) ? '' : String(v).trim();
+                    return s === '' ? '<span class="vacio" title="Sin nota (cuenta como 0)">—</span>' : esc(s);
+                };
+                // Filas de un grupo: actividades + una sola fila con sumatorio y media (sobre 100)
+                const filasGrupo = (stu, tipo, indices, maxSum) => {
+                    let h = '';
+                    const bg = ' style="background-color:' + COLOR_TIPO[tipo] + ';"';
+                    indices.forEach(ix => {
+                        const v = numVal(stu.cols[ix]);
+                        h += '<tr><td>' + esc(cols[ix].header) + '</td><td class="tipo"' + bg + '>' + tipo + '</td><td class="num">' + celdaNota(stu.cols[ix]) + '</td><td class="num mx">' + fmt(maxCol[ix]) + '</td><td class="num">' + fmt(pct(v, maxCol[ix])) + '</td></tr>\n';
+                    });
+                    const ng = notaGrupo(stu, indices, maxSum);
+                    h += '<tr class="fila-sum"><td colspan="2">Sumatorio y media · ' + NOMBRE_TIPO[tipo] + '</td><td class="num">' + fmt(ng.sum) + '</td><td class="num mx">' + fmt(ng.max) + '</td><td class="num"><b>' + fmt(ng.pct) + '</b></td></tr>\n';
+                    return h;
+                };
+
+                let statsClase = [];
                 parsedStudents.forEach((stu, sIndex) => {
                     let encodedName = btoa(unescape(encodeURIComponent(stu.realName)));
                     let encodedSearch = btoa(unescape(encodeURIComponent(stu.realName.toLowerCase())));
 
-                    tablesHTML += '<tr class="student-card" data-name="' + encodedName + '" data-search="' + encodedSearch + '">\n';
-                    
-                    tablesHTML += '<td data-label="Identificación" style="background-color: #eee;" class="col-identificacion"><span class="grade-val">' + stu.cols[0] + '</span></td>\n';
+                    tablesHTML += '<div class="student-card" data-name="' + encodedName + '" data-search="' + encodedSearch + '">\n';
 
-                    if (typeCols.T.length > 0 && stu.avgT !== null) {
-                        let pctT = maxAvgs.T > 0 ? ((stu.avgT / maxAvgs.T) * 10 ).toFixed(1) : 0;
-                        tablesHTML += '<td data-label="MEDIA TAREAS" style="background-color: #b8d4ff; border: 3px solid #0056b3 !important;"><span class="grade-val">' + pctT + '</span></td>\n';
+                    // --- Resumen: identificación + medias generales (como antes) ---
+                    let ths = '<th>Identificación</th>';
+                    let tds = '<td data-label="Identificación" style="background-color: #eee;" class="col-identificacion"><span class="grade-val">' + esc(stu.cols[0]) + '</span></td>';
+                    if (grupos.length === 0 && typeCols.T.length > 0 && stu.avgT !== null) {
+                        let pctT = maxAvgs.T > 0 ? ((stu.avgT / maxAvgs.T) * 10).toFixed(1) : 0;
+                        ths += '<th>MEDIA TAREAS</th>';
+                        tds += '<td data-label="MEDIA TAREAS" style="background-color: #b8d4ff; border: 3px solid #0056b3 !important;"><span class="grade-val">' + pctT + '</span></td>';
                     }
-                    if (typeCols.C.length > 0 && stu.avgC !== null) {
-                        let pctC = maxAvgs.C > 0 ? ((stu.avgC / maxAvgs.C) * 10 ).toFixed(1) : 0;
-                        tablesHTML += '<td data-label="MEDIA PRUEBAS" style="background-color: #f5c6cb; border: 3px solid #b21f2d !important;"><span class="grade-val">' + pctC + '</span></td>\n';
+                    if (grupos.length === 0 && typeCols.C.length > 0 && stu.avgC !== null) {
+                        let pctC = maxAvgs.C > 0 ? ((stu.avgC / maxAvgs.C) * 10).toFixed(1) : 0;
+                        ths += '<th>MEDIA PRUEBAS</th>';
+                        tds += '<td data-label="MEDIA PRUEBAS" style="background-color: #f5c6cb; border: 3px solid #b21f2d !important;"><span class="grade-val">' + pctC + '</span></td>';
                     }
-                    if (typeCols.P.length > 0 && stu.avgP !== null) {
-                        let pctP = maxAvgs.P > 0 ? ((stu.avgP / maxAvgs.P) * 10 ).toFixed(1) : 0;
-                        tablesHTML += '<td data-label="MEDIA PROYECTOS" style="background-color: #c3e6cb; border: 3px solid #1e7e34 !important;"><span class="grade-val">' + pctP + '</span></td>\n';
+                    if (grupos.length === 0 && typeCols.P.length > 0 && stu.avgP !== null) {
+                        let pctP = maxAvgs.P > 0 ? ((stu.avgP / maxAvgs.P) * 10).toFixed(1) : 0;
+                        ths += '<th>MEDIA PROYECTOS</th>';
+                        tds += '<td data-label="MEDIA PROYECTOS" style="background-color: #c3e6cb; border: 3px solid #1e7e34 !important;"><span class="grade-val">' + pctP + '</span></td>';
+                    }
+                    tablesHTML += '<div class="tabla-wrap"><table class="t-grande t-resumen"><thead><tr>' + ths + '</tr></thead><tbody><tr>' + tds + '</tr></tbody></table></div>\n';
+
+                    // --- Resumen por criterio de evaluación ---
+                    let notasCriterio = {};
+                    let mediaCrit = null;
+                    if (grupos.length > 0) {
+                        tablesHTML += '<h3>Nota por criterio de evaluación</h3>\n';
+                        tablesHTML += '<div class="tabla-wrap"><table class="t-grande"><thead><tr><th>Criterio</th><th>Tareas</th><th>Pruebas</th><th>Proyectos</th><th>NOTA CRITERIO</th></tr></thead><tbody>\n';
+                        grupos.forEach(g => {
+                            let medias = [];
+                            let fila = '<tr><td class="crit-nombre">' + esc(g.k) + '</td>';
+                            ['T', 'C', 'P'].forEach(tp => {
+                                if (g[tp].length) {
+                                    const ng = notaGrupo(stu, g[tp], maxGrupo[g.k][tp]);
+                                    medias.push(ng.pct);
+                                    fila += '<td class="num"><b>' + fmt(ng.pct) + '</b> <span class="sub">Σ ' + fmt(ng.sum) + '</span></td>';
+                                } else {
+                                    fila += '<td class="num"><span class="vacio">—</span></td>';
+                                }
+                            });
+                            const nota = medias.length ? medias.reduce((x, y) => x + y, 0) / medias.length : null;
+                            notasCriterio[g.k] = nota;
+                            fila += '<td class="num nota-crit">' + (nota === null ? '—' : fmt(nota)) + '</td></tr>\n';
+                            tablesHTML += fila;
+                        });
+                        const validas = grupos.map(g => notasCriterio[g.k]).filter(v => v !== null);
+                        mediaCrit = validas.length ? validas.reduce((x, y) => x + y, 0) / validas.length : null;
+                        tablesHTML += '<tr class="fila-media-crit"><td colspan="4">MEDIA DE CRITERIOS</td><td class="num" data-label="MEDIA CRITERIOS"><span class="grade-val">' + (mediaCrit === null ? '—' : fmt(mediaCrit)) + '</span></td></tr>\n';
+                        tablesHTML += '</tbody></table></div>\n';
+                        tablesHTML += '<p class="leyenda">Σ = sumatorio de puntos. Todas las notas van sobre 100: las tareas se comparan con el mayor sumatorio de la clase; las pruebas y los proyectos se comparan siempre con 100. La nota del criterio es la media de tareas, pruebas y proyectos de ese criterio, y la media de criterios es la media de todas las notas de criterio.</p>\n';
                     }
 
-                    stu.cols.slice(1).forEach((col, cIdx) => {
-                        let realIdx = cIdx + 1;
-                        tablesHTML += '<td data-label="' + columnHeaders[realIdx] + '" style="background-color: ' + columnColors[realIdx] + ';"><span class="grade-val">' + col + '</span></td>\n';
-                    });
-                    tablesHTML += '</tr>\n';
+                    // --- Detalle de actividades agrupado en UNA sola tabla ---
+                    const hayDetalle = grupos.length > 0 || sinCriterio.T.length + sinCriterio.C.length + sinCriterio.P.length > 0 || otrasCols.length > 0;
+                    if (hayDetalle) {
+                        tablesHTML += '<h3>Detalle de actividades</h3>\n';
+                        tablesHTML += '<div class="tabla-wrap"><table class="t-grande t-detalle"><thead><tr><th>Actividad</th><th>Tipo</th><th>Puntos</th><th>Máximo</th><th>% sobre 100</th></tr></thead><tbody>\n';
+                        grupos.forEach(g => {
+                            let usados = [];
+                            ['T', 'C', 'P'].forEach(tp => { if (g[tp].length) usados.push(tp); });
+                            tablesHTML += '<tr class="fila-crit"><td colspan="4">CRITERIO ' + esc(g.k) + ' · nota del criterio (media de ' + usados.join(', ') + ')</td><td class="num">' + fmt(notasCriterio[g.k]) + '</td></tr>\n';
+                            usados.forEach(tp => { tablesHTML += filasGrupo(stu, tp, g[tp], maxGrupo[g.k][tp]); });
+                        });
+                        if (sinCriterio.T.length + sinCriterio.C.length + sinCriterio.P.length > 0) {
+                            tablesHTML += '<tr class="fila-crit"><td colspan="5">SIN CRITERIO ASIGNADO</td></tr>\n';
+                            ['T', 'C', 'P'].forEach(tp => {
+                                if (sinCriterio[tp].length) tablesHTML += filasGrupo(stu, tp, sinCriterio[tp], maxSin[tp]);
+                            });
+                        }
+                        if (otrasCols.length > 0) {
+                            tablesHTML += '<tr class="fila-crit"><td colspan="5">OTRAS COLUMNAS</td></tr>\n';
+                            otrasCols.forEach(ix => {
+                                tablesHTML += '<tr><td>' + esc(cols[ix].header) + '</td><td class="tipo" style="background-color:' + COLOR_TIPO[cols[ix].tipo] + ';">' + cols[ix].tipo + '</td><td class="num">' + celdaNota(stu.cols[ix]) + '</td><td class="num mx"></td><td class="num"></td></tr>\n';
+                            });
+                        }
+                        tablesHTML += '</tbody></table></div>\n';
+                    }
+
+                    const r2 = (v) => v === null ? null : Math.round(v * 100) / 100;
+                    let notasRed = {};
+                    Object.keys(notasCriterio).forEach(k => { notasRed[k] = r2(notasCriterio[k]); });
+                    statsClase.push({ c: String(stu.cols[0]).trim(), media: r2(mediaCrit), notas: notasRed });
+                    tablesHTML += '</div>\n';
                 });
-                tablesHTML += '</tbody>\n</table>\n</div>\n';
+                statsAll.push({ nombre: tabName, criterios: todosCriterios, alumnos: statsClase });
+                tablesHTML += '</div>\n';
             }
 
+            const statsJSON = JSON.stringify(statsAll).replace(/</g, '\u003c');
             const finalHTML = `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -196,22 +346,52 @@
 <title>Consulta de Notas</title>
 <style>
   body { font-family: 'Segoe UI', sans-serif; padding: 20px; background-color: #f4f7f6; margin: 0; }
-  .container { background-color: white; padding: 30px 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; max-width: 800px; margin: 0 auto; }
+  .container { background-color: white; padding: 30px 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; max-width: 1150px; margin: 0 auto; }
   .disclaimer { background-color: #fff3cd; color: #856404; padding: 12px 15px; border-left: 5px solid #ffeeba; border-radius: 6px; margin-bottom: 20px; font-size: 14px; text-align: left; }
   .search-box { padding: 12px; width: 100%; max-width: 350px; font-size: 16px; border: 2px solid #ddd; border-radius: 8px; margin-bottom: 10px; outline: none; box-sizing: border-box; }
   .nav-tools { margin-bottom: 20px; display: none; justify-content: center; gap: 10px; flex-wrap: wrap; }
   .btn-nav { background-color: #007BFF; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; min-width: 130px; transition: 0.2s; }
   .btn-nav:hover { background-color: #0056b3; }
+  .btn-stats { background-color: #6f42c1; margin-bottom: 15px; }
+  .btn-stats:hover { background-color: #59339d; }
+  #modal-stats { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 15px; }
+  #modal-stats.hidden { display: none !important; }
+  .stats-box { background: white; border-radius: 12px; padding: 20px; width: 100%; max-width: 860px; max-height: 95vh; overflow-y: auto; position: relative; box-sizing: border-box; }
+  .stats-box h2 { margin: 0 0 12px; }
+  .stats-close { position: absolute; top: 12px; right: 12px; background: #dc3545; color: white; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; font-weight: bold; }
+  .stats-sel { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 12px; }
+  .stats-sel select { padding: 6px; font-size: 15px; border-radius: 6px; }
+  #statsResumen { margin-top: 12px; font-size: 15px; text-align: center; }
   .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
   .tab { padding: 8px 18px; background-color: #e9ecef; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
   .tab.active { background-color: #007BFF; color: white; }
   .tab-content { display: none; }
   .tab-content.active { display: block; }
-  table { width: 100%; }
-  .student-card { display: none; flex-direction: column; background: #fafafa; padding: 20px; border-radius: 12px; border: 3px solid #343a40; margin: 15px auto; gap: 8px; max-width: 500px; }
-  td { display: flex; justify-content: space-between; align-items: center; border: 1px solid #ccc; padding: 12px; border-radius: 6px; }
-  td::before { content: attr(data-label); font-weight: bold; font-size: 13px; color: #444; text-align: left; flex: 1; padding-right: 10px; }
+  .student-card { display: none; flex-direction: column; background: #fafafa; padding: 20px; border-radius: 12px; border: 3px solid #343a40; margin: 15px auto; gap: 8px; max-width: 100%; box-sizing: border-box; text-align: left; }
+  .student-card h3 { margin: 18px 0 4px; color: #1a5f7a; font-size: 18px; }
+  .tabla-wrap { overflow-x: auto; }
+  table.t-grande { width: 100%; border-collapse: collapse; background: white; font-size: 15px; }
+  .t-grande th { background: #343a40; color: white; padding: 10px 12px; text-align: center; font-size: 13px; }
+  .t-grande td { border: 1px solid #ccc; padding: 9px 12px; }
+  .t-detalle th:first-child, .t-detalle td:first-child { text-align: left; }
+  .t-grande td.num { text-align: center; font-weight: bold; width: 17%; }
+  .t-grande td.mx { font-weight: normal; color: #666; }
+  .t-resumen td { text-align: center; }
+  .crit-nombre { font-weight: bold; text-align: center; background: #eee; }
+  .nota-crit { background: #fff3cd; font-size: 17px; }
+  .sub { font-weight: normal; font-size: 12px; color: #666; margin-left: 4px; }
+  .vacio { color: #999; font-weight: normal; }
+  .fila-tipo td { font-weight: bold; }
+  .fila-sum td { background: #f1f3f5; }
+  .fila-media td { background: #e7f1ff; font-weight: bold; }
+  .fila-crit td { background: #fff3cd; font-weight: bold; }
+  .badge { background: #0056b3; color: white; border-radius: 12px; padding: 2px 10px; font-size: 14px; margin-left: 8px; }
+  .leyenda { font-size: 12px; color: #666; margin: 4px 0 0; }
   .grade-val { font-weight: bold; font-size: 16px; text-align: right; }
+  .fila-media-crit td { background: #ffe08a; font-weight: bold; font-size: 17px; text-align: center; }
+  .fila-media-crit td:first-child { text-align: right; }
+  .t-detalle td.tipo { text-align: center; font-weight: bold; width: 60px; }
+  .t-detalle td.num { width: 15%; }
   .aviso { color: #dc3545; font-size: 14px; margin-top: 15px; display: none; }
   
   .secret-trigger { cursor: pointer; transition: color 0.3s; }
@@ -258,10 +438,10 @@
 
   @media (max-width: 480px) {
     .container { padding: 20px 10px; }
-    .student-card { padding: 15px; max-width: 100%; box-sizing: border-box; border-width: 2px; }
-    td { flex-direction: column; align-items: flex-start; gap: 8px; }
-    td::before { border-bottom: 1px solid rgba(0,0,0,0.1); width: 100%; padding-bottom: 5px; margin-bottom: 2px; }
-    .grade-val { align-self: flex-end; font-size: 18px; }
+    .student-card { padding: 12px; max-width: 100%; box-sizing: border-box; border-width: 2px; }
+    .t-grande { font-size: 13px; }
+    .t-grande th, .t-grande td { padding: 7px 6px; }
+    .grade-val { font-size: 16px; }
     .btn-nav { width: 45%; flex-grow: 1; padding: 12px 10px; }
     .items-container { grid-template-columns: 1fr; }
   }
@@ -275,6 +455,7 @@
         <div class="disclaimer">💡 <b>Aviso:</b> Las notas mostradas son informativas. No todas las notas valen lo mismo, dependen del criterio al que estén asociadas. Las tareas no entregadas cuentan como 0.</div>
         
         <div class="tabs">${tabsHTML}</div>
+        <button class="btn-nav btn-stats" onclick="abrirEstadisticas()">📊 Estadística de la clase</button>
         
         <input type="text" id="searchInput" class="search-box" placeholder="Introduce tu CÓDIGO..." onkeyup="filtrarNotas()">
         
@@ -287,6 +468,19 @@
         
         <p class="aviso" id="avisoNoEncontrado">No encontrado.</p>
       </div>
+  </div>
+
+  <div id="modal-stats" class="hidden">
+    <div class="stats-box">
+      <button class="stats-close" onclick="cerrarEstadisticas()">✖ Cerrar</button>
+      <h2>📊 Estadística de la clase</h2>
+      <div class="stats-sel">
+        <label>Clase: <select id="statsClase" onchange="rellenarCriterios(); dibujarEstadisticas()"></select></label>
+        <label>Nota: <select id="statsCrit" onchange="dibujarEstadisticas()"></select></label>
+      </div>
+      <div id="statsChart"></div>
+      <div id="statsResumen"></div>
+    </div>
   </div>
 
   <div id="vista-prenotas" class="hidden">
@@ -344,6 +538,7 @@
   </div>
 
   <script>
+    const STATS = ${statsJSON};
     let currentStudentIndex = -1;
     let unlocked = false;
     let studentsData = []; 
@@ -420,6 +615,101 @@
       nextCard.style.display = "flex";
       
       document.getElementById("searchInput").value = nextCard.querySelector('.col-identificacion .grade-val').innerText;
+    }
+
+    function abrirEstadisticas() {
+        if (!unlocked) {
+            let pass = prompt("Acceso restringido. Introduce la contraseña del profesor:");
+            if (pass === "1979") { unlocked = true; }
+            else { if (pass !== null) alert("Contraseña incorrecta."); return; }
+        }
+        if (!STATS || STATS.length === 0) { alert("No hay datos."); return; }
+        const selClase = document.getElementById('statsClase');
+        selClase.innerHTML = '';
+        STATS.forEach((c, i) => { const o = document.createElement('option'); o.value = i; o.textContent = c.nombre; selClase.appendChild(o); });
+        const activa = document.querySelector('.tab-content.active');
+        if (activa) selClase.value = activa.id.replace('tab-content-', '');
+        rellenarCriterios();
+        document.getElementById('modal-stats').classList.remove('hidden');
+        dibujarEstadisticas();
+    }
+
+    function cerrarEstadisticas() {
+        document.getElementById('modal-stats').classList.add('hidden');
+    }
+
+    function rellenarCriterios() {
+        const cl = STATS[parseInt(document.getElementById('statsClase').value, 10)];
+        const sel = document.getElementById('statsCrit');
+        sel.innerHTML = '';
+        const o0 = document.createElement('option');
+        o0.value = 'media'; o0.textContent = 'Media de criterios';
+        sel.appendChild(o0);
+        cl.criterios.forEach(k => { const o = document.createElement('option'); o.value = k; o.textContent = 'Criterio ' + k; sel.appendChild(o); });
+    }
+
+    function dibujarEstadisticas() {
+        const cl = STATS[parseInt(document.getElementById('statsClase').value, 10)];
+        const crit = document.getElementById('statsCrit').value;
+        const vals = cl.alumnos.map(a => {
+            const v = crit === 'media' ? a.media : a.notas[crit];
+            return (v === null || v === undefined) ? null : v;
+        });
+        const n = vals.length;
+        const limpia = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+        const W = 860, H = 420, ML = 62, MR = 22, MT = 30, MB = 70;
+        const pw = W - ML - MR, ph = H - MT - MB;
+        const xAt = i => ML + pw * (i + 0.5) / n;
+        const yAt = v => MT + ph - ph * v / 100;
+        const fs = n > 40 ? 8 : (n > 25 ? 10 : 12);
+        const salto = n > 70 ? 2 : 1;
+        const radio = n > 30 ? 3.5 : 5;
+
+        let svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:auto;background:#fff;border:1px solid #ddd;border-radius:8px;">';
+        for (let v = 0; v <= 100; v += 10) {
+            svg += '<line x1="' + ML + '" y1="' + yAt(v) + '" x2="' + (W - MR) + '" y2="' + yAt(v) + '" stroke="#e5e5e5"/>';
+            svg += '<text x="' + (ML - 8) + '" y="' + (yAt(v) + 4) + '" text-anchor="end" font-size="12" fill="#555">' + v + '</text>';
+        }
+        svg += '<line x1="' + ML + '" y1="' + (MT + ph) + '" x2="' + (W - MR) + '" y2="' + (MT + ph) + '" stroke="#333"/>';
+        svg += '<line x1="' + ML + '" y1="' + MT + '" x2="' + ML + '" y2="' + (MT + ph) + '" stroke="#333"/>';
+
+        for (let i = 0; i < n; i++) {
+            if (i % salto === 0) svg += '<text x="' + xAt(i) + '" y="' + (MT + ph + 18) + '" text-anchor="middle" font-size="' + fs + '" fill="#555">' + (i + 1) + '</text>';
+        }
+
+        const validos = [];
+        vals.forEach(v => { if (v !== null) validos.push(v); });
+        const media = validos.length ? validos.reduce((a, b) => a + b, 0) / validos.length : null;
+        if (media !== null) {
+            svg += '<line x1="' + ML + '" y1="' + yAt(media) + '" x2="' + (W - MR) + '" y2="' + yAt(media) + '" stroke="#dc3545" stroke-width="1.5" stroke-dasharray="6,4"/>';
+            svg += '<text x="' + ML + '" y="' + (MT - 12) + '" text-anchor="start" font-size="12" fill="#dc3545" font-weight="bold">- - -  Media de la clase: ' + (Math.round(media * 10) / 10) + '</text>';
+        }
+
+        let pts = '';
+        vals.forEach((v, i) => { if (v !== null) pts += xAt(i) + ',' + yAt(v) + ' '; });
+        svg += '<polyline points="' + pts + '" fill="none" stroke="#007BFF" stroke-width="2.5" stroke-linejoin="round"/>';
+        vals.forEach((v, i) => {
+            if (v === null) return;
+            const r1 = Math.round(v * 10) / 10;
+            svg += '<circle cx="' + xAt(i) + '" cy="' + yAt(v) + '" r="' + radio + '" fill="#007BFF"><title>Alumno ' + (i + 1) + ' (' + limpia(cl.alumnos[i].c) + '): ' + r1 + '</title></circle>';
+            if (n <= 30) svg += '<text x="' + xAt(i) + '" y="' + (yAt(v) - 9) + '" text-anchor="middle" font-size="10" font-weight="bold" fill="#0056b3">' + r1 + '</text>';
+        });
+        svg += '<text x="' + (ML + pw / 2) + '" y="' + (H - 14) + '" text-anchor="middle" font-size="14" font-weight="bold" fill="#333">Número de alumno</text>';
+        svg += '<text transform="translate(16,' + (MT + ph / 2) + ') rotate(-90)" text-anchor="middle" font-size="14" font-weight="bold" fill="#333">Nota (% sobre 100)</text>';
+        svg += '</svg>';
+        document.getElementById('statsChart').innerHTML = svg;
+
+        let res = 'Sin datos.';
+        if (validos.length > 0) {
+            const ord = validos.slice().sort((a, b) => a - b);
+            const mid = Math.floor(ord.length / 2);
+            const mediana = ord.length % 2 ? ord[mid] : (ord[mid - 1] + ord[mid]) / 2;
+            const f = x => (Math.round(x * 10) / 10).toString();
+            res = '<b>Alumnos:</b> ' + validos.length + ' &nbsp;|&nbsp; <b>Media:</b> ' + f(media) + ' &nbsp;|&nbsp; <b>Mediana:</b> ' + f(mediana) + ' &nbsp;|&nbsp; <b>Máxima:</b> ' + f(ord[ord.length - 1]) + ' &nbsp;|&nbsp; <b>Mínima:</b> ' + f(ord[0]);
+            res += '<div class="leyenda">Pasa el ratón (o toca) un punto para ver el número de alumno y su código.</div>';
+        }
+        document.getElementById('statsResumen').innerHTML = res;
     }
 
     function abrirPrenotas() {
@@ -625,4 +915,5 @@
             document.body.removeChild(link);
         }
     </script>
+
 </body></html>
