@@ -68,8 +68,10 @@
         }
 
         .score {
-            font-size: 2em;
-            color: back;
+            font-size: 4em;
+            font-weight: bold;
+            color: black;
+            margin: 5px 0;
         }
 
         .instructions {
@@ -85,33 +87,6 @@
             position: fixed;
             left: 50%;
             transform: translateX(-50%);
-        }
-
-        #send-results {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            z-index: 100;
-        }
-
-        #status-message {
-            position: fixed;
-            bottom: 60px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: #333;
-            font-weight: bold;
-            z-index: 100;
-            background-color: white;
-            padding: 5px 10px;
-            border-radius: 5px;
         }
 
         #player-names-modal {
@@ -169,7 +144,7 @@
     <div class="game-area" id="leftArea">
         <h2 id="player1-title">Jugador Izquierdo</h2>
         <div class="grid-container" id="gridLeft"></div>
-        <div class="score" id="scoreLeft">Punt: 0</div>
+        <div class="score" id="scoreLeft">0.0</div>
         <div class="instructions">
             Controles:<br>
             W - Avanzar<br>
@@ -184,7 +159,7 @@
     <div class="game-area" id="rightArea">
         <h2 id="player2-title">Jugador Derecho</h2>
         <div class="grid-container" id="gridRight"></div>
-        <div class="score" id="scoreRight">Punt: 0</div>
+        <div class="score" id="scoreRight">0.0</div>
         <div class="instructions">
             Controles:<br>
             ↑ - Avanzar<br>
@@ -193,9 +168,6 @@
             → - Girar derecha
         </div>
     </div>
-
-    <button id="send-results">Enviar resultados</button>
-    <div id="status-message"></div>
 
     <script>
         const gridSize = 6;
@@ -232,7 +204,6 @@
             }
 
             function isPositionValid(pos, positions) {
-                // Verifica que la posición no esté adyacente a ninguna recompensa existente
                 for (const rewardPos of positions) {
                     const dx = Math.abs(pos.x - rewardPos.x);
                     const dy = Math.abs(pos.y - rewardPos.y);
@@ -261,7 +232,6 @@
                 return pos;
             }
 
-            // Generar recompensas (1-4) que no se toquen
             for (let i = 0; i < 4; i++) {
                 const rewardPos = uniqueRandomPosition();
                 if (!rewardPos) break;
@@ -270,7 +240,6 @@
                 player.rewards.push({ ...rewardPos, order: i + 1 });
             }
 
-            // Generar obstáculos
             for (let i = 0; i < 3; i++) {
                 const obstaclePos = randomPosition();
                 if (!usedPositions.has(positionKey(obstaclePos))) {
@@ -335,7 +304,8 @@
 
             if (newPosition.x < 0 || newPosition.x >= gridSize || 
                 newPosition.y < 0 || newPosition.y >= gridSize) {
-                player.score--;
+                player.score -= 0.1;
+                player.score = Math.round(player.score * 10) / 10;
                 updateScore(player, gridId);
                 return;
             }
@@ -353,12 +323,14 @@
             const reward = player.rewards.find(r => r.x === newPosition.x && r.y === newPosition.y);
 
             if (obstacle) {
-                player.score--;
+                player.score -= 0.1;
+                player.score = Math.round(player.score * 10) / 10;
             } else if (reward) {
                 if (reward.order === player.currentRewardIndex + 1) {
                     player.currentRewardIndex++;
                     if (player.currentRewardIndex === player.rewards.length) {
-                        player.score++;
+                        player.score += 0.1;
+                        player.score = Math.round(player.score * 10) / 10;
                         player.currentRewardIndex = 0;
                         generateRewardsAndObstacles(player);
                     }
@@ -376,14 +348,22 @@
             const areaId = gridId === "gridLeft" ? "leftArea" : "rightArea";
             const areaElement = document.getElementById(areaId);
 
-            document.getElementById(scoreElementId).textContent = `Punt: ${player.score}`;
+            document.getElementById(scoreElementId).textContent = player.score.toFixed(1);
 
-            if (player.score >= 50) {
+            if (player.score > 30) {
+                areaElement.style.backgroundColor = "red";
+            } else if (player.score > 25) {
+                areaElement.style.backgroundColor = "orange";
+            } else if (player.score > 20) {
                 areaElement.style.backgroundColor = "yellow";
-            } else if (player.score >= 40) {
+            } else if (player.score > 15) {
                 areaElement.style.backgroundColor = "green";
-            } else if (player.score >= 30) {
+            } else if (player.score > 10) {
+                areaElement.style.backgroundColor = "purple";
+            } else if (player.score > 5) {
                 areaElement.style.backgroundColor = "blue";
+            } else if (player.score > 2) {
+                areaElement.style.backgroundColor = "gray";
             } else {
                 areaElement.style.backgroundColor = "white";
             }
@@ -391,48 +371,6 @@
             renderGrid(player, gridId);
         }
 
-        function sendResultsToGoogleSheets() {
-            if (!players.left.name || !players.right.name) {
-                document.getElementById('status-message').textContent = "Error: Ingresa nombres primero";
-                document.getElementById('status-message').style.color = "red";
-                return;
-            }
-
-            const timestamp = new Date().toLocaleString();
-
-            const data = {
-                player1: "Milogo2 " + players.left.name,
-                score1: players.left.score,
-                player2: "Milogo2 " + players.right.name,
-                score2: players.right.score,
-                timestamp: timestamp
-            };
-
-            document.getElementById('status-message').textContent = "Enviando datos...";
-            document.getElementById('status-message').style.color = "blue";
-
-            const scriptUrl = "https://script.google.com/macros/s/AKfycbwVPttSZrhwfWwSZpFo7KWjJ39vldQm3MPGykMWEPWOoF4UsZ24mC8YhgiaE-0xm_7G/exec";
-
-            fetch(scriptUrl, {
-                method: "POST",
-                mode: "no-cors",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(data)
-            })
-            .then(() => {
-                document.getElementById('status-message').textContent = "Resultados enviados!";
-                document.getElementById('status-message').style.color = "green";
-            })
-            .catch(error => {
-                document.getElementById('status-message').textContent = "Error al enviar";
-                document.getElementById('status-message').style.color = "red";
-                console.error("Error:", error);
-            });
-        }
-
-        // Event listeners
         document.getElementById('start-game').addEventListener('click', () => {
             const player1Name = document.getElementById('player1-name').value.trim();
             const player2Name = document.getElementById('player2-name').value.trim();
@@ -455,8 +393,6 @@
             renderGrid(players.left, "gridLeft");
             renderGrid(players.right, "gridRight");
         });
-
-        document.getElementById('send-results').addEventListener('click', sendResultsToGoogleSheets);
 
         window.addEventListener("keydown", (event) => {
             if (document.getElementById('player-names-modal').style.display === 'flex') {
