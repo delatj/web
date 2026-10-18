@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- saved from url=(0039)https://delatj.github.io/web/angry.html -->
 <html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -224,7 +225,7 @@
     .res-final {
       color: black;
       font-weight: bold;
-      font-size: 2em;
+      font-size: 3em;
     }
     
     .canvas-container {
@@ -346,50 +347,6 @@
       text-align: center;
       color: #000000 !important;
     }
-    
-    #send-results {
-      margin: 20px;
-      padding: 12px 24px;
-      font-size: 16px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-      display: none; 
-    }
-    
-    #send-results:hover {
-      background-color: #45a049;
-    }
-    
-    #status-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.7);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1001;
-      display: none;
-    }
-    
-    #status-message {
-      background-color: white;
-      padding: 40px;
-      border-radius: 15px;
-      text-align: center;
-      font-size: 36px;
-      font-weight: bold;
-      color: #155724;
-      box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
-      min-width: 500px;
-      border: 5px solid #4CAF50;
-    }
   </style>
 </head>
 <body>
@@ -420,7 +377,7 @@
         <div class="player-name player1" id="player1-name">Jugador 1</div>
         <div class="score-display player1">
           <div>Puntos: <span id="score1">0</span></div>
-          <div class="multiplier">[ <span id="score-base1">0</span> x 4 = <span id="score-mult1" class="res-final">0</span> ]</div>
+          <div class="multiplier">[ <span id="score-base1">0</span> x 0.4 = <span id="score-mult1" class="res-final">0.0</span> ]</div>
         </div>
       </div>
       
@@ -446,7 +403,7 @@
         <div class="player-name player2" id="player2-name">Jugador 2</div>
         <div class="score-display player2">
           <div>Puntos: <span id="score2">0</span></div>
-          <div class="multiplier">[ <span id="score-base2">0</span> x 4 = <span id="score-mult2" class="res-final">0</span> ]</div>
+          <div class="multiplier">[ <span id="score-base2">0</span> x 0.4 = <span id="score-mult2" class="res-final">0.0</span> ]</div>
         </div>
       </div>
       
@@ -470,7 +427,7 @@
   
   <div class="instructions" id="game-instructions">
     <h3>Instrucciones del juego</h3>
-    <p>Observa la cuadrícula (origen en la esquina inferior izquierda). Ajusta las coordenadas X e Y usando las teclas y luego lanza la bola. Si golpea una pieza, la pieza y todas las de arriba caen. Sumas 5 puntos cuando derribas TODA la torre. <b>¡Cuidado! Cada 10 puntos tendrás que responder a una pregunta de ciberseguridad, si fallas perderás 2 puntos.</b> ¡Continúa hasta que no quede ningún bloque!</p>
+    <p>Observa la cuadrícula (origen en la esquina inferior izquierda). Ajusta las coordenadas X e Y usando las teclas y luego lanza la bola. Al derribar una torre sumas 2 puntos. <b>¡Cada 5 puntos se lanzará una pregunta de ciberseguridad, redes y uso de internet; si fallas, se restarán 2 puntos antes de aplicar el multiplicador (0.4)!</b> ¡Continúa hasta que no quede ningún bloque!</p>
     
     <div class="controls-info">
       <div class="player-controls player1">
@@ -480,7 +437,6 @@
         <div class="control-item"><span class="key">W</span> Incrementar Y</div>
         <div class="control-item"><span class="key">S</span> Decrementar Y</div>
         <div class="control-item"><span class="key">E</span> Lanzar bola</div>
-        <div class="control-item"><span class="key">R</span> Nueva torre</div>
       </div>
       
       <div class="player-controls player2">
@@ -490,15 +446,8 @@
         <div class="control-item"><span class="key">O</span> Incrementar Y</div>
         <div class="control-item"><span class="key">L</span> Decrementar Y</div>
         <div class="control-item"><span class="key">P</span> Lanzar bola</div>
-        <div class="control-item"><span class="key">;</span> Nueva torre</div>
       </div>
     </div>
-  </div>
-  
-  <button id="send-results">Enviar resultados a Google Sheets</button>
-  
-  <div id="status-overlay">
-    <div id="status-message"></div>
   </div>
 
   <script>
@@ -506,25 +455,21 @@
     const GRID_H = 12;
     const CELL = 32;
     const PADDING = 10;
-    const POINTS_PER_FULL_TOWER = 5;
-    const COLOR_CHANGE_THRESHOLD = 20;
+    const POINTS_PER_FULL_TOWER = 2;
     
     let player1Name = "";
     let player2Name = "";
-    let resultsSent = false;
     let player1Game, player2Game;
 
-    // Estado global de la pregunta de ciberseguridad
     let isQuestionActive = false;
     
     const playerNamesModal = document.getElementById('player-names-modal');
     const gameArea = document.getElementById('game-area');
     const gameTitle = document.getElementById('game-title');
     const gameInstructions = document.getElementById('game-instructions');
-    const sendResultsButton = document.getElementById('send-results');
     const startGameButton = document.getElementById('start-game');
     
-    // Preguntas de ciberseguridad
+    // Banco de 30 preguntas sobre ciberseguridad, redes y uso adecuado de internet[cite: 4]
     const cyberQuestions = [
       { q: "¿Qué es el Phishing?", options: ["Un deporte náutico", "Engaño por email para robar claves", "Un tipo de cable de red"], correct: 1 },
       { q: "¿Qué contraseña es más segura?", options: ["12345678", "pAssw0rd!", "D0m1ng0_2024*"], correct: 2 },
@@ -581,22 +526,12 @@
       gameArea.style.display = 'flex';
       gameTitle.style.display = 'block';
       gameInstructions.style.display = 'block';
-      sendResultsButton.style.display = 'block';
       
       document.getElementById('player1-name').textContent = player1Name;
       document.getElementById('player2-name').textContent = player2Name;
       
       initializeGames();
     }
-    
-    const COLOR_LEVELS = [
-      { bg: '#f0f9f0', name: 'Verde claro' }, { bg: '#2196F3', name: 'Azul' }, { bg: '#FFEB3B', name: 'Amarillo' }, 
-      { bg: '#4CAF50', name: 'Verde' }, { bg: '#FF5722', name: 'Naranja' }, { bg: '#F44336', name: 'Rojo' }, 
-      { bg: '#9C27B0', name: 'Púrpura' }, { bg: '#00BCD4', name: 'Cian' }, { bg: '#FF9800', name: 'Naranja oscuro' }, 
-      { bg: '#795548', name: 'Marrón' }, { bg: '#607D8B', name: 'Gris azulado' }, { bg: '#E91E63', name: 'Rosa' }, 
-      { bg: '#3F51B5', name: 'Índigo' }, { bg: '#009688', name: 'Verde azulado' }, { bg: '#8BC34A', name: 'Verde lima' }, 
-      { bg: '#FFC107', name: 'Ámbar' }
-    ];
     
     class PlayerGame {
       constructor(canvasId, scoreId, messageId, blocksCountId, containerId, 
@@ -624,7 +559,7 @@
         
         this.blocks = [];
         this.score = 0;
-        this.pointsSinceLastQuestion = 0; // Contador para las preguntas
+        this.pointsSinceLastQuestion = 0;
         this.animating = false;
         this.launcher = { x: 1, y: 1 };
         this.colors = playerNumber === 1 ? 
@@ -646,7 +581,6 @@
         const towerCols = this.randInt(3, 6);
         const startCol = this.randInt(4, GRID_W - towerCols - 2);
         
-        // Torre Principal
         for (let c = 0; c < towerCols; c++) {
           const col = startCol + c;
           const height = this.randInt(2, Math.min(6, GRID_H - 1));
@@ -655,7 +589,6 @@
           }
         }
         
-        // Flotantes originales
         const floating = this.randInt(1, 4);
         for (let i = 0; i < floating; i++) {
           const fx = this.randInt(0, GRID_W - 1);
@@ -665,7 +598,6 @@
           }
         }
 
-        // 5 Piezas aisladas
         let isolatedPiecesAdded = 0;
         let attempts = 0;
         while (isolatedPiecesAdded < 5 && attempts < 200) {
@@ -692,7 +624,8 @@
       updateScoreUI() {
         this.scoreElement.textContent = this.score;
         this.scoreBaseElement.textContent = this.score;
-        this.scoreMultElement.textContent = this.score * 4;
+        this.scoreMultElement.textContent = (this.score * 0.4).toFixed(1);
+        this.updatePlayerColor();
       }
       
       updateCoordinatesDisplay() {
@@ -791,13 +724,11 @@
               const allDestroyed = this.areAllBlocksDestroyed();
               
               if (allDestroyed) {
-                // Actualización de los Puntos y del Multiplicador
                 this.score += POINTS_PER_FULL_TOWER;
                 this.pointsSinceLastQuestion += POINTS_PER_FULL_TOWER;
                 this.updateScoreUI();
                 
                 this.messageElement.textContent = `¡Torre completamente derribada! +${POINTS_PER_FULL_TOWER} puntos`;
-                this.updatePlayerColor();
               } else {
                 this.messageElement.textContent = '¡Impacto! Bloques eliminados';
               }
@@ -807,9 +738,8 @@
               this.updateBlocksCount();
               
               if (allDestroyed) {
-                // Verificar si salta pregunta
-                if (this.pointsSinceLastQuestion >= 10) {
-                  this.pointsSinceLastQuestion -= 10;
+                if (this.pointsSinceLastQuestion >= 5) {
+                  this.pointsSinceLastQuestion -= 5;
                   setTimeout(() => { showCyberQuestion(this); }, 500);
                 }
 
@@ -905,16 +835,32 @@
         this.updateBlocksCount();
       }
       
-      setupCanvasEvents() {
-        // Función anulada a petición: Ya no se pueden seleccionar las coordenadas haciendo clic en el canvas.
-      }
+      setupCanvasEvents() {}
       
       updatePlayerColor() {
-        const level = Math.floor(this.score / COLOR_CHANGE_THRESHOLD);
-        const colorLevel = Math.min(level, COLOR_LEVELS.length - 1);
-        this.container.style.backgroundColor = COLOR_LEVELS[colorLevel].bg;
+        let bgColor = '#ffffff';
+        let colorName = 'Blanco';
+        
+        const finalScore = this.score * 0.4;
+        
+        if (finalScore > 30) {
+          bgColor = '#ff0000'; colorName = 'Rojo';
+        } else if (finalScore > 25) {
+          bgColor = '#ffa500'; colorName = 'Naranja';
+        } else if (finalScore > 20) {
+          bgColor = '#ffff00'; colorName = 'Amarillo';
+        } else if (finalScore > 15) {
+          bgColor = '#008000'; colorName = 'Verde';
+        } else if (finalScore > 10) {
+          bgColor = '#800080'; colorName = 'Morado';
+        } else if (finalScore > 5) {
+          bgColor = '#0000ff'; colorName = 'Azul';
+        } else if (finalScore > 2) {
+          bgColor = '#808080'; colorName = 'Gris';
+        }
+
+        this.container.style.backgroundColor = bgColor;
         this.container.style.color = '#000000';
-        this.messageElement.textContent = `${this.messageElement.textContent} (Nivel ${level + 1}: ${COLOR_LEVELS[colorLevel].name})`;
       }
       
       reset() {
@@ -929,7 +875,6 @@
       }
     }
 
-    // Lógica para mostrar la pregunta de ciberseguridad
     function showCyberQuestion(player) {
       isQuestionActive = true;
       const modal = document.getElementById('question-modal');
@@ -943,44 +888,42 @@
       qPlayerTurn.textContent = `Turno de: ${player.playerName} (Jugador ${player.playerNumber})`;
       qPlayerTurn.style.color = player.colors.primary;
       
-      // Seleccionar pregunta aleatoria
       const randomIdx = Math.floor(Math.random() * cyberQuestions.length);
-      const question = cyberQuestions[randomIdx];
+      const originalQ = cyberQuestions[randomIdx];
       
-      qText.textContent = question.q;
+      let optionsWithIndex = originalQ.options.map((opt, idx) => ({ text: opt, isCorrect: idx === originalQ.correct }));
+      optionsWithIndex.sort(() => Math.random() - 0.5);
 
-      question.options.forEach((opt, index) => {
+      qText.textContent = originalQ.q;
+
+      optionsWithIndex.forEach((optObj) => {
         const btn = document.createElement('button');
         btn.className = 'option-btn';
-        btn.textContent = opt;
-        btn.onclick = () => handleAnswer(index, question.correct, btn, player, modal, qOptions, qFeedback);
+        btn.textContent = optObj.text;
+        btn.onclick = () => handleAnswer(optObj.isCorrect, btn, player, modal, qOptions, qFeedback);
         qOptions.appendChild(btn);
       });
 
       modal.style.display = 'flex';
     }
 
-    function handleAnswer(selectedIndex, correctIndex, buttonElement, player, modal, optionsContainer, feedbackElement) {
-      // Desactivar botones
+    function handleAnswer(isCorrect, buttonElement, player, modal, optionsContainer, feedbackElement) {
       const buttons = optionsContainer.querySelectorAll('.option-btn');
       buttons.forEach(b => b.disabled = true);
 
-      if (selectedIndex === correctIndex) {
+      if (isCorrect) {
         buttonElement.classList.add('correct');
         feedbackElement.textContent = "¡Correcto! Tus puntos están a salvo.";
         feedbackElement.style.color = "#28a745";
       } else {
         buttonElement.classList.add('wrong');
-        buttons[correctIndex].classList.add('correct'); // Mostrar la correcta
-        feedbackElement.textContent = "¡Incorrecto! Pierdes 2 puntos.";
+        feedbackElement.textContent = "¡Incorrecto! Pierdes 2 puntos antes del multiplicador.";
         feedbackElement.style.color = "#dc3545";
         
-        // Penalización de puntos
-        player.score = Math.max(0, player.score - 2); // Evitar negativos (opcional)
+        player.score = Math.max(0, player.score - 2); 
         player.updateScoreUI();
       }
 
-      // Cerrar modal después de unos segundos
       setTimeout(() => {
         modal.style.display = 'none';
         isQuestionActive = false;
@@ -996,7 +939,7 @@
     
     document.addEventListener('keydown', (e) => {
       if (playerNamesModal.style.display === 'flex') return;
-      if (isQuestionActive) return; // Bloqueo de controles durante la pregunta
+      if (isQuestionActive) return; 
       
       const key = e.key.toLowerCase();
       
@@ -1004,76 +947,14 @@
       else if (key === 'a') { player1Game.adjustX(-1); e.preventDefault(); } 
       else if (key === 'w') { player1Game.adjustY(1); e.preventDefault(); } 
       else if (key === 's') { player1Game.adjustY(-1); e.preventDefault(); } 
-      else if (key === 'e') { player1Game.launch(); e.preventDefault(); } 
-      else if (key === 'r') { player1Game.reset(); e.preventDefault(); }
+      else if (key === 'e') { player1Game.launch(); e.preventDefault(); }
       
       if (key === 'i') { player2Game.adjustX(1); e.preventDefault(); } 
       else if (key === 'k') { player2Game.adjustX(-1); e.preventDefault(); } 
       else if (key === 'o') { player2Game.adjustY(1); e.preventDefault(); } 
       else if (key === 'l') { player2Game.adjustY(-1); e.preventDefault(); } 
-      else if (key === 'p') { player2Game.launch(); e.preventDefault(); } 
-      else if (key === ';' || key === 'ñ') { player2Game.reset(); e.preventDefault(); }
+      else if (key === 'p') { player2Game.launch(); e.preventDefault(); }
     });
-    
-    document.getElementById('send-results').addEventListener('click', sendResultsToGoogleSheets);
-    
-    function sendResultsToGoogleSheets() {
-      const sendButton = document.getElementById('send-results');
-      const statusMessage = document.getElementById('status-message');
-      const statusOverlay = document.getElementById('status-overlay');
-      
-      if (resultsSent) {
-        statusMessage.textContent = "¡Los resultados ya fueron enviados!";
-        statusMessage.className = "info";
-        statusOverlay.style.display = 'flex';
-        setTimeout(() => { statusOverlay.style.display = 'none'; }, 3000);
-        return;
-      }
-      
-      const score1 = player1Game ? player1Game.getScore() : 0;
-      const score2 = player2Game ? player2Game.getScore() : 0;
-      const timestamp = new Date().toLocaleString();
-      
-      const data = {
-        player1: "Angry " + player1Name,
-        score1: score1,
-        player2: "Angry " + player2Name,
-        score2: score2,
-        timestamp: timestamp
-      };
-      
-      resultsSent = true;
-      sendButton.disabled = true;
-      sendButton.textContent = "Resultados enviados";
-      
-      statusMessage.textContent = "ENVIANDO RESULTADOS...";
-      statusMessage.className = "info";
-      statusOverlay.style.display = 'flex';
-      
-      const scriptUrl = "https://script.google.com/macros/s/AKfycbwVPttSZrhwfWwSZpFo7KWjJ39vldQm3MPGykMWEPWOoF4UsZ24mC8YhgiaE-0xm_7G/exec";
-      
-      fetch(scriptUrl, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      })
-      .then(() => {
-        statusMessage.textContent = "¡RESULTADOS ENVIADOS CORRECTAMENTE!";
-        statusMessage.className = "success";
-        setTimeout(() => { statusOverlay.style.display = 'none'; }, 5000);
-      })
-      .catch(error => {
-        statusMessage.textContent = "ERROR AL ENVIAR RESULTADOS";
-        statusMessage.className = "error";
-        console.error("Error:", error);
-        
-        resultsSent = false;
-        sendButton.disabled = false;
-        sendButton.textContent = "Enviar resultados a Google Sheets";
-        setTimeout(() => { statusOverlay.style.display = 'none'; }, 3000);
-      });
-    }
   </script>
 
 </body></html>
