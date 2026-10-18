@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
+<!-- saved from url=(0039)https://delatj.github.io/web/brazo.html -->
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
     <title>Robot Game - Alcance Corregido</title>
     <style>
         :root {
@@ -22,7 +22,8 @@
 
         .sidebar { width: 310px; background: var(--panel); padding: 15px; display: flex; flex-direction: column; gap: 8px; z-index: 1000; box-shadow: 5px 0 15px rgba(0,0,0,0.5); }
         .header-score { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; border: 2px solid var(--accent); }
-        .score-box { font-size: 1.8rem; font-weight: bold; color: var(--accent); }
+        /* Puntuación multiplicada por tres en tamaño */
+        .score-box { font-size: 5.4rem; font-weight: bold; color: var(--accent); line-height: 1; }
         .instructions { background: #111; padding: 12px; border-radius: 8px; border-left: 5px solid #2ecc71; min-height: 50px; font-size: 0.85rem; }
         
         .control-group { background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; display: flex; flex-direction: column; gap: 5px; }
@@ -33,7 +34,6 @@
         .btn-move { background: var(--accent); color: #000; }
         .btn-grip { background: #9b59b6; color: white; }
         .btn-save { background: #3498db; color: white; grid-column: span 2; }
-        #btn-sheets { background: #2ecc71; color: white; grid-column: span 2; margin-top: 5px; }
 
         .pos-list { flex-grow: 1; background: #111; border-radius: 6px; padding: 10px; overflow-y: auto; border: 1px solid #444; }
         .pos-card { background: #222; margin-bottom: 5px; padding: 8px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid var(--accent); }
@@ -44,7 +44,7 @@
         .modal-box input { margin: 15px 0; width: 90%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
 
         #status-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 2001; }
-        #status-msg { background: white; padding: 25px; border-radius: 8px; color: #155724; font-weight: bold; border: 4px solid var(--primary); }
+        #status-msg { background: white; padding: 25px; border-radius: 8px; color: #155724; font-weight: bold; border: 4px solid var(--primary); text-align: center; max-width: 450px; }
 
         .viewport { flex-grow: 1; position: relative; overflow: hidden; }
         .conveyor { position: absolute; bottom: 0; width: 100%; height: 90px; background: var(--belt); border-top: 8px solid #222; z-index: 10; }
@@ -58,7 +58,8 @@
         .claw-l { left: 8px; bottom: -45px; }
         .claw-r { right: 8px; bottom: -45px; }
         
-        .piece { position: absolute; width: 40px; height: 40px; border-radius: 6px; z-index: 50; }
+        /* Piezas con borde negro añadido para mayor visibilidad */
+        .piece { position: absolute; width: 40px; height: 40px; border-radius: 6px; z-index: 50; border: 2px solid #000; box-sizing: border-box; }
         
         .box { position: absolute; bottom: 90px; width: 110px; height: 80px; border: 5px solid #fff; background: rgba(255,255,255,0.1); border-top: none; z-index: 20; transition: left 0.5s ease-out; }
         .box-lid { position: absolute; top: -10px; left: -5px; width: 110px; height: 10px; background: rgba(255,255,255,0.5); border: 2px solid white; border-radius: 5px; }
@@ -98,7 +99,6 @@
             <button class="btn-move" onclick="manualMove()">Mover</button>
             <button class="btn-grip" onclick="toggleClaw()" id="gripBtn">PINZA</button>
             <button class="btn-save" onclick="savePos()">Guardar Pos.</button>
-            <button id="btn-sheets" onclick="enviarASheets()">ENVIAR A SHEETS</button>
         </div>
         
         <div class="pos-list" id="posList"></div>
@@ -124,9 +124,42 @@
         let itemHeld = null;
         let savedPositions = [];
         let operarioNombre = "";
-        let enviado = false;
         const colors = { 'rojo': '#e74c3c', 'azul': '#3498db', 'verde': '#2ecc71', 'amarillo': '#f1c40f', 'naranja': '#e67e22' };
         let misionesActivas = [];
+
+        // Banco de 30 preguntas de ciberseguridad, redes e internet
+        const bancoPreguntas = [
+            { q: "¿Qué es una contraseña segura?", options: ["Una combinación de letras, números y símbolos", "Tu fecha de cumpleaños", "La palabra 'contraseña'"], correct: 0 },
+            { q: "¿Qué debes hacer si recibes un mensaje sospechoso de alguien desconocido?", options: ["Hacer clic en todos los enlaces", "Ignorarlo y no compartir datos personales", "Enviar tus contraseñas"], correct: 1 },
+            { q: "¿Qué significa el término 'Phishing'?", options: ["Un deporte acuático", "Un fraude para robar información personal mediante engaños", "Un antivirus gratuito"], correct: 1 },
+            { q: "¿Es seguro conectarse a cualquier red Wi-Fi pública sin protección?", options: ["Sí, todas son seguras", "No, pueden interceptar tus datos", "Solo si tiene nombre oficial"], correct: 1 },
+            { q: "¿Qué es la autenticación de doble factor (2FA)?", options: ["Tener dos teléfonos móviles", "Una capa extra de seguridad además de la contraseña", "Memorizar dos claves iguales"], correct: 1 },
+            { q: "¿Qué información NUNCA debes publicar en redes sociales?", options: ["Tus gustos musicales", "Tu dirección completa y número de teléfono", "Una foto de un paisaje"], correct: 1 },
+            { q: "¿Qué debes hacer con el software y sistema operativo de tus dispositivos?", options: ["No actualizarlos nunca", "Actualizarlos regularmente para corregir fallos de seguridad", "Borrar el sistema"], correct: 1 },
+            { q: "¿Qué es el ciberacoso (cyberbullying)?", options: ["Jugar videojuegos en red", "Usar medios digitales para acosar o intimidar a alguien", "Un tipo de virus informático"], correct: 1 },
+            { q: "¿Qué es un software malicioso o 'malware'?", options: ["Un programa útil para estudiar", "Un software diseñado para dañar o infiltrarse en sistemas", "Un componente físico del ordenador"], correct: 1 },
+            { q: "¿Por qué es importante cerrar sesión en ordenadores compartidos?", options: ["Para ahorrar electricidad", "Para evitar que otros accedan a tus cuentas personales", "Para que la pantalla brille menos"], correct: 1 },
+            { q: "¿Qué debes hacer si alguien te pide fotos íntimas en internet?", options: ["Enviarlas si es un amigo", "Rechazarlo, bloquear y avisar a un adulto de confianza", "Publicarlas en un perfil público"], correct: 1 },
+            { q: "¿Qué es una copia de seguridad (backup)?", options: ["Borrar archivos antiguos", "Duplicar y guardar datos importantes en otro lugar seguro", "Imprimir documentos en papel"], correct: 1 },
+            { q: "¿Qué indica un protocolo HTTPS en una página web?", options: ["Que la conexión está cifrada y es más segura", "Que la página es muy rápida", "Que la web es gratuita"], correct: 0 },
+            { q: "¿Qué debes hacer ante un enlace acortado sospechoso en redes sociales?", options: ["Abrirlo inmediatamente", "No hacer clic si no confías en la fuente", "Compartirlo con tus amigos"], correct: 1 },
+            { q: "¿Qué es la huella digital en internet?", options: ["Tus impresiones dactilares reales escaneadas", "El rastro de información que dejas al navegar online", "Un diseño de teclado táctil"], correct: 1 },
+            { q: "¿Cuál es una buena práctica para gestionar tus contraseñas?", options: ["Usar la misma en todas partes", "Anotarlas en un papel pegado al monitor", "Usar contraseñas diferentes y un gestor seguro"], correct: 2 },
+            { q: "¿Qué es el 'vishing'?", options: ["Phishing a través de llamadas telefónicas", "Un virus de vídeo", "Un juego de realidad virtual"], correct: 0 },
+            { q: "¿Qué debes hacer si descubres que una cuenta tuya ha sido hackeada?", options: ["Dejarla abandonada", "Cambiar la contraseña de inmediato y revisar la actividad", "Apagar el router"], correct: 1 },
+            { q: "¿Qué es el ransomware?", options: ["Un programa de diseño gráfico", "Un malware que bloquea tus archivos y pide rescate", "Un navegador web rápido"], correct: 1 },
+            { q: "¿Es recomendable aceptar solicitudes de amistad de personas completamente desconocidas?", options: ["Sí, cuantos más amigos mejor", "No, podría ser un perfil falso con malas intenciones", "Solo si tienen foto bonita"], correct: 1 },
+            { q: "¿Qué es el correo basura o 'spam'?", options: ["Correos electrónicos no deseados, normalmente publicitarios o maliciosos", "Mensajes importantes del colegio", "Archivos de música comprimidos"], correct: 0 },
+            { q: "¿Qué debes hacer antes de descargar una aplicación móvil?", options: ["Revisar valoraciones, permisos y la reputación del desarrollador", "Descargarla sin mirar", "Aceptar todos los permisos sin leer"], correct: 0 },
+            { q: "¿Qué es la Netiqueta?", options: ["Etiquetas para ropa comprada online", "El conjunto de normas de comportamiento en internet", "Una red social de fotografías"], correct: 1 },
+            { q: "¿Por qué es peligroso usar redes Wi-Fi abiertas para hacer operaciones bancarias?", options: ["Porque gastan muchos datos", "Porque los datos pueden ser interceptados por ciberdelincuentes", "Porque la pantalla se apaga"], correct: 1 },
+            { q: "¿Qué es la ingeniería social en ciberseguridad?", options: ["Construir redes sociales", "Manipular psicológicamente a las personas para que revelen datos", "Una red de ordenadores escolares"], correct: 1 },
+            { q: "¿Qué debes hacer si ves un comentario ofensivo o acoso en redes?", options: ["Unirte a los insultos", "Reportar la publicación y bloquear al usuario", "Ignorarlo y borrar tu cuenta"], correct: 1 },
+            { q: "¿Qué es un firewall (cortafuegos)?", options: ["Un sistema físico para apagar incendios informáticos", "Un dispositivo o software que filtra el tráfico de red según reglas de seguridad", "Un juego de estrategia"], correct: 1 },
+            { q: "¿Qué información se considera dato personal sensible?", options: ["Tu color favorito", "Tu DNI, número de cuenta bancaria y datos médicos", "Tu comida preferida"], correct: 1 },
+            { q: "¿Qué significa configurar una cuenta de redes sociales como 'privada'?", options: ["Que solo tus amigos aprobados pueden ver tu contenido", "Que nadie en el mundo puede encontrarte", "Que la plataforma te paga dinero"], correct: 0 },
+            { q: "¿Por qué no debes creer todo lo que ves en internet (noticias falsas o fake news)?", options: ["Porque todo en internet es mentira", "Porque cualquier persona puede publicar información sin verificar", "Porque los ordenadores fallan"], correct: 1 }
+        ];
 
         window.addEventListener('keydown', (e) => {
             if (e.code === "Space") { e.preventDefault(); toggleClaw(); }
@@ -151,7 +184,6 @@
             if (shouldChangePos) {
                 document.querySelectorAll('.box').forEach(b => b.remove());
                 misionesActivas = [];
-                // ALCANCE LIMITADO: La caja ahora solo aparece entre -140 y 140 para que el brazo llegue siempre.
                 const safeX = (Math.random() * 280) - 140; 
                 createBox(safeX, nextColor);
             } else {
@@ -184,14 +216,17 @@
             b.appendChild(lid);
             b.appendChild(l);
             document.getElementById('factory').appendChild(b);
-            misionesActivas.push({ el: b, color: colorTarget, xCenter: absX + 55, yTop: window.innerHeight - 170 });
+            misionesActivas.push({ el: b, color: colorTarget });
         }
 
         function updateBackground() {
-            let bg = "#333";
-            if (puntos >= 4) bg = "#1b4d3e";  
-            if (puntos >= 8) bg = "#7d6608";  
-            if (puntos >= 12) bg = "#78281f"; 
+            let bg = "#333"; 
+            if (puntos > 2) bg = "#3498db";   
+            if (puntos > 5) bg = "#8e44ad";   
+            if (puntos > 15) bg = "#2ecc71";  
+            if (puntos > 20) bg = "#f1c40f";  
+            if (puntos > 25) bg = "#e67e22";  
+            if (puntos > 30) bg = "#e74c3c";  
             document.body.style.backgroundColor = bg;
         }
 
@@ -239,16 +274,33 @@
                 y += 8; 
                 p.style.top = y + "px";
 
+                const pRect = p.getBoundingClientRect();
+
                 misionesActivas.forEach(m => {
-                    // Detección de colisión más permisiva (65px de ancho)
-                    if (!p.dataset.scored && Math.abs(y - m.yTop) < 30 && Math.abs((x + 20) - m.xCenter) < 65) {
-                        if (p.getAttribute('data-color') === m.color) {
-                            p.dataset.scored = "true";
-                            puntos++;
-                            document.getElementById('puntos').innerText = puntos;
-                            p.style.opacity = "0";
-                            updateBackground();
-                            setTimeout(() => setMision(), 500);
+                    if (!p.dataset.scored) {
+                        const boxRect = m.el.getBoundingClientRect();
+                        if (
+                            pRect.right >= boxRect.left &&
+                            pRect.left <= boxRect.right &&
+                            pRect.bottom >= boxRect.top &&
+                            pRect.top <= boxRect.bottom
+                        ) {
+                            if (p.getAttribute('data-color') === m.color) {
+                                p.dataset.scored = "true";
+                                puntos++;
+                                document.getElementById('puntos').innerText = puntos;
+                                p.style.opacity = "0";
+                                updateBackground();
+                                
+                                clearInterval(gravity);
+                                setTimeout(() => p.remove(), 500);
+
+                                if (puntos > 0 && puntos % 5 === 0) {
+                                    setTimeout(lanzarPreguntaCiberseguridad, 400);
+                                } else {
+                                    setTimeout(() => setMision(), 500);
+                                }
+                            }
                         }
                     }
                 });
@@ -258,6 +310,50 @@
                     setTimeout(() => p.remove(), 500); 
                 }
             }, 20);
+        }
+
+        function lanzarPreguntaCiberseguridad() {
+            const preguntaObj = bancoPreguntas[Math.floor(Math.random() * bancoPreguntas.length)];
+            
+            let opcionesMezcladas = preguntaObj.options.map((texto, index) => ({ texto, originalIndex: index }));
+            opcionesMezcladas.sort(() => Math.random() - 0.5);
+
+            const overlay = document.getElementById('status-overlay');
+            const msg = document.getElementById('status-msg');
+            
+            let htmlOpciones = "";
+            opcionesMezcladas.forEach((op, idx) => {
+                htmlOpciones += `<button onclick="verificarRespuesta(${op.originalIndex === preguntaObj.correct})" style="background:#2c3e50; color:white; padding:10px; margin:5px 0; width:100%; border:none; border-radius:4px; cursor:pointer; text-align:left; font-size:0.9rem;">${idx + 1}. ${op.texto}</button>`;
+            });
+
+            msg.innerHTML = `
+                <h3 style="color:#c0392b; margin-top:0;">¡CONTROL DE CIBERSEGURIDAD! (${puntos} Pts)</h3>
+                <p style="font-size:0.95rem; font-weight:normal; color:#333;">${preguntaObj.q}</p>
+                <div style="display:flex; flex-direction:column;">${htmlOpciones}</div>
+                <p style="font-size:0.75rem; color:#666; margin-top:10px;">⚠️ Si fallas, perderás 2 puntos.</p>
+            `;
+            overlay.style.display = 'flex';
+        }
+
+        window.verificarRespuesta = function(esCorrecta) {
+            const overlay = document.getElementById('status-overlay');
+            const msg = document.getElementById('status-msg');
+
+            if (esCorrecta) {
+                puntos++;
+                msg.innerHTML = `<h3 style="color:#27ae60;">¡Respuesta Correcta!</h3><p style="color:#333;">¡Ganaste 1 punto extra por tu conocimiento en internet!</p>`;
+            } else {
+                puntos = Math.max(0, puntos - 2);
+                msg.innerHTML = `<h3 style="color:#c0392b;">¡Respuesta Incorrecta!</h3><p style="color:#333;">Se te han restado 2 puntos por fallo de seguridad.</p>`;
+            }
+
+            document.getElementById('puntos').innerText = puntos;
+            updateBackground();
+
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                setMision(true);
+            }, 2000);
         }
 
         function createPiece() {
@@ -275,7 +371,7 @@
             let xPos = -50;
             const belt = setInterval(() => {
                 if (itemHeld === p) { clearInterval(belt); return; }
-                xPos += 2.5; // Un pelín más rápido para dar dinamismo
+                xPos += 2.5; 
                 p.style.left = xPos + "px";
                 if (xPos > window.innerWidth) { p.remove(); clearInterval(belt); }
             }, 30);
@@ -309,17 +405,6 @@
             manualMove();
         }
 
-        function enviarASheets() {
-            if(enviado || puntos === 0) return;
-            enviado = true;
-            document.getElementById('status-overlay').style.display = 'flex';
-            document.getElementById('status-msg').innerText = "ENVIANDO DATOS...";
-            setTimeout(() => {
-                document.getElementById('status-msg').innerText = "¡REGISTRADO CON ÉXITO!";
-                setTimeout(() => { document.getElementById('status-overlay').style.display = 'none'; }, 2000);
-            }, 1500);
-        }
-
         setInterval(() => {
             if (itemHeld) {
                 const g = document.getElementById('cL').getBoundingClientRect();
@@ -331,5 +416,5 @@
 
         setInterval(createPiece, 4000);
     </script>
-</body>
-</html>
+
+</body></html>
