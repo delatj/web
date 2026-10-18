@@ -466,19 +466,22 @@
                 const winner = state.turn === 'white' ? state.names.black : state.names.white;
 
                 // Lógica de recompensas por victoria contra la máquina
-                if (state.gameMode === 'pve' && winnerColor === 'white') {
-                    if (state.aiDifficulty === 1) {
-                        state.scores.white += 10;
-                        document.getElementById('score-w').innerText = state.scores.white;
-                    } else if (state.aiDifficulty === 2) {
-                        extraMsg = `<div class="reward-msg">¡HAS GANADO 100 PUNTOS!</div>`;
-                        document.body.style.background = '#e74c3c';
-                    } else if (state.aiDifficulty === 3) {
-                        extraMsg = `<div class="reward-msg">¡HAS GANADO 200 PUNTOS!</div>`;
-                        document.body.style.background = '#e74c3c';
-                    }
-                }
-
+if (state.gameMode === 'pve' && winnerColor === 'white') {
+    if (state.aiDifficulty === 1) {
+        state.scores.white += 2;
+        document.getElementById('score-w').innerText = state.scores.white;
+    } else if (state.aiDifficulty === 2) {
+        state.scores.white += 10; // Suma 10 puntos al marcador
+        extraMsg = `<div class="reward-msg">¡HAS GANADO 10 PUNTOS!</div>`;
+        document.body.style.background = '#e74c3c';
+        document.getElementById('score-w').innerText = state.scores.white;
+    } else if (state.aiDifficulty === 3) {
+        state.scores.white += 20; // Suma 20 puntos al marcador
+        extraMsg = `<div class="reward-msg">¡HAS GANADO 20 PUNTOS!</div>`;
+        document.body.style.background = '#e74c3c';
+        document.getElementById('score-w').innerText = state.scores.white;
+    }
+}
                 let modoTexto = state.gameMode === 'pve' ? `MODO: JUGADOR VS MÁQUINA (NIVEL ${state.aiDifficulty})` : "MODO: JUGADOR VS JUGADOR";
                 let metaInfo = `<br><span style="font-size:1.1rem; font-weight:normal; color:#555; display:block; margin-top:15px; border-top:1px dashed #ccc; padding-top:10px;">` +
                                `${modoTexto}<br>` +
