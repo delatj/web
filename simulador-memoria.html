@@ -353,6 +353,8 @@
         .ans-right { color: #166534; font-weight: 700; }
         .all-ok { color: #166534; font-weight: 700; }
         .nav-buttons { flex-wrap: wrap; }
+        .team-card { border: 1px solid var(--border); border-radius: 10px; padding: 14px; background: #f8fafc; }
+        .team-card h3 { font-size: 1rem; color: #1e3a8a; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -376,13 +378,27 @@
                 Escribe los datos antes de empezar. Sin nombre y apellidos no se puede iniciar el simulador.
             </p>
             <div class="team-grid">
-                <div class="form-group">
-                    <label for="studentName1">Alumno/a 1 (nombre y apellidos):</label>
-                    <input type="text" id="studentName1" autocomplete="off" placeholder="Ej: Lucía Pérez Gómez">
+                <div class="team-card">
+                    <h3>Alumno/a 1</h3>
+                    <div class="form-group">
+                        <label for="studentName1">Nombre:</label>
+                        <input type="text" id="studentName1" autocomplete="off" placeholder="Ej: Lucía">
+                    </div>
+                    <div class="form-group">
+                        <label for="studentSurname1">Apellidos:</label>
+                        <input type="text" id="studentSurname1" autocomplete="off" placeholder="Ej: Pérez Gómez">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="studentName2">Alumno/a 2 (nombre y apellidos):</label>
-                    <input type="text" id="studentName2" autocomplete="off" placeholder="Ej: Marcos Díaz Ruiz">
+                <div class="team-card">
+                    <h3>Alumno/a 2</h3>
+                    <div class="form-group">
+                        <label for="studentName2">Nombre:</label>
+                        <input type="text" id="studentName2" autocomplete="off" placeholder="Ej: Marcos">
+                    </div>
+                    <div class="form-group">
+                        <label for="studentSurname2">Apellidos:</label>
+                        <input type="text" id="studentSurname2" autocomplete="off" placeholder="Ej: Díaz Ruiz">
+                    </div>
                 </div>
             </div>
             <div class="form-group">
@@ -711,7 +727,7 @@
 
         /* ============ CONFIGURACIÓN ============ */
         // Pega aquí la URL de la aplicación web de Google Apps Script (termina en /exec).
-        const SHEET_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyiOndS6GMYhgiSGLVAXUOOHhMKtBXqcLUeOppbNZIkrxU-HiMlgmhlYCj1xYZQG0io/exec";
+        const SHEET_WEBAPP_URL = "";
 
         // Porcentaje mínimo para aprobar y enviar los datos a la hoja de cálculo
         const PASS_PERCENT = 70;
@@ -1125,22 +1141,26 @@
 
         function toggleSolo() {
             const solo = document.getElementById('soloCheck').checked;
-            const n2 = document.getElementById('studentName2');
-            n2.disabled = solo;
-            if (solo) n2.value = '';
+            ['studentName2', 'studentSurname2'].forEach(id => {
+                const el = document.getElementById(id);
+                el.disabled = solo;
+                if (solo) el.value = '';
+            });
         }
 
         function validateTeamData() {
-            const n1 = document.getElementById('studentName1').value;
-            const n2 = document.getElementById('studentName2').value;
-            const g = document.getElementById('studentGroup').value;
+            const val = id => cleanName(document.getElementById(id).value);
             const solo = document.getElementById('soloCheck').checked;
             const err = document.getElementById('team-error');
             const msgs = [];
 
-            if (!isFullName(n1)) msgs.push('Escribe nombre y apellidos del alumno/a 1.');
-            if (!solo && !isFullName(n2)) msgs.push('Escribe nombre y apellidos del alumno/a 2 (o marca «Trabajo en solitario»).');
-            if (!g.trim()) msgs.push('Indica el curso y grupo.');
+            if (val('studentName1').length < 2) msgs.push('Escribe el nombre del alumno/a 1.');
+            if (val('studentSurname1').length < 2) msgs.push('Escribe los apellidos del alumno/a 1.');
+            if (!solo) {
+                if (val('studentName2').length < 2) msgs.push('Escribe el nombre del alumno/a 2 (o marca «Trabajo en solitario»).');
+                if (val('studentSurname2').length < 2) msgs.push('Escribe los apellidos del alumno/a 2 (o marca «Trabajo en solitario»).');
+            }
+            if (!val('studentGroup')) msgs.push('Indica el curso y grupo.');
 
             if (msgs.length) {
                 err.className = 'feedback-msg error';
@@ -1162,8 +1182,8 @@
         function prevWindow(current) { showWindow(current - 1); }
 
         function calculateResults() {
-            const n1 = cleanName(document.getElementById('studentName1').value);
-            const n2 = cleanName(document.getElementById('studentName2').value);
+            const n1 = cleanName(document.getElementById('studentName1').value + ' ' + document.getElementById('studentSurname1').value);
+            const n2 = cleanName(document.getElementById('studentName2').value + ' ' + document.getElementById('studentSurname2').value);
             const grupo = cleanName(document.getElementById('studentGroup').value);
 
             updateCriterionDisplay();
@@ -1468,7 +1488,7 @@
             activeCriterionKey = 'productos';
 
             if (!keepTeam) {
-                ['studentName1', 'studentName2', 'studentGroup'].forEach(id => document.getElementById(id).value = '');
+                ['studentName1', 'studentSurname1', 'studentName2', 'studentSurname2', 'studentGroup'].forEach(id => document.getElementById(id).value = '');
                 document.getElementById('soloCheck').checked = false;
                 toggleSolo();
             }
