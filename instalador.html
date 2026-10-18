@@ -955,7 +955,15 @@
 
         function sendResultsToSheets(m1, m2, course, aciertos, porcentaje) {
             const now = new Date();
-            const fecha = now.toISOString().split('T')[0];
+            
+            // Obtenemos día, mes y año con ceros a la izquierda si es necesario
+            const dia = String(now.getDate()).padStart(2, '0');
+            const mes = String(now.getMonth() + 1).padStart(2, '0');
+            const anio = now.getFullYear();
+            
+            // Formato día/mes/año (puedes cambiar la barra '/' por guiones '-' si lo prefieres)
+            const fecha = `${dia}/${mes}/${anio}`;
+            
             const hora = now.toTimeString().split(' ')[0];
             const envioId = 'linux_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
 
