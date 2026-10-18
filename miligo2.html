@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<!-- saved from url=(0041)https://delatj.github.io/web/milogo2.html -->
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movimiento de Tortuga: Dos Jugadores</title>
+    <style>
+        body {
+            transition: background-color 0.5s;
+            display: flex;
+            justify-content: space-around;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .game-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            width: 50%;
+            transition: background-color 0.5s;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(6, 50px);
+            grid-template-rows: repeat(6, 50px);
+            gap: 2px;
+            border: 2px solid black;
+        }
+
+        .grid-item {
+            width: 50px;
+            height: 50px;
+            border: 1px solid black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .character {
+            width: 40px;
+            height: 20px;
+            background-color: lightblue;
+            border-radius: 0px 10px 10px 0px;
+            border-right: 3px solid black;
+            transform-origin: center center;
+            transition: transform 0.3s;
+        }
+
+        .goal {
+            background-color: lightgreen;
+            border-radius: 50%;
+            color: black;
+            font-weight: bold;
+        }
+
+        .obstacle {
+            background-color: red;
+            border-radius: 50%;
+            color: white;
+            font-weight: bold;
+        }
+
+        .score {
+            font-size: 4em;
+            font-weight: bold;
+            color: black;
+            margin: 5px 0;
+        }
+
+        .instructions {
+            font-size: 16px;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .divider {
+            height: 100vh;
+            width: 2px;
+            background-color: black;
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        #player-names-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #player-names-form {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            width: 300px;
+        }
+
+        #player-names-form h2 {
+            margin-top: 0;
+        }
+
+        #player-names-form input {
+            margin: 10px;
+            padding: 8px;
+            width: 80%;
+        }
+
+        #player-names-form button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="player-names-modal">
+        <div id="player-names-form">
+            <h2>Ingresa los nombres</h2>
+            <input type="text" id="player1-name" placeholder="Jugador Izquierdo" required="">
+            <input type="text" id="player2-name" placeholder="Jugador Derecho" required="">
+            <button id="start-game">Comenzar Juego</button>
+        </div>
+    </div>
+
+    <div class="game-area" id="leftArea">
+        <h2 id="player1-title">Jugador Izquierdo</h2>
+        <div class="grid-container" id="gridLeft"></div>
+        <div class="score" id="scoreLeft">0.0</div>
+        <div class="instructions">
+            Controles:<br>
+            W - Avanzar<br>
+            S - Retroceder<br>
+            A - Girar izquierda<br>
+            D - Girar derecha
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="game-area" id="rightArea">
+        <h2 id="player2-title">Jugador Derecho</h2>
+        <div class="grid-container" id="gridRight"></div>
+        <div class="score" id="scoreRight">0.0</div>
+        <div class="instructions">
+            Controles:<br>
+            ↑ - Avanzar<br>
+            ↓ - Retroceder<br>
+            ← - Girar izquierda<br>
+            → - Girar derecha
+        </div>
+    </div>
+
+    <script>
+        const gridSize = 6;
+        let players = {
+            left: {
+                position: { x: 0, y: 0 },
+                direction: 0,
+                score: 0,
+                rewards: [],
+                obstacles: [],
+                currentRewardIndex: 0,
+                name: ""
+            },
+            right: {
+                position: { x: 0, y: 0 },
+                direction: 0,
+                score: 0,
+                rewards: [],
+                obstacles: [],
+                currentRewardIndex: 0,
+                name: ""
+            }
+        };
+
+        function generateRewardsAndObstacles(player) {
+            player.rewards = [];
+            player.obstacles = [];
+
+            const usedPositions = new Set();
+            const rewardPositions = [];
+
+            function positionKey(pos) {
+                return `${pos.x},${pos.y}`;
+            }
+
+            function isPositionValid(pos, positions) {
+                for (const rewardPos of positions) {
+                    const dx = Math.abs(pos.x - rewardPos.x);
+                    const dy = Math.abs(pos.y - rewardPos.y);
+                    if (dx <= 1 && dy <= 1) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            function uniqueRandomPosition() {
+                let pos, attempts = 0;
+                do {
+                    pos = randomPosition();
+                    attempts++;
+                    if (attempts > 100) {
+                        console.error("No se pudo encontrar posición válida");
+                        return null;
+                    }
+                } while (
+                    usedPositions.has(positionKey(pos)) || 
+                    !isPositionValid(pos, rewardPositions)
+                );
+                
+                usedPositions.add(positionKey(pos));
+                return pos;
+            }
+
+            for (let i = 0; i < 4; i++) {
+                const rewardPos = uniqueRandomPosition();
+                if (!rewardPos) break;
+                
+                rewardPositions.push(rewardPos);
+                player.rewards.push({ ...rewardPos, order: i + 1 });
+            }
+
+            for (let i = 0; i < 3; i++) {
+                const obstaclePos = randomPosition();
+                if (!usedPositions.has(positionKey(obstaclePos))) {
+                    player.obstacles.push(obstaclePos);
+                    usedPositions.add(positionKey(obstaclePos));
+                }
+            }
+        }
+
+        function randomPosition() {
+            return {
+                x: Math.floor(Math.random() * gridSize),
+                y: Math.floor(Math.random() * gridSize)
+            };
+        }
+
+        function renderGrid(player, gridId) {
+            const grid = document.getElementById(gridId);
+            grid.innerHTML = "";
+
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    const cell = document.createElement("div");
+                    cell.classList.add("grid-item");
+
+                    if (x === player.position.x && y === player.position.y) {
+                        const character = document.createElement("div");
+                        character.classList.add("character");
+                        character.style.transform = `rotate(${player.direction}deg)`;
+                        cell.appendChild(character);
+                    } else {
+                        const reward = player.rewards.find(r => r.x === x && r.y === y);
+                        const obstacle = player.obstacles.find(o => o.x === x && o.y === y);
+
+                        if (reward) {
+                            cell.classList.add("goal");
+                            cell.textContent = reward.order;
+                        } else if (obstacle) {
+                            cell.classList.add("obstacle");
+                        }
+                    }
+
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        function movePlayer(player, direction, gridId) {
+            const newPosition = { ...player.position };
+
+            if (direction === "forward") {
+                if (player.direction === 0) newPosition.x++;
+                if (player.direction === 90) newPosition.y++;
+                if (player.direction === 180) newPosition.x--;
+                if (player.direction === 270) newPosition.y--;
+            } else if (direction === "backward") {
+                if (player.direction === 0) newPosition.x--;
+                if (player.direction === 90) newPosition.y--;
+                if (player.direction === 180) newPosition.x++;
+                if (player.direction === 270) newPosition.y++;
+            }
+
+            if (newPosition.x < 0 || newPosition.x >= gridSize || 
+                newPosition.y < 0 || newPosition.y >= gridSize) {
+                player.score -= 0.1;
+                player.score = Math.round(player.score * 10) / 10;
+                updateScore(player, gridId);
+                return;
+            }
+
+            checkPosition(player, newPosition, gridId);
+        }
+
+        function rotatePlayer(player, rotation, gridId) {
+            player.direction = (player.direction + rotation + 360) % 360;
+            renderGrid(player, gridId);
+        }
+
+        function checkPosition(player, newPosition, gridId) {
+            const obstacle = player.obstacles.find(o => o.x === newPosition.x && o.y === newPosition.y);
+            const reward = player.rewards.find(r => r.x === newPosition.x && r.y === newPosition.y);
+
+            if (obstacle) {
+                player.score -= 0.1;
+                player.score = Math.round(player.score * 10) / 10;
+            } else if (reward) {
+                if (reward.order === player.currentRewardIndex + 1) {
+                    player.currentRewardIndex++;
+                    if (player.currentRewardIndex === player.rewards.length) {
+                        player.score += 0.1;
+                        player.score = Math.round(player.score * 10) / 10;
+                        player.currentRewardIndex = 0;
+                        generateRewardsAndObstacles(player);
+                    }
+                } else {
+                    return;
+                }
+            }
+
+            player.position = newPosition;
+            updateScore(player, gridId);
+        }
+
+        function updateScore(player, gridId) {
+            const scoreElementId = gridId === "gridLeft" ? "scoreLeft" : "scoreRight";
+            const areaId = gridId === "gridLeft" ? "leftArea" : "rightArea";
+            const areaElement = document.getElementById(areaId);
+
+            document.getElementById(scoreElementId).textContent = player.score.toFixed(1);
+
+            if (player.score > 30) {
+                areaElement.style.backgroundColor = "red";
+            } else if (player.score > 25) {
+                areaElement.style.backgroundColor = "orange";
+            } else if (player.score > 20) {
+                areaElement.style.backgroundColor = "yellow";
+            } else if (player.score > 15) {
+                areaElement.style.backgroundColor = "green";
+            } else if (player.score > 10) {
+                areaElement.style.backgroundColor = "purple";
+            } else if (player.score > 5) {
+                areaElement.style.backgroundColor = "blue";
+            } else if (player.score > 2) {
+                areaElement.style.backgroundColor = "gray";
+            } else {
+                areaElement.style.backgroundColor = "white";
+            }
+
+            renderGrid(player, gridId);
+        }
+
+        document.getElementById('start-game').addEventListener('click', () => {
+            const player1Name = document.getElementById('player1-name').value.trim();
+            const player2Name = document.getElementById('player2-name').value.trim();
+            
+            if (!player1Name || !player2Name) {
+                alert("Ingresa nombres para ambos jugadores");
+                return;
+            }
+            
+            players.left.name = player1Name;
+            players.right.name = player2Name;
+            
+            document.getElementById('player1-title').textContent = player1Name;
+            document.getElementById('player2-title').textContent = player2Name;
+            
+            document.getElementById('player-names-modal').style.display = 'none';
+            
+            generateRewardsAndObstacles(players.left);
+            generateRewardsAndObstacles(players.right);
+            renderGrid(players.left, "gridLeft");
+            renderGrid(players.right, "gridRight");
+        });
+
+        window.addEventListener("keydown", (event) => {
+            if (document.getElementById('player-names-modal').style.display === 'flex') {
+                return;
+            }
+
+            switch (event.key) {
+                case "w": movePlayer(players.left, "forward", "gridLeft"); break;
+                case "s": movePlayer(players.left, "backward", "gridLeft"); break;
+                case "a": rotatePlayer(players.left, -90, "gridLeft"); break;
+                case "d": rotatePlayer(players.left, 90, "gridLeft"); break;
+                case "ArrowUp": movePlayer(players.right, "forward", "gridRight"); break;
+                case "ArrowDown": movePlayer(players.right, "backward", "gridRight"); break;
+                case "ArrowLeft": rotatePlayer(players.right, -90, "gridRight"); break;
+                case "ArrowRight": rotatePlayer(players.right, 90, "gridRight"); break;
+            }
+        });
+    </script>
+
+</body></html>
