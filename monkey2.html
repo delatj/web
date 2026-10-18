@@ -1,11 +1,9 @@
 <!DOCTYPE html>
-<!-- saved from url=(0041)https://delatj.github.io/web/monkey2.html -->
-<html lang="en">
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Donkey Kong - 2 Jugadores</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.js"></script>
     <style>
         body {
             display: flex;
@@ -15,20 +13,47 @@
             margin: 0;
             padding: 0;
             background-color: white;
+            overflow-x: hidden;
         }
         #scoreboard {
             display: flex;
             justify-content: space-around;
             width: 700px;
-            font-size: 18px;
+            font-size: 1.5rem;
             font-weight: bold;
             margin-bottom: 10px;
+        }
+        .score-val-large {
+            font-size: 3.5rem;
+            font-weight: 900;
+            display: inline-block;
+            vertical-align: middle;
+            color: #333;
+        }
+        /* Contenedor principal que alinea instrucciones laterales y área de juego */
+        #main-layout {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+            margin-top: 10px;
+        }
+        .side-instructions {
+            width: 220px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #333;
         }
         #game-container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            width: 900px;
+            width: 700px;
         }
         #game-area {
             width: 700px;
@@ -48,24 +73,7 @@
             background-color: #f0f0f0;
             border: 1px solid #ccc;
             text-align: center;
-        }
-        #instructions {
-            margin-top: 20px;
-            font-size: 14px;
-            color: #333;
-            text-align: center;
-            width: 700px;
-        }
-        #example {
-            margin-top: 20px;
-            font-size: 14px;
-            color: #333;
-            text-align: center;
-            background-color: #f9f9f9;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            width: 700px;
+            font-weight: bold;
         }
         #player-zones {
             display: flex;
@@ -87,57 +95,6 @@
         }
         #player2-zone {
             background-color: white;
-        }
-        #send-results {
-            margin: 20px;
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        #send-results:hover {
-            background-color: #45a049;
-        }
-        #send-results:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-        #status-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1001;
-            display: none;
-        }
-        #status-message {
-            background-color: white;
-            padding: 40px;
-            border-radius: 15px;
-            text-align: center;
-            font-size: 36px;
-            font-weight: bold;
-            color: #155724;
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
-            min-width: 500px;
-            border: 5px solid #4CAF50;
-        }
-        #status-message.error {
-            color: #721c24;
-            border-color: #f44336;
-        }
-        #status-message.info {
-            color: #0c5460;
-            border-color: #2196F3;
         }
         #player-names-modal {
             position: fixed;
@@ -183,6 +140,54 @@
         #player-names-form button:hover {
             background-color: #45a049;
         }
+
+        #quiz-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        #quiz-content {
+            background-color: white;
+            padding: 35px;
+            border-radius: 15px;
+            text-align: center;
+            width: 500px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            border: 4px solid #2196F3;
+        }
+        #quiz-content h3 {
+            margin-top: 0;
+            color: #2196F3;
+            font-size: 22px;
+        }
+        #quiz-question {
+            font-size: 18px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .quiz-option-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            background-color: #f8f9fa;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .quiz-option-btn:hover {
+            background-color: #e2e6ea;
+            border-color: #2196F3;
+        }
     </style>
 </head>
 <body>
@@ -195,8 +200,12 @@
         </div>
     </div>
 
-    <div id="status-overlay">
-        <div id="status-message"></div>
+    <div id="quiz-modal">
+        <div id="quiz-content">
+            <h3>🛡️ RETO DE CIBERSEGURIDAD Y REDES 🛡️</h3>
+            <div id="quiz-question">Pregunta aquí...</div>
+            <div id="quiz-options"></div>
+        </div>
     </div>
 
     <div id="player-zones">
@@ -206,36 +215,41 @@
     
     <h1>Donkey Kong - Modo 2 Jugadores</h1>
     <div id="scoreboard">
-        <div>Jugador 1: <span id="score1">0</span> puntos</div>
-        <div>Jugador 2: <span id="score2">0</span> puntos</div>
+        <div><span id="label1">Jugador 1</span>: <span id="score1" class="score-val-large">0.0</span></div>
+        <div><span id="label2">Jugador 2</span>: <span id="score2" class="score-val-large">0.0</span></div>
     </div>
     
-    <div id="game-container">
-        <div id="game-area"></div>
-        <div id="key-display">
-            <div id="keys1">Secuencia Jugador 1: </div>
-            <div id="keys2">Secuencia Jugador 2: </div>
+    <div id="main-layout">
+        <!-- Instrucciones Jugador 1 a la Izquierda -->
+        <div class="side-instructions">
+            <h3>Jugador 1</h3>
+            <p><strong>Controles:</strong></p>
+            <p>A - Izquierda<br>D - Derecha<br>W - Subir<br>S - Bajar<br>Q - Recoger<br>E - Inicio</p>
+            <hr>
+            <p>Pulsa <strong>X</strong> para ejecutar la secuencia.</p>
+        </div>
+
+        <div id="game-container">
+            <div id="game-area"></div>
+            <div id="key-display">
+                <div id="keys1">Secuencia J1: </div>
+                <div id="keys2">Secuencia J2: </div>
+            </div>
+        </div>
+
+        <!-- Instrucciones Jugador 2 a la Derecha -->
+        <div class="side-instructions">
+            <h3>Jugador 2</h3>
+            <p><strong>Controles:</strong></p>
+            <p>← - Izquierda<br>→ - Derecha<br>↑ - Subir<br>↓ - Bajar<br>P - Recoger<br>I - Inicio</p>
+            <hr>
+            <p>Pulsa <strong>M</strong> para ejecutar la secuencia.</p>
         </div>
     </div>
-    
-    <div id="instructions">
-        <h3>Controles</h3>
-        <p><strong>Jugador 1 (izquierda):</strong> A (izquierda), D (derecha), W (subir), S (bajar), Q (recoger), E (volver a inicio)</p>
-        <p><strong>Jugador 2 (derecha):</strong> ← (izquierda), → (derecha), ↑ (subir), ↓ (bajar), P (recoger), I (volver a inicio)</p>
-        <p>Introduce una secuencia de teclas y pulsa <strong>X</strong> (Jugador 1) o <strong>M</strong> (Jugador 2) para ejecutarla.</p>
-    </div>
-    
-    <div id="example">
-        <h3>Ejemplo</h3>
-        <p>Para coger la bola amarilla a dos pasos a la derecha:</p>
-        <p><strong>d (derecha) d (derecha) q (coger) x (ejecutar)</strong></p>
-    </div>
-    
-    <button id="send-results">Enviar resultados a Google Sheets</button>
 
     <script>
-        let mono1 = { x: 100, y: 400, visualX: 100, visualY: 400, puntos: 0, path: [], initialPos: { x: 100, y: 400 } };
-        let mono2 = { x: 600, y: 400, visualX: 600, visualY: 400, puntos: 0, path: [], initialPos: { x: 600, y: 400 } };
+        let mono1 = { x: 100, y: 400, visualX: 100, visualY: 400, puntos: 0, nextQuizThreshold: 5, path: [], initialPos: { x: 100, y: 400 } };
+        let mono2 = { x: 600, y: 400, visualX: 600, visualY: 400, puntos: 0, nextQuizThreshold: 5, path: [], initialPos: { x: 600, y: 400 } };
         let tonel1 = { x: 150, y: 400 };
         let tonel2 = { x: 550, y: 400 };
         let ladders1 = [];
@@ -244,29 +258,46 @@
         let sequence2 = [];
         let player1Name = "";
         let player2Name = "";
-        let resultsSent = false;
+        let activeQuizPlayer = null;
 
-        const colorMap = {
-            20: "blue",
-            30: "green",
-            40: "yellow",
-            50: "orange",
-            60: "red",
-            70: "lightgray",
-            100: "violet"
-        };
+        const cybersecurityQuestions = [
+            { q: "¿Qué es el phishing?", options: ["Un tipo de estafa para robar datos mediante falsos mensajes", "Un antivirus gratuito", "Una red social segura"], correct: 0 },
+            { q: "¿Cuál es una característica clave de una contraseña segura?", options: ["Combinar letras mayúsculas, minúsculas, números y símbolos", "Usar tu fecha de nacimiento", "Poner una palabra sencilla como 'contraseña'"], correct: 0 },
+            { q: "Si te llega un enlace desconocido por mensaje de texto de alguien que no conoces, ¿qué debes hacer?", options: ["No abrirlo y borrarlo directamente", "Abrirlo para ver qué sorteo es", "Reenviarlo a todos tus amigos"], correct: 0 },
+            { q: "¿Qué significa que una página web utiliza el protocolo HTTPS?", options: ["La conexión entre tu navegador y la web está cifrada y es segura", "Que la página web carga mucho más rápido", "Que el contenido de la web es gratuito"], correct: 0 },
+            { q: "¿Es seguro conectarse a redes Wi-Fi públicas abiertas para enviar información personal?", options: ["No, porque otros usuarios pueden interceptar tus datos", "Sí, son completamente seguras si tienen buena cobertura", "Sí, siempre que no descargues archivos pesados"], correct: 0 },
+            { q: "¿Qué es el ransomware?", options: ["Un programa malicioso que bloquea tus archivos y pide un rescate económico", "Un sistema para limpiar virus del ordenador", "Una aplicación oficial de videollamadas"], correct: 0 },
+            { q: "¿Qué es la verificación o autenticación en dos pasos (2FA)?", options: ["Una capa adicional de seguridad además de la contraseña habitual", "Tener dos cuentas de correo electrónico distintas", "Conectarte desde dos ordenadores a la vez"], correct: 0 },
+            { q: "¿Por qué es importante actualizar el sistema operativo y las aplicaciones?", options: ["Para corregir fallos de seguridad y vulnerabilidades", "Únicamente para que cambie el diseño visual", "Para gastar más datos de internet"], correct: 0 },
+            { q: "¿Qué es el 'vishing'?", options: ["Una estafa de suplantación de identidad realizada mediante llamadas telefónicas", "Un virus informático que se oculta en los vídeos", "Una herramienta de diseño gráfico web"], correct: 0 },
+            { q: "¿Qué es el 'smishing'?", options: ["Phishing realizado a través de mensajes cortos de texto (SMS)", "Un ataque informático masivo a servidores", "Una red social de intercambio de fotos"], correct: 0 },
+            { q: "Si te encuentras un pendrive (memoria USB) olvidado en la calle, ¿qué debes hacer?", options: ["No conectarlo nunca a tu ordenador por riesgo de malware", "Conectarlo para buscar el dueño por las fotos", "Formatearlo inmediatamente para usarlo"], correct: 0 },
+            { q: "¿Qué es una copia de seguridad (backup)?", options: ["Un duplicado de tus archivos importantes guardado en un lugar seguro", "Un archivo temporal que se borra solo", "Un programa para acelerar internet"], correct: 0 },
+            { q: "¿Qué se entiende por malware?", options: ["Cualquier tipo de software diseñado para dañar o infiltrarse en un sistema", "Un componente físico del hardware del ordenador", "Un protocolo estándar de navegación web"], correct: 0 },
+            { q: "¿Qué es el 'spoofing' en ciberseguridad?", options: ["La suplantación de identidad para engañar a usuarios o sistemas", "Una técnica avanzada de edición de vídeo", "Un juego multijugador online"], correct: 0 },
+            { q: "En redes sociales, ¿qué configuración es más recomendable para proteger tu privacidad?", options: ["Mantener el perfil privado y aceptar solo a conocidos", "Hacer público absolutamente todo lo que compartes", "Publicar tu dirección y número de teléfono en la biografía"], correct: 0 },
+            { q: "Cuál de estas opciones es un peligro al compartir demasiada información personal en internet:", options: ["Facilitar ataques de ingeniería social o suplantación de identidad", "Que tus publicaciones tengan muchos 'me gusta'", "Que la velocidad de tu conexión aumente"], correct: 0 },
+            { q: "Cuando utilizas un ordenador compartido o público, al terminar debes:", options: ["Cerrar sesión de tus cuentas y borrar el historial", "Apagar el monitor y marcharte", "Dejar la pestaña abierta para el siguiente usuario"], correct: 0 },
+            { q: "¿En qué consiste la ingeniería social?", options: ["En manipular psicológicamente a las personas para que revelen información confidencial", "En construir redes sociales corporativas de éxito", "En estudiar el comportamiento de la sociedad en internet"], correct: 0 },
+            { q: "¿Qué es un ataque de denegación de servicio (DDoS)?", options: ["Saturar un servidor web con peticiones masivas para que deje de funcionar", "Robar contraseñas mediante un formulario falso", "Borrar perfiles de redes sociales de forma remota"], correct: 0 },
+            { q: "¿Qué indica un certificado de seguridad digital válido en un sitio web?", options: ["Que la identidad de la página web ha sido comprobada y es auténtica", "Que la web ofrece premios seguros", "Que el servidor web es muy costoso"], correct: 0 },
+            { q: "¿Qué función principal cumple una red VPN?", options: ["Cifrar tu tráfico de internet y ocultar tu ubicación real", "Aumentar los gigas de tu tarifa móvil", "Eliminar los virus de tu dispositivo"], correct: 0 },
+            { q: "¿Cuál es una mala práctica al crear contraseñas?", options: ["Utilizar la misma contraseña exacta en todas tus cuentas y servicios", "Utilizar una frase larga combinando diferentes tipos de caracteres", "Cambiar la contraseña si sospechas de una brecha"], correct: 0 },
+            { q: "¿Qué es el 'shoulder surfing' (espionaje por encima del hombro)?", options: ["Mirar disimuladamente la pantalla de otra persona para robarle su contraseña o datos", "Navegar por internet de pie en la calle", "Hacer surf mientras buscas información online"], correct: 0 },
+            { q: "¿Qué es un troyano en el ámbito de la ciberseguridad?", options: ["Un software malicioso que se disfraza de programa legítimo para colarse en tu equipo", "Un programa antivirus obsoleto", "Un tipo de cable de red de alta velocidad"], correct: 0 },
+            { q: "¿Por qué es peligroso interactuar con perfiles falsos (bots o cuentas anónimas) en redes?", options: ["Porque pueden intentar manipularte, estafarte o enviarte enlaces maliciosos", "Porque consumen la batería del móvil más rápido", "Porque hacen que el fondo de pantalla cambie de color"], correct: 0 },
+            { q: "¿Qué es el ciberacoso (ciberbullying)?", options: ["El uso de medios digitales para acosar, amenazar o humillar a otra persona", "Un videojuego de estrategia en línea", "Un tipo de publicidad molesta en webs"], correct: 0 },
+            { q: "¿Qué significa cifrar la información?", options: ["Codificar los datos para que solo puedan ser leídos si dispones de la clave correcta", "Comprimir archivos para que ocupen menos espacio", "Eliminar permanentemente documentos del disco duro"], correct: 0 },
+            { q: "¿Qué institución o fuerzas de seguridad suelen investigar los ciberdelitos en España?", options: ["La Policía Nacional y la Guardia Civil", "Cualquier establecimiento de reparación de móviles", "Las empresas proveedoras de fibra óptica"], correct: 0 },
+            { q: "¿Qué es una 'cookie' de rastreo en internet?", options: ["Un pequeño archivo que las webs guardan para recopilar información sobre tus hábitos de navegación", "Un virus informático destructivo", "Un programa de mensajería instantánea"], correct: 0 },
+            { q: "Si te das cuenta de que te han hackeado una cuenta de una red social, ¿qué debes hacer primero?", options: ["Intentar cambiar la contraseña inmediatamente y avisar a tus contactos", "Publicar un estado enfadado", "Comprar un ordenador nuevo"], correct: 0 }
+        ];
 
         function setup() {
             let canvas = createCanvas(700, 450);
             canvas.parent('game-area');
             
-            // Configurar el botón de comenzar juego
             document.getElementById('start-game').addEventListener('click', startGame);
-            
-            // Configurar el botón de enviar resultados
-            document.getElementById('send-results').addEventListener('click', sendResultsToGoogleSheets);
-            
-            // Generar las escaleras iniciales
             generateRandomLadders();
         }
 
@@ -279,71 +310,57 @@
                 return;
             }
             
-            // Actualizar los nombres en el marcador
-            document.querySelector('#scoreboard div:first-child').innerHTML = `${player1Name}: <span id="score1">0</span> puntos`;
-            document.querySelector('#scoreboard div:last-child').innerHTML = `${player2Name}: <span id="score2">0</span> puntos`;
+            document.getElementById('label1').innerText = player1Name;
+            document.getElementById('label2').innerText = player2Name;
             
-            // Ocultar el modal
             document.getElementById('player-names-modal').style.display = 'none';
             
-            // Resetear puntuaciones
             mono1.puntos = 0;
-            mono2.puntos = 0;
+            mono1.nextQuizThreshold = 5;
             mono1.x = mono1.initialPos.x;
             mono1.y = mono1.initialPos.y;
             mono1.visualX = mono1.initialPos.x;
             mono1.visualY = mono1.initialPos.y;
             mono1.path = [];
+
+            mono2.puntos = 0;
+            mono2.nextQuizThreshold = 5;
             mono2.x = mono2.initialPos.x;
             mono2.y = mono2.initialPos.y;
             mono2.visualX = mono2.initialPos.x;
             mono2.visualY = mono2.initialPos.y;
             mono2.path = [];
             
-            // Actualizar marcadores
-            document.getElementById('score1').innerText = "0";
-            document.getElementById('score2').innerText = "0";
+            updateScoreDisplay('score1', mono1.puntos, 'player1-zone');
+            updateScoreDisplay('score2', mono2.puntos, 'player2-zone');
             
-            // Resetear colores de zonas
             document.getElementById('player1-zone').style.backgroundColor = "white";
             document.getElementById('player2-zone').style.backgroundColor = "white";
             
-            // Generar nuevas escaleras
             generateRandomLadders();
-            
-            // Resetear el estado de envío de resultados
-            resultsSent = false;
-            document.getElementById('send-results').disabled = false;
-            document.getElementById('send-results').textContent = "Enviar resultados a Google Sheets";
-            document.getElementById('status-overlay').style.display = 'none';
         }
 
         function draw() {
             background(220);
             
-            // Dibujar plataformas
             fill(200);
             for (let i = 0; i < 4; i++) {
                 rect(0, i * 112.5, width, 112.5);
             }
             
-            // Dibujar escaleras del jugador 1
             fill(150);
             for (let ladder of ladders1) {
                 rect(ladder.x, ladder.y, 40, 112.5);
             }
             
-            // Dibujar escaleras del jugador 2
             for (let ladder of ladders2) {
                 rect(ladder.x, ladder.y, 40, 112.5);
             }
             
-            // Dibujar toneles
             fill(255, 204, 0);
             ellipse(tonel1.x, tonel1.y + 15, 30, 30);
             ellipse(tonel2.x, tonel2.y + 15, 30, 30);
             
-            // Dibujar rutas
             if (mono1.path.length > 0) {
                 noFill();
                 stroke(255, 0, 0);
@@ -364,13 +381,11 @@
                 endShape();
             }
             
-            // Dibujar personajes
             fill(100, 100, 255);
             ellipse(mono1.visualX, mono1.visualY + 15, 30, 30);
             fill(255, 100, 100);
             ellipse(mono2.visualX, mono2.visualY + 15, 30, 30);
             
-            // Línea divisoria
             stroke(0);
             line(width / 2, 0, width / 2, height);
         }
@@ -379,16 +394,12 @@
             ladders1 = [];
             ladders2 = [];
             
-            // Generar 3 escaleras para cada jugador en posiciones aleatorias
             for (let i = 1; i < 4; i++) {
                 const yPos = 450 - i * 112.5;
-                
-                // Escaleras para jugador 1 (lado izquierdo)
                 const x1Options = [50, 100, 150, 200];
                 const x1 = x1Options[Math.floor(Math.random() * x1Options.length)];
                 ladders1.push({ x: x1, y: yPos });
                 
-                // Escaleras para jugador 2 (lado derecho)
                 const x2Options = [500, 550, 600, 650];
                 const x2 = x2Options[Math.floor(Math.random() * x2Options.length)];
                 ladders2.push({ x: x2, y: yPos });
@@ -396,30 +407,35 @@
         }
 
         function keyPressed() {
-            // No permitir entrada de teclas mientras el modal está visible
-            if (document.getElementById('player-names-modal').style.display === 'flex') {
+            if (document.getElementById('player-names-modal').style.display === 'flex' || activeQuizPlayer !== null) {
                 return;
+            }
+
+            // Evitar que las teclas de control mueva la página web hacia arriba o abajo
+            if (['a', 'd', 'w', 's', 'q', 'e', 'x', 'm', 'arrowleft', 'arrowright', 'arrowup', 'arrowdown', 'p', 'i'].includes(key.toLowerCase()) || 
+                ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+                event.preventDefault();
             }
 
             if (key === 'a' || key === 'd' || key === 'w' || key === 's' || key === 'q') {
                 sequence1.push(key);
-                document.getElementById('keys1').innerText = "Secuencia " + player1Name + ": " + sequence1.join(" ");
+                document.getElementById('keys1').innerText = "Secuencia J1: " + sequence1.join(" ");
             }
             if (key === 'ArrowLeft' || key === 'ArrowRight' || key === 'ArrowUp' || key === 'ArrowDown' || key === 'p') {
                 sequence2.push(key);
-                document.getElementById('keys2').innerText = "Secuencia " + player2Name + ": " + sequence2.join(" ");
+                document.getElementById('keys2').innerText = "Secuencia J2: " + sequence2.join(" ");
             }
 
             if (key === 'x') {
-                executeSequence(mono1, sequence1, 0, width / 2, tonel1, 'score1', ladders1);
+                executeSequence(mono1, sequence1, 0, width / 2, tonel1, 'score1', ladders1, 'player1-zone', 1);
                 sequence1 = [];
-                document.getElementById('keys1').innerText = "Secuencia " + player1Name + ": ";
+                document.getElementById('keys1').innerText = "Secuencia J1: ";
             }
 
             if (key === 'm') {
-                executeSequence(mono2, sequence2, width / 2, width, tonel2, 'score2', ladders2);
+                executeSequence(mono2, sequence2, width / 2, width, tonel2, 'score2', ladders2, 'player2-zone', 2);
                 sequence2 = [];
-                document.getElementById('keys2').innerText = "Secuencia " + player2Name + ": ";
+                document.getElementById('keys2').innerText = "Secuencia J2: ";
             }
 
             if (key === 'e') {
@@ -439,35 +455,37 @@
             }
         }
 
-        function executeSequence(mono, sequence, xStart, xEnd, tonel, scoreId, ladders) {
+        function executeSequence(mono, sequence, xStart, xEnd, tonel, scoreId, ladders, zoneId, playerNum) {
             if (sequence.length === 0) return;
             
             let delay = 500;
             let index = 0;
 
             function nextStep() {
-                if (index < sequence.length) {
-                    let key = sequence[index];
-                    if (key === 'a' || key === 'ArrowLeft') {
+                if (index < sequence.length && activeQuizPlayer === null) {
+                    let k = sequence[index];
+                    if (k === 'a' || k === 'ArrowLeft') {
                         mono.x = constrain(mono.x - 40, xStart, xEnd - 40);
-                    } else if (key === 'd' || key === 'ArrowRight') {
+                    } else if (k === 'd' || k === 'ArrowRight') {
                         mono.x = constrain(mono.x + 40, xStart, xEnd - 40);
-                    } else if (key === 'w' || key === 'ArrowUp') {
+                    } else if (k === 'w' || k === 'ArrowUp') {
                         if (isOnLadder(mono, ladders)) {
                             mono.y = constrain(mono.y - 40, 0, height - 40);
                         }
-                    } else if (key === 's' || key === 'ArrowDown') {
+                    } else if (k === 's' || k === 'ArrowDown') {
                         if (isOnLadder(mono, ladders)) {
                             mono.y = constrain(mono.y + 40, 0, height - 40);
                         }
-                    } else if (key === 'q' || key === 'p') {
+                    } else if (k === 'q' || k === 'p') {
                         if (dist(mono.x, mono.y, tonel.x, tonel.y) < 30) {
                             mono.puntos++;
-                            document.getElementById(scoreId).innerText = mono.puntos;
-                            // Reposicionar tonel en una posición aleatoria dentro de la zona del jugador
                             tonel.x = random(xStart + 50, xEnd - 50);
                             tonel.y = random(100, 400);
-                            updateZoneColor(mono.puntos, scoreId);
+
+                            if (mono.puntos >= mono.nextQuizThreshold) {
+                                mono.nextQuizThreshold += 5;
+                                triggerQuiz(playerNum, scoreId, zoneId);
+                            }
                         } else {
                             mono.x = mono.initialPos.x;
                             mono.y = mono.initialPos.y;
@@ -476,26 +494,74 @@
                     mono.path.push({ x: mono.x, y: mono.y });
                     mono.visualX = mono.x;
                     mono.visualY = mono.y;
+                    updateScoreDisplay(scoreId, mono.puntos, zoneId);
                     index++;
-                    setTimeout(nextStep, delay);
+                    
+                    if (activeQuizPlayer === null) {
+                        setTimeout(nextStep, delay);
+                    }
                 }
             }
 
             nextStep();
         }
 
-        function updateZoneColor(puntos, scoreId) {
+        function triggerQuiz(playerNum, scoreId, zoneId) {
+            activeQuizPlayer = playerNum;
+            const randIndex = Math.floor(Math.random() * cybersecurityQuestions.length);
+            const qObj = cybersecurityQuestions[randIndex];
+
+            document.getElementById('quiz-question').innerText = qObj.q;
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = "";
+
+            let indexedOptions = qObj.options.map((opt, idx) => ({ text: opt, isCorrect: (idx === qObj.correct) }));
+            indexedOptions.sort(() => Math.random() - 0.5);
+
+            indexedOptions.forEach(optData => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-option-btn';
+                btn.innerText = optData.text;
+                btn.onclick = () => {
+                    let mono = (playerNum === 1) ? mono1 : mono2;
+                    if (!optData.isCorrect) {
+                        mono.puntos = Math.max(0, mono.puntos - 2); // Resta 2 puntos base (-0.4 finales)
+                        mono.nextQuizThreshold = Math.max(5, Math.floor(mono.puntos / 5) * 5 + 5);
+                    }
+                    updateScoreDisplay(scoreId, mono.puntos, zoneId);
+                    document.getElementById('quiz-modal').style.display = 'none';
+                    activeQuizPlayer = null;
+                };
+                optionsContainer.appendChild(btn);
+            });
+
+            document.getElementById('quiz-modal').style.display = 'flex';
+        }
+
+        function updateScoreDisplay(scoreId, rawPoints, zoneId) {
+            let finalScore = rawPoints * 0.2; // Multiplicación por 0.2
+            document.getElementById(scoreId).innerText = finalScore.toFixed(1);
+            updateZoneColor(finalScore, zoneId);
+        }
+
+        function updateZoneColor(finalScore, zoneId) {
             let color = "white";
-            for (let threshold in colorMap) {
-                if (puntos >= threshold) {
-                    color = colorMap[threshold];
-                }
+            if (finalScore > 30) {
+                color = "red";
+            } else if (finalScore > 25) {
+                color = "orange";
+            } else if (finalScore > 20) {
+                color = "yellow";
+            } else if (finalScore > 15) {
+                color = "green";
+            } else if (finalScore > 10) {
+                color = "purple";
+            } else if (finalScore > 5) {
+                color = "blue";
+            } else if (finalScore > 2) {
+                color = "gray";
             }
-            if (scoreId === 'score1') {
-                document.getElementById('player1-zone').style.backgroundColor = color;
-            } else if (scoreId === 'score2') {
-                document.getElementById('player2-zone').style.backgroundColor = color;
-            }
+            document.getElementById(zoneId).style.backgroundColor = color;
         }
 
         function isOnLadder(mono, ladders) {
@@ -506,92 +572,6 @@
             }
             return false;
         }
-
-        // Función para enviar resultados a Google Sheets
-        function sendResultsToGoogleSheets() {
-            const sendButton = document.getElementById('send-results');
-            const statusMessage = document.getElementById('status-message');
-            const statusOverlay = document.getElementById('status-overlay');
-            
-            // Verificar si ya se enviaron los resultados
-            if (resultsSent) {
-                statusMessage.textContent = "¡Los resultados ya fueron enviados!";
-                statusMessage.className = "info";
-                statusOverlay.style.display = 'flex';
-                setTimeout(() => {
-                    statusOverlay.style.display = 'none';
-                }, 3000);
-                return;
-            }
-            
-            if (!player1Name || !player2Name) {
-                statusMessage.textContent = "Error: No se han definido los nombres de los jugadores";
-                statusMessage.className = "error";
-                statusOverlay.style.display = 'flex';
-                setTimeout(() => {
-                    statusOverlay.style.display = 'none';
-                }, 3000);
-                return;
-            }
-
-            const score1 = mono1.puntos;
-            const score2 = mono2.puntos;
-            const timestamp = new Date().toLocaleString();
-
-            // Modificación: Añadir "Monkey2" delante de los nombres de los jugadores
-            const data = {
-                player1: "Monkey2 " + player1Name,
-                score1: score1,
-                player2: "Monkey2 " + player2Name,
-                score2: score2,
-                timestamp: timestamp
-            };
-
-            // Deshabilitar el botón inmediatamente y marcar como enviado
-            resultsSent = true;
-            sendButton.disabled = true;
-            sendButton.textContent = "Resultados enviados";
-            
-            // Mostrar mensaje de "enviando" en el centro de la pantalla
-            statusMessage.textContent = "ENVIANDO RESULTADOS...";
-            statusMessage.className = "info";
-            statusOverlay.style.display = 'flex';
-
-            // URL del Web App de Google Apps Script
-            const scriptUrl = "https://script.google.com/macros/s/AKfycbwVPttSZrhwfWwSZpFo7KWjJ39vldQm3MPGykMWEPWOoF4UsZ24mC8YhgiaE-0xm_7G/exec";
-
-            fetch(scriptUrl, {
-                method: "POST",
-                mode: "no-cors",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(data)
-            })
-            .then(() => {
-                statusMessage.textContent = "¡RESULTADOS ENVIADOS CORRECTAMENTE!";
-                statusMessage.className = "success";
-                // Mantener el mensaje visible por 5 segundos
-                setTimeout(() => {
-                    statusOverlay.style.display = 'none';
-                }, 5000);
-            })
-            .catch(error => {
-                statusMessage.textContent = "ERROR AL ENVIAR RESULTADOS";
-                statusMessage.className = "error";
-                console.error("Error:", error);
-                
-                // Rehabilitar el botón en caso de error
-                resultsSent = false;
-                sendButton.disabled = false;
-                sendButton.textContent = "Enviar resultados a Google Sheets";
-                
-                // Ocultar el mensaje después de 3 segundos
-                setTimeout(() => {
-                    statusOverlay.style.display = 'none';
-                }, 3000);
-            });
-        }
     </script>
-</body>
-</html>
+
+</body></html>
