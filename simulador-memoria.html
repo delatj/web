@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
+<!-- saved from url=(0051)https://delatj.github.io/web/simulador-memoria.html -->
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulador de Memoria Técnica y Cuestionario por Criterio</title>
     <style>
@@ -313,6 +313,46 @@
             .canvas-wrapper { max-height: none; overflow: visible; border: none; }
             select { border: none; appearance: none; -webkit-appearance: none; font-weight: bold; padding: 0; }
         }
+
+        body { transition: background-color .6s ease; }
+        .team-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        @media (max-width: 700px) { .team-grid { grid-template-columns: 1fr; } }
+        .score-number { font-size: clamp(7rem, 22vw, 13rem); color: #0f172a; }
+        .score-box { border-width: 10px; }
+        .band-chip { display: inline-block; padding: 8px 22px; border-radius: 24px; font-size: 1.2rem; font-weight: 800; margin: 8px 0 12px; border: 2px solid rgba(0,0,0,.15); }
+        .breakdown { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin: 18px 0; }
+        .breakdown .item { border: 2px solid var(--border); border-radius: 12px; padding: 14px; background: #fff; text-align: center; }
+        .breakdown .big { font-size: 3.2rem; font-weight: 900; line-height: 1.1; color: #0f172a; }
+        .breakdown .big small { font-size: 1.3rem; font-weight: 700; color: var(--text-muted); }
+        .breakdown .lbl { font-size: .88rem; color: var(--text-muted); font-weight: 600; margin-top: 4px; }
+        @media print { body { background: #fff !important; } }
+
+        .phase-progress { display: flex; gap: 10px; margin-bottom: 24px; }
+        .phase-node { flex: 1; text-align: center; padding: 10px; border-radius: 10px; background: #e2e8f0; border: 2px solid var(--border); color: var(--text-muted); font-weight: 700; transition: all .3s; }
+        .phase-node small { font-weight: 600; }
+        .phase-node.active { background: var(--primary); color: #fff; border-color: var(--primary-dark); }
+        .phase-node.completed { background: var(--success); color: #fff; border-color: #15803d; }
+        .verdict { padding: 18px 20px; border-radius: 10px; font-size: 1.15rem; font-weight: 700; margin: 16px 0; text-align: center; line-height: 1.6; }
+        .verdict.fail { background: #fef2f2; color: #991b1b; border: 3px solid #dc2626; }
+        .verdict.pass { background: #dcfce7; color: #166534; border: 3px solid #16a34a; }
+        .report-section { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin: 16px 0; }
+        .report-section h3 { color: #1e3a8a; margin-bottom: 10px; }
+        .report-section h4 { margin: 14px 0 6px; color: #334155; }
+        .plan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+        .plan-card { border: 2px solid var(--border); border-radius: 10px; padding: 12px; text-align: center; }
+        .plan-card.ok { border-color: #16a34a; background: #f0fdf4; }
+        .plan-card.bad { border-color: #dc2626; background: #fef2f2; }
+        .plan-card svg { width: 100%; height: auto; background: #fff; border: 1px solid var(--border); border-radius: 6px; margin-top: 8px; }
+        .legend { margin-top: 8px; font-size: .82rem; }
+        .legend span { display: inline-flex; align-items: center; gap: 5px; margin: 2px 8px; }
+        .legend i { display: inline-block; width: 24px; height: 0; border-top: 4px solid; }
+        tr.row-ok td { background: #f0fdf4; }
+        tr.row-bad td { background: #fef2f2; }
+        .test-fail { border: 1px solid #fca5a5; background: #fef2f2; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+        .ans-wrong { color: #991b1b; font-weight: 700; }
+        .ans-right { color: #166534; font-weight: 700; }
+        .all-ok { color: #166534; font-weight: 700; }
+        .nav-buttons { flex-wrap: wrap; }
     </style>
 </head>
 <body>
@@ -322,22 +362,50 @@
         <p>Prisma Pop-Up en Tarjeta A4 con Minilibro y Bolsillo Integrado</p>
     </header>
 
-    <div class="step-progress no-print">
-        <div class="step-node active" id="node-0">0</div>
-        <div class="step-node" id="node-1">1</div>
-        <div class="step-node" id="node-2">2</div>
-        <div class="step-node" id="node-3">3</div>
-        <div class="step-node" id="node-4">4</div>
-        <div class="step-node" id="node-5">5</div>
-        <div class="step-node" id="node-6">6</div>
+    <div class="phase-progress no-print">
+        <div class="phase-node" id="phase-1">Fase 1<br><small>Planos</small></div>
+        <div class="phase-node" id="phase-2">Fase 2<br><small>Materiales y proceso</small></div>
+        <div class="phase-node" id="phase-3">Fase 3<br><small>Test</small></div>
     </div>
 
     <form id="memory-form" onsubmit="return false;">
-        <!-- VENTANA 0: SELECCIÓN PREVIA DEL CRITERIO -->
+        <!-- VENTANA 0: DATOS DEL EQUIPO (PREVIA) -->
         <div class="tab-window active" id="window-0">
+            <h2>Paso Previo: Datos del Equipo</h2>
+            <p style="margin-bottom:16px; color:var(--text-muted);">
+                Escribe los datos antes de empezar. Sin nombre y apellidos no se puede iniciar el simulador.
+            </p>
+            <div class="team-grid">
+                <div class="form-group">
+                    <label for="studentName1">Alumno/a 1 (nombre y apellidos):</label>
+                    <input type="text" id="studentName1" autocomplete="off" placeholder="Ej: Lucía Pérez Gómez">
+                </div>
+                <div class="form-group">
+                    <label for="studentName2">Alumno/a 2 (nombre y apellidos):</label>
+                    <input type="text" id="studentName2" autocomplete="off" placeholder="Ej: Marcos Díaz Ruiz">
+                </div>
+            </div>
+            <div class="form-group">
+                <label style="display:flex; align-items:center; gap:8px; font-weight:normal; cursor:pointer;">
+                    <input type="checkbox" id="soloCheck" onchange="toggleSolo()"> Trabajo en solitario (sin pareja)
+                </label>
+            </div>
+            <div class="form-group">
+                <label for="studentGroup">Curso y grupo:</label>
+                <input type="text" id="studentGroup" autocomplete="off" placeholder="Ej: 2º ESO A">
+            </div>
+            <div id="team-error" class="feedback-msg"></div>
+            <div class="nav-buttons">
+                <div></div>
+                <button type="button" class="btn" onclick="validateTeamData()">Siguiente: elegir criterio →</button>
+            </div>
+        </div>
+
+        <!-- VENTANA 1: CRITERIO -->
+        <div class="tab-window" id="window-1">
             <h2>Paso Previo: Selección del Criterio de Evaluación</h2>
             <p style="margin-bottom:16px; color:var(--text-muted);">
-                Selecciona el criterio específico asignado para realizar el cuestionario de teoría durante la práctica:
+                Selecciona el criterio específico asignado para realizar el cuestionario de teoría al final de la práctica:
             </p>
             <div class="form-group">
                 <label for="selectedCriterion">Criterio a evaluar:</label>
@@ -348,31 +416,14 @@
                 </select>
             </div>
             <div class="nav-buttons">
-                <div></div>
-                <button type="button" class="btn" onclick="confirmCriterionSelection()">Comenzar Memoria &rarr;</button>
-            </div>
-        </div>
-
-        <!-- VENTANA 1 -->
-        <div class="tab-window" id="window-1">
-            <h2>Ventana 1: Datos Generales del Alumnado</h2>
-            <div class="form-group">
-                <label>Nombre del Alumno/a:</label>
-                <input type="text" id="studentName" placeholder="Escribe tu nombre y apellidos..." required>
-            </div>
-            <div class="form-group">
-                <label>Curso y Grupo:</label>
-                <input type="text" id="studentGroup" placeholder="Ej: 2º ESO A" required>
-            </div>
-            <div class="nav-buttons">
-                <button type="button" class="btn btn-secondary" onclick="showWindow(0)">&larr; Anterior</button>
-                <button type="button" class="btn" onclick="nextWindow(1)">Siguiente: Dibujar Pieza &rarr;</button>
+                <button type="button" class="btn btn-secondary" onclick="prevWindow(1)">← Anterior</button>
+                <button type="button" class="btn" onclick="confirmCriterionSelection()">Comenzar Memoria →</button>
             </div>
         </div>
 
         <!-- VENTANA 2 -->
         <div class="tab-window" id="window-2">
-            <h2>Ventana 2: Dibujo Técnico de la Pieza Pop-Up (20% de la nota)</h2>
+            <h2>Fase 1 · Planos — Dibujo Técnico de la Pieza Pop-Up (20% de la nota)</h2>
             <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:8px;">
                 Dibuja la plantilla exacta alineada en la parte superior de la rejilla:<br>
                 - <strong>Cuerpo central:</strong> Ancho de 10 cm (20 divisiones, de x=10 a x=30).<br>
@@ -384,26 +435,26 @@
 
             <div class="canvas-container">
                 <div class="canvas-wrapper">
-                    <svg id="svg-prisma" class="drawing-grid" width="1000" height="700" viewBox="0 0 1000 700"></svg>
+                    <svg id="svg-prisma" class="drawing-grid" width="1000" height="700" viewBox="0 0 1000 700"><g id="svg-prisma-lines"></g><g id="svg-prisma-solution"></g></svg>
                 </div>
                 <div class="drawing-tools">
-                    <button type="button" id="btn-validate-prisma" class="btn btn-success" onclick="validateDrawing('prisma')">✔ Validar Dibujo</button>
-                    <button type="button" class="btn btn-danger" onclick="undoLastLine('prisma')">Deshacer Línea</button>
-                    <button type="button" class="btn btn-secondary" onclick="clearCanvas('prisma')">Borrar Todo</button>
+                    <button type="button" id="btn-validate-prisma" class="btn btn-success" onclick="validateDrawing(&#39;prisma&#39;)">✔ Validar Dibujo</button>
+                    <button type="button" class="btn btn-danger" onclick="undoLastLine(&#39;prisma&#39;)">Deshacer Línea</button>
+                    <button type="button" class="btn btn-secondary" onclick="clearCanvas(&#39;prisma&#39;)">Borrar Todo</button>
                     <span id="attempts-prisma" class="attempts-badge">Intentos: 0 / 5</span>
                 </div>
                 <div id="feedback-prisma" class="feedback-msg"></div>
             </div>
 
             <div class="nav-buttons">
-                <button type="button" class="btn btn-secondary" onclick="prevWindow(2)">&larr; Anterior</button>
-                <button type="button" class="btn" onclick="nextWindow(2)">Siguiente: Dibujar Bolsillo &rarr;</button>
+                <div></div>
+                <button type="button" class="btn" onclick="nextWindow(2)">Siguiente: Dibujar Bolsillo →</button>
             </div>
         </div>
 
         <!-- VENTANA 3 -->
         <div class="tab-window" id="window-3">
-            <h2>Ventana 3: Dibujo Técnico del Bolsillo (20% de la nota)</h2>
+            <h2>Fase 1 · Planos — Dibujo Técnico del Bolsillo (20% de la nota)</h2>
             <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:8px;">
                 Dibuja el desarrollo plano del bolsillo:<br>
                 - <strong>Cuerpo central:</strong> 9 cm de ancho × 9 cm de alto.<br>
@@ -414,26 +465,26 @@
 
             <div class="canvas-container">
                 <div class="canvas-wrapper">
-                    <svg id="svg-bolsillo" class="drawing-grid" width="1000" height="600" viewBox="0 0 1000 600"></svg>
+                    <svg id="svg-bolsillo" class="drawing-grid" width="1000" height="600" viewBox="0 0 1000 600"><g id="svg-bolsillo-lines"></g><g id="svg-bolsillo-solution"></g></svg>
                 </div>
                 <div class="drawing-tools">
-                    <button type="button" id="btn-validate-bolsillo" class="btn btn-success" onclick="validateDrawing('bolsillo')">✔ Validar Dibujo</button>
-                    <button type="button" class="btn btn-danger" onclick="undoLastLine('bolsillo')">Deshacer Línea</button>
-                    <button type="button" class="btn btn-secondary" onclick="clearCanvas('bolsillo')">Borrar Todo</button>
+                    <button type="button" id="btn-validate-bolsillo" class="btn btn-success" onclick="validateDrawing(&#39;bolsillo&#39;)">✔ Validar Dibujo</button>
+                    <button type="button" class="btn btn-danger" onclick="undoLastLine(&#39;bolsillo&#39;)">Deshacer Línea</button>
+                    <button type="button" class="btn btn-secondary" onclick="clearCanvas(&#39;bolsillo&#39;)">Borrar Todo</button>
                     <span id="attempts-bolsillo" class="attempts-badge">Intentos: 0 / 5</span>
                 </div>
                 <div id="feedback-bolsillo" class="feedback-msg"></div>
             </div>
 
             <div class="nav-buttons">
-                <button type="button" class="btn btn-secondary" onclick="prevWindow(3)">&larr; Anterior</button>
-                <button type="button" class="btn" onclick="nextWindow(3)">Siguiente: Presupuesto &rarr;</button>
+                <button type="button" class="btn btn-secondary" onclick="prevWindow(3)">← Anterior</button>
+                <button type="button" class="btn" onclick="nextPhase(3)">Siguiente fase: Materiales y proceso →</button>
             </div>
         </div>
 
         <!-- VENTANA 4 -->
         <div class="tab-window" id="window-4">
-            <h2>Ventana 4: Presupuesto e Identificación de Materiales</h2>
+            <h2>Fase 2 · Presupuesto e Identificación de Materiales y Herramientas</h2>
             <table>
                 <thead>
                     <tr>
@@ -442,7 +493,55 @@
                         <th>Material / Herramienta</th>
                     </tr>
                 </thead>
-                <tbody id="budget-body"></tbody>
+                <tbody id="budget-body"><tr>
+                    <td><strong>1</strong></td>
+                    <td><strong>0.40 €</strong></td>
+                    <td>
+                        <select id="budget-select-0">
+                            <option value="-- Selecciona el material --">-- Selecciona el material --</option><option value="Cartulina tamaño A3">Cartulina tamaño A3</option><option value="Cartulina tamaño A4">Cartulina tamaño A4</option><option value="Cuerda o Hilo">Cuerda o Hilo</option><option value="Folio blanco">Folio blanco</option><option value="Bolígrafo o lápiz">Bolígrafo o lápiz</option><option value="Pegamento de barra">Pegamento de barra</option><option value="Regla">Regla</option><option value="Tijeras">Tijeras</option>
+                        </select>
+                    </td>
+                </tr><tr>
+                    <td><strong>1</strong></td>
+                    <td><strong>0.50 €</strong></td>
+                    <td>
+                        <select id="budget-select-1">
+                            <option value="-- Selecciona el material --">-- Selecciona el material --</option><option value="Regla">Regla</option><option value="Pegamento de barra">Pegamento de barra</option><option value="Cartulina tamaño A4">Cartulina tamaño A4</option><option value="Tijeras">Tijeras</option><option value="Cuerda o Hilo">Cuerda o Hilo</option><option value="Bolígrafo o lápiz">Bolígrafo o lápiz</option><option value="Folio blanco">Folio blanco</option><option value="Cartulina tamaño A3">Cartulina tamaño A3</option>
+                        </select>
+                    </td>
+                </tr><tr>
+                    <td><strong>3</strong></td>
+                    <td><strong>0.45 €</strong></td>
+                    <td>
+                        <select id="budget-select-2">
+                            <option value="-- Selecciona el material --">-- Selecciona el material --</option><option value="Bolígrafo o lápiz">Bolígrafo o lápiz</option><option value="Cuerda o Hilo">Cuerda o Hilo</option><option value="Tijeras">Tijeras</option><option value="Regla">Regla</option><option value="Pegamento de barra">Pegamento de barra</option><option value="Folio blanco">Folio blanco</option><option value="Cartulina tamaño A4">Cartulina tamaño A4</option><option value="Cartulina tamaño A3">Cartulina tamaño A3</option>
+                        </select>
+                    </td>
+                </tr><tr>
+                    <td><strong>2</strong></td>
+                    <td><strong>0.30 €</strong></td>
+                    <td>
+                        <select id="budget-select-3">
+                            <option value="-- Selecciona el material --">-- Selecciona el material --</option><option value="Cuerda o Hilo">Cuerda o Hilo</option><option value="Cartulina tamaño A4">Cartulina tamaño A4</option><option value="Tijeras">Tijeras</option><option value="Folio blanco">Folio blanco</option><option value="Bolígrafo o lápiz">Bolígrafo o lápiz</option><option value="Cartulina tamaño A3">Cartulina tamaño A3</option><option value="Pegamento de barra">Pegamento de barra</option><option value="Regla">Regla</option>
+                        </select>
+                    </td>
+                </tr><tr>
+                    <td><strong>1</strong></td>
+                    <td><strong>1.00 €</strong></td>
+                    <td>
+                        <select id="budget-select-4">
+                            <option value="-- Selecciona el material --">-- Selecciona el material --</option><option value="Regla">Regla</option><option value="Cartulina tamaño A4">Cartulina tamaño A4</option><option value="Bolígrafo o lápiz">Bolígrafo o lápiz</option><option value="Cartulina tamaño A3">Cartulina tamaño A3</option><option value="Folio blanco">Folio blanco</option><option value="Tijeras">Tijeras</option><option value="Cuerda o Hilo">Cuerda o Hilo</option><option value="Pegamento de barra">Pegamento de barra</option>
+                        </select>
+                    </td>
+                </tr><tr>
+                    <td><strong>1</strong></td>
+                    <td><strong>1.00 €</strong></td>
+                    <td>
+                        <select id="budget-select-5">
+                            <option value="-- Selecciona el material --">-- Selecciona el material --</option><option value="Cartulina tamaño A4">Cartulina tamaño A4</option><option value="Pegamento de barra">Pegamento de barra</option><option value="Cuerda o Hilo">Cuerda o Hilo</option><option value="Bolígrafo o lápiz">Bolígrafo o lápiz</option><option value="Tijeras">Tijeras</option><option value="Cartulina tamaño A3">Cartulina tamaño A3</option><option value="Folio blanco">Folio blanco</option><option value="Regla">Regla</option>
+                        </select>
+                    </td>
+                </tr></tbody>
                 <tfoot>
                     <tr class="total-row">
                         <td colspan="2">Presupuesto Total Estimado</td>
@@ -452,14 +551,14 @@
             </table>
 
             <div class="nav-buttons">
-                <button type="button" class="btn btn-secondary" onclick="prevWindow(4)">&larr; Anterior</button>
-                <button type="button" class="btn" onclick="nextWindow(4)">Siguiente: Hoja de Proceso &rarr;</button>
+                <div></div>
+                <button type="button" class="btn" onclick="nextWindow(4)">Siguiente: Hoja de Proceso →</button>
             </div>
         </div>
 
         <!-- VENTANA 5 -->
         <div class="tab-window" id="window-5">
-            <h2>Ventana 5: Orden de la Hoja de Proceso</h2>
+            <h2>Fase 2 · Orden de la Hoja de Proceso</h2>
             <table>
                 <thead>
                     <tr>
@@ -467,46 +566,62 @@
                         <th>Operación a Realizar</th>
                     </tr>
                 </thead>
-                <tbody id="process-body"></tbody>
+                <tbody id="process-body"><tr>
+                    <td><strong>Paso 1</strong></td>
+                    <td>
+                        <select id="step-select-0" data-correct="Doblar la cartulina A4 por la mitad, dibujar y recortar el bolsillo y pegarlo en una de las mitades.">
+                            <option value="-- Selecciona la operación correspondiente --">-- Selecciona la operación correspondiente --</option><option value="Dibujar el prisma, recortarlo y hacerle los agujeros.">Dibujar el prisma, recortarlo y hacerle los agujeros.</option><option value="Pasar la cuerda por los agujeros y pegar el prisma en la otra mitad de la cartulina.">Pasar la cuerda por los agujeros y pegar el prisma en la otra mitad de la cartulina.</option><option value="Hacer nuestro mini libro y colocarlo dentro del bolsillo.">Hacer nuestro mini libro y colocarlo dentro del bolsillo.</option><option value="Doblar la cartulina A4 por la mitad, dibujar y recortar el bolsillo y pegarlo en una de las mitades.">Doblar la cartulina A4 por la mitad, dibujar y recortar el bolsillo y pegarlo en una de las mitades.</option><option value="Comprobar que el plegado del prisma es correcto.">Comprobar que el plegado del prisma es correcto.</option>
+                        </select>
+                    </td>
+                </tr><tr>
+                    <td><strong>Paso 2</strong></td>
+                    <td>
+                        <select id="step-select-1" data-correct="Hacer nuestro mini libro y colocarlo dentro del bolsillo.">
+                            <option value="-- Selecciona la operación correspondiente --">-- Selecciona la operación correspondiente --</option><option value="Dibujar el prisma, recortarlo y hacerle los agujeros.">Dibujar el prisma, recortarlo y hacerle los agujeros.</option><option value="Pasar la cuerda por los agujeros y pegar el prisma en la otra mitad de la cartulina.">Pasar la cuerda por los agujeros y pegar el prisma en la otra mitad de la cartulina.</option><option value="Hacer nuestro mini libro y colocarlo dentro del bolsillo.">Hacer nuestro mini libro y colocarlo dentro del bolsillo.</option><option value="Doblar la cartulina A4 por la mitad, dibujar y recortar el bolsillo y pegarlo en una de las mitades.">Doblar la cartulina A4 por la mitad, dibujar y recortar el bolsillo y pegarlo en una de las mitades.</option><option value="Comprobar que el plegado del prisma es correcto.">Comprobar que el plegado del prisma es correcto.</option>
+                        </select>
+                    </td>
+                </tr><tr>
+                    <td><strong>Paso 3</strong></td>
+                    <td>
+                        <select id="step-select-2" data-correct="Dibujar el prisma, recortarlo y hacerle los agujeros.">
+                            <option value="-- Selecciona la operación correspondiente --">-- Selecciona la operación correspondiente --</option><option value="Dibujar el prisma, recortarlo y hacerle los agujeros.">Dibujar el prisma, recortarlo y hacerle los agujeros.</option><option value="Pasar la cuerda por los agujeros y pegar el prisma en la otra mitad de la cartulina.">Pasar la cuerda por los agujeros y pegar el prisma en la otra mitad de la cartulina.</option><option value="Hacer nuestro mini libro y colocarlo dentro del bolsillo.">Hacer nuestro mini libro y colocarlo dentro del bolsillo.</option><option value="Doblar la cartulina A4 por la mitad, dibujar y recortar el bolsillo y pegarlo en una de las mitades.">Doblar la cartulina A4 por la mitad, dibujar y recortar el bolsillo y pegarlo en una de las mitades.</option><option value="Comprobar que el plegado del prisma es correcto.">Comprobar que el plegado del prisma es correcto.</option>
+                        </select>
+                    </td>
+                </tr><tr>
+                    <td><strong>Paso 4</strong></td>
+                    <td>
+                        <select id="step-select-3" data-correct="Pasar la cuerda por los agujeros y pegar el prisma en la otra mitad de la cartulina.">
+                            <option value="-- Selecciona la operación correspondiente --">-- Selecciona la operación correspondiente --</option><option value="Dibujar el prisma, recortarlo y hacerle los agujeros.">Dibujar el prisma, recortarlo y hacerle los agujeros.</option><option value="Pasar la cuerda por los agujeros y pegar el prisma en la otra mitad de la cartulina.">Pasar la cuerda por los agujeros y pegar el prisma en la otra mitad de la cartulina.</option><option value="Hacer nuestro mini libro y colocarlo dentro del bolsillo.">Hacer nuestro mini libro y colocarlo dentro del bolsillo.</option><option value="Doblar la cartulina A4 por la mitad, dibujar y recortar el bolsillo y pegarlo en una de las mitades.">Doblar la cartulina A4 por la mitad, dibujar y recortar el bolsillo y pegarlo en una de las mitades.</option><option value="Comprobar que el plegado del prisma es correcto.">Comprobar que el plegado del prisma es correcto.</option>
+                        </select>
+                    </td>
+                </tr><tr>
+                    <td><strong>Paso 5</strong></td>
+                    <td>
+                        <select id="step-select-4" data-correct="Comprobar que el plegado del prisma es correcto.">
+                            <option value="-- Selecciona la operación correspondiente --">-- Selecciona la operación correspondiente --</option><option value="Dibujar el prisma, recortarlo y hacerle los agujeros.">Dibujar el prisma, recortarlo y hacerle los agujeros.</option><option value="Pasar la cuerda por los agujeros y pegar el prisma en la otra mitad de la cartulina.">Pasar la cuerda por los agujeros y pegar el prisma en la otra mitad de la cartulina.</option><option value="Hacer nuestro mini libro y colocarlo dentro del bolsillo.">Hacer nuestro mini libro y colocarlo dentro del bolsillo.</option><option value="Doblar la cartulina A4 por la mitad, dibujar y recortar el bolsillo y pegarlo en una de las mitades.">Doblar la cartulina A4 por la mitad, dibujar y recortar el bolsillo y pegarlo en una de las mitades.</option><option value="Comprobar que el plegado del prisma es correcto.">Comprobar que el plegado del prisma es correcto.</option>
+                        </select>
+                    </td>
+                </tr></tbody>
             </table>
 
             <div class="nav-buttons">
-                <button type="button" class="btn btn-secondary" onclick="prevWindow(5)">&larr; Anterior</button>
-                <button type="button" class="btn btn-success" onclick="calculateResults()">Calcular Resultados y Finalizar &rarr;</button>
+                <button type="button" class="btn btn-secondary" onclick="prevWindow(5)">← Anterior</button>
+                <button type="button" class="btn btn-success" onclick="nextPhase(5)">Siguiente fase: Test →</button>
             </div>
         </div>
 
-        <!-- VENTANA 6 -->
+        <!-- VENTANA 6: TEST -->
         <div class="tab-window" id="window-6">
-            <h2>Ventana 6: Evaluación Global y Cuestionario de Criterios</h2>
-            
-            <div id="score-container" class="score-box">
-                <div id="student-display" class="student-display-name">Alumno: -</div>
-                
-                <!-- NOMBRE DEL TEST / CRITERIO SELECCIONADO -->
-                <div id="criterion-display" class="criterion-badge-display">Criterio: Sin Seleccionar</div>
-
-                <p style="font-weight:600; color:var(--text-muted);">Calificación Global del Proyecto y Memoria</p>
-                <div id="score-percentage" class="score-number">0%</div>
-                <p id="score-text">Revisa el desglose de tu evaluación a continuación.</p>
+            <h2>Fase 3 · Cuestionario Test del Criterio</h2>
+            <div id="criterion-display-test" class="criterion-badge-display">Criterio: Sin Seleccionar</div>
+            <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:12px;">
+                Responde las preguntas y pulsa «Comprobar resultado del test». Una vez comprobado, el test no se puede repetir.
+            </p>
+            <div class="quiz-filter-container no-print">
+                <button type="button" class="btn btn-warning" onclick="toggleTheory()">📖 Mostrar / Ocultar Teoría</button>
             </div>
-            <div id="detailed-feedback" style="margin-bottom:20px; font-size:0.95rem;"></div>
 
-            <!-- SECCIÓN TEORÍA Y TIPO TEST -->
-            <div class="no-print" style="margin-top:24px; border-top:2px dashed var(--border); padding-top:20px;">
-                <h3>Cuestionario de Conocimientos Técnicos por Criterio</h3>
-                <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:12px;">
-                    Usa las opciones a continuación para revisar la teoría o cargar el cuestionario del criterio asignado:
-                </p>
-
-                <div class="quiz-filter-container">
-                    <button type="button" id="btn-quiz-productos" class="btn btn-secondary" onclick="loadQuizCategory('productos')">1. Productos y Materiales (Criterio 2.1)</button>
-                    <button type="button" id="btn-quiz-fabricacion" class="btn btn-secondary" onclick="loadQuizCategory('fabricacion')">2. Fabricación (Criterio 2.2)</button>
-                    <button type="button" id="btn-quiz-difusion" class="btn btn-secondary" onclick="loadQuizCategory('difusion')">3. Difusión (Criterios 3.1 y 3.2)</button>
-                    <button type="button" class="btn btn-warning" onclick="toggleTheory()">📖 Mostrar / Ocultar Teoría Completa</button>
-                </div>
-
-                <!-- CAJA DE TEORÍA DETALLADA Y AMPLIADA -->
+            <!-- CAJA DE TEORÍA DETALLADA Y AMPLIADA -->
                 <div id="theory-container" class="theory-box">
                     <h3>📖 Guía Teórica Detallada de Apoyo</h3>
                     
@@ -538,20 +653,46 @@
                     </ul>
                 </div>
 
-                <!-- CONTENEDOR DE PREGUNTAS TIPO TEST -->
-                <div id="quiz-questions-container">
-                    <p style="font-style:italic; color:var(--text-muted);">El cuestionario se cargará automáticamente al pulsar sobre el botón correspondiente o al llegar a esta pantalla.</p>
-                </div>
-
-                <div id="quiz-actions" style="display:none; margin-top:16px;">
-                    <button type="button" id="btn-evaluate-quiz" class="btn btn-success" onclick="evaluateQuiz()">✔ Validar y Finalizar Cuestionario Test</button>
-                    <span id="quiz-score-badge" style="margin-left:12px; font-weight:bold;"></span>
-                </div>
+                
+            <div id="quiz-questions-container">
+                <p style="font-style:italic; color:var(--text-muted);">El cuestionario se carga al elegir el criterio.</p>
             </div>
 
+            <div id="quiz-actions" style="margin-top:16px;">
+                <button type="button" id="btn-evaluate-quiz" class="btn btn-success" onclick="evaluateQuiz()">✔ Comprobar resultado del test</button>
+                <span id="quiz-score-badge" style="margin-left:12px; font-weight:bold;"></span>
+            </div>
+
+            
+        </div>
+
+        <!-- VENTANA 7: RESULTADO E INFORME -->
+        <div class="tab-window" id="window-7">
+            <h2>Resultado Final e Informe de Fallos</h2>
+
+            <div id="score-container" class="score-box">
+                <div id="student-display" class="student-display-name">-</div>
+                <div id="group-display" style="color:var(--text-muted); font-weight:600; margin-bottom:8px;"></div>
+                <div id="criterion-display" class="criterion-badge-display">Criterio: Sin Seleccionar</div>
+                <p style="font-weight:600; color:var(--text-muted);">Porcentaje final del proyecto y la memoria</p>
+                <div id="score-percentage" class="score-number">0%</div>
+                <div id="band-chip" class="band-chip"></div>
+            </div>
+
+            <div id="verdict" class="verdict"></div>
+            <div id="score-breakdown" class="breakdown"></div>
+
+            <div id="send-status" class="feedback-msg"></div>
+            <div style="text-align:center; margin-top:10px;">
+                <button type="button" id="btn-retry-send" class="btn btn-warning no-print" style="display:none;" onclick="sendResults()">↻ Reintentar envío</button>
+            </div>
+
+            <div id="report-container"></div>
+
             <div class="nav-buttons no-print" style="margin-top:30px;">
-                <button type="button" id="btn-fix-or-reset" class="btn btn-secondary" onclick="handleFixOrReset()">&circlearrowleft; Corregir Errores</button>
-                <button type="button" class="btn btn-success" onclick="window.print()">Imprimir / Guardar Memoria PDF</button>
+                <button type="button" id="btn-redo" class="btn btn-danger" onclick="resetToStart(true)">↺ Reiniciar</button>
+                <button type="button" class="btn btn-secondary" onclick="resetToStart(false)">👥 Nueva pareja (borrar datos)</button>
+                <button type="button" class="btn btn-success" onclick="window.print()">Imprimir / Guardar Informe PDF</button>
             </div>
         </div>
     </form>
@@ -564,10 +705,39 @@
             bolsillo: { selectedPoint: null, lines: [], isCorrect: false, attempts: 0, solutionTimer: null, width: 1000, height: 600 }
         };
 
-        let lastFirstErrorWindow = 4;
-        let testScorePct = 0;
+                let testScorePct = 0;
         let isQuizLocked = false;
         let activeCriterionKey = "productos";
+
+        /* ============ CONFIGURACIÓN ============ */
+        // Pega aquí la URL de la aplicación web de Google Apps Script (termina en /exec).
+        const SHEET_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyiOndS6GMYhgiSGLVAXUOOHhMKtBXqcLUeOppbNZIkrxU-HiMlgmhlYCj1xYZQG0io/exec";
+
+        // Porcentaje mínimo para aprobar y enviar los datos a la hoja de cálculo
+        const PASS_PERCENT = 70;
+
+        // true = el informe muestra la respuesta correcta de cada fallo; false = solo marca el fallo
+        const SHOW_CORRECT_ANSWERS = true;
+
+        // Fondo de pantalla según la puntuación (sobre 100). Se aplica el primer tramo que se SUPERA (>).
+        const SCORE_BANDS = [
+            { min: 30, name: "Rojo",     bg: "#ef4444", fg: "#ffffff" },
+            { min: 25, name: "Naranja",  bg: "#f97316", fg: "#0f172a" },
+            { min: 20, name: "Amarillo", bg: "#facc15", fg: "#0f172a" },
+            { min: 15, name: "Verde",    bg: "#22c55e", fg: "#0f172a" },
+            { min: 10, name: "Morado",   bg: "#a855f7", fg: "#ffffff" },
+            { min: 5,  name: "Azul",     bg: "#3b82f6", fg: "#ffffff" },
+            { min: 2,  name: "Gris",     bg: "#9ca3af", fg: "#0f172a" }
+        ];
+
+        let finalResult = null;
+        let resultSent = false;
+        let testCorrectCount = 0;
+        let testTotalCount = 10;
+        let testReview = [];
+        let materialsReview = [];
+        let processReview = [];
+
 
         const criterionLabels = {
             productos: "Productos y Materiales",
@@ -612,12 +782,15 @@
             activeCriterionKey = document.getElementById('selectedCriterion').value;
             updateCriterionDisplay();
             loadQuizCategory(activeCriterionKey);
-            showWindow(1);
+            showWindow(2);
         }
 
         function updateCriterionDisplay() {
-            const badge = document.getElementById('criterion-display');
-            badge.innerText = `Criterio Evaluado: ${criterionLabels[activeCriterionKey]}`;
+            const text = `Criterio Evaluado: ${criterionLabels[activeCriterionKey]}`;
+            ['criterion-display', 'criterion-display-test'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.innerText = text;
+            });
         }
 
         function setupGrid(svgId, width, height) {
@@ -930,162 +1103,383 @@
 
         function showWindow(n) {
             document.querySelectorAll('.tab-window').forEach(w => w.classList.remove('active'));
-            document.querySelectorAll('.step-node').forEach((node, idx) => {
-                node.classList.remove('active');
-                if (idx < n) node.classList.add('completed');
-                else node.classList.remove('completed');
-                if (idx === n) node.classList.add('active');
+            const phase = (n >= 2 && n <= 3) ? 1 : (n >= 4 && n <= 5) ? 2 : (n === 6) ? 3 : (n === 7) ? 4 : 0;
+            [1, 2, 3].forEach(p => {
+                const el = document.getElementById('phase-' + p);
+                el.classList.remove('active', 'completed');
+                if (phase === 4 || p < phase) el.classList.add('completed');
+                else if (p === phase) el.classList.add('active');
             });
             document.getElementById(`window-${n}`).classList.add('active');
             window.scrollTo(0, 0);
         }
 
         function nextWindow(current) {
-            if (current === 1) {
-                if (!document.getElementById('studentName').value || !document.getElementById('studentGroup').value) {
-                    alert('Por favor, completa tu nombre y curso antes de continuar.');
-                    return;
-                }
-            }
             showWindow(current + 1);
+        }
+
+        function cleanName(v) { return v.trim().replace(/\s+/g, ' '); }
+        function isFullName(v) {
+            return cleanName(v).split(' ').filter(w => w.length >= 2).length >= 2;
+        }
+
+        function toggleSolo() {
+            const solo = document.getElementById('soloCheck').checked;
+            const n2 = document.getElementById('studentName2');
+            n2.disabled = solo;
+            if (solo) n2.value = '';
+        }
+
+        function validateTeamData() {
+            const n1 = document.getElementById('studentName1').value;
+            const n2 = document.getElementById('studentName2').value;
+            const g = document.getElementById('studentGroup').value;
+            const solo = document.getElementById('soloCheck').checked;
+            const err = document.getElementById('team-error');
+            const msgs = [];
+
+            if (!isFullName(n1)) msgs.push('Escribe nombre y apellidos del alumno/a 1.');
+            if (!solo && !isFullName(n2)) msgs.push('Escribe nombre y apellidos del alumno/a 2 (o marca «Trabajo en solitario»).');
+            if (!g.trim()) msgs.push('Indica el curso y grupo.');
+
+            if (msgs.length) {
+                err.className = 'feedback-msg error';
+                err.innerHTML = msgs.join('<br>');
+                return;
+            }
+            err.className = 'feedback-msg';
+            showWindow(1);
+        }
+
+        function nextPhase(from) {
+            const msg = from === 3
+                ? 'Vas a pasar a la Fase 2. Ya no podrás volver a los planos. ¿Continuar?'
+                : 'Vas a pasar a la Fase 3 (test). Ya no podrás volver a los materiales ni a la hoja de proceso. ¿Continuar?';
+            if (!confirm(msg)) return;
+            showWindow(from + 1);
         }
 
         function prevWindow(current) { showWindow(current - 1); }
 
         function calculateResults() {
-            let errorList = [];
-            lastFirstErrorWindow = 6;
-
-            const sName = document.getElementById('studentName').value || "No especificado";
-            const sGroup = document.getElementById('studentGroup').value || "";
-            document.getElementById('student-display').innerText = `Alumno/a: ${sName} (${sGroup})`;
+            const n1 = cleanName(document.getElementById('studentName1').value);
+            const n2 = cleanName(document.getElementById('studentName2').value);
+            const grupo = cleanName(document.getElementById('studentGroup').value);
 
             updateCriterionDisplay();
 
-            let prismaPoints = state.prisma.isCorrect ? 20 : 0;
-            let bolsilloPoints = state.bolsillo.isCorrect ? 20 : 0;
+            const prismaPoints = state.prisma.isCorrect ? 20 : 0;
+            const bolsilloPoints = state.bolsillo.isCorrect ? 20 : 0;
 
-            if (!state.prisma.isCorrect) {
-                errorList.push("El plano del <strong>Prisma Pop-Up (Ventana 2)</strong> no está validado correctamente.");
-                if (lastFirstErrorWindow > 2) lastFirstErrorWindow = 2;
-            }
-            if (!state.bolsillo.isCorrect) {
-                errorList.push("El plano del <strong>Bolsillo (Ventana 3)</strong> no está validado correctamente.");
-                if (lastFirstErrorWindow > 3) lastFirstErrorWindow = 3;
-            }
-
-            let tableTotalCount = currentBudgetData.length + correctSteps.length;
+            const tableTotalCount = currentBudgetData.length + correctSteps.length;
             let tableCorrectCount = 0;
+            materialsReview = [];
+            processReview = [];
 
             const selectedByPriceGroup = {};
             currentBudgetData.forEach((item, index) => {
                 const sel = document.getElementById(`budget-select-${index}`);
-                const val = sel.value;
                 const group = item.priceGroup;
-
-                if (!selectedByPriceGroup[group]) {
-                    selectedByPriceGroup[group] = [];
-                }
-                selectedByPriceGroup[group].push({ index, val, element: sel, validAnswers: item.validAnswers });
+                if (!selectedByPriceGroup[group]) selectedByPriceGroup[group] = [];
+                selectedByPriceGroup[group].push({ item, val: sel.value, validAnswers: item.validAnswers });
             });
 
             Object.keys(selectedByPriceGroup).forEach(group => {
-                const entries = selectedByPriceGroup[group];
-                const usedAnswersInGroup = new Set();
-
-                entries.forEach(entry => {
-                    if (entry.validAnswers.includes(entry.val) && !usedAnswersInGroup.has(entry.val)) {
-                        entry.element.className = "correct";
-                        usedAnswersInGroup.add(entry.val);
-                        tableCorrectCount++;
-                    } else {
-                        entry.element.className = "incorrect";
-                    }
+                const used = new Set();
+                selectedByPriceGroup[group].forEach(entry => {
+                    const ok = entry.validAnswers.includes(entry.val) && !used.has(entry.val);
+                    if (ok) { used.add(entry.val); tableCorrectCount++; }
+                    materialsReview.push({ units: entry.item.units, cost: entry.item.cost, chosen: entry.val, valid: entry.validAnswers, ok });
                 });
             });
+            materialsReview.sort((x, y) => parseFloat(x.cost) - parseFloat(y.cost));
 
             correctSteps.forEach((stepObj, index) => {
                 const sel = document.getElementById(`step-select-${index}`);
-                if (sel.value === sel.dataset.correct) {
-                    sel.className = "correct";
-                    tableCorrectCount++;
-                } else { sel.className = "incorrect"; }
+                const ok = sel.value === sel.dataset.correct;
+                if (ok) tableCorrectCount++;
+                processReview.push({ step: stepObj.step, chosen: sel.value, correct: stepObj.text, ok });
             });
 
-            if (tableCorrectCount < tableTotalCount) {
-                errorList.push(`Tienes fallos en la <strong>tabla de materiales o en el orden del proceso</strong> (${tableCorrectCount}/${tableTotalCount} aciertos).`);
-                if (lastFirstErrorWindow > 4) lastFirstErrorWindow = 4;
-            }
-
-            let tablesPoints = (tableCorrectCount / tableTotalCount) * 30;
-            let testPoints = (testScorePct / 100) * 30;
-
+            const tablesPoints = (tableCorrectCount / tableTotalCount) * 30;
+            const testPoints = (testScorePct / 100) * 30;
             const globalScore = Math.round(prismaPoints + bolsilloPoints + tablesPoints + testPoints);
+            const passed = globalScore >= PASS_PERCENT;
+            const fmt = v => Number(v.toFixed(1));
 
-            showWindow(6);
+            finalResult = {
+                alumno1: n1, alumno2: n2, curso: grupo,
+                criterio: criterionLabels[activeCriterionKey],
+                total: globalScore, passed,
+                prisma: prismaPoints, bolsillo: bolsilloPoints,
+                tablas: fmt(tablesPoints), test: fmt(testPoints),
+                aciertos: `${testCorrectCount}/${testTotalCount}`,
+                id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
+            };
 
-            const scoreNum = document.getElementById('score-percentage');
-            const scoreText = document.getElementById('score-text');
-            const feedbackDetail = document.getElementById('detailed-feedback');
-            const fixOrResetBtn = document.getElementById('btn-fix-or-reset');
+            showWindow(7);
 
-            scoreNum.innerText = `${globalScore}%`;
+            document.getElementById('student-display').innerText = n2 ? `${n1}  ·  ${n2}` : n1;
+            document.getElementById('group-display').innerText = grupo;
+            document.getElementById('score-percentage').innerText = `${globalScore}%`;
 
-            if (globalScore < 20) {
-                scoreNum.style.color = "#64748b";
-            } else if (globalScore >= 20 && globalScore < 40) {
-                scoreNum.style.color = "#2563eb";
-            } else if (globalScore >= 40 && globalScore < 60) {
-                scoreNum.style.color = "#16a34a";
-            } else if (globalScore >= 60 && globalScore < 80) {
-                scoreNum.style.color = "#ca8a04";
-            } else if (globalScore >= 80 && globalScore < 90) {
-                scoreNum.style.color = "#ea580c";
+            document.getElementById('score-breakdown').innerHTML = `
+                <div class="item"><div class="big">${finalResult.prisma}<small>/20</small></div><div class="lbl">Plano del prisma</div></div>
+                <div class="item"><div class="big">${finalResult.bolsillo}<small>/20</small></div><div class="lbl">Plano del bolsillo</div></div>
+                <div class="item"><div class="big">${finalResult.tablas}<small>/30</small></div><div class="lbl">Materiales y proceso</div></div>
+                <div class="item"><div class="big">${finalResult.test}<small>/30</small></div><div class="lbl">Test (${finalResult.aciertos} aciertos)</div></div>`;
+
+            // Fondo de pantalla según la puntuación
+            const band = SCORE_BANDS.find(b => globalScore > b.min);
+            document.body.style.backgroundColor = band ? band.bg : '';
+            const box = document.getElementById('score-container');
+            const chip = document.getElementById('band-chip');
+            if (band) {
+                box.style.borderColor = band.bg;
+                chip.style.display = 'inline-block';
+                chip.style.background = band.bg;
+                chip.style.color = band.fg;
+                chip.innerText = `Nivel ${band.name}`;
             } else {
-                scoreNum.style.color = "#dc2626";
+                box.style.borderColor = '';
+                chip.style.display = 'none';
             }
 
-            if (errorList.length === 0 && globalScore >= 90) {
-                scoreText.innerText = "¡Excelente trabajo! Has completado los planos, la memoria técnica y el test a la perfección.";
-                feedbackDetail.innerHTML = "<p style='color:var(--success); font-weight:bold;'>✔ Planos validados y respuestas totalmente correctas.</p>";
-                fixOrResetBtn.innerText = "↺ Volver a Empezar Todo";
+            // Veredicto
+            const verdict = document.getElementById('verdict');
+            const redo = document.getElementById('btn-redo');
+            const status = document.getElementById('send-status');
+            document.getElementById('btn-retry-send').style.display = 'none';
+            if (passed) {
+                verdict.className = 'verdict pass';
+                verdict.innerHTML = `✔ ¡Superado! Has alcanzado el ${globalScore}% (mínimo exigido: ${PASS_PERCENT}%).<br>
+                    Revisa el informe de fallos. Si quieres más nota, puedes hacer de nuevo el simulador.`;
+                redo.className = 'btn';
+                redo.innerText = '↻ Hacer de nuevo el simulador (subir nota)';
+                status.className = 'feedback-msg';
+                sendResults();
             } else {
-                scoreText.innerText = "Revisa los elementos pendientes o con errores detallados a continuación:";
-                
-                let htmlMsg = "<ul style='margin-left:20px; color:#991b1b;'>";
-                errorList.forEach(err => { htmlMsg += `<li>${err}</li>`; });
-                htmlMsg += "</ul>";
+                verdict.className = 'verdict fail';
+                verdict.innerHTML = `❌ No has llegado al ${PASS_PERCENT}%. Tu resultado es ${globalScore}% y esto es insuficiente: tienes que llegar al ${PASS_PERCENT}%.<br>
+                    Revisa el informe de fallos, reinicia e intenta el proyecto de nuevo desde el principio.<br>
+                    <span style="font-size:1rem;">Tus datos NO se han enviado a la hoja de cálculo.</span>`;
+                redo.className = 'btn btn-danger';
+                redo.innerText = '↺ Reiniciar e intentarlo de nuevo desde el principio';
+                status.className = 'feedback-msg';
+            }
 
-                feedbackDetail.innerHTML = htmlMsg;
-                fixOrResetBtn.innerText = "✎ Volver a Corregir Planos o Memoria";
+            document.getElementById('report-container').innerHTML = buildReportHTML();
+        }
+
+                function esc(s) {
+            return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        function distPointSeg(px, py, s) {
+            const dx = s.x2 - s.x1, dy = s.y2 - s.y1;
+            const l2 = dx * dx + dy * dy;
+            let t = l2 ? ((px - s.x1) * dx + (py - s.y1) * dy) / l2 : 0;
+            t = Math.max(0, Math.min(1, t));
+            return Math.hypot(px - (s.x1 + t * dx), py - (s.y1 + t * dy));
+        }
+
+        function samplePoints(s, step) {
+            const len = Math.hypot(s.x2 - s.x1, s.y2 - s.y1);
+            const n = Math.max(1, Math.ceil(len / step));
+            const pts = [];
+            for (let i = 0; i <= n; i++) pts.push([s.x1 + (s.x2 - s.x1) * i / n, s.y1 + (s.y2 - s.y1) * i / n]);
+            return pts;
+        }
+
+        function analyzeDrawing(type) {
+            const target = (type === 'prisma') ? targetPrismaSegments : targetBolsilloSegments;
+            const tgt = target.map(t => ({ x1: t.x1 * GRID_STEP, y1: t.y1 * GRID_STEP, x2: t.x2 * GRID_STEP, y2: t.y2 * GRID_STEP }));
+            const user = state[type].lines.map(l => ({ x1: l.rawX1, y1: l.rawY1, x2: l.rawX2, y2: l.rawY2 }));
+            const near = (p, segs) => segs.some(s => distPointSeg(p[0], p[1], s) <= 10);
+
+            const missing = tgt.filter(t => {
+                const pts = samplePoints(t, 8);
+                return pts.filter(p => near(p, user)).length / pts.length < 0.85;
+            });
+            const extra = user.filter(u => {
+                const pts = samplePoints(u, 8);
+                return pts.filter(p => !near(p, tgt)).length / pts.length > 0.3;
+            });
+            const good = user.filter(u => !extra.includes(u));
+            return { tgt, user, missing, extra, good };
+        }
+
+        function drawingSVG(type, a) {
+            const vb = (type === 'prisma') ? [0, 0, 800, 560] : [40, 80, 520, 480];
+            let g = '';
+            for (let x = vb[0]; x <= vb[0] + vb[2]; x += 40) g += `<line x1="${x}" y1="${vb[1]}" x2="${x}" y2="${vb[1] + vb[3]}" stroke="#e2e8f0" stroke-width="1"/>`;
+            for (let y = vb[1]; y <= vb[1] + vb[3]; y += 40) g += `<line x1="${vb[0]}" y1="${y}" x2="${vb[0] + vb[2]}" y2="${y}" stroke="#e2e8f0" stroke-width="1"/>`;
+            const ln = (s, extra) => `<line x1="${s.x1}" y1="${s.y1}" x2="${s.x2}" y2="${s.y2}" ${extra} stroke-linecap="round"/>`;
+            a.missing.forEach(s => g += ln(s, 'stroke="#dc2626" stroke-width="5" stroke-dasharray="10 7"'));
+            a.good.forEach(s => g += ln(s, 'stroke="#2563eb" stroke-width="4"'));
+            a.extra.forEach(s => g += ln(s, 'stroke="#f97316" stroke-width="4"'));
+            return `<svg viewBox="${vb.join(' ')}" xmlns="http://www.w3.org/2000/svg">${g}</svg>`;
+        }
+
+        function planCardHTML(type, title) {
+            if (state[type].isCorrect) {
+                return `<div class="plan-card ok"><h4>${title} ✔</h4><p class="all-ok">Plano validado correctamente.</p></div>`;
+            }
+            if (state[type].lines.length === 0) {
+                return `<div class="plan-card bad"><h4>${title} ✘</h4><p class="ans-wrong">No dibujaste ninguna línea en este plano.</p></div>`;
+            }
+            const a = analyzeDrawing(type);
+            const detalle = [];
+            if (a.missing.length) detalle.push(`Te faltan <strong>${a.missing.length}</strong> de ${a.tgt.length} líneas.`);
+            if (a.extra.length) detalle.push(`Hay <strong>${a.extra.length}</strong> línea(s) que sobran o están mal colocadas.`);
+            if (!detalle.length) detalle.push('El trazado no llegó a validarse: revisa que las líneas coincidan exactamente con el plano.');
+            const solucion = SHOW_CORRECT_ANSWERS
+                ? `<div class="legend"><span><i style="border-color:#2563eb"></i>Tus líneas correctas</span><span><i style="border-color:#f97316"></i>Líneas que sobran</span><span><i style="border-color:#dc2626;border-top-style:dashed"></i>Líneas que faltan</span></div>`
+                : '';
+            return `<div class="plan-card bad"><h4>${title} ✘</h4><p class="ans-wrong">${detalle.join(' ')}</p>${SHOW_CORRECT_ANSWERS ? drawingSVG(type, a) : ''}${solucion}</div>`;
+        }
+
+        function buildReportHTML() {
+            let html = '';
+
+            // FASE 1
+            html += `<div class="report-section"><h3>Fase 1 · Planos</h3><div class="plan-grid">${planCardHTML('prisma', 'Prisma Pop-Up')}${planCardHTML('bolsillo', 'Bolsillo')}</div></div>`;
+
+            // FASE 2
+            const matBad = materialsReview.filter(r => !r.ok).length;
+            const procBad = processReview.filter(r => !r.ok).length;
+            html += `<div class="report-section"><h3>Fase 2 · Tabla de herramientas y materiales y hoja de proceso</h3>`;
+            html += `<h4>Tabla de herramientas y materiales ${matBad ? '✘ (' + matBad + ' fallo/s)' : '✔'}</h4>`;
+            html += `<table><thead><tr><th>Unidades</th><th>Coste</th><th>Tu respuesta</th><th>Resultado</th></tr></thead><tbody>`;
+            materialsReview.forEach(r => {
+                const res = r.ok ? '<span class="ans-right">✔ Correcto</span>'
+                    : `<span class="ans-wrong">✘ Incorrecto</span>${SHOW_CORRECT_ANSWERS ? `<br><span class="ans-right">Correcto: ${esc(r.valid.join(' o '))}</span>` : ''}`;
+                html += `<tr class="${r.ok ? 'row-ok' : 'row-bad'}"><td>${esc(r.units)}</td><td>${esc(r.cost)}</td><td>${esc(r.chosen)}</td><td>${res}</td></tr>`;
+            });
+            html += `</tbody></table>`;
+            html += `<h4>Hoja de proceso ${procBad ? '✘ (' + procBad + ' fallo/s)' : '✔'}</h4>`;
+            html += `<table><thead><tr><th>Secuencia</th><th>Tu respuesta</th><th>Resultado</th></tr></thead><tbody>`;
+            processReview.forEach(r => {
+                const res = r.ok ? '<span class="ans-right">✔ Correcto</span>'
+                    : `<span class="ans-wrong">✘ Incorrecto</span>${SHOW_CORRECT_ANSWERS ? `<br><span class="ans-right">Correcto: ${esc(r.correct)}</span>` : ''}`;
+                html += `<tr class="${r.ok ? 'row-ok' : 'row-bad'}"><td><strong>Paso ${r.step}</strong></td><td>${esc(r.chosen)}</td><td>${res}</td></tr>`;
+            });
+            html += `</tbody></table></div>`;
+
+            // FASE 3
+            const testBad = testReview.filter(r => !r.ok);
+            html += `<div class="report-section"><h3>Fase 3 · Test (${testCorrectCount}/${testTotalCount} aciertos)</h3>`;
+            if (!testBad.length) {
+                html += `<p class="all-ok">✔ Sin fallos en el test.</p>`;
+            } else {
+                testBad.forEach(r => {
+                    html += `<div class="test-fail"><div style="font-weight:700; margin-bottom:6px;">${esc(r.q)}</div>
+                        <div class="ans-wrong">✘ Tu respuesta: ${esc(r.chosen)}</div>
+                        ${SHOW_CORRECT_ANSWERS ? `<div class="ans-right">✔ Respuesta correcta: ${esc(r.correct)}</div>` : ''}</div>`;
+                });
+            }
+            html += `</div>`;
+            return html;
+        }
+
+        async function sendResults() {
+            if (!finalResult || !finalResult.passed || resultSent) return;
+            const status = document.getElementById('send-status');
+            const retry = document.getElementById('btn-retry-send');
+            retry.style.display = 'none';
+
+            if (!SHEET_WEBAPP_URL) {
+                status.className = 'feedback-msg warning';
+                status.innerText = '⚠ El envío a la hoja de cálculo no está configurado (falta la URL en el programa). Avisa a tu profesor/a.';
+                return;
+            }
+
+            status.className = 'feedback-msg warning';
+            status.innerText = 'Enviando resultados a la hoja de cálculo…';
+
+            const now = new Date();
+            const params = new URLSearchParams({
+                id: finalResult.id,
+                fecha: now.toLocaleDateString('es-ES'),
+                hora: now.toLocaleTimeString('es-ES', { hour12: false }),
+                alumno1: finalResult.alumno1,
+                alumno2: finalResult.alumno2,
+                curso: finalResult.curso,
+                criterio: finalResult.criterio,
+                total: finalResult.total,
+                prisma: finalResult.prisma,
+                bolsillo: finalResult.bolsillo,
+                tablas: finalResult.tablas,
+                test: finalResult.test,
+                aciertos: finalResult.aciertos
+            });
+
+            try {
+                // Primer intento: respuesta legible (confirma la recepción)
+                const resp = await fetch(SHEET_WEBAPP_URL, { method: 'POST', body: params });
+                const data = await resp.json();
+                if (!data.ok) throw new Error(data.error || 'Respuesta no válida');
+                resultSent = true;
+                status.className = 'feedback-msg success';
+                status.innerText = '✔ Resultados enviados correctamente a la hoja de cálculo.';
+            } catch (e1) {
+                try {
+                    // Segundo intento sin leer respuesta (el servidor ignora duplicados por ID)
+                    await fetch(SHEET_WEBAPP_URL, { method: 'POST', mode: 'no-cors', body: params });
+                    resultSent = true;
+                    status.className = 'feedback-msg success';
+                    status.innerText = '✔ Resultados enviados (no se pudo leer la confirmación del servidor).';
+                } catch (e2) {
+                    status.className = 'feedback-msg error';
+                    status.innerText = '❌ No se pudieron enviar los resultados. Comprueba la conexión y pulsa «Reintentar envío».';
+                    retry.style.display = 'inline-block';
+                }
             }
         }
 
-        function handleFixOrReset() {
-            if (lastFirstErrorWindow < 6) {
-                showWindow(lastFirstErrorWindow);
-            } else {
-                resetToStart();
-            }
-        }
+        
 
-        function resetToStart() {
+        function resetToStart(keepTeam) {
+            if (finalResult && finalResult.passed && !resultSent && !confirm('El resultado todavía no se ha enviado a la hoja de cálculo. ¿Empezar de nuevo igualmente?')) return;
+
             state.prisma.attempts = 0;
             state.bolsillo.attempts = 0;
             isQuizLocked = false;
             testScorePct = 0;
+            testCorrectCount = 0;
+            testReview = [];
+            materialsReview = [];
+            processReview = [];
+            finalResult = null;
+            resultSent = false;
 
             document.getElementById('btn-validate-prisma').disabled = false;
             document.getElementById('btn-validate-bolsillo').disabled = false;
             document.getElementById('attempts-prisma').innerText = 'Intentos: 0 / 5';
             document.getElementById('attempts-bolsillo').innerText = 'Intentos: 0 / 5';
-            
-            document.getElementById('btn-quiz-productos').disabled = false;
-            document.getElementById('btn-quiz-fabricacion').disabled = false;
-            document.getElementById('btn-quiz-difusion').disabled = false;
+            document.getElementById('btn-evaluate-quiz').disabled = false;
+            document.getElementById('quiz-score-badge').innerText = '';
+            document.getElementById('quiz-questions-container').innerHTML = '';
+            document.getElementById('send-status').className = 'feedback-msg';
+            document.getElementById('btn-retry-send').style.display = 'none';
+            document.getElementById('report-container').innerHTML = '';
+            document.getElementById('team-error').className = 'feedback-msg';
+            document.getElementById('selectedCriterion').value = 'productos';
+            activeCriterionKey = 'productos';
+
+            if (!keepTeam) {
+                ['studentName1', 'studentName2', 'studentGroup'].forEach(id => document.getElementById(id).value = '');
+                document.getElementById('soloCheck').checked = false;
+                toggleSolo();
+            }
+
+            document.body.style.backgroundColor = '';
+            document.getElementById('score-container').style.borderColor = '';
 
             clearCanvas('prisma');
             clearCanvas('bolsillo');
+            document.getElementById('svg-prisma-solution').innerHTML = '';
+            document.getElementById('svg-bolsillo-solution').innerHTML = '';
             initTables();
             showWindow(0);
         } 
@@ -1155,6 +1549,7 @@
 
             container.innerHTML = '';
             actions.style.display = 'block';
+            document.getElementById('btn-evaluate-quiz').disabled = false;
 
             currentActiveQuiz.forEach((qObj, qIndex) => {
                 const optionsIndexed = qObj.options.map((optText, origIdx) => ({ text: optText, isCorrect: origIdx === qObj.correct }));
@@ -1189,31 +1584,30 @@
         function evaluateQuiz() {
             if (isQuizLocked) return;
 
+            const unanswered = currentActiveQuiz.filter((_, i) => !document.querySelector(`input[name="quiz-ans-${i}"]:checked`)).length;
+            if (unanswered > 0 && !confirm(`Tienes ${unanswered} pregunta(s) sin responder y contarán como fallo. ¿Comprobar el resultado igualmente?`)) return;
+
             let correctCount = 0;
+            testReview = [];
             currentActiveQuiz.forEach((qObj, qIndex) => {
                 const selected = document.querySelector(`input[name="quiz-ans-${qIndex}"]:checked`);
-
-                if (selected && selected.value === '1') {
-                    correctCount++;
-                }
-
-                // Deshabilitar las opciones de esta pregunta sin añadir clases visuales ni marcas de error/acierto
-                const radios = document.querySelectorAll(`input[name="quiz-ans-${qIndex}"]`);
-                radios.forEach(r => r.disabled = true);
+                const ok = !!selected && selected.value === '1';
+                if (ok) correctCount++;
+                testReview.push({
+                    q: qObj.q,
+                    chosen: selected ? selected.closest('label').innerText.trim() : 'Sin responder',
+                    correct: qObj.options[qObj.correct],
+                    ok
+                });
+                document.querySelectorAll(`input[name="quiz-ans-${qIndex}"]`).forEach(r => r.disabled = true);
             });
 
-            testScorePct = Math.round((correctCount / currentActiveQuiz.length) * 100);
-            
-            // BLOQUEO DEFINITIVO TRAS VALIDAR
+            testCorrectCount = correctCount;
+            testTotalCount = currentActiveQuiz.length;
+            testScorePct = Math.round((correctCount / testTotalCount) * 100);
+
             isQuizLocked = true;
             document.getElementById('btn-evaluate-quiz').disabled = true;
-            document.getElementById('btn-quiz-productos').disabled = true;
-            document.getElementById('btn-quiz-fabricacion').disabled = true;
-            document.getElementById('btn-quiz-difusion').disabled = true;
-
-            const scoreBadge = document.getElementById('quiz-score-badge');
-            scoreBadge.innerText = `Cuestionario Validado: ${correctCount} / 10 aciertos (${testScorePct}%) - Test Bloqueado`;
-            scoreBadge.style.color = 'var(--primary)';
 
             calculateResults();
         }
@@ -1222,5 +1616,5 @@
         setupGrid('svg-bolsillo', 1000, 600);
         initTables();
     </script>
-</body>
-</html>
+
+</body></html>
