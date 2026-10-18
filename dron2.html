@@ -82,8 +82,8 @@
     .name-display { font-size: 1.1rem; font-weight: bold; color: #555; margin-bottom: 2px; }
     .score-val { font-size: 2.5rem; font-weight: 900; color: #222; margin: 0; display: none; }
     
-    .multiplier { color: #e67e22; font-size: 2.5rem; font-weight: 900; margin: 0; display: flex; align-items: center; justify-content: center; gap: 10px; }
-    .res-final { color: black; font-weight: bold; font-size: 2em; }
+    .multiplier { color: #e67e22; font-size: 2.2rem; font-weight: 900; margin: 0; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .res-final { color: black; font-weight: bold; font-size: 1.8em; }
 
     /* SECCIÓN CENTRAL BARRA SUPERIOR */
     .center-top-panel {
@@ -177,16 +177,16 @@
 <body>
 
    <!-- PANTALLA DE SELECCIÓN INICIAL DE CRITERIO -->
-  <div id="pantalla-seleccion">
+  <div id="pantalla-seleccion" style="display: flex;">
     <div class="card-seleccion">
       <h2>🛸 Dron Duel - Test Evaluativo</h2>
       <p>Selecciona el bloque temático sobre el que responderás cada 5 puntos logrados en la pista:</p>
-      <button class="btn-criterio" style="background: var(--criterio-13);" onclick="seleccionarCriterio(&#39;13&#39;, &#39;Criterio 1.3 (Tec y digital)/ 6.1 a 6.4 (Comput)&#39;, &#39;var(--criterio-13)&#39;)">Criterio 1.3 (Tec y digital)/ 6.1 a 6.4 (Comput): Protección, Salud Personal y Ética Digital</button>
-      <button class="btn-criterio" style="background: var(--criterio-61);" onclick="seleccionarCriterio(&#39;61&#39;, &#39;Criterio 6.1 (Tec y digit)/ 1.1 (Comput)&#39;, &#39;var(--criterio-61)&#39;)">Criterio 6.1 (Tec y digit)/ 1.1 (Comput): Componentes, Redes y Seguridad Operativa</button>
-      <button class="btn-criterio" style="background: var(--criterio-42);" onclick="seleccionarCriterio(&#39;42&#39;, &#39;Criterio 4.2 (Digital)&#39;, &#39;var(--criterio-42)&#39;)">Criterio 4.2 (Digital): Administración Digital, Comercio Electrónico y Brecha Social</button>
-      <button class="btn-criterio" style="background: var(--criterio-43);" onclick="seleccionarCriterio(&#39;43&#39;, &#39;Criterio 4.3 (Digital)&#39;, &#39;var(--criterio-43)&#39;)">Criterio 4.3 (Digital): Libertad de Expresión, Medios Digitales y Análisis Crítico</button>
-      <button class="btn-criterio" style="background: var(--criterio-44);" onclick="seleccionarCriterio(&#39;44&#39;, &#39;Criterio 4.4 / 6.1 (4º ESO)&#39;, &#39;var(--criterio-44)&#39;)">Criterio 4.4 (Digitalización)/ 6.1 (Tecnología): Sostenibilidad y Accesibilidad Técnica y Digital</button>
-      <button class="btn-criterio" style="background: var(--criterio-todos);" onclick="seleccionarCriterio(&#39;todos&#39;, &#39;Todos los Criterios Mezclados&#39;, &#39;var(--criterio-todos)&#39;)">🔀 Todos los Criterios Mezclados</button>
+      <button class="btn-criterio" style="background: var(--criterio-13);" onclick="seleccionarCriterio('13', 'Criterio 1.3 (Tec y digital)/ 6.1 a 6.4 (Comput)', 'var(--criterio-13)')">Criterio 1.3 (Tec y digital)/ 6.1 a 6.4 (Comput): Protección, Salud Personal y Ética Digital</button>
+      <button class="btn-criterio" style="background: var(--criterio-61);" onclick="seleccionarCriterio('61', 'Criterio 6.1 (Tec y digit)/ 1.1 (Comput)', 'var(--criterio-61)')">Criterio 6.1 (Tec y digit)/ 1.1 (Comput): Componentes, Redes y Seguridad Operativa</button>
+      <button class="btn-criterio" style="background: var(--criterio-42);" onclick="seleccionarCriterio('42', 'Criterio 4.2 (Digital)', 'var(--criterio-42)')">Criterio 4.2 (Digital): Administración Digital, Comercio Electrónico y Brecha Social</button>
+      <button class="btn-criterio" style="background: var(--criterio-43);" onclick="seleccionarCriterio('43', 'Criterio 4.3 (Digital)', 'var(--criterio-43)')">Criterio 4.3 (Digital): Libertad de Expresión, Medios Digitales y Análisis Crítico</button>
+      <button class="btn-criterio" style="background: var(--criterio-44);" onclick="seleccionarCriterio('44', 'Criterio 4.4 / 6.1 (4º ESO)', 'var(--criterio-44)')">Criterio 4.4 (Digitalización)/ 6.1 (Tecnología): Sostenibilidad y Accesibilidad Técnica y Digital</button>
+      <button class="btn-criterio" style="background: var(--criterio-todos);" onclick="seleccionarCriterio('todos', 'Todos los Criterios Mezclados', 'var(--criterio-todos)')">🔀 Todos los Criterios Mezclados</button>
     </div>
   </div>
 
@@ -205,18 +205,18 @@
     <div class="score-card">
       <div id="label-n1" class="name-display">ALUMNO 1</div>
       <div class="score-val" id="score1" style="display:block;">0</div>
-      <div id="calc-1" class="multiplier">[ 0 x 4 = <span class="res-final">0</span> ]</div>
+      <div id="calc-1" class="multiplier">[ 0 x 0,4 = <span class="res-final">0,0</span> ]</div>
     </div>
 
     <div class="center-top-panel">
-      <div id="badge-criterio" class="badge-criterio">CRITERIO: NO SELECCIONADO</div>
+      <div id="badge-criterio" class="badge-criterio" style="background-color: var(--criterio-61);">CRITERIO: Criterio 6.1 (Tec y digit)/ 1.1 (Comput)</div>
       <button class="btn-top-teoria" onclick="abrirTeoria()">📖 Ver Teoría Desarrollada</button>
     </div>
 
     <div class="score-card">
       <div id="label-n2" class="name-display">ALUMNO 2</div>
       <div class="score-val" id="score2" style="display:block;">0</div>
-      <div id="calc-2" class="multiplier">[ 0 x 4 = <span class="res-final">0</span> ]</div>
+      <div id="calc-2" class="multiplier">[ 0 x 0,4 = <span class="res-final">0,0</span> ]</div>
     </div>
   </div>
 
@@ -249,7 +249,6 @@
   <!-- MODAL PREGUNTA EVALUATIVA -->
   <div class="modal-eval" id="modalPregunta">
     <div class="modal-eval-content">
-      <!-- BOTÓN AÑADIDO: No modifica el CSS global y se apoya sobre la posición relativa del contenedor -->
       <button onclick="abrirTeoria()" style="position: absolute; top: 20px; right: 20px; background-color: #2b6cb0; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.9rem; z-index: 10;">📖 Ver Teoría</button>
       
       <h3 id="pregunta-titulo">Reto Evaluativo</h3>
@@ -380,7 +379,8 @@
 
     // LÓGICA DRON DUEL Y EVALUACIÓN
     const GRID = 40;
-    const colors = ['#ffffff', '#888888', '#87ceeb', '#0000ff', '#008000', '#ffff00', '#ffa500', '#ff0000'];
+    // Escala de colores solicitada: blanco por defecto, >2 gris, >5 azul, >10 morado, >15 verde, >20 amarillo, >25 naranja, >30 rojo
+    const colors = ['#ffffff', '#cccccc', '#87ceeb', '#9b59b6', '#2ecc71', '#f1c40f', '#e67e22', '#e74c3c'];
     let criterioSeleccionado = 'todos';
     let preguntasFiltradas = [];
 
@@ -393,12 +393,10 @@
     function seleccionarCriterio(cat, nombreEtiqueta, colorCss) {
       criterioSeleccionado = cat;
 
-      // Filtrar preguntas
       preguntasFiltradas = cat === 'todos' 
         ? [...preguntasBD] 
         : preguntasBD.filter(p => p.cat === cat);
 
-      // Actualizar la etiqueta visible arriba
       const badge = document.getElementById('badge-criterio');
       badge.innerText = `CRITERIO: ${nombreEtiqueta}`;
       badge.style.backgroundColor = colorCss;
@@ -413,7 +411,6 @@
       document.getElementById('label-n1').innerText = state.p1.name;
       document.getElementById('label-n2').innerText = state.p2.name;
       
-      // AÑADIR ESTAS DOS LÍNEAS:
       document.getElementById('dron-name-p1').innerText = state.p1.name;
       document.getElementById('dron-name-p2').innerText = state.p2.name;
 
@@ -422,6 +419,7 @@
       updateVisuals('p1'); updateVisuals('p2');
       updateScoreUI('p1'); updateScoreUI('p2');
     }
+
     function moverMeta(p) {
       state.metas[p].x = Math.floor(Math.random() * 10);
       state.metas[p].y = Math.floor(Math.random() * 12);
@@ -503,26 +501,30 @@
       const num = p === 'p1' ? '1' : '2';
       const score = state[p].score;
       document.getElementById('score' + num).innerText = score;
-      document.getElementById('calc-' + num).innerHTML = `[ ${score} x 4 = <span class="res-final">${score * 4}</span> ]`;
       
-      // Cambio de color según la escala solicitada
+      // Multiplicación por 0,4 y formateo con coma decimal
+      let finalScore = (score * 0.4).toFixed(1).replace('.', ',');
+      document.getElementById('calc-' + num).innerHTML = `[ ${score} x 0,4 = <span class="res-final">${finalScore}</span> ]`;
+      
+      // Cambio de color según la puntuación final superada (multiplicada por 0,4)
+      let numericFinal = score * 0.4;
       let cIndex;
-      if (score < 10) {
-        cIndex = 0; // Blanco
-      } else if (score < 20) {
-        cIndex = 1; // Gris
-      } else if (score < 30) {
-        cIndex = 2; // Celeste
-      } else if (score < 40) {
-        cIndex = 3; // Azul
-      } else if (score < 50) {
-        cIndex = 4; // Verde
-      } else if (score < 60) {
-        cIndex = 5; // Amarillo
-      } else if (score <= 80) {
+      if (numericFinal > 30) {
+        cIndex = 7; // Rojo
+      } else if (numericFinal > 25) {
         cIndex = 6; // Naranja
+      } else if (numericFinal > 20) {
+        cIndex = 5; // Amarillo
+      } else if (numericFinal > 15) {
+        cIndex = 4; // Verde
+      } else if (numericFinal > 10) {
+        cIndex = 3; // Morado
+      } else if (numericFinal > 5) {
+        cIndex = 2; // Azul
+      } else if (numericFinal > 2) {
+        cIndex = 1; // Gris
       } else {
-        cIndex = 7; // Rojo (> 100)
+        cIndex = 0; // Blanco
       }
 
       document.getElementById('arena-' + p).style.backgroundColor = colors[cIndex];
@@ -546,7 +548,6 @@
       const contenedorOpts = document.getElementById('pregunta-opciones');
       contenedorOpts.innerHTML = '';
 
-      // Crear una copia de las opciones y barajarlas
       const opcionesBarajadas = [...q.opts];
       for (let i = opcionesBarajadas.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -560,11 +561,10 @@
         btn.onclick = () => {
           if (opt.c) {
             alert(`¡Correcto ${state[p].name}! No sumas puntos adicionales.`);
-            // No suma puntos al acertar
             updateScoreUI(p);
           } else {
-            alert(`Incorrecto ${state[p].name}. ¡Pierdes 5 puntos!`);
-            state[p].score -= 5;
+            alert(`Incorrecto ${state[p].name}. ¡Pierdes 2 en la nota final !`);
+            state[p].score = Math.max(0, state[p].score - 5); // Penalización de 2 puntos base para que reste 0,4 en la final
             updateScoreUI(p);
           }
           modal.style.display = 'none';
