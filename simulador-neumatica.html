@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- saved from url=(0053)https://delatj.github.io/web/simulador-neumatica.html -->
 <html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,6 +17,7 @@
       line-height: 1.3;
       font-size: 13px;
       padding-bottom: 40px;
+      transition: background-color 0.4s ease;
     }
 
     /* PANTALLA PREVIA (MODAL / OVERLAY) */
@@ -41,41 +41,60 @@
       border-radius: 12px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.2);
       width: 100%;
-      max-width: 450px;
+      max-width: 480px;
       text-align: center;
+      max-height: 94vh;
+      overflow-y: auto;
     }
 
     .welcome-card h2 {
       font-size: 1.4rem;
       color: #1e293b;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .welcome-card p {
       font-size: 0.85rem;
       color: #64748b;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
 
     .input-group-welcome {
       display: flex;
       flex-direction: column;
       gap: 12px;
-      margin-bottom: 24px;
+      margin-bottom: 16px;
       text-align: left;
+    }
+
+    .team-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    .team-card h3 {
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: #1e3a8a;
+      margin-bottom: 6px;
     }
 
     .input-group-welcome label {
       font-weight: 700;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: #334155;
+      display: block;
+      margin-bottom: 3px;
     }
 
     .input-group-welcome input {
-      padding: 10px;
+      width: 100%;
+      padding: 8px;
       border: 1px solid #cbd5e1;
       border-radius: 6px;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       outline: none;
     }
 
@@ -83,6 +102,39 @@
       border-color: #2563eb;
       box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
     }
+
+    .input-group-welcome input:disabled {
+      background-color: #f1f5f9;
+      color: #94a3b8;
+      cursor: not-allowed;
+    }
+
+    .solo-check-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 16px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .welcome-error {
+      display: none;
+      background: #fef2f2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      text-align: left;
+      line-height: 1.4;
+    }
+    .welcome-error.show { display: block; }
 
     .btn-start {
       width: 100%;
@@ -143,6 +195,32 @@
       font-size: 0.9rem;
       color: #64748b;
       font-weight: 600;
+    }
+
+    /* ESTADOS DE ENVÍO Y BANDERAS */
+    .send-status {
+      display: none;
+      margin-top: 12px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: bold;
+    }
+    .send-status.ok { display: block; background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    .send-status.wait { display: block; background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+    .send-status.err { display: block; background: #fef2f2; color: #991b1b; border: 1px solid #fca5a5; }
+
+    .btn-retry {
+      display: none;
+      margin: 8px auto 0 auto;
+      padding: 6px 12px;
+      background: #d97706;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.78rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
     }
 
     /* COLORES SEGÚN NOTA */
@@ -398,6 +476,12 @@
       width: 100%;
     }
 
+    .calc-input-group input:disabled {
+      background-color: #f1f5f9;
+      color: #94a3b8;
+      cursor: not-allowed;
+    }
+
     .calc-status-list {
       font-size: 0.75rem;
       background: #f1f5f9;
@@ -511,19 +595,32 @@
   <div id="welcome-screen">
     <div class="welcome-card">
       <h2>Examen de Neumática e Hidráulica</h2>
-      <p>Por favor, introduce tus datos para comenzar la prueba.</p>
+      <p>Introduce los datos de los miembros del grupo para comenzar la prueba.</p>
       
       <div class="input-group-welcome">
-        <div>
-          <label for="student-name-input">Nombre y Apellidos:</label>
-          <input type="text" id="student-name-input" placeholder="Ej: Juan Pérez García">
+        <div class="team-card">
+          <h3>Alumno/a 1</h3>
+          <label for="studentName1">Nombre y Apellidos:</label>
+          <input type="text" id="studentName1" autocomplete="off" placeholder="Ej. Ana García López">
         </div>
+
+        <div class="team-card">
+          <h3>Alumno/a 2</h3>
+          <label for="studentName2">Nombre y Apellidos:</label>
+          <input type="text" id="studentName2" autocomplete="off" placeholder="Ej. Marcos Díaz Ruiz">
+        </div>
+
+        <label class="solo-check-wrapper">
+          <input type="checkbox" id="soloCheck" onchange="toggleSoloMode()"> Trabajo en solitario (sin pareja)
+        </label>
+
         <div>
-          <label for="student-course-input">Curso y Grupo:</label>
-          <input type="text" id="student-course-input" placeholder="Ej: 4º ESO B">
+          <label for="studentCourseInput">Curso y Grupo:</label>
+          <input type="text" id="studentCourseInput" autocomplete="off" placeholder="Ej. 4º ESO B">
         </div>
       </div>
 
+      <div id="welcomeError" class="welcome-error"></div>
       <button class="btn-start" onclick="startExam()">Comenzar Examen</button>
     </div>
   </div>
@@ -545,6 +642,8 @@
       <div class="student-name-display" id="banner-student-info">--</div>
       <div class="grade-display" id="banner-score">0.0</div>
       <div class="grade-details" id="banner-details">Test: 0/6 | Práctica: 0/4</div>
+      <div id="sendStatus" class="send-status"></div>
+      <button id="btnRetrySend" class="btn-retry" onclick="sendResults()">↻ Reintentar envío</button>
     </div>
 
     <!-- ENCABEZADO -->
@@ -553,7 +652,7 @@
       
       <div class="student-info">
         <div class="info-field">
-          <label>Alumno/a:</label>
+          <label>Alumno/s:</label>
           <input type="text" id="header-student-name" readonly="">
         </div>
         <div class="info-field">
@@ -607,7 +706,7 @@
               <option value="simple">Cilindro Simple Efecto (Retorno Muelle)</option>
               <option value="doble">Cilindro Doble Efecto (Avance / Retorno)</option>
             </select>
-            <button class="btn-sm btn-actuate" onmousedown="pressPulsador()" onmouseup="releasePulsador()" touchstart="pressPulsador()" touchend="releasePulsador()">
+            <button class="btn-sm btn-actuate" onmousedown="pressPulsador()" onmouseup="releasePulsador()" ontouchstart="pressPulsador()" ontouchend="releasePulsador()">
                Accionar Válvula
             </button>
           </div>
@@ -678,6 +777,28 @@
   </div>
 
   <script>
+    /* CONFIGURACIÓN DE GOOGLE SHEETS Y NOTAS */
+    const SHEET_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyiOndS6GMYhgiSGLVAXUOOHhMKtBXqcLUeOppbNZIkrxU-HiMlgmhlYCj1xYZQG0io/exec";
+    const PASS_PERCENT = 70; // 7.0 sobre 10
+    const ACTIVITY_LABEL = "Examen de Neumática e Hidráulica (4º ESO)";
+
+    let examResultData = null;
+    let sentPercent = -1;
+    let sendingNow = false;
+    let globalStudentData = { name1: '', name2: '', course: '' };
+
+    function cleanName(v) { return v.trim().replace(/\s+/g, ' '); }
+    function isValidFullName(v) {
+      return cleanName(v).split(' ').filter(w => w.length >= 2).length >= 2;
+    }
+
+    function toggleSoloMode() {
+      const isSolo = document.getElementById('soloCheck').checked;
+      const name2Input = document.getElementById('studentName2');
+      name2Input.disabled = isSolo;
+      if (isSolo) name2Input.value = '';
+    }
+
     // PREGUNTAS DEL TEST
     const questionsData = [
       {
@@ -852,15 +973,38 @@
 
     // INICIO DE EXAMEN (VENTANA PREVIA)
     function startExam() {
-      const name = document.getElementById('student-name-input').value.trim();
-      const course = document.getElementById('student-course-input').value.trim();
+      const name1 = cleanName(document.getElementById('studentName1').value);
+      const isSolo = document.getElementById('soloCheck').checked;
+      const name2 = isSolo ? '' : cleanName(document.getElementById('studentName2').value);
+      const course = cleanName(document.getElementById('studentCourseInput').value);
+      const errBox = document.getElementById('welcomeError');
+      let msgs = [];
 
-      if (!name || !course) {
-        alert("Por favor, rellena tu nombre y curso antes de comenzar.");
-        return;
+      if (!isValidFullName(name1)) {
+        msgs.push("Alumno/a 1: Introduce nombre y apellidos válidos.");
+      }
+      if (!isSolo) {
+        if (!isValidFullName(name2)) {
+          msgs.push("Alumno/a 2: Introduce nombre y apellidos válidos (o marca trabajo en solitario).");
+        } else if (name1.toLowerCase() === name2.toLowerCase()) {
+          msgs.push("Los nombres de los dos alumnos no pueden ser idénticos.");
+        }
+      }
+      if (!course) {
+        msgs.push("Por favor, introduce el curso y grupo.");
       }
 
-      document.getElementById('header-student-name').value = name;
+      if (msgs.length > 0) {
+        errBox.innerHTML = msgs.join("<br>");
+        errBox.classList.add('show');
+        return;
+      }
+      errBox.classList.remove('show');
+
+      globalStudentData = { name1, name2, course };
+      const studentDisplayStr = name2 ? `${name1} · ${name2}` : name1;
+
+      document.getElementById('header-student-name').value = studentDisplayStr;
       document.getElementById('header-student-course').value = course;
 
       document.getElementById('welcome-screen').style.display = 'none';
@@ -903,10 +1047,9 @@
       }
     }
 
-    /* Al acabar el tiempo: se valida lo pendiente (sin avisos) y sale la nota directamente */
     function finishExamByTime() {
       const checkBtn = document.getElementById('checkAnswersBtn');
-      if (checkBtn.disabled) return; // la nota ya se había calculado
+      if (checkBtn.disabled) return;
       const originalAlert = window.alert;
       window.alert = function() {};
       try {
@@ -918,7 +1061,6 @@
       }
     }
 
-    // Mezcla aleatoria (Fisher-Yates) sin modificar el array original
     function shuffleArray(arr) {
       const a = [...arr];
       for (let i = a.length - 1; i > 0; i--) {
@@ -935,7 +1077,6 @@
 
       const optionLetters = ['a', 'b', 'c'];
 
-      // Cada vez que se abre el examen cambia el orden de las preguntas y el de sus respuestas
       shuffleArray(questionsData).forEach((qItem, qIndex) => {
         const questionCard = document.createElement('div');
         questionCard.className = 'question-card';
@@ -1002,11 +1143,9 @@
       const checkBtn = document.getElementById('checkAnswersBtn');
       if (checkBtn.disabled) return;
 
-      // Deshabilitar botón de comprobar nota definitivamente (solo 1 intento)
       checkBtn.disabled = true;
       if (examInterval) { clearInterval(examInterval); examInterval = null; }
 
-      // Bloquear todas las preguntas para que no se puedan cambiar
       const radios = document.querySelectorAll('#quiz-container input[type="radio"]');
       radios.forEach(radio => radio.disabled = true);
 
@@ -1030,52 +1169,147 @@
       const testScore = ((netScore / 20) * 6);
       const simScore = calculatePracticalScore(); 
       const totalScore = testScore + simScore;
+      const totalPercent = Math.round(totalScore * 10);
+      const passed = totalPercent >= PASS_PERCENT;
 
-      // Actualizar cabecera
       document.getElementById('test-score-val').innerText = testScore.toFixed(2);
       document.getElementById('sim-score-val').innerText = simScore.toFixed(1);
       document.getElementById('total-score-val').innerText = totalScore.toFixed(1);
 
-      // MOSTRAR BANNER DESTACADO
-      const name = document.getElementById('header-student-name').value;
-      const course = document.getElementById('header-student-course').value;
+      const nameStr = document.getElementById('header-student-name').value;
+      const courseStr = document.getElementById('header-student-course').value;
 
       const banner = document.getElementById('final-score-banner');
       const scoreElem = document.getElementById('banner-score');
       
-      document.getElementById('banner-student-info').innerText = `${name} (${course})`;
+      document.getElementById('banner-student-info').innerText = `${nameStr} (${courseStr})`;
       scoreElem.innerText = totalScore.toFixed(1);
       document.getElementById('banner-details').innerText = `Test: ${testScore.toFixed(2)}/6.0 pts | Práctica: ${simScore.toFixed(1)}/4.0 pts`;
 
-      // ASIGNACIÓN DE COLOR SEGÚN NOTA
-      scoreElem.className = "grade-display"; // reset
+      // ASIGNACIÓN DE COLOR SEGÚN NOTA Y CAMBIO DE FONDO
+      scoreElem.className = "grade-display";
+      let bgHex = "#f8fafc";
+
       if (totalScore >= 0 && totalScore < 2) {
         scoreElem.classList.add('score-color-grey');
+        bgHex = "#f1f5f9";
       } else if (totalScore >= 2 && totalScore < 4) {
         scoreElem.classList.add('score-color-blue');
+        bgHex = "#eff6ff";
       } else if (totalScore >= 4 && totalScore < 6) {
         scoreElem.classList.add('score-color-green');
+        bgHex = "#f0fdf4";
       } else if (totalScore >= 6 && totalScore < 8) {
         scoreElem.classList.add('score-color-yellow');
+        bgHex = "#fefce8";
       } else if (totalScore >= 8 && totalScore < 10) {
         scoreElem.classList.add('score-color-orange');
+        bgHex = "#fff7ed";
       } else if (totalScore >= 10) {
         scoreElem.classList.add('score-color-red');
+        bgHex = "#fef2f2";
       }
 
+      document.body.style.backgroundColor = bgHex;
       banner.style.display = 'block';
       window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // GESTIÓN DE RESULTADOS Y ENVÍO A HOJA DE CÁLCULO
+      const newId = () => Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
+      examResultData = {
+        id: newId(),
+        sent: false,
+        alumno1: globalStudentData.name1,
+        alumno2: globalStudentData.name2,
+        alumno: nameStr,
+        curso: courseStr,
+        criterio: ACTIVITY_LABEL,
+        total: totalPercent,
+        passed,
+        testScore: testScore.toFixed(2),
+        simScore: simScore.toFixed(1),
+        aciertosNetos: `${correctCount} aciertos (${wrongCount} fallos)`
+      };
+
+      const statusEl = document.getElementById('sendStatus');
+      if (passed) {
+        if (totalPercent > sentPercent) {
+          sendResults();
+        } else {
+          statusEl.className = 'send-status ok';
+          statusEl.innerText = '✔ Este resultado ya se había enviado a la hoja de cálculo.';
+        }
+      } else {
+        statusEl.className = 'send-status';
+        statusEl.style.display = 'none';
+      }
+    }
+
+    async function sendResults() {
+      if (!examResultData || !examResultData.passed || examResultData.sent || sendingNow) return;
+      const statusEl = document.getElementById('sendStatus');
+      const retryBtn = document.getElementById('btnRetrySend');
+      retryBtn.style.display = 'none';
+
+      if (!SHEET_WEBAPP_URL) {
+        statusEl.className = 'send-status wait';
+        statusEl.innerText = '⚠ El enlace de la hoja de cálculo no está configurado.';
+        return;
+      }
+
+      sendingNow = true;
+      statusEl.className = 'send-status wait';
+      statusEl.innerText = 'Enviando nota a la hoja de cálculo...';
+
+      const now = new Date();
+      const params = new URLSearchParams({
+        id: examResultData.id,
+        fecha: now.toLocaleDateString('es-ES'),
+        hora: now.toLocaleTimeString('es-ES', { hour12: false }),
+        alumno1: examResultData.alumno1,
+        alumno2: examResultData.alumno2,
+        alumno: examResultData.alumno,
+        curso: examResultData.curso,
+        criterio: examResultData.criterio,
+        total: examResultData.total,
+        testScore: examResultData.testScore,
+        simScore: examResultData.simScore,
+        aciertosNetos: examResultData.aciertosNetos
+      });
+
+      const markSent = (msg) => {
+        examResultData.sent = true;
+        sentPercent = Math.max(sentPercent, examResultData.total);
+        statusEl.className = 'send-status ok';
+        statusEl.innerText = msg;
+      };
+
+      try {
+        const resp = await fetch(SHEET_WEBAPP_URL, { method: 'POST', body: params });
+        const data = await resp.json();
+        if (!data.ok) throw new Error(data.error || 'Respuesta no válida');
+        markSent('✔ Resultados enviados correctamente a la hoja de cálculo.');
+      } catch (e1) {
+        try {
+          await fetch(SHEET_WEBAPP_URL, { method: 'POST', mode: 'no-cors', body: params });
+          markSent('✔ Resultados enviados correctamente.');
+        } catch (e2) {
+          statusEl.className = 'send-status err';
+          statusEl.innerText = '❌ No se pudieron enviar los resultados. Comprueba la conexión y pulsa «Reintentar envío».';
+          retryBtn.style.display = 'block';
+        }
+      } finally {
+        sendingNow = false;
+      }
     }
 
     /* ==========================================================================
        PROBLEMA DE CÁLCULO ALEATORIO CON TOLERANCIA DEL ±5%
        ========================================================================== */
     function initExactProblem() {
-      // Generación totalmente aleatoria de datos dentro de rangos técnicos realistas
       const d = (Math.floor(Math.random() * 17) + 4) * 5; 
       const p = (Math.floor(Math.random() * 39) + 2) * 250; 
 
-      // Cálculo del valor teórico exacto: F = P * S
       const radiusM = (d / 2) / 1000;
       const area = Math.PI * radiusM * radiusM;
       const pressurePa = p * 1000;
@@ -1102,11 +1336,9 @@
           return;
         }
 
-        // Deshabilitar un solo intento de validación
         document.getElementById("validateBtn").disabled = true;
         document.getElementById("answerA1").disabled = true;
 
-        // Rango de tolerancia del 5% hacia arriba y hacia abajo
         const minAllowed = exactForceValue * 0.95;
         const maxAllowed = exactForceValue * 1.05;
 
@@ -1148,7 +1380,7 @@
         if (key && key.trim() === "1979") {
           const minA = Math.round(exactForceValue * 0.95);
           const maxA = Math.round(exactForceValue * 1.05);
-          alert(`Respuesta exactas:\n\nValor teórico = ${exactForceValue} N\nRango admitido (±5%) = [${minA} N - ${maxA} N]`);
+          alert(`Respuestas exactas:\n\nValor teórico = ${exactForceValue} N\nRango admitido (±5%) = [${minA} N - ${maxA} N]`);
         } else if (key !== null) {
           alert("Clave incorrecta.");
         }
