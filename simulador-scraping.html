@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full font-sans">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Data Scraping FP - Criterio 4.3</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.05);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.5);
+            border-radius: 4px;
+        }
+        .no-select {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            pointer-events: none;
+        }
+        /* Smooth background color transition */
+        body {
+            transition: background-color 0.8s ease-in-out, color 0.3s ease;
+        }
+    </style>
+</head>
+<body id="main-body" class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 min-h-full flex flex-col">
+
+    <!-- 1. MANDATORY INITIAL REGISTRATION MODAL -->
+    <div id="modal-registration" class="fixed inset-0 z-50 bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-6 sm:p-8 space-y-5">
+            
+            <div class="text-center space-y-2">
+                <div class="w-14 h-14 bg-indigo-600 text-white rounded-2xl flex items-center justify-center mx-auto text-2xl shadow-lg">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+                <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100">Registro de Alumnos y Equipo</h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400">
+                    Introduce los datos obligatorios para iniciar la prueba de Data Scraping (Criterio 4.3).
+                </p>
+            </div>
+
+            <form id="form-registration" onsubmit="event.preventDefault(); startExamSimulator();" class="space-y-4">
+                
+                <!-- Group -->
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 dark:text-slate-300 mb-1">
+                        <i class="fa-solid fa-graduation-cap text-indigo-600 mr-1"></i>
+                        Grupo / Curso *
+                    </label>
+                    <input type="text" id="reg-group" required placeholder="Ej: 1º DAM A, 2º SMR..." class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+
+                <!-- Individual Toggle -->
+                <div class="flex items-center space-x-2 pt-1">
+                    <input type="checkbox" id="reg-individual" onchange="toggleIndividualMode()" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500">
+                    <label for="reg-individual" class="text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer">
+                        Trabajo individual (solo 1 persona)
+                    </label>
+                </div>
+
+                <!-- Student 1 -->
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 dark:text-slate-300 mb-1">
+                        <i class="fa-solid fa-user text-indigo-600 mr-1"></i>
+                        Alumno 1 (Nombre y Apellidos - Mínimo 2 palabras) *
+                    </label>
+                    <input type="text" id="reg-student1" required placeholder="Ej: Laura García" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+
+                <!-- Student 2 -->
+                <div id="container-student2">
+                    <label class="block text-xs font-bold uppercase text-slate-600 dark:text-slate-300 mb-1">
+                        <i class="fa-solid fa-user-plus text-indigo-600 mr-1"></i>
+                        Alumno 2 (Nombre y Apellidos - Mínimo 2 palabras) *
+                    </label>
+                    <input type="text" id="reg-student2" required placeholder="Ej: Carlos Pérez" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+
+                <button type="submit" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
+                    <span>Comenzar Simulador / Examen</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </form>
+
+        </div>
+    </div>
+
+    <!-- HEADER -->
+    <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                
+                <!-- Title & Student Data -->
+                <div class="flex items-center space-x-3">
+                    <div class="bg-slate-900 text-white dark:bg-indigo-600 p-2.5 rounded-xl shadow-md">
+                        <i class="fa-solid fa-spider text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-sm sm:text-base font-bold leading-tight">Data Scraping Lab FP</h1>
+                        <p id="header-team-display" class="text-xs text-indigo-600 dark:text-indigo-400 font-semibold truncate max-w-[200px] sm:max-w-md">
+                            Equipo: Pendiente de Registro
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Timer & Theory Button -->
+                <div class="flex items-center space-x-3">
+                    
+                    <!-- 5 MINUTE TIMER -->
+                    <div id="timer-box" class="px-3.5 py-1.5 bg-amber-50 dark:bg-amber-900/40 border border-amber-300 dark:border-amber-700 rounded-xl flex items-center space-x-2">
+                        <i class="fa-solid fa-clock text-amber-600 dark:text-amber-400 text-sm animate-pulse"></i>
+                        <span id="timer-display" class="font-mono font-black text-amber-700 dark:text-amber-300 text-base">05:00</span>
+                    </div>
+
+                    <!-- Theory Modal Button -->
+                    <button onclick="openTheoryModal()" class="px-3 py-1.5 text-xs font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/40 border border-indigo-200 dark:border-indigo-800 rounded-lg hover:bg-indigo-100 transition flex items-center space-x-1.5">
+                        <i class="fa-solid fa-book-open"></i>
+                        <span class="hidden sm:inline">Ver Teoría</span>
+                    </button>
+
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- TOP SCORE SUMMARY BAR -->
+    <div id="score-banner" class="bg-slate-900 text-white py-3 border-b border-slate-800 transition-all">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs sm:text-sm">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-award text-amber-400 text-base"></i>
+                <span class="font-bold uppercase tracking-wider">Calificación:</span>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <div>Práctica (20%): <strong id="score-practical" class="text-amber-300 font-mono">0%</strong></div>
+                <div>Test (80%): <strong id="score-quiz" class="text-amber-300 font-mono">0%</strong></div>
+                <div id="hits-count-display" class="hidden text-emerald-400 font-bold font-mono bg-slate-800 px-2.5 py-1 rounded border border-slate-700">
+                    Aciertos: 0 / 10
+                </div>
+                <div class="bg-slate-800 px-3 py-1 rounded-lg border border-slate-700 flex items-center space-x-2">
+                    <span class="text-slate-300 font-bold">NOTA FINAL:</span>
+                    <span id="score-total" class="text-base font-black text-emerald-400 font-mono">0%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ENLARGED FINAL SCREENSHOT BADGE (VISIBLE UPON VALIDATION) -->
+    <div id="final-screenshot-card" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border-4 border-amber-400 p-6 rounded-2xl shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6 text-slate-800 dark:text-slate-100">
+            <div class="space-y-1 text-center md:text-left">
+                <span class="inline-block px-3 py-1 bg-amber-400 text-slate-900 font-extrabold text-xs rounded-full uppercase tracking-wider">
+                    <i class="fa-solid fa-camera mr-1"></i> Captura para el Profesor
+                </span>
+                <h2 id="card-team-names" class="text-base sm:text-lg font-bold text-indigo-600 dark:text-indigo-400">
+                    Alumnos: -
+                </h2>
+                <p id="card-hits-text" class="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                    Aciertos Test: - | Práctica Scraping: Completada
+                </p>
+            </div>
+
+            <div class="text-center md:text-right bg-slate-900 text-white px-8 py-4 rounded-xl shadow-inner border border-slate-700 shrink-0">
+                <span class="block text-xs font-bold text-amber-400 uppercase tracking-widest">NOTA FINAL OBTENIDA</span>
+                <span id="giant-grade-text" class="text-5xl sm:text-6xl font-black font-mono text-emerald-400 leading-none">
+                    0%
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN TABS -->
+    <div class="bg-white/80 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 backdrop-blur mt-2">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <nav class="flex space-x-6" aria-label="Tabs">
+                <button onclick="switchTab('simulator')" id="tab-btn-simulator" class="tab-btn py-3 px-1 border-b-2 font-bold text-sm border-indigo-600 text-indigo-600 dark:text-indigo-400 flex items-center space-x-2">
+                    <i class="fa-solid fa-download"></i>
+                    <span>1. Scraping Wikipedia (20%)</span>
+                </button>
+                <button onclick="switchTab('quiz')" id="tab-btn-quiz" class="tab-btn py-3 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 font-bold text-sm flex items-center space-x-2">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span>2. Test Teórico (80%)</span>
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- TAB 1: SCRAPING PRACTICAL SECTION (20%) -->
+        <section id="tab-simulator" class="tab-content space-y-6">
+            
+            <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
+                <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center space-x-2">
+                    <span class="w-6 h-6 bg-indigo-600 text-white rounded-full inline-flex items-center justify-center text-xs">1</span>
+                    <span>Paso 1: Escribir Dirección URL Requerida y Extraer Datos (20%)</span>
+                </h2>
+                <p class="text-xs text-slate-600 dark:text-slate-300">
+                    Escribe la dirección URL exacta que aparece en la imagen sin copiar y pegar. Si cometes un error en la dirección, el sistema mostrará un aviso pidiendo reiniciar la página.
+                </p>
+            </div>
+
+            <!-- URL Canvas Banner (UNCOPYABLE) & Input Box -->
+            <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+                
+                <div>
+                    <label class="block text-xs font-bold text-amber-600 dark:text-amber-400 uppercase mb-1.5">
+                        <i class="fa-solid fa-eye mr-1"></i> URL exacta requerida (Imagen no copiable):
+                    </label>
+                    <div class="bg-slate-900 p-2.5 rounded-xl border-2 border-amber-500/50 shadow-inner flex justify-center items-center overflow-x-auto">
+                        <canvas id="url-target-canvas" width="600" height="40" class="no-select max-w-full h-auto cursor-not-allowed"></canvas>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-2">
+                        <i class="fa-solid fa-keyboard text-indigo-600 mr-1"></i>
+                        Escribe la URL completa aquí carácter por carácter:
+                    </label>
+
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <input type="text" id="wiki-url-input" placeholder="https://es.wikipedia.org/wiki/Internet" class="flex-grow px-3.5 py-2.5 bg-slate-50 dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-100 rounded-xl text-sm font-mono focus:ring-2 focus:ring-indigo-500 outline-none">
+                        
+                        <button onclick="runRealWikipediaScraper()" id="btn-run-scrape" class="py-2.5 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-md transition flex items-center justify-center space-x-2 shrink-0">
+                            <i class="fa-solid fa-cloud-arrow-down"></i>
+                            <span>Extraer Datos</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- CRITICAL ERROR ALERT BANNER -->
+                <div id="url-error-alert" class="hidden p-4 rounded-xl bg-red-100 dark:bg-red-950/70 border-2 border-red-500 text-red-800 dark:text-red-200 text-xs sm:text-sm font-bold flex items-center space-x-3">
+                    <i class="fa-solid fa-triangle-exclamation text-2xl text-red-600 shrink-0"></i>
+                    <div>
+                        <p class="text-base font-extrabold">Error en la URL. Reinicia la página de nuevo para volver a intentarlo.</p>
+                        <p class="font-normal text-xs text-red-700 dark:text-red-300">La dirección introducida no coincide exactamente con https://es.wikipedia.org/wiki/Internet o falló la conexión.</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Extracted Data Preview & CSV Output -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                <!-- Article Render View -->
+                <div class="lg:col-span-7 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-5 space-y-3 min-h-[280px]">
+                    <div class="flex items-center justify-between border-b pb-2">
+                        <span class="text-xs font-bold text-slate-500 uppercase">Vista de Datos Extraídos</span>
+                        <span id="scrape-status-badge" class="text-[11px] font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full">Sin Petición</span>
+                    </div>
+                    <div id="wiki-article-view" class="text-xs text-slate-500 space-y-2 py-8 text-center">
+                        <i class="fa-solid fa-network-wired text-4xl text-slate-300"></i>
+                        <p>Escribe la URL exacta arriba y pulsa <strong>Extraer Datos</strong>.</p>
+                    </div>
+                </div>
+
+                <!-- Download CSV Dataset Box -->
+                <div class="lg:col-span-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-5 space-y-4">
+                    <h3 class="text-xs font-bold uppercase text-slate-600 dark:text-slate-300 flex items-center space-x-2">
+                        <i class="fa-solid fa-file-csv text-emerald-600 text-base"></i>
+                        <span>Dataset Resultante (Formato CSV)</span>
+                    </h3>
+
+                    <pre id="dataset-preview-container" class="bg-slate-900 text-emerald-400 p-3 rounded-xl text-[11px] font-mono overflow-x-auto max-h-[220px] min-h-[140px]">
+// Formato CSV (Compatible con OpenOffice Calc / Excel)
+// Al extraer aparecerán las filas de datos...
+                    </pre>
+
+                    <div class="space-y-2">
+                        <button onclick="downloadWikiCSVDataset()" id="btn-download-csv" disabled class="w-full py-2.5 px-4 bg-slate-300 dark:bg-slate-700 text-slate-500 font-bold text-xs rounded-xl flex items-center justify-center space-x-2 cursor-not-allowed transition">
+                            <i class="fa-solid fa-file-excel"></i>
+                            <span>Descargar Datos (.csv)</span>
+                        </button>
+                        <p id="practical-note-msg" class="text-[11px] text-slate-400 text-center">
+                            Para puntuar el 20% práctico debes efectuar la extracción correcta y pulsar descargar.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- TAB 2: 10-QUESTION RANDOMIZED EVALUATION TEST (80%) -->
+        <section id="tab-quiz" class="tab-content hidden max-w-4xl mx-auto space-y-6">
+            
+            <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center space-x-2">
+                        <i class="fa-solid fa-clipboard-question text-indigo-600"></i>
+                        <span>Test Teórico: 10 Preguntas (80%)</span>
+                    </h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">
+                        Cada acierto vale un 8%. El orden de preguntas y respuestas se aleatoriza en cada recarga.
+                    </p>
+                </div>
+
+                <div class="bg-slate-50 dark:bg-slate-700/50 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-center shrink-0">
+                    <span class="block text-[10px] uppercase font-bold text-slate-400">Nota Test</span>
+                    <span id="quiz-score-pill" class="text-lg font-black text-indigo-600 dark:text-indigo-400">0% / 80%</span>
+                </div>
+            </div>
+
+            <!-- 10 Questions Container -->
+            <form id="quiz-form" onsubmit="event.preventDefault();" class="space-y-5">
+                
+                <div id="quiz-questions-container" class="space-y-5"></div>
+
+                <!-- Lock Action Card -->
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 sticky bottom-4 z-20">
+                    <p class="text-xs text-amber-700 dark:text-amber-400 flex items-center space-x-2">
+                        <i class="fa-solid fa-lock text-sm"></i>
+                        <span>Al validar se bloquean las respuestas y se muestra la nota gigante.</span>
+                    </p>
+
+                    <button type="button" id="btn-submit-quiz" onclick="validateQuizAndFinish()" class="w-full sm:w-auto px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-md transition flex items-center justify-center space-x-2 shrink-0">
+                        <i class="fa-solid fa-check-double"></i>
+                        <span>Validar Respuestas</span>
+                    </button>
+                </div>
+
+            </form>
+
+        </section>
+
+    </main>
+
+    <!-- CONCISE THEORY MODAL -->
+    <div id="theory-modal" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-200">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-3xl rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 flex flex-col max-h-[85vh] overflow-hidden">
+            
+            <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center space-x-2">
+                    <i class="fa-solid fa-book-open text-indigo-600"></i>
+                    <span>Resumen Teórico: Data Scraping (Criterio 4.3)</span>
+                </h3>
+                <button onclick="closeTheoryModal()" class="text-slate-400 hover:text-slate-600 p-2 rounded-lg">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto space-y-4 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed custom-scrollbar">
+                
+                <div class="space-y-1">
+                    <h4 class="font-bold text-indigo-600 dark:text-indigo-400 text-sm">1. ¿Qué es Data Scraping?</h4>
+                    <p>Es la técnica automatizada para extraer información no estructurada alojada en páginas web y transformarla en datos estructurados.</p>
+                </div>
+
+                <div class="space-y-1">
+                    <h4 class="font-bold text-indigo-600 dark:text-indigo-400 text-sm">2. Protocolo HTTP y Peticiones GET</h4>
+                    <p>Un scraper envía una petición con el método <strong>HTTP GET</strong>. Si la solicitud es exitosa, el servidor responde con el código <strong>200 OK</strong>.</p>
+                </div>
+
+                <div class="space-y-1">
+                    <h4 class="font-bold text-indigo-600 dark:text-indigo-400 text-sm">3. Identificación mediante User-Agent</h4>
+                    <p>La cabecera <strong>User-Agent</strong> identifica al cliente o programa ante el servidor web.</p>
+                </div>
+
+                <div class="space-y-1">
+                    <h4 class="font-bold text-indigo-600 dark:text-indigo-400 text-sm">4. Modelo DOM y Selectores HTML</h4>
+                    <p>El <strong>DOM (Document Object Model)</strong> representa la web como un árbol de elementos HTML:</p>
+                    <ul class="list-disc list-inside pl-2 space-y-0.5 font-mono text-xs">
+                        <li><code>&lt;h1&gt;</code>: Título principal de primer nivel.</li>
+                        <li><code>&lt;p&gt;</code>: Párrafo de texto.</li>
+                        <li><code>&lt;a&gt;</code> con atributo <code>href</code>: Enlace de hipertexto.</li>
+                        <li>Selector <code>#firstHeading</code> en Wikipedia: Identifica el título principal.</li>
+                    </ul>
+                </div>
+
+                <div class="space-y-1">
+                    <h4 class="font-bold text-indigo-600 dark:text-indigo-400 text-sm">5. Formatos de Salida (JSON y CSV)</h4>
+                    <p>Los datos extraídos se exportan en formatos estándar como <strong>JSON</strong> (pares clave-valor) o <strong>CSV</strong> (filas y columnas separadas por comas).</p>
+                </div>
+
+                <div class="space-y-1">
+                    <h4 class="font-bold text-indigo-600 dark:text-indigo-400 text-sm">6. Ética y Archivo robots.txt</h4>
+                    <p>El archivo <strong>robots.txt</strong> ubicado en el servidor especifica las reglas de acceso y restricciones permitidas para los robots automáticos.</p>
+                </div>
+
+            </div>
+
+            <div class="px-6 py-3 bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex justify-end">
+                <button onclick="closeTheoryModal()" class="px-4 py-2 bg-indigo-600 text-white font-bold text-xs rounded-xl hover:bg-indigo-700">
+                    Entendido
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT APP LOGIC -->
+    <script>
+        const TARGET_URL = "https://es.wikipedia.org/wiki/Internet";
+
+        // MASTER QUESTIONS (100% LITERAL MAPPING TO THEORY MODAL)
+        const MASTER_QUESTIONS = [
+            {
+                question: "¿Qué es el Data Scraping?",
+                options: [
+                    "Técnica para reparar cables de red.",
+                    "Técnica automatizada para extraer datos no estructurados de webs y estructurarlos.",
+                    "Un virus de ordenador.",
+                    "Copiar textos manualmente con Ctrl+C."
+                ],
+                correctText: "Técnica automatizada para extraer datos no estructurados de webs y estructurarlos.",
+                explanation: "Extrae información no estructurada alojada en páginas web y la transforma en datos estructurados."
+            },
+            {
+                question: "¿Qué método HTTP utiliza un scraper para solicitar una página web?",
+                options: ["HTTP POST", "HTTP GET", "HTTP DELETE", "HTTP PUT"],
+                correctText: "HTTP GET",
+                explanation: "Un scraper envía una petición mediante el método HTTP GET."
+            },
+            {
+                question: "¿Qué código de estado HTTP indica que la petición fue exitosa?",
+                options: ["404 Not Found", "200 OK", "500 Internal Error", "301 Redirect"],
+                correctText: "200 OK",
+                explanation: "Si la solicitud es exitosa, el servidor responde con el código 200 OK."
+            },
+            {
+                question: "¿Qué cabecera HTTP identifica al cliente o robot ante el servidor web?",
+                options: ["Content-Type", "User-Agent", "Cookie", "Authorization"],
+                correctText: "User-Agent",
+                explanation: "La cabecera User-Agent identifica al cliente ante el servidor."
+            },
+            {
+                question: "¿Qué significan las siglas DOM en desarrollo web?",
+                options: ["Digital Online Mode", "Document Object Model", "Data Output Machine", "Direct Object Method"],
+                correctText: "Document Object Model",
+                explanation: "El DOM (Document Object Model) representa la estructura en árbol de la web."
+            },
+            {
+                question: "¿Qué etiqueta HTML define el título principal de primer nivel?",
+                options: ["<p>", "<h1>", "<a>", "<div>"],
+                correctText: "<h1>",
+                explanation: "<h1> define el título principal de primer nivel."
+            },
+            {
+                question: "¿Qué etiqueta HTML define un enlace de hipertexto e incluye el atributo href?",
+                options: ["<img>", "<a>", "<span>", "<form>"],
+                correctText: "<a>",
+                explanation: "<a> con atributo href define un enlace de hipertexto."
+            },
+            {
+                question: "En Wikipedia, ¿qué selector localiza el título principal del artículo?",
+                options: [".title-box", "#firstHeading", "div.header", "span.wiki-title"],
+                correctText: "#firstHeading",
+                explanation: "El selector #firstHeading localiza el título del artículo en Wikipedia."
+            },
+            {
+                question: "¿En qué formato se representan los datos estructurados en pares de clave-valor?",
+                options: ["MP3", "JSON", "PNG", "ZIP"],
+                correctText: "JSON",
+                explanation: "JSON representa datos estructurados en pares clave-valor."
+            },
+            {
+                question: "¿Qué archivo ubicado en el servidor especifica las reglas de acceso para los robots?",
+                options: ["index.html", "robots.txt", "style.css", "config.json"],
+                correctText: "robots.txt",
+                explanation: "El archivo robots.txt especifica las reglas y restricciones para robots automáticos."
+            }
+        ];
+
+        // GLOBAL APP STATE
+        let activeQuestions = [];
+        let timerSeconds = 300; // 5 minutes
+        let timerInterval = null;
+        let practicalPercent = 0; // 0 to 20%
+        let quizPercent = 0;      // 0 to 80%
+        let isExamFinished = false;
+        
+        // Student Information
+        let studentGroup = "";
+        let student1Name = "";
+        let student2Name = "";
+        let isIndividual = false;
+
+        let extractedCSVContent = "";
+
+        // Fisher-Yates Shuffle Algorithm
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // Helper to validate at least 2 words (Nombre + Apellido)
+        function isValidFullName(str) {
+            if (!str) return false;
+            const words = str.trim().split(/\s+/);
+            return words.length >= 2;
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            renderUncopyableCanvasUrl();
+            prepareRandomizedQuestions();
+        });
+
+        // 1. REGISTRATION LOGIC WITH STRICT TWO-WORD VALIDATION
+        function toggleIndividualMode() {
+            isIndividual = document.getElementById('reg-individual').checked;
+            const containerS2 = document.getElementById('container-student2');
+            const inputS2 = document.getElementById('reg-student2');
+
+            if (isIndividual) {
+                containerS2.classList.add('hidden');
+                inputS2.required = false;
+                inputS2.value = '';
+            } else {
+                containerS2.classList.remove('hidden');
+                inputS2.required = true;
+            }
+        }
+
+        function startExamSimulator() {
+            studentGroup = document.getElementById('reg-group').value.trim();
+            student1Name = document.getElementById('reg-student1').value.trim();
+            isIndividual = document.getElementById('reg-individual').checked;
+            student2Name = document.getElementById('reg-student2').value.trim();
+
+            if (!studentGroup) {
+                alert("Por favor, introduce el Grupo / Curso.");
+                return;
+            }
+
+            // Strict Validation: Minimum two words for Student 1
+            if (!isValidFullName(student1Name)) {
+                alert("Debes escribir al menos nombre y apellido para el Alumno 1, separados por un espacio (ejemplo: 'Laura García').");
+                document.getElementById('reg-student1').focus();
+                return;
+            }
+
+            // Strict Validation: Minimum two words for Student 2 if not individual
+            if (!isIndividual && !isValidFullName(student2Name)) {
+                alert("Debes escribir al menos nombre y apellido para el Alumno 2, separados por un espacio (ejemplo: 'Carlos Pérez').");
+                document.getElementById('reg-student2').focus();
+                return;
+            }
+
+            let teamText = `Grupo: ${studentGroup} | Alumno 1: ${student1Name}`;
+            if (!isIndividual) teamText += ` | Alumno 2: ${student2Name}`;
+
+            document.getElementById('header-team-display').innerText = teamText;
+            document.getElementById('card-team-names').innerText = teamText;
+            document.getElementById('modal-registration').classList.add('hidden');
+
+            startCountdownTimer();
+        }
+
+        // 2. 5-MINUTE TIMER
+        function startCountdownTimer() {
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                timerSeconds--;
+                updateTimerDisplay();
+
+                if (timerSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    alert("¡El tiempo de 5 minutos ha finalizado! Evaluando simulador...");
+                    finishExamAndEvaluate();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(timerSeconds / 60);
+            const secs = timerSeconds % 60;
+            document.getElementById('timer-display').innerText = 
+                `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // 3. CANVAS URL RENDERER (UNCOPYABLE)
+        function renderUncopyableCanvasUrl() {
+            const canvas = document.getElementById('url-target-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = "#0f172a";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Noise pattern
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+            for (let x = 0; x < canvas.width; x += 12) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+
+            ctx.font = "bold 17px 'Courier New', monospace";
+            ctx.fillStyle = "#fbbf24";
+            ctx.fillText(TARGET_URL, 15, 26);
+        }
+
+        // 4. SCRAPING PRACTICAL
+        async function runRealWikipediaScraper() {
+            if (isExamFinished) return;
+
+            const inputUrl = document.getElementById('wiki-url-input').value.trim();
+            const alertBox = document.getElementById('url-error-alert');
+            const statusBadge = document.getElementById('scrape-status-badge');
+            const articleView = document.getElementById('wiki-article-view');
+
+            alertBox.classList.add('hidden');
+
+            // EXACT MATCH VALIDATION
+            if (inputUrl !== TARGET_URL) {
+                alertBox.classList.remove('hidden');
+                statusBadge.innerText = 'Error en URL';
+                statusBadge.className = 'text-[11px] font-bold bg-red-200 text-red-800 px-2 py-0.5 rounded-full';
+                return;
+            }
+
+            statusBadge.innerText = 'Conectando API...';
+            statusBadge.className = 'text-[11px] font-bold bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full animate-pulse';
+
+            try {
+                const response = await fetch(`https://es.wikipedia.org/w/api.php?action=parse&origin=*&format=json&page=Internet&prop=text|title|links`);
+                if (!response.ok) throw new Error("HTTP Fetch Error");
+                
+                const data = await response.json();
+                if (data.error) throw new Error("API Error");
+
+                const title = data.parse.title;
+                const rawHtml = data.parse.text['*'];
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(rawHtml, 'text/html');
+
+                const leadParagraph = doc.querySelector('p:not(.mw-empty-elt)') ? 
+                    doc.querySelector('p:not(.mw-empty-elt)').textContent.replace(/"/g, '""').trim() : "Extracción realizada.";
+
+                const totalLinks = data.parse.links.length;
+
+                // BUILD CSV DATA (UTF-8 BOM + Comma-Separated Values)
+                extractedCSVContent = `\uFEFFClave,Valor\n`;
+                extractedCSVContent += `"URL_Solicitada","${inputUrl}"\n`;
+                extractedCSVContent += `"Codigo_HTTP","200 OK"\n`;
+                extractedCSVContent += `"Titulo_firstHeading","${title}"\n`;
+                extractedCSVContent += `"Parrafo_Lead","${leadParagraph}"\n`;
+                extractedCSVContent += `"Enlace_Internos_Count","${totalLinks}"\n`;
+
+                statusBadge.innerText = 'HTTP 200 OK';
+                statusBadge.className = 'text-[11px] font-bold bg-emerald-200 text-emerald-800 px-2 py-0.5 rounded-full';
+
+                articleView.innerHTML = `
+                    <div class="text-left space-y-2">
+                        <span class="text-[10px] font-bold text-indigo-600 uppercase font-mono">#firstHeading Extraído</span>
+                        <h3 class="text-base font-extrabold text-slate-800 dark:text-slate-100">${title}</h3>
+                        <span class="text-[10px] font-bold text-emerald-600 uppercase font-mono">p (Párrafo Lead)</span>
+                        <p class="text-xs text-slate-600 dark:text-slate-300">${leadParagraph.substring(0, 220)}...</p>
+                    </div>
+                `;
+
+                document.getElementById('dataset-preview-container').innerText = extractedCSVContent;
+                
+                const btnDl = document.getElementById('btn-download-csv');
+                btnDl.disabled = false;
+                btnDl.className = "w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-2 shadow cursor-pointer transition";
+
+            } catch (e) {
+                alertBox.classList.remove('hidden');
+                statusBadge.innerText = 'Error en Petición';
+                statusBadge.className = 'text-[11px] font-bold bg-red-200 text-red-800 px-2 py-0.5 rounded-full';
+            }
+        }
+
+        // DOWNLOAD CSV DATASET WITH MANDATORY STUDENT NAME FILENAME
+        function downloadWikiCSVDataset() {
+            if (!extractedCSVContent) return;
+
+            // Ensure registration data exists
+            if (!student1Name) {
+                alert("Debes completar el registro con tus datos de alumno primero.");
+                return;
+            }
+
+            // Create customized filename with student name(s)
+            let safeS1 = student1Name.replace(/[^a-zA-Z0-9]/g, '_');
+            let filename = `scraping_wikipedia_${studentGroup.replace(/[^a-zA-Z0-9]/g, '_')}_${safeS1}`;
+            
+            if (!isIndividual && student2Name) {
+                let safeS2 = student2Name.replace(/[^a-zA-Z0-9]/g, '_');
+                filename += `_${safeS2}`;
+            }
+            filename += `.csv`;
+
+            // Download CSV Blob
+            const blob = new Blob([extractedCSVContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            // Award 20% practical score
+            practicalPercent = 20;
+            document.getElementById('practical-note-msg').innerHTML = 
+                `<span class="text-emerald-600 font-bold"><i class="fa-solid fa-circle-check"></i> Práctica completada con éxito (+20%). Archivo descargado: ${filename}</span>`;
+            updateScoreUI();
+        }
+
+        // 5. RANDOMIZED QUESTIONS PREPARATION
+        function prepareRandomizedQuestions() {
+            const shuffledQuestions = shuffleArray(MASTER_QUESTIONS);
+            
+            activeQuestions = shuffledQuestions.map((q, idx) => {
+                const shuffledOpts = shuffleArray(q.options);
+                return {
+                    id: idx + 1,
+                    question: q.question,
+                    options: shuffledOpts,
+                    correctText: q.correctText,
+                    explanation: q.explanation
+                };
+            });
+
+            renderQuizDOM();
+        }
+
+        function renderQuizDOM() {
+            const container = document.getElementById('quiz-questions-container');
+            container.innerHTML = '';
+
+            activeQuestions.forEach((q, idx) => {
+                const card = document.createElement('div');
+                card.className = 'bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-3';
+                card.id = `q-card-${q.id}`;
+
+                let optionsHtml = '';
+                q.options.forEach((opt, optIdx) => {
+                    optionsHtml += `
+                        <label class="flex items-start p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/30 hover:bg-slate-100 dark:hover:bg-slate-700/60 cursor-pointer transition text-xs sm:text-sm" id="label-q${q.id}-opt${optIdx}">
+                            <input type="radio" name="question-${q.id}" value="${escapeHtml(opt)}" class="mt-0.5 mr-3 text-indigo-600 focus:ring-indigo-500">
+                            <span class="text-slate-700 dark:text-slate-200">${escapeHtml(opt)}</span>
+                        </label>
+                    `;
+                });
+
+                card.innerHTML = `
+                    <div class="flex items-start justify-between gap-2">
+                        <h3 class="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100">
+                            ${idx + 1}. ${q.question}
+                        </h3>
+                        <span id="badge-q${q.id}" class="hidden px-2 py-0.5 text-[10px] font-bold rounded shrink-0"></span>
+                    </div>
+                    <div class="space-y-2">${optionsHtml}</div>
+                    <div id="feedback-q${q.id}" class="hidden p-3 rounded-xl text-xs border space-y-1"></div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        // 6. VALIDATION & FINAL EVALUATION IN PERCENTAGES (%)
+        function validateQuizAndFinish() {
+            if (isExamFinished) return;
+
+            let hitsCount = 0;
+
+            activeQuestions.forEach(q => {
+                const selectedInput = document.querySelector(`input[name="question-${q.id}"]:checked`);
+                const badge = document.getElementById(`badge-q${q.id}`);
+                const feedback = document.getElementById(`feedback-q${q.id}`);
+
+                // LOCK RADIOS PERMANENTLY
+                document.querySelectorAll(`input[name="question-${q.id}"]`).forEach(inp => {
+                    inp.disabled = true;
+                    inp.closest('label').classList.add('cursor-not-allowed', 'opacity-70');
+                });
+
+                const isCorrect = selectedInput && selectedInput.value === q.correctText;
+
+                if (isCorrect) {
+                    hitsCount++;
+                    badge.className = 'px-2 py-0.5 text-[10px] font-bold rounded bg-green-100 text-green-800';
+                    badge.innerText = 'Correcto (+8%)';
+                    badge.classList.remove('hidden');
+
+                    feedback.className = 'p-3 rounded-xl text-xs border bg-green-50 text-green-900 border-green-200 dark:bg-green-950/40 dark:text-green-300';
+                    feedback.innerHTML = `<strong><i class="fa-solid fa-check"></i> Correcto:</strong> ${q.explanation}`;
+                    feedback.classList.remove('hidden');
+                } else {
+                    badge.className = 'px-2 py-0.5 text-[10px] font-bold rounded bg-red-100 text-red-800';
+                    badge.innerText = 'Incorrecto (0%)';
+                    badge.classList.remove('hidden');
+
+                    feedback.className = 'p-3 rounded-xl text-xs border bg-red-50 text-red-900 border-red-200 dark:bg-red-950/40 dark:text-red-300';
+                    feedback.innerHTML = `<strong><i class="fa-solid fa-xmark"></i> Explicación:</strong> ${q.explanation}`;
+                    feedback.classList.remove('hidden');
+                }
+            });
+
+            quizPercent = hitsCount * 8; // 8% per correct hit (80% max)
+            
+            const hitsDisplay = document.getElementById('hits-count-display');
+            hitsDisplay.innerText = `Aciertos: ${hitsCount} / 10`;
+            hitsDisplay.classList.remove('hidden');
+
+            document.getElementById('card-hits-text').innerText = 
+                `Aciertos Test: ${hitsCount} / 10 (${quizPercent}%) | Práctica Scraping: ${practicalPercent}%`;
+
+            document.getElementById('quiz-score-pill').innerText = `${quizPercent}% / 80%`;
+
+            finishExamAndEvaluate();
+        }
+
+        function finishExamAndEvaluate() {
+            if (isExamFinished) return;
+            isExamFinished = true;
+
+            clearInterval(timerInterval);
+
+            // Lock Submit Button
+            const btnSubmit = document.getElementById('btn-submit-quiz');
+            btnSubmit.disabled = true;
+            btnSubmit.className = 'w-full sm:w-auto px-6 py-3 bg-slate-400 text-white font-bold text-sm rounded-xl cursor-not-allowed';
+            btnSubmit.innerHTML = `<i class="fa-solid fa-lock"></i><span>Respuestas Validadas</span>`;
+
+            updateScoreUI();
+
+            const totalPercent = practicalPercent + quizPercent;
+
+            // ENLARGE FINAL PERCENTAGE DISPLAY FOR SCREENSHOT
+            document.getElementById('giant-grade-text').innerText = `${totalPercent}%`;
+            document.getElementById('final-screenshot-card').classList.remove('hidden');
+
+            // APPLY DYNAMIC BACKGROUND COLOR ACCORDING TO PERCENTAGE SCALE
+            applyScoreBackgroundColor(totalPercent);
+        }
+
+        function updateScoreUI() {
+            document.getElementById('score-practical').innerText = `${practicalPercent}%`;
+            document.getElementById('score-quiz').innerText = `${quizPercent}%`;
+            
+            const total = practicalPercent + quizPercent;
+            document.getElementById('score-total').innerText = `${total}%`;
+        }
+
+        // BACKGROUND COLOR PERCENTAGE SCALE LOGIC
+        function applyScoreBackgroundColor(percentage) {
+            const body = document.getElementById('main-body');
+            body.classList.remove('bg-slate-50', 'dark:bg-slate-900');
+
+            let colorHex = "#6B7280"; // 0% to 19.99%: Gray
+
+            if (percentage >= 100) {
+                colorHex = "#DC2626"; // 100%: Red
+            } else if (percentage >= 80) {
+                colorHex = "#EA580C"; // 80% to 89.99%: Orange
+            } else if (percentage >= 60) {
+                colorHex = "#EAB308"; // 60% to 79.99%: Yellow
+            } else if (percentage >= 40) {
+                colorHex = "#16A34A"; // 40% to 59.99%: Green
+            } else if (percentage >= 20) {
+                colorHex = "#2563EB"; // 20% to 39.99%: Blue
+            } else {
+                colorHex = "#6B7280"; // 0% to 19.99%: Gray
+            }
+
+            body.style.backgroundColor = colorHex;
+        }
+
+        // TAB SWITCHING
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('border-indigo-600', 'text-indigo-600', 'dark:text-indigo-400');
+                el.classList.add('border-transparent', 'text-slate-500');
+            });
+
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-btn-${tabId}`);
+            activeBtn.classList.remove('border-transparent', 'text-slate-500');
+            activeBtn.classList.add('border-indigo-600', 'text-indigo-600', 'dark:text-indigo-400');
+        }
+
+        // MODAL CONTROLS
+        function openTheoryModal() {
+            const m = document.getElementById('theory-modal');
+            m.classList.remove('hidden');
+            setTimeout(() => m.classList.remove('opacity-0'), 10);
+        }
+
+        function closeTheoryModal() {
+            const m = document.getElementById('theory-modal');
+            m.classList.add('opacity-0');
+            setTimeout(() => m.classList.add('hidden'), 200);
+        }
+
+        function escapeHtml(str) {
+            if (typeof str !== 'string') return str;
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
