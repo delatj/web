@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en" prefix="dc: http://purl.org/dc/elements/1.1/">
 <head><meta name="author" content="Created with Hot Potatoes by Half-Baked Software, registered to Ies Arboleda."/><meta name="keywords" content="Hot Potatoes, Hot Potatoes, Half-Baked Software, Windows, University of Victoria"/>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 
 <meta name="dc:creator" content="Ies Arboleda" />
 <meta name="dc:creator" content="casa" />
@@ -960,7 +960,7 @@ function ClearTextBoxes(){
 var CurrQNum = 0;
 var CorrectIndicator = ' ';
 var IncorrectIndicator = ' ';
-var YourScoreIs = ':';
+var YourScoreIs = 'Tu puntuaci&#x00F3;n es:';
 
 //New for 6.2.2.0
 var CompletedSoFar = 'Questions completed so far: ';
@@ -1421,17 +1421,7 @@ function CheckFinished(){
 	
 //Report final score and submit if necessary
 		CalculateOverallScore();
-		
-                var bgColor = "lightgrey";
-                if (Score >= 0 && Score <= 20) { bgColor = "lightblue"; }
-                else if (Score > 20 && Score <= 40) { bgColor = "lightgreen"; }
-                else if (Score > 40 && Score <= 60) { bgColor = "yellow"; }
-                else if (Score > 60 && Score <= 80) { bgColor = "orange"; }
-                else if (Score > 80 && Score <= 100) { bgColor = "red"; }
-                document.body.style.backgroundColor = bgColor;
-
-                FB = '<span style="font-size: 325px; font-weight: bold; color: red;">' + YourScoreIs + ' ' + Score + '%.</span>';
-            
+		FB = YourScoreIs + ' ' + Score + '%.';
 		if (ShowCorrectFirstTime == true){
 			var CFT = 0;
 			for (QNum=0; QNum<State.length; QNum++){
@@ -1874,9 +1864,323 @@ function DownTime(){
 </script>
 
 
+
+<!-- HPK:inicio -->
+<style id="hpk-css">
+#hpk-overlay{position:fixed;inset:0;z-index:2147483000;background:#f1f5f9;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:24px 14px;font-family:"Segoe UI",system-ui,-apple-system,Arial,sans-serif;}
+#hpk-overlay,#hpk-overlay div,#hpk-overlay p,#hpk-overlay label,#hpk-overlay h2,#hpk-overlay h3{color:#0f172a;font-size:16px;text-align:left;box-sizing:border-box;}
+#hpk-overlay .hpk-caja{background:#fff;border:1px solid #cbd5e1;border-radius:12px;padding:24px;max-width:640px;width:100%;margin:auto;box-shadow:0 6px 24px rgba(15,23,42,.12);}
+#hpk-overlay h2{margin:0 0 4px;font-size:1.5rem;color:#1e3a8a;}
+#hpk-overlay .hpk-act{margin:0 0 10px;font-weight:700;}
+#hpk-overlay .hpk-info{margin:0 0 16px;color:#475569;}
+#hpk-overlay .hpk-par{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media (max-width:600px){#hpk-overlay .hpk-par{grid-template-columns:1fr;}}
+#hpk-overlay .hpk-tarjeta{border:1px solid #cbd5e1;border-radius:10px;padding:14px;background:#f8fafc;}
+#hpk-overlay h3{margin:0 0 10px;font-size:1rem;color:#1e3a8a;}
+#hpk-overlay label{display:block;font-weight:600;font-size:.92rem;margin-bottom:4px;}
+#hpk-overlay input[type=text]{box-sizing:border-box;display:block;width:100%;padding:9px 10px;font-size:1rem;border:1px solid #94a3b8;border-radius:7px;background:#fff;color:#0f172a;font-family:inherit;}
+#hpk-overlay input[type=text]:disabled{background:#e2e8f0;}
+#hpk-overlay input:focus-visible,#hpk-overlay button:focus-visible{outline:3px solid #2563eb;outline-offset:1px;}
+#hpk-overlay .hpk-solo{display:flex;align-items:center;gap:8px;font-weight:400;margin:14px 0;cursor:pointer;}
+#hpk-overlay .hpk-grupo{margin-bottom:12px;}
+#hpk-overlay .hpk-err{display:none;background:#fee2e2;color:#b91c1c;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-weight:600;}
+#hpk-overlay .hpk-err.hpk-ver{display:block;color:#b91c1c;}
+.hpk-btn{font-family:"Segoe UI",system-ui,Arial,sans-serif;font-size:1rem;font-weight:700;border:0;border-radius:8px;padding:11px 20px;background:#1e3a8a;color:#fff;cursor:pointer;display:inline-block;}
+.hpk-btn:hover{background:#172e6e;}
+.hpk-btn-sec{background:#fff;color:#1e3a8a;border:1px solid #1e3a8a;}
+.hpk-btn-sec:hover{background:#dbeafe;}
+#hpk-res{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:2147482000;width:min(760px,calc(100% - 20px));display:flex;gap:18px;align-items:center;background:#fff;border:3px solid #64748b;border-radius:14px;padding:14px 38px 14px 18px;box-shadow:0 8px 28px rgba(15,23,42,.3);font-family:"Segoe UI",system-ui,Arial,sans-serif;}
+#hpk-res,#hpk-res div{color:#0f172a;font-size:15px;text-align:left;}
+#hpk-res.hpk-res-ok{border-color:#16a34a;background:#f0fdf4;}
+#hpk-res.hpk-res-mal{border-color:#b91c1c;background:#fef2f2;}
+#hpk-res .hpk-nota{font-size:3.4rem;font-weight:800;line-height:1;min-width:2.6ch;text-align:center;}
+#hpk-res.hpk-res-ok .hpk-nota{color:#166534;}
+#hpk-res.hpk-res-mal .hpk-nota{color:#b91c1c;}
+#hpk-res .hpk-equipo{font-weight:700;margin-bottom:4px;}
+#hpk-res .hpk-msg{margin-bottom:6px;}
+#hpk-res .hpk-estado{margin-bottom:8px;font-weight:600;}
+#hpk-res .hpk-estado.hpk-bien{color:#166534;}
+#hpk-res .hpk-estado.hpk-mal{color:#b91c1c;}
+#hpk-res .hpk-estado.hpk-aviso{color:#92400e;}
+#hpk-res .hpk-acciones{display:flex;gap:8px;flex-wrap:wrap;}
+#hpk-res .hpk-x{position:absolute;top:6px;right:8px;border:0;background:transparent;font-size:1.1rem;cursor:pointer;color:#475569;padding:4px 8px;}
+@media (max-width:560px){#hpk-res{flex-direction:column;text-align:center;align-items:stretch;}#hpk-res .hpk-nota{font-size:2.6rem;}}
+</style>
+<script id="hpk-js">
+(function HPK_RUNTIME(CFG) {
+  var enviado = false;
+  var datos = null;
+  var resultado = null;
+
+  function limpiar(s) { return String(s || '').replace(/\s+/g, ' ').trim(); }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function nombreValido(n) {
+    return n.split(' ').filter(Boolean).length >= 2 && n.length >= 5 && /[A-Za-zÀ-ÿ]/.test(n);
+  }
+  function leer(k) { try { return sessionStorage.getItem('hpk_' + k) || ''; } catch (e) { return ''; } }
+  function guardar(k, v) { try { sessionStorage.setItem('hpk_' + k, v); } catch (e) {} }
+  function $(id) { return document.getElementById(id); }
+
+  /* Hot Potatoes bloquea la tecla Retroceso salvo que InTextBox sea true */
+  function enTexto(v) { try { window.InTextBox = v; } catch (e) {} }
+
+  /* ---------- Ventana inicial de datos del equipo ---------- */
+  function ventanaDatos(alAceptar) {
+    var ov = document.createElement('div');
+    ov.id = 'hpk-overlay';
+    ov.setAttribute('role', 'dialog');
+    ov.setAttribute('aria-modal', 'true');
+    ov.setAttribute('aria-labelledby', 'hpk-titulo');
+    ov.innerHTML = [
+      '<div class="hpk-caja">',
+      '<h2 id="hpk-titulo">Datos del equipo</h2>',
+      '<p class="hpk-act">' + esc(CFG.actividad) + '</p>',
+      '<p class="hpk-info">Escribe nombre y apellidos de los dos miembros del grupo. Sin estos datos no se puede empezar.</p>',
+      '<div class="hpk-par">',
+      '<div class="hpk-tarjeta"><h3>Alumno/a 1</h3>',
+      '<label for="hpk-a1">Nombre y apellidos</label>',
+      '<input type="text" id="hpk-a1" autocomplete="off" placeholder="Ej: Lucía Pérez Gómez"></div>',
+      '<div class="hpk-tarjeta"><h3>Alumno/a 2</h3>',
+      '<label for="hpk-a2">Nombre y apellidos</label>',
+      '<input type="text" id="hpk-a2" autocomplete="off" placeholder="Ej: Marcos Díaz Ruiz"></div>',
+      '</div>',
+      '<label class="hpk-solo"><input type="checkbox" id="hpk-solo"> Trabajo en solitario (sin pareja)</label>',
+      '<div class="hpk-grupo"><label for="hpk-curso">Curso y grupo</label>',
+      '<input type="text" id="hpk-curso" autocomplete="off" placeholder="Ej: 2º ESO A"></div>',
+      '<div id="hpk-err" class="hpk-err" role="alert"></div>',
+      '<button type="button" id="hpk-go" class="hpk-btn">Empezar la actividad</button>',
+      '</div>'
+    ].join('');
+    document.body.appendChild(ov);
+
+    $('hpk-a1').value = leer('a1');
+    $('hpk-a2').value = leer('a2');
+    $('hpk-curso').value = leer('curso');
+    if (leer('solo') === '1') { $('hpk-solo').checked = true; }
+
+    function alternarSolo() {
+      var solo = $('hpk-solo').checked;
+      $('hpk-a2').disabled = solo;
+      if (solo) { $('hpk-a2').value = ''; }
+    }
+    alternarSolo();
+    $('hpk-solo').addEventListener('change', alternarSolo);
+
+    ov.addEventListener('focusin', function () { enTexto(true); });
+    ov.addEventListener('focusout', function () { enTexto(false); });
+
+    function validar() {
+      var a1 = limpiar($('hpk-a1').value);
+      var a2 = limpiar($('hpk-a2').value);
+      var curso = limpiar($('hpk-curso').value);
+      var solo = $('hpk-solo').checked;
+      var m = [];
+      if (!nombreValido(a1)) { m.push('Escribe nombre y apellidos del alumno/a 1.'); }
+      if (!solo) {
+        if (!nombreValido(a2)) { m.push('Escribe nombre y apellidos del alumno/a 2 (o marca «Trabajo en solitario»).'); }
+        else if (a1.toLowerCase() === a2.toLowerCase()) { m.push('Los dos alumnos no pueden tener el mismo nombre.'); }
+      }
+      if (curso.length < 2) { m.push('Indica el curso y grupo.'); }
+      if (m.length) {
+        $('hpk-err').innerHTML = m.map(esc).join('<br>');
+        $('hpk-err').className = 'hpk-err hpk-ver';
+        return;
+      }
+      datos = { alumno1: a1, alumno2: solo ? '' : a2, curso: curso };
+      guardar('a1', a1); guardar('a2', solo ? '' : a2); guardar('curso', curso); guardar('solo', solo ? '1' : '0');
+      enTexto(false);
+      ov.parentNode.removeChild(ov);
+      setTimeout(alAceptar, 0);
+    }
+
+    $('hpk-go').addEventListener('click', validar);
+    ov.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && e.target && e.target.tagName === 'INPUT' && e.target.type === 'text') { validar(); }
+    });
+    setTimeout(function () { try { $('hpk-a1').focus(); } catch (e) {} }, 50);
+  }
+
+  /* ---------- Cálculo de aciertos (informativo) ---------- */
+  function aciertos() {
+    try {
+      var D = window.DragEx;
+      if (D && D.RightItems && D.GetLeftItemByOrigPos) {
+        var tot = 0, ok = 0;
+        D.RightItems.forEach(function (RI) {
+          if (D.GetLeftItemByOrigPos(RI.OrigPos) !== null) {
+            tot++;
+            if (RI.MatchedWith !== -1) {
+              var LI = D.GetLeftItemByOrigPos(RI.MatchedWith);
+              if (LI && RI.Groups.indexOf(LI.Group) > -1) { ok++; }
+            }
+          }
+        });
+        return ok + '/' + tot;
+      }
+      if (window.State && window.QsToShow !== undefined) {
+        var c = 0;
+        for (var q = 0; q < window.State.length; q++) {
+          if (window.State[q] != null && window.State[q][0] >= 1) { c++; }
+        }
+        return c + '/' + window.QsToShow;
+      }
+    } catch (e) {}
+    return '';
+  }
+
+  /* ---------- Resultado y envío ---------- */
+  function pintarResultado() {
+    var r = resultado;
+    var caja = $('hpk-res');
+    if (!caja) {
+      caja = document.createElement('div');
+      caja.id = 'hpk-res';
+      document.body.appendChild(caja);
+    }
+    caja.className = r.pasa ? 'hpk-res hpk-res-ok' : 'hpk-res hpk-res-mal';
+    var equipo = esc(r.alumno1) + (r.alumno2 ? ' y ' + esc(r.alumno2) : ' (trabajo en solitario)');
+    var msg;
+    if (r.pasa) {
+      msg = '✔ Actividad superada. Puedes repetirla si quieres subir nota.';
+    } else {
+      msg = '✘ Insuficiente: hay que llegar al ' + CFG.minimo + '%. Los datos NO se han enviado. Pulsa «Repetir actividad» para intentarlo de nuevo.';
+    }
+    caja.innerHTML = [
+      '<button type="button" class="hpk-x" id="hpk-ocultar" aria-label="Ocultar resultado">✕</button>',
+      '<div class="hpk-nota">' + r.pct + '%</div>',
+      '<div class="hpk-cuerpo">',
+      '<div class="hpk-equipo">' + equipo + ' · ' + esc(r.curso) + (r.aciertos ? ' · aciertos ' + esc(r.aciertos) : '') + '</div>',
+      '<div class="hpk-msg">' + msg + '</div>',
+      '<div id="hpk-estado" class="hpk-estado"></div>',
+      '<div class="hpk-acciones">',
+      '<button type="button" class="hpk-btn" id="hpk-repetir">Repetir actividad</button>',
+      '<button type="button" class="hpk-btn hpk-btn-sec" id="hpk-reintento" style="display:none">Reintentar envío</button>',
+      '</div></div>'
+    ].join('');
+    $('hpk-ocultar').addEventListener('click', function () { caja.style.display = 'none'; });
+    $('hpk-repetir').addEventListener('click', function () { location.reload(); });
+    $('hpk-reintento').addEventListener('click', function () { enviar(); });
+  }
+
+  function estado(clase, texto) {
+    var e = $('hpk-estado');
+    if (!e) { return; }
+    e.className = 'hpk-estado ' + clase;
+    e.textContent = texto;
+  }
+
+  var yaEnviado = false;
+  function enviar() {
+    if (!resultado || !resultado.pasa || yaEnviado) { return; }
+    var re = $('hpk-reintento');
+    if (re) { re.style.display = 'none'; }
+    if (!CFG.url) {
+      estado('hpk-aviso', '⚠ El envío a la hoja de cálculo no está configurado. Avisa a tu profesor/a.');
+      return;
+    }
+    estado('hpk-aviso', 'Enviando resultados a la hoja de cálculo…');
+    var ahora = new Date();
+    var params = new URLSearchParams({
+      id: resultado.id,
+      fecha: ahora.toLocaleDateString('es-ES'),
+      hora: ahora.toLocaleTimeString('es-ES', { hour12: false }),
+      alumno1: resultado.alumno1,
+      alumno2: resultado.alumno2,
+      curso: resultado.curso,
+      criterio: CFG.actividad,
+      total: resultado.pct,
+      prisma: '',
+      bolsillo: '',
+      tablas: '',
+      test: resultado.pct,
+      aciertos: resultado.aciertos,
+      actividad: CFG.actividad,
+      tipo: CFG.tipo
+    });
+    fetch(CFG.url, { method: 'POST', body: params })
+      .then(function (resp) { return resp.json(); })
+      .then(function (data) {
+        if (!data.ok) { throw new Error(data.error || 'Respuesta no válida'); }
+        yaEnviado = true;
+        estado('hpk-bien', '✔ Resultados enviados correctamente a la hoja de cálculo.');
+      })
+      .catch(function () {
+        /* Segundo intento sin leer la respuesta (el servidor ignora duplicados por id) */
+        fetch(CFG.url, { method: 'POST', mode: 'no-cors', body: params })
+          .then(function () {
+            yaEnviado = true;
+            estado('hpk-bien', '✔ Resultados enviados (no se pudo leer la confirmación del servidor).');
+          })
+          .catch(function () {
+            estado('hpk-mal', '❌ No se pudieron enviar los resultados. Comprueba la conexión y pulsa «Reintentar envío».');
+            var b = $('hpk-reintento');
+            if (b) { b.style.display = 'inline-block'; }
+          });
+      });
+  }
+
+  function terminar() {
+    var pct = Number(window.Score);
+    if (isNaN(pct)) { pct = 0; }
+    pct = Math.max(0, Math.min(100, Math.round(pct)));
+    resultado = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+      alumno1: datos ? datos.alumno1 : '',
+      alumno2: datos ? datos.alumno2 : '',
+      curso: datos ? datos.curso : '',
+      pct: pct,
+      aciertos: aciertos(),
+      pasa: pct >= CFG.minimo
+    };
+    pintarResultado();
+    if (resultado.pasa) { enviar(); }
+  }
+
+  /* La actividad termina cuando Hot Potatoes marca Locked y Finished */
+  function revisar() {
+    if (enviado) { return; }
+    if (window.Locked === true && window.Finished === true) {
+      enviado = true;
+      terminar();
+    }
+  }
+
+  function envolver() {
+    ['CheckFinished', 'CheckAnswers'].forEach(function (n) {
+      var o = window[n];
+      if (typeof o === 'function' && !o.__hpk) {
+        var nueva = function () {
+          var r = o.apply(this, arguments);
+          try { revisar(); } catch (e) {}
+          return r;
+        };
+        nueva.__hpk = true;
+        window[n] = nueva;
+      }
+    });
+  }
+  envolver();
+
+  window.HPK_iniciar = function (arranque) {
+    envolver();
+    ventanaDatos(function () {
+      if (typeof arranque === 'function') { arranque(); }
+    });
+  };
+
+  if (!CFG.onloadReescrito) {
+    window.addEventListener('load', function () { window.HPK_iniciar(null); });
+  }
+})({"url":"https://script.google.com/macros/s/AKfycbyiOndS6GMYhgiSGLVAXUOOHhMKtBXqcLUeOppbNZIkrxU-HiMlgmhlYCj1xYZQG0io/exec","minimo":0,"tipo":"test","actividad":"TEMA: TECNOLOGÍA SOSTENIBLE.","onloadReescrito":true});
+</script>
+<!-- HPK:fin -->
 </head>
 
-<body style="background-color: lightgrey;" onload="StartUp()" id="TheBody" >
+<body onload="HPK_iniciar(function(){StartUp()})" id="TheBody" >
 
 <!-- BeginTopNavButtons -->
 
