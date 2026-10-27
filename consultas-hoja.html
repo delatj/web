@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consulta de Resultados de Alumnos</title>
+  <!-- Estilos y Librería PapaParse para parsear los datos de Google Sheets -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <style>
+    :root {
+      --primary-color: #2563eb;
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-color: #1e293b;
+      --border-color: #e2e8f0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      color: #0f172a;
+      margin-bottom: 8px;
+    }
+
+    .filters-card {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      margin-bottom: 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      align-items: end;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #475569;
+    }
+
+    select, input {
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    select:focus, input:focus {
+      border-color: var(--primary-color);
+    }
+
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .stat-box {
+      background: var(--card-bg);
+      padding: 12px 20px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      font-weight: 600;
+    }
+
+    .stat-value {
+      color: var(--primary-color);
+      font-size: 1.2rem;
+    }
+
+    .table-container {
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+
+    th {
+      background-color: #f1f5f9;
+      padding: 12px 16px;
+      font-weight: 600;
+      color: #334155;
+      border-bottom: 1px solid var(--border-color);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-color);
+      white-space: nowrap;
+    }
+
+    tr:hover {
+      background-color: #f8fafc;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    .badge-success { background: #dcfce7; color: #15803d; }
+    .badge-warning { background: #fef9c3; color: #a16207; }
+    .badge-danger  { background: #fee2e2; color: #b91c1c; }
+
+    .loading, .no-data {
+      text-align: center;
+      padding: 40px;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>Consulta de Actividades de Alumnos</h1>
+    <p>Panel interactivo de consulta en tiempo real desde Google Sheets</p>
+  </header>
+
+  <!-- Filtros -->
+  <div class="filters-card">
+    <div class="form-group">
+      <label for="fechaSelect">Seleccionar Día:</label>
+      <select id="fechaSelect">
+        <option value="">Cargando fechas...</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="tramoSelect">Tramo Horario:</label>
+      <select id="tramoSelect">
+        <option value="TODOS">Todos los tramos</option>
+        <option value="08:00-09:00">08:00 - 09:00</option>
+        <option value="09:00-10:00">09:00 - 10:00</option>
+        <option value="10:00-11:00">10:00 - 11:00</option>
+        <option value="11:30-12:30">11:30 - 12:30</option>
+        <option value="12:30-13:30">12:30 - 13:30</option>
+        <option value="13:30-14:30">13:30 - 14:30</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="busquedaInput">Buscar por alumno / grupo:</label>
+      <input type="text" id="busquedaInput" placeholder="Escribe para buscar...">
+    </div>
+  </div>
+
+  <!-- Barra de Estadísticas -->
+  <div class="stats-bar">
+    <div class="stat-box">Entregas encontradas: <span id="countStat" class="stat-value">0</span></div>
+    <div class="stat-box">Puntuación Media: <span id="avgStat" class="stat-value">0</span></div>
+  </div>
+
+  <!-- Tabla de Resultados -->
+  <div class="table-container">
+    <table id="dataTable">
+      <thead>
+        <tr id="tableHeader">
+          <th>Fecha</th>
+          <th>Hora</th>
+          <th>Alumno/a 1</th>
+          <th>Alumno/a 2</th>
+          <th>Curso/Grupo</th>
+          <th>Criterio Evaluado</th>
+          <th>Puntuación Total</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <tr><td colspan="7" class="loading">Cargando datos desde Google Sheets...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  // ID de la hoja proporcionado
+  const SPREADSHEET_ID = '1VpcYNdyvFqZiYaE_YcOEPFQR8jwcy3AnTNM6C7GrHHQ';
+  const SHEET_NAME = 'Hoja 1';
+  const CSV_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
+
+  let rawData = [];
+
+  // Tramos Horarios en minutos desde las 00:00
+  const TRAMOS = {
+    '08:00-09:00': { start: 8 * 60, end: 9 * 60 },
+    '09:00-10:00': { start: 9 * 60, end: 10 * 60 },
+    '10:00-11:00': { start: 10 * 60, end: 11 * 60 },
+    '11:30-12:30': { start: 11 * 60 + 30, end: 12 * 60 + 30 },
+    '12:30-13:30': { start: 12 * 60 + 30, end: 13 * 60 + 30 },
+    '13:30-14:30': { start: 13 * 60 + 30, end: 14 * 60 + 30 },
+  };
+
+  // Convertir string de hora (HH:MM:SS) a minutos del día
+  function parseTimeToMinutes(timeStr) {
+    if (!timeStr) return -1;
+    const parts = timeStr.toString().trim().split(':');
+    if (parts.length < 2) return -1;
+    return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+  }
+
+  // Normalizar fechas a formato YYYY-MM-DD
+  function parseDateStandard(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+      return d.toISOString().split('T')[0];
+    }
+    return dateStr.toString().trim();
+  }
+
+  // Cargar datos al iniciar la página
+  function loadData() {
+    Papa.parse(CSV_URL, {
+      download: true,
+      header: true,
+      skipEmptyLines: true,
+      complete: function(results) {
+        rawData = results.data;
+        populateDateDropdown();
+        filterAndDisplayData();
+      },
+      error: function(err) {
+        document.getElementById('tableBody').innerHTML = 
+          `<tr><td colspan="7" class="no-data">Error al cargar la hoja de cálculo. Revisa que la hoja esté compartida públicamente.</td></tr>`;
+      }
+    });
+  }
+
+  // Rellenar el selector de fechas únicas
+  function populateDateDropdown() {
+    const dateSelect = document.getElementById('fechaSelect');
+    const dates = new Set();
+
+    rawData.forEach(row => {
+      const fecha = parseDateStandard(row['Fecha']);
+      if (fecha && fecha.toLowerCase() !== 'monk-tablet') {
+        dates.add(fecha);
+      }
+    });
+
+    const sortedDates = Array.from(dates).sort();
+    dateSelect.innerHTML = sortedDates.map(d => `<option value="${d}">${d}</option>`).join('');
+    
+    // Seleccionar la última fecha por defecto si existe
+    if (sortedDates.length > 0) {
+      dateSelect.value = sortedDates[sortedDates.length - 1];
+    }
+  }
+
+  // Filtrar y renderizar en la tabla
+  function filterAndDisplayData() {
+    const selectedDate = document.getElementById('fechaSelect').value;
+    const selectedTramo = document.getElementById('tramoSelect').value;
+    const busqueda = document.getElementById('busquedaInput').value.toLowerCase();
+
+    const filtered = rawData.filter(row => {
+      const fechaRow = parseDateStandard(row['Fecha']);
+      if (selectedDate && fechaRow !== selectedDate) return false;
+
+      // Filtro de tramo horario
+      if (selectedTramo !== 'TODOS' && TRAMOS[selectedTramo]) {
+        const timeMinutes = parseTimeToMinutes(row['Hora']);
+        const range = TRAMOS[selectedTramo];
+        if (timeMinutes < range.start || timeMinutes > range.end) return false;
+      }
+
+      // Filtro de búsqueda por texto
+      if (busqueda) {
+        const textRow = `${row['Alumno/a 1']} ${row['Alumno/a 2']} ${row['Curso y grupo']} ${row['Criterio evaluado']}`.toLowerCase();
+        if (!textRow.includes(busqueda)) return false;
+      }
+
+      return true;
+    });
+
+    renderTable(filtered);
+  }
+
+  // Dibujar tabla y actualizar métricas
+  function renderTable(data) {
+    const tbody = document.getElementById('tableBody');
+    const countStat = document.getElementById('countStat');
+    const avgStat = document.getElementById('avgStat');
+
+    if (data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" class="no-data">Sin entregas para este día y tramo.</td></tr>`;
+      countStat.textContent = '0';
+      avgStat.textContent = '0';
+      return;
+    }
+
+    let sumScores = 0;
+    let validScores = 0;
+
+    const rowsHtml = data.map(row => {
+      const score = parseFloat(row['Puntuación total (sobre 100)']);
+      let badgeClass = 'badge-danger';
+      if (!isNaN(score)) {
+        sumScores += score;
+        validScores++;
+        if (score >= 70) badgeClass = 'badge-success';
+        else if (score >= 50) badgeClass = 'badge-warning';
+      }
+
+      return `
+        <tr>
+          <td>${parseDateStandard(row['Fecha']) || '-'}</td>
+          <td>${row['Hora'] || '-'}</td>
+          <td><strong>${row['Alumno/a 1'] || '-'}</strong></td>
+          <td>${row['Alumno/a 2'] || '-'}</td>
+          <td>${row['Curso y grupo'] || '-'}</td>
+          <td>${row['Criterio evaluado'] || '-'}</td>
+          <td><span class="badge ${badgeClass}">${score ? score.toFixed(1) : '-'}</span></td>
+        </tr>
+      `;
+    }).join('');
+
+    tbody.innerHTML = rowsHtml;
+    countStat.textContent = data.length;
+    avgStat.textContent = validScores > 0 ? (sumScores / validScores).toFixed(1) : '0';
+  }
+
+  // Listeners para actualización automática
+  document.getElementById('fechaSelect').addEventListener('change', filterAndDisplayData);
+  document.getElementById('tramoSelect').addEventListener('change', filterAndDisplayData);
+  document.getElementById('busquedaInput').addEventListener('input', filterAndDisplayData);
+
+  // Inicializar al cargar
+  window.addEventListener('DOMContentLoaded', loadData);
+</script>
+
+</body>
+</html>
