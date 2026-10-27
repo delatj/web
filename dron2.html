@@ -142,7 +142,22 @@
     }
 
     #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 3000; }
-    .modal-content { background: white; color: #333; padding: 30px; border-radius: 15px; text-align: center; width: 450px; border: 5px solid #333; }
+    .modal-content { background: white; color: #333; padding: 30px; border-radius: 15px; text-align: center; width: 450px; max-width: 92%; max-height: 92vh; overflow-y: auto; box-sizing: border-box; border: 5px solid #333; }
+    .modal-content .team-card { border: 1px solid #ccc; border-radius: 8px; padding: 4px 10px 10px; margin: 10px 0; background: #f7f9fc; }
+    .modal-content .team-card h3 { margin: 6px 0 4px; font-size: 1.05rem; }
+    .modal-content input[type="text"] { width: 85%; padding: 10px; margin: 4px; box-sizing: border-box; }
+    #team-error { color: #b71c1c; font-size: 0.9rem; min-height: 1em; margin-top: 6px; }
+
+    /* ENVÍO DE RESULTADOS */
+    #btn-enviar {
+      background-color: #e67e22; color: white; border: none; padding: 7px 16px;
+      border-radius: 8px; font-weight: bold; cursor: pointer; z-index: 210; font-size: 0.85rem;
+    }
+    #btn-enviar:disabled { background-color: #cbd5e1; color: #555; cursor: not-allowed; }
+    #estado-envio { font-size: 0.72rem; max-width: 300px; text-align: center; line-height: 1.2; }
+    #estado-envio.ok { color: #1b5e20; }
+    #estado-envio.err { color: #b71c1c; }
+    #estado-envio.wait { color: #8a5a00; }
 
     .modal-eval {
       display: none; position: fixed; inset: 0;
@@ -181,12 +196,12 @@
     <div class="card-seleccion">
       <h2>🛸 Dron Duel - Test Evaluativo</h2>
       <p>Selecciona el bloque temático sobre el que responderás cada 5 puntos logrados en la pista:</p>
-      <button class="btn-criterio" style="background: var(--criterio-13);" onclick="seleccionarCriterio('13', 'Criterio 1.3 (Tec y digital)/ 6.1 a 6.4 (Comput)', 'var(--criterio-13)')">Criterio 1.3 (Tec y digital)/ 6.1 a 6.4 (Comput): Protección, Salud Personal y Ética Digital</button>
-      <button class="btn-criterio" style="background: var(--criterio-61);" onclick="seleccionarCriterio('61', 'Criterio 6.1 (Tec y digit)/ 1.1 (Comput)', 'var(--criterio-61)')">Criterio 6.1 (Tec y digit)/ 1.1 (Comput): Componentes, Redes y Seguridad Operativa</button>
-      <button class="btn-criterio" style="background: var(--criterio-42);" onclick="seleccionarCriterio('42', 'Criterio 4.2 (Digital)', 'var(--criterio-42)')">Criterio 4.2 (Digital): Administración Digital, Comercio Electrónico y Brecha Social</button>
-      <button class="btn-criterio" style="background: var(--criterio-43);" onclick="seleccionarCriterio('43', 'Criterio 4.3 (Digital)', 'var(--criterio-43)')">Criterio 4.3 (Digital): Libertad de Expresión, Medios Digitales y Análisis Crítico</button>
-      <button class="btn-criterio" style="background: var(--criterio-44);" onclick="seleccionarCriterio('44', 'Criterio 4.4 / 6.1 (4º ESO)', 'var(--criterio-44)')">Criterio 4.4 (Digitalización)/ 6.1 (Tecnología): Sostenibilidad y Accesibilidad Técnica y Digital</button>
-      <button class="btn-criterio" style="background: var(--criterio-todos);" onclick="seleccionarCriterio('todos', 'Todos los Criterios Mezclados', 'var(--criterio-todos)')">🔀 Todos los Criterios Mezclados</button>
+      <button class="btn-criterio" style="background: var(--criterio-13);" onclick="seleccionarCriterio(&#39;13&#39;, &#39;Criterio 1.3 (Tec y digital)/ 6.1 a 6.4 (Comput)&#39;, &#39;var(--criterio-13)&#39;)">Criterio 1.3 (Tec y digital)/ 6.1 a 6.4 (Comput): Protección, Salud Personal y Ética Digital</button>
+      <button class="btn-criterio" style="background: var(--criterio-61);" onclick="seleccionarCriterio(&#39;61&#39;, &#39;Criterio 6.1 (Tec y digit)/ 1.1 (Comput)&#39;, &#39;var(--criterio-61)&#39;)">Criterio 6.1 (Tec y digit)/ 1.1 (Comput): Componentes, Redes y Seguridad Operativa</button>
+      <button class="btn-criterio" style="background: var(--criterio-42);" onclick="seleccionarCriterio(&#39;42&#39;, &#39;Criterio 4.2 (Digital)&#39;, &#39;var(--criterio-42)&#39;)">Criterio 4.2 (Digital): Administración Digital, Comercio Electrónico y Brecha Social</button>
+      <button class="btn-criterio" style="background: var(--criterio-43);" onclick="seleccionarCriterio(&#39;43&#39;, &#39;Criterio 4.3 (Digital)&#39;, &#39;var(--criterio-43)&#39;)">Criterio 4.3 (Digital): Libertad de Expresión, Medios Digitales y Análisis Crítico</button>
+      <button class="btn-criterio" style="background: var(--criterio-44);" onclick="seleccionarCriterio(&#39;44&#39;, &#39;Criterio 4.4 / 6.1 (4º ESO)&#39;, &#39;var(--criterio-44)&#39;)">Criterio 4.4 (Digitalización)/ 6.1 (Tecnología): Sostenibilidad y Accesibilidad Técnica y Digital</button>
+      <button class="btn-criterio" style="background: var(--criterio-todos);" onclick="seleccionarCriterio(&#39;todos&#39;, &#39;Todos los Criterios Mezclados&#39;, &#39;var(--criterio-todos)&#39;)">🔀 Todos los Criterios Mezclados</button>
     </div>
   </div>
 
@@ -194,8 +209,18 @@
   <div id="modal" style="display: none;">
     <div class="modal-content">
       <h2>🛸 DRON DUEL</h2>
-      <input type="text" id="name1" value="ALUMNO 1" style="width:80%; padding:10px; margin:5px;">
-      <input type="text" id="name2" value="ALUMNO 2" style="width:80%; padding:10px; margin:5px;">
+      <div class="team-card">
+        <h3 style="color:var(--p1-color)">Alumno/a 1</h3>
+        <input type="text" id="name1-first" autocomplete="off" placeholder="Nombre. Ej: Lucía"><br>
+        <input type="text" id="name1-last" autocomplete="off" placeholder="Apellidos. Ej: Pérez Gómez">
+      </div>
+      <div class="team-card">
+        <h3 style="color:var(--p2-color)">Alumno/a 2</h3>
+        <input type="text" id="name2-first" autocomplete="off" placeholder="Nombre. Ej: Marcos"><br>
+        <input type="text" id="name2-last" autocomplete="off" placeholder="Apellidos. Ej: Díaz Ruiz">
+      </div>
+      <input type="text" id="student-group" autocomplete="off" placeholder="Curso y grupo. Ej: 2º ESO A">
+      <div id="team-error"></div>
       <button onclick="startGame()" style="margin-top:15px; padding:15px 40px; background:var(--primary); color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">INICIAR</button>
     </div>
   </div>
@@ -211,6 +236,8 @@
     <div class="center-top-panel">
       <div id="badge-criterio" class="badge-criterio" style="background-color: var(--criterio-61);">CRITERIO: Criterio 6.1 (Tec y digit)/ 1.1 (Comput)</div>
       <button class="btn-top-teoria" onclick="abrirTeoria()">📖 Ver Teoría Desarrollada</button>
+      <button id="btn-enviar" type="button" onmousedown="event.preventDefault()" onclick="enviarResultados()">📤 Enviar resultados</button>
+      <div id="estado-envio"></div>
     </div>
 
     <div class="score-card">
@@ -382,6 +409,8 @@
     // Escala de colores solicitada: blanco por defecto, >2 gris, >5 azul, >10 morado, >15 verde, >20 amarillo, >25 naranja, >30 rojo
     const colors = ['#ffffff', '#cccccc', '#87ceeb', '#9b59b6', '#2ecc71', '#f1c40f', '#e67e22', '#e74c3c'];
     let criterioSeleccionado = 'todos';
+    let criterioEtiqueta = 'Todos los Criterios Mezclados';
+    let gameStarted = false;
     let preguntasFiltradas = [];
 
     const state = {
@@ -392,6 +421,7 @@
 
     function seleccionarCriterio(cat, nombreEtiqueta, colorCss) {
       criterioSeleccionado = cat;
+      criterioEtiqueta = nombreEtiqueta;
 
       preguntasFiltradas = cat === 'todos' 
         ? [...preguntasBD] 
@@ -405,9 +435,22 @@
       document.getElementById('modal').style.display = 'flex';
     }
 
+    function cleanName(v) { return v.trim().replace(/\s+/g, ' '); }
+    const getVal = id => cleanName(document.getElementById(id).value);
+
     function startGame() {
-      state.p1.name = document.getElementById('name1').value || "ALUMNO 1";
-      state.p2.name = document.getElementById('name2').value || "ALUMNO 2";
+      const err = document.getElementById('team-error');
+      const msgs = [];
+      if (getVal('name1-first').length < 2) msgs.push('Escribe el nombre del alumno/a 1.');
+      if (getVal('name1-last').length < 2) msgs.push('Escribe los apellidos del alumno/a 1.');
+      if (getVal('name2-first').length < 2) msgs.push('Escribe el nombre del alumno/a 2.');
+      if (getVal('name2-last').length < 2) msgs.push('Escribe los apellidos del alumno/a 2.');
+      if (!getVal('student-group')) msgs.push('Indica el curso y grupo.');
+      if (msgs.length) { err.innerHTML = msgs.join('<br>'); return; }
+      err.innerHTML = '';
+
+      state.p1.name = getVal('name1-first') + ' ' + getVal('name1-last');
+      state.p2.name = getVal('name2-first') + ' ' + getVal('name2-last');
       document.getElementById('label-n1').innerText = state.p1.name;
       document.getElementById('label-n2').innerText = state.p2.name;
       
@@ -415,6 +458,7 @@
       document.getElementById('dron-name-p2').innerText = state.p2.name;
 
       document.getElementById('modal').style.display = 'none';
+      gameStarted = true;
       moverMeta('p1'); moverMeta('p2');
       updateVisuals('p1'); updateVisuals('p2');
       updateScoreUI('p1'); updateScoreUI('p2');
@@ -429,6 +473,9 @@
     }
 
     window.onkeydown = (e) => {
+      if (!gameStarted) return; // no mover drones mientras se escriben los datos
+      const tg = e.target;
+      if (tg && (tg.tagName === 'INPUT' || tg.tagName === 'TEXTAREA')) return;
       const k = e.code;
       
       // Jugador 1
@@ -573,6 +620,92 @@
       });
 
       modal.style.display = 'flex';
+    }
+
+    /* ====== ENVÍO DE RESULTADOS A LA HOJA DE CÁLCULO ====== */
+    const SHEET_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyiOndS6GMYhgiSGLVAXUOOHhMKtBXqcLUeOppbNZIkrxU-HiMlgmhlYCj1xYZQG0io/exec";
+    const BLOQUEO_ENVIO_MS = 5 * 60 * 1000; // 5 minutos tras un envío correcto
+    let enviando = false;
+    let lockTimer = null;
+
+    function setEstadoEnvio(texto, cls) {
+      const el = document.getElementById('estado-envio');
+      el.innerText = texto;
+      el.className = cls || '';
+    }
+
+    function iniciarBloqueoEnvio() {
+      const btn = document.getElementById('btn-enviar');
+      const hasta = Date.now() + BLOQUEO_ENVIO_MS;
+      btn.disabled = true;
+      clearInterval(lockTimer);
+      const tick = () => {
+        const resta = hasta - Date.now();
+        if (resta <= 0) {
+          clearInterval(lockTimer);
+          btn.disabled = false;
+          btn.innerText = '📤 Enviar resultados';
+          setEstadoEnvio('Ya puedes enviar de nuevo si quieres actualizar tu puntuación.', 'wait');
+          return;
+        }
+        const s = Math.ceil(resta / 1000);
+        btn.innerText = '🔒 Bloqueado ' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+      };
+      tick();
+      lockTimer = setInterval(tick, 500);
+    }
+
+    async function enviarResultados() {
+      if (!gameStarted || enviando) return;
+      const btn = document.getElementById('btn-enviar');
+      if (btn.disabled) return;
+      btn.blur();
+
+      enviando = true;
+      btn.disabled = true; // evita pulsaciones repetidas mientras se envía
+      setEstadoEnvio('Enviando resultados a la hoja de cálculo…', 'wait');
+
+      // Nota final de cada alumno = puntos x 0,4 (igual que se muestra en pantalla)
+      const nota1 = Math.round(state.p1.score * 0.4 * 10) / 10;
+      const nota2 = Math.round(state.p2.score * 0.4 * 10) / 10;
+      const ahora = new Date();
+      const params = new URLSearchParams({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+        fecha: ahora.toLocaleDateString('es-ES'),
+        hora: ahora.toLocaleTimeString('es-ES', { hour12: false }),
+        alumno1: state.p1.name,
+        alumno2: state.p2.name,
+        curso: getVal('student-group'),
+        criterio: 'Dron2 - ' + criterioEtiqueta,
+        total: (Math.round((nota1 + nota2) * 10) / 10).toFixed(1),
+        puntos_alumno1: nota1.toFixed(1),
+        puntos_alumno2: nota2.toFixed(1),
+        puntos_brutos_alumno1: state.p1.score,
+        puntos_brutos_alumno2: state.p2.score
+      });
+
+      let ok = false;
+      try {
+        // Primer intento: respuesta legible (confirma la recepción)
+        const resp = await fetch(SHEET_WEBAPP_URL, { method: 'POST', body: params });
+        const data = await resp.json();
+        if (!data.ok) throw new Error(data.error || 'Respuesta no válida');
+        ok = true;
+        setEstadoEnvio('✔ Resultados enviados correctamente.', 'ok');
+      } catch (e1) {
+        try {
+          // Segundo intento sin leer respuesta (el servidor ignora duplicados por ID)
+          await fetch(SHEET_WEBAPP_URL, { method: 'POST', mode: 'no-cors', body: params });
+          ok = true;
+          setEstadoEnvio('✔ Resultados enviados (no se pudo leer la confirmación del servidor).', 'ok');
+        } catch (e2) {
+          setEstadoEnvio('❌ No se pudieron enviar. Comprueba la conexión y pulsa de nuevo.', 'err');
+        }
+      }
+
+      enviando = false;
+      if (ok) iniciarBloqueoEnvio();   // envío correcto: bloqueo de 5 minutos
+      else btn.disabled = false;       // si falla, se puede reintentar
     }
 
     function abrirTeoria() {
