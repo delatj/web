@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conversor de actividades Hot Potatoes</title>
+<style>
+  :root {
+    --azul: #1e3a8a;
+    --azul-claro: #dbeafe;
+    --fondo: #f1f5f9;
+    --borde: #cbd5e1;
+    --texto: #0f172a;
+    --suave: #475569;
+    --ok: #166534;
+    --ok-fondo: #dcfce7;
+    --error: #b91c1c;
+    --error-fondo: #fee2e2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    background: var(--fondo);
+    color: var(--texto);
+    line-height: 1.5;
+  }
+  header { background: var(--azul); color: #fff; padding: 28px 20px 24px; }
+  header .in, main { max-width: 860px; margin: 0 auto; }
+  header h1 { margin: 0 0 6px; font-size: 1.7rem; font-weight: 700; }
+  header p { margin: 0; color: #dbeafe; max-width: 62ch; }
+  main { padding: 20px; display: grid; gap: 18px; }
+  section { background: #fff; border: 1px solid var(--borde); border-radius: 10px; padding: 20px; }
+  section h2 { margin: 0 0 4px; font-size: 1.15rem; color: var(--azul); }
+  section > p.ayuda { margin: 0 0 14px; color: var(--suave); }
+  .campos { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; }
+  .campos .ancho { grid-column: 1 / -1; }
+  @media (max-width: 680px) { .campos { grid-template-columns: 1fr; } }
+  label.campo { display: block; font-weight: 600; font-size: .92rem; }
+  label.campo small { display: block; font-weight: 400; color: var(--suave); margin-top: 2px; }
+  input[type="text"], input[type="number"], select {
+    width: 100%; margin-top: 5px; padding: 9px 10px; font: inherit;
+    border: 1px solid var(--borde); border-radius: 7px; background: #fff; color: var(--texto);
+  }
+  input:focus-visible, select:focus-visible, button:focus-visible, .zona:focus-within {
+    outline: 3px solid #2563eb; outline-offset: 1px;
+  }
+  .check { display: flex; gap: 8px; align-items: flex-start; font-size: .92rem; margin-top: 8px; cursor: pointer; }
+  .check input { margin-top: 4px; }
+  details.avanzado { margin-top: 14px; border-top: 1px solid var(--borde); padding-top: 12px; }
+  details.avanzado summary { cursor: pointer; font-weight: 600; color: var(--azul); }
+  details.avanzado .campos { margin-top: 12px; }
+
+  .zona {
+    display: block; border: 2px dashed #94a3b8; border-radius: 10px; padding: 30px 16px;
+    text-align: center; cursor: pointer; background: #f8fafc; transition: background .15s, border-color .15s;
+  }
+  .zona.sobre { background: var(--azul-claro); border-color: var(--azul); }
+  .zona strong { display: block; font-size: 1.05rem; color: var(--azul); }
+  .zona span { color: var(--suave); font-size: .92rem; }
+  .zona input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+
+  .btn {
+    font: inherit; font-weight: 600; cursor: pointer; border: 0; border-radius: 8px;
+    padding: 9px 16px; background: var(--azul); color: #fff;
+  }
+  .btn:hover { background: #172e6e; }
+  .btn.sec { background: #fff; color: var(--azul); border: 1px solid var(--azul); }
+  .btn.sec:hover { background: var(--azul-claro); }
+
+  #resultados[hidden] { display: none; }
+  .barra { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  .lista { display: grid; gap: 10px; }
+  .ficha {
+    display: grid; grid-template-columns: 1fr auto; gap: 8px 14px; align-items: center;
+    border: 1px solid var(--borde); border-left-width: 6px; border-radius: 8px; padding: 12px 14px;
+  }
+  .ficha.ok { border-left-color: #16a34a; }
+  .ficha.mal { border-left-color: var(--error); background: var(--error-fondo); }
+  .ficha .nombre { font-weight: 700; word-break: break-word; }
+  .ficha .meta { color: var(--suave); font-size: .9rem; }
+  .ficha .aviso { grid-column: 1 / -1; font-size: .88rem; color: #92400e; background: #fef3c7; border-radius: 6px; padding: 6px 10px; }
+  .ficha .err { grid-column: 1 / -1; color: var(--error); font-weight: 600; }
+
+  .que-hace { margin: 0; padding-left: 20px; color: var(--texto); }
+  .que-hace li { margin: 4px 0; }
+  footer { max-width: 860px; margin: 0 auto; padding: 0 20px 28px; color: var(--suave); font-size: .88rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="in">
+    <h1>Conversor de actividades Hot Potatoes</h1>
+    <p>Sube tus archivos de relacionar imágenes o de test y descarga la versión que pide los datos de la pareja y envía la nota a la hoja de cálculo.</p>
+  </div>
+</header>
+
+<main>
+
+  <section id="ajustes">
+    <h2>Ajustes</h2>
+    <p class="ayuda">Vienen rellenados con los mismos datos de tus simuladores. Solo tienes que tocarlos si algo cambia.</p>
+    <div class="campos">
+      <label class="campo ancho">Dirección de envío a la hoja de cálculo (Apps Script)
+        <input type="text" id="cfg-url" spellcheck="false"
+               value="https://script.google.com/macros/s/AKfycbyiOndS6GMYhgiSGLVAXUOOHhMKtBXqcLUeOppbNZIkrxU-HiMlgmhlYCj1xYZQG0io/exec">
+      </label>
+      <label class="campo">Nota mínima para enviar (%)
+        <input type="number" id="cfg-minimo" min="0" max="100" step="1" value="70">
+        <small>Por debajo de esta nota no se envía nada. Pon 0 para enviar siempre.</small>
+      </label>
+      <label class="campo">Extensión del archivo descargado
+        <select id="cfg-ext">
+          <option value="igual" selected>La misma que el archivo original</option>
+          <option value=".htm">.htm</option>
+          <option value=".html">.html</option>
+        </select>
+        <small>Así los enlaces entre actividades siguen funcionando.</small>
+      </label>
+    </div>
+
+    <details class="avanzado">
+      <summary>Opciones avanzadas</summary>
+      <div class="campos">
+        <label class="campo">Añadir al nombre del archivo (opcional)
+          <input type="text" id="cfg-sufijo" placeholder="Ej: _equipo" spellcheck="false">
+          <small>Vacío = mismo nombre que el original.</small>
+        </label>
+        <label class="campo">Dirección base de las imágenes (opcional)
+          <input type="text" id="cfg-base" placeholder="Ej: https://delatj.github.io/test/" spellcheck="false">
+          <small>Solo si las imágenes se cargan con rutas relativas y quieres apuntarlas al repositorio.</small>
+        </label>
+        <label class="check ancho">
+          <input type="checkbox" id="cfg-quitar-files" checked>
+          <span>Al usar la dirección base, quitar la carpeta «…_files/» que añade el navegador al guardar una página</span>
+        </label>
+      </div>
+    </details>
+  </section>
+
+  <section id="subida">
+    <h2>Archivos a convertir</h2>
+    <p class="ayuda">Admite varios a la vez, de los dos tipos.</p>
+    <label class="zona" id="zona" for="ficheros">
+      <strong>Pulsa aquí o arrastra tus archivos .htm / .html</strong>
+      <span>Actividades de relacionar imágenes, tests y rellenar huecos</span>
+      <input type="file" id="ficheros" accept=".htm,.html" multiple>
+    </label>
+  </section>
+
+  <section id="resultados" hidden>
+    <div class="barra">
+      <h2 style="margin:0">Archivos convertidos</h2>
+      <button type="button" class="btn" id="btn-todos">Descargar todos</button>
+    </div>
+    <div class="lista" id="lista"></div>
+  </section>
+
+  <section>
+    <h2>Qué hace el archivo convertido</h2>
+    <ol class="que-hace">
+      <li>Antes de empezar pide, de forma obligatoria, nombre y apellidos de los dos miembros del grupo (con casilla para trabajo en solitario) y el curso y grupo.</li>
+      <li>El tiempo de la actividad no empieza hasta que se rellenan esos datos.</li>
+      <li>Al terminar la actividad, o al acabarse el tiempo, muestra la nota en grande.</li>
+      <li>Si se llega a la nota mínima, envía fecha, hora, alumnos, curso, actividad y nota a la hoja de cálculo. Si no, avisa de que no se ha enviado y permite repetir.</li>
+    </ol>
+  </section>
+
+</main>
+
+<footer>
+  El archivo original no se modifica: se descarga una copia nueva. Funciona con las actividades de arrastrar y relacionar (JMatch), los tests (JQuiz) y los de rellenar huecos (JCloze).
+</footer>
+
+<script>
+/* ========================================================================
+   CÓDIGO QUE SE INCRUSTA EN CADA ACTIVIDAD CONVERTIDA
+   (se copia tal cual dentro del archivo descargado; debe ser autónomo)
+   ======================================================================== */
+function HPK_RUNTIME(CFG) {
+  var enviado = false;
+  var datos = null;
+  var resultado = null;
+
+  function limpiar(s) { return String(s || '').replace(/\s+/g, ' ').trim(); }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function nombreValido(n) {
+    return n.split(' ').filter(Boolean).length >= 2 && n.length >= 5 && /[A-Za-zÀ-ÿ]/.test(n);
+  }
+  function leer(k) { try { return sessionStorage.getItem('hpk_' + k) || ''; } catch (e) { return ''; } }
+  function guardar(k, v) { try { sessionStorage.setItem('hpk_' + k, v); } catch (e) {} }
+  function $(id) { return document.getElementById(id); }
+
+  /* Hot Potatoes bloquea la tecla Retroceso salvo que InTextBox sea true */
+  function enTexto(v) { try { window.InTextBox = v; } catch (e) {} }
+
+  /* ---------- Ventana inicial de datos del equipo ---------- */
+  function ventanaDatos(alAceptar) {
+    var ov = document.createElement('div');
+    ov.id = 'hpk-overlay';
+    ov.setAttribute('role', 'dialog');
+    ov.setAttribute('aria-modal', 'true');
+    ov.setAttribute('aria-labelledby', 'hpk-titulo');
+    ov.innerHTML = [
+      '<div class="hpk-caja">',
+      '<h2 id="hpk-titulo">Datos del equipo</h2>',
+      '<p class="hpk-act">' + esc(CFG.actividad) + '</p>',
+      '<p class="hpk-info">Escribe nombre y apellidos de los dos miembros del grupo. Sin estos datos no se puede empezar.</p>',
+      '<div class="hpk-par">',
+      '<div class="hpk-tarjeta"><h3>Alumno/a 1</h3>',
+      '<label for="hpk-a1">Nombre y apellidos</label>',
+      '<input type="text" id="hpk-a1" autocomplete="off" placeholder="Ej: Lucía Pérez Gómez"></div>',
+      '<div class="hpk-tarjeta"><h3>Alumno/a 2</h3>',
+      '<label for="hpk-a2">Nombre y apellidos</label>',
+      '<input type="text" id="hpk-a2" autocomplete="off" placeholder="Ej: Marcos Díaz Ruiz"></div>',
+      '</div>',
+      '<label class="hpk-solo"><input type="checkbox" id="hpk-solo"> Trabajo en solitario (sin pareja)</label>',
+      '<div class="hpk-grupo"><label for="hpk-curso">Curso y grupo</label>',
+      '<input type="text" id="hpk-curso" autocomplete="off" placeholder="Ej: 2º ESO A"></div>',
+      '<div id="hpk-err" class="hpk-err" role="alert"></div>',
+      '<button type="button" id="hpk-go" class="hpk-btn">Empezar la actividad</button>',
+      '</div>'
+    ].join('');
+    document.body.appendChild(ov);
+
+    $('hpk-a1').value = leer('a1');
+    $('hpk-a2').value = leer('a2');
+    $('hpk-curso').value = leer('curso');
+    if (leer('solo') === '1') { $('hpk-solo').checked = true; }
+
+    function alternarSolo() {
+      var solo = $('hpk-solo').checked;
+      $('hpk-a2').disabled = solo;
+      if (solo) { $('hpk-a2').value = ''; }
+    }
+    alternarSolo();
+    $('hpk-solo').addEventListener('change', alternarSolo);
+
+    ov.addEventListener('focusin', function () { enTexto(true); });
+    ov.addEventListener('focusout', function () { enTexto(false); });
+
+    function validar() {
+      var a1 = limpiar($('hpk-a1').value);
+      var a2 = limpiar($('hpk-a2').value);
+      var curso = limpiar($('hpk-curso').value);
+      var solo = $('hpk-solo').checked;
+      var m = [];
+      if (!nombreValido(a1)) { m.push('Escribe nombre y apellidos del alumno/a 1.'); }
+      if (!solo) {
+        if (!nombreValido(a2)) { m.push('Escribe nombre y apellidos del alumno/a 2 (o marca «Trabajo en solitario»).'); }
+        else if (a1.toLowerCase() === a2.toLowerCase()) { m.push('Los dos alumnos no pueden tener el mismo nombre.'); }
+      }
+      if (curso.length < 2) { m.push('Indica el curso y grupo.'); }
+      if (m.length) {
+        $('hpk-err').innerHTML = m.map(esc).join('<br>');
+        $('hpk-err').className = 'hpk-err hpk-ver';
+        return;
+      }
+      datos = { alumno1: a1, alumno2: solo ? '' : a2, curso: curso };
+      guardar('a1', a1); guardar('a2', solo ? '' : a2); guardar('curso', curso); guardar('solo', solo ? '1' : '0');
+      enTexto(false);
+      ov.parentNode.removeChild(ov);
+      setTimeout(alAceptar, 0);
+    }
+
+    $('hpk-go').addEventListener('click', validar);
+    ov.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && e.target && e.target.tagName === 'INPUT' && e.target.type === 'text') { validar(); }
+    });
+    setTimeout(function () { try { $('hpk-a1').focus(); } catch (e) {} }, 50);
+  }
+
+  /* ---------- Cálculo de aciertos (informativo) ---------- */
+  function aciertos() {
+    try {
+      var D = window.DragEx;
+      if (D && D.RightItems && D.GetLeftItemByOrigPos) {
+        var tot = 0, ok = 0;
+        D.RightItems.forEach(function (RI) {
+          if (D.GetLeftItemByOrigPos(RI.OrigPos) !== null) {
+            tot++;
+            if (RI.MatchedWith !== -1) {
+              var LI = D.GetLeftItemByOrigPos(RI.MatchedWith);
+              if (LI && RI.Groups.indexOf(LI.Group) > -1) { ok++; }
+            }
+          }
+        });
+        return ok + '/' + tot;
+      }
+      if (window.State && window.QsToShow !== undefined) {
+        var c = 0;
+        for (var q = 0; q < window.State.length; q++) {
+          if (window.State[q] != null && window.State[q][0] >= 1) { c++; }
+        }
+        return c + '/' + window.QsToShow;
+      }
+    } catch (e) {}
+    return '';
+  }
+
+  /* ---------- Resultado y envío ---------- */
+  function pintarResultado() {
+    var r = resultado;
+    var caja = $('hpk-res');
+    if (!caja) {
+      caja = document.createElement('div');
+      caja.id = 'hpk-res';
+      document.body.appendChild(caja);
+    }
+    caja.className = r.pasa ? 'hpk-res hpk-res-ok' : 'hpk-res hpk-res-mal';
+    var equipo = esc(r.alumno1) + (r.alumno2 ? ' y ' + esc(r.alumno2) : ' (trabajo en solitario)');
+    var msg;
+    if (r.pasa) {
+      msg = '✔ Actividad superada. Puedes repetirla si quieres subir nota.';
+    } else {
+      msg = '✘ Insuficiente: hay que llegar al ' + CFG.minimo + '%. Los datos NO se han enviado. Pulsa «Repetir actividad» para intentarlo de nuevo.';
+    }
+    caja.innerHTML = [
+      '<button type="button" class="hpk-x" id="hpk-ocultar" aria-label="Ocultar resultado">✕</button>',
+      '<div class="hpk-nota">' + r.pct + '%</div>',
+      '<div class="hpk-cuerpo">',
+      '<div class="hpk-equipo">' + equipo + ' · ' + esc(r.curso) + (r.aciertos ? ' · aciertos ' + esc(r.aciertos) : '') + '</div>',
+      '<div class="hpk-msg">' + msg + '</div>',
+      '<div id="hpk-estado" class="hpk-estado"></div>',
+      '<div class="hpk-acciones">',
+      '<button type="button" class="hpk-btn" id="hpk-repetir">Repetir actividad</button>',
+      '<button type="button" class="hpk-btn hpk-btn-sec" id="hpk-reintento" style="display:none">Reintentar envío</button>',
+      '</div></div>'
+    ].join('');
+    $('hpk-ocultar').addEventListener('click', function () { caja.style.display = 'none'; });
+    $('hpk-repetir').addEventListener('click', function () { location.reload(); });
+    $('hpk-reintento').addEventListener('click', function () { enviar(); });
+  }
+
+  function estado(clase, texto) {
+    var e = $('hpk-estado');
+    if (!e) { return; }
+    e.className = 'hpk-estado ' + clase;
+    e.textContent = texto;
+  }
+
+  var yaEnviado = false;
+  function enviar() {
+    if (!resultado || !resultado.pasa || yaEnviado) { return; }
+    var re = $('hpk-reintento');
+    if (re) { re.style.display = 'none'; }
+    if (!CFG.url) {
+      estado('hpk-aviso', '⚠ El envío a la hoja de cálculo no está configurado. Avisa a tu profesor/a.');
+      return;
+    }
+    estado('hpk-aviso', 'Enviando resultados a la hoja de cálculo…');
+    var ahora = new Date();
+    var params = new URLSearchParams({
+      id: resultado.id,
+      fecha: ahora.toLocaleDateString('es-ES'),
+      hora: ahora.toLocaleTimeString('es-ES', { hour12: false }),
+      alumno1: resultado.alumno1,
+      alumno2: resultado.alumno2,
+      curso: resultado.curso,
+      criterio: CFG.actividad,
+      total: resultado.pct,
+      prisma: '',
+      bolsillo: '',
+      tablas: '',
+      test: resultado.pct,
+      aciertos: resultado.aciertos,
+      actividad: CFG.actividad,
+      tipo: CFG.tipo
+    });
+    fetch(CFG.url, { method: 'POST', body: params })
+      .then(function (resp) { return resp.json(); })
+      .then(function (data) {
+        if (!data.ok) { throw new Error(data.error || 'Respuesta no válida'); }
+        yaEnviado = true;
+        estado('hpk-bien', '✔ Resultados enviados correctamente a la hoja de cálculo.');
+      })
+      .catch(function () {
+        /* Segundo intento sin leer la respuesta (el servidor ignora duplicados por id) */
+        fetch(CFG.url, { method: 'POST', mode: 'no-cors', body: params })
+          .then(function () {
+            yaEnviado = true;
+            estado('hpk-bien', '✔ Resultados enviados (no se pudo leer la confirmación del servidor).');
+          })
+          .catch(function () {
+            estado('hpk-mal', '❌ No se pudieron enviar los resultados. Comprueba la conexión y pulsa «Reintentar envío».');
+            var b = $('hpk-reintento');
+            if (b) { b.style.display = 'inline-block'; }
+          });
+      });
+  }
+
+  function terminar() {
+    var pct = Number(window.Score);
+    if (isNaN(pct)) { pct = 0; }
+    pct = Math.max(0, Math.min(100, Math.round(pct)));
+    resultado = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+      alumno1: datos ? datos.alumno1 : '',
+      alumno2: datos ? datos.alumno2 : '',
+      curso: datos ? datos.curso : '',
+      pct: pct,
+      aciertos: aciertos(),
+      pasa: pct >= CFG.minimo
+    };
+    pintarResultado();
+    if (resultado.pasa) { enviar(); }
+  }
+
+  /* La actividad termina cuando Hot Potatoes marca Locked y Finished */
+  function revisar() {
+    if (enviado) { return; }
+    if (window.Locked === true && window.Finished === true) {
+      enviado = true;
+      terminar();
+    }
+  }
+
+  function envolver() {
+    ['CheckFinished', 'CheckAnswers'].forEach(function (n) {
+      var o = window[n];
+      if (typeof o === 'function' && !o.__hpk) {
+        var nueva = function () {
+          var r = o.apply(this, arguments);
+          try { revisar(); } catch (e) {}
+          return r;
+        };
+        nueva.__hpk = true;
+        window[n] = nueva;
+      }
+    });
+  }
+  envolver();
+
+  window.HPK_iniciar = function (arranque) {
+    envolver();
+    ventanaDatos(function () {
+      if (typeof arranque === 'function') { arranque(); }
+    });
+  };
+
+  if (!CFG.onloadReescrito) {
+    window.addEventListener('load', function () { window.HPK_iniciar(null); });
+  }
+}
+
+/* ========================================================================
+   ESTILOS DE LA VENTANA DE DATOS Y DEL RESULTADO (prefijo hpk- para no
+   chocar con los estilos propios de Hot Potatoes)
+   ======================================================================== */
+var HPK_CSS = [
+  '#hpk-overlay{position:fixed;inset:0;z-index:2147483000;background:#f1f5f9;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:24px 14px;font-family:"Segoe UI",system-ui,-apple-system,Arial,sans-serif;}',
+  '#hpk-overlay,#hpk-overlay div,#hpk-overlay p,#hpk-overlay label,#hpk-overlay h2,#hpk-overlay h3{color:#0f172a;font-size:16px;text-align:left;box-sizing:border-box;}',
+  '#hpk-overlay .hpk-caja{background:#fff;border:1px solid #cbd5e1;border-radius:12px;padding:24px;max-width:640px;width:100%;margin:auto;box-shadow:0 6px 24px rgba(15,23,42,.12);}',
+  '#hpk-overlay h2{margin:0 0 4px;font-size:1.5rem;color:#1e3a8a;}',
+  '#hpk-overlay .hpk-act{margin:0 0 10px;font-weight:700;}',
+  '#hpk-overlay .hpk-info{margin:0 0 16px;color:#475569;}',
+  '#hpk-overlay .hpk-par{display:grid;grid-template-columns:1fr 1fr;gap:14px;}',
+  '@media (max-width:600px){#hpk-overlay .hpk-par{grid-template-columns:1fr;}}',
+  '#hpk-overlay .hpk-tarjeta{border:1px solid #cbd5e1;border-radius:10px;padding:14px;background:#f8fafc;}',
+  '#hpk-overlay h3{margin:0 0 10px;font-size:1rem;color:#1e3a8a;}',
+  '#hpk-overlay label{display:block;font-weight:600;font-size:.92rem;margin-bottom:4px;}',
+  '#hpk-overlay input[type=text]{box-sizing:border-box;display:block;width:100%;padding:9px 10px;font-size:1rem;border:1px solid #94a3b8;border-radius:7px;background:#fff;color:#0f172a;font-family:inherit;}',
+  '#hpk-overlay input[type=text]:disabled{background:#e2e8f0;}',
+  '#hpk-overlay input:focus-visible,#hpk-overlay button:focus-visible{outline:3px solid #2563eb;outline-offset:1px;}',
+  '#hpk-overlay .hpk-solo{display:flex;align-items:center;gap:8px;font-weight:400;margin:14px 0;cursor:pointer;}',
+  '#hpk-overlay .hpk-grupo{margin-bottom:12px;}',
+  '#hpk-overlay .hpk-err{display:none;background:#fee2e2;color:#b91c1c;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-weight:600;}',
+  '#hpk-overlay .hpk-err.hpk-ver{display:block;color:#b91c1c;}',
+  '.hpk-btn{font-family:"Segoe UI",system-ui,Arial,sans-serif;font-size:1rem;font-weight:700;border:0;border-radius:8px;padding:11px 20px;background:#1e3a8a;color:#fff;cursor:pointer;display:inline-block;}',
+  '.hpk-btn:hover{background:#172e6e;}',
+  '.hpk-btn-sec{background:#fff;color:#1e3a8a;border:1px solid #1e3a8a;}',
+  '.hpk-btn-sec:hover{background:#dbeafe;}',
+  '#hpk-res{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:2147482000;width:min(760px,calc(100% - 20px));display:flex;gap:18px;align-items:center;background:#fff;border:3px solid #64748b;border-radius:14px;padding:14px 38px 14px 18px;box-shadow:0 8px 28px rgba(15,23,42,.3);font-family:"Segoe UI",system-ui,Arial,sans-serif;}',
+  '#hpk-res,#hpk-res div{color:#0f172a;font-size:15px;text-align:left;}',
+  '#hpk-res.hpk-res-ok{border-color:#16a34a;background:#f0fdf4;}',
+  '#hpk-res.hpk-res-mal{border-color:#b91c1c;background:#fef2f2;}',
+  '#hpk-res .hpk-nota{font-size:3.4rem;font-weight:800;line-height:1;min-width:2.6ch;text-align:center;}',
+  '#hpk-res.hpk-res-ok .hpk-nota{color:#166534;}',
+  '#hpk-res.hpk-res-mal .hpk-nota{color:#b91c1c;}',
+  '#hpk-res .hpk-equipo{font-weight:700;margin-bottom:4px;}',
+  '#hpk-res .hpk-msg{margin-bottom:6px;}',
+  '#hpk-res .hpk-estado{margin-bottom:8px;font-weight:600;}',
+  '#hpk-res .hpk-estado.hpk-bien{color:#166534;}',
+  '#hpk-res .hpk-estado.hpk-mal{color:#b91c1c;}',
+  '#hpk-res .hpk-estado.hpk-aviso{color:#92400e;}',
+  '#hpk-res .hpk-acciones{display:flex;gap:8px;flex-wrap:wrap;}',
+  '#hpk-res .hpk-x{position:absolute;top:6px;right:8px;border:0;background:transparent;font-size:1.1rem;cursor:pointer;color:#475569;padding:4px 8px;}',
+  '@media (max-width:560px){#hpk-res{flex-direction:column;text-align:center;align-items:stretch;}#hpk-res .hpk-nota{font-size:2.6rem;}}'
+].join('\n');
+
+/* ========================================================================
+   LÓGICA DEL CONVERSOR
+   ======================================================================== */
+var convertidos = [];   // {nombre, blob, ...}
+
+function decodificar(buf) {
+  var bytes = new Uint8Array(buf);
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+  } catch (e) {
+    return new TextDecoder('windows-1252').decode(bytes);
+  }
+}
+
+function entidadesATexto(s) {
+  var t = document.createElement('textarea');
+  t.innerHTML = s;
+  return t.value;
+}
+
+function analizar(texto) {
+  var m = texto.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  var titulo = m ? entidadesATexto(m[1]).replace(/\s+/g, ' ').trim() : '';
+  var esRelacionar = /var\s+DragEx\b|DragEx\s*\.\s*CheckAnswers/.test(texto);
+  var tieneFinished = /function\s+CheckFinished\s*\(/.test(texto);
+  var tieneChecks = /function\s+CheckAnswers\s*\(/.test(texto);
+  var tipo = null, corto = '';
+  if (esRelacionar) { tipo = 'Relacionar / arrastrar imágenes (JMatch)'; corto = 'relacionar'; }
+  else if (tieneFinished) { tipo = 'Test o rellenar huecos (JQuiz / JCloze)'; corto = 'test'; }
+  else if (tieneChecks) { tipo = 'Otro ejercicio de Hot Potatoes'; corto = 'otro'; }
+  return { titulo: titulo, tipo: tipo, corto: corto };
+}
+
+function esRutaRelativa(r) {
+  return !/^(?:[a-z][a-z0-9+.-]*:|\/\/|\/|#)/i.test(r);
+}
+
+function contarImagenesRelativas(texto) {
+  var n = 0;
+  texto.replace(/<img\b[^>]*?\bsrc\s*=\s*\\?["']([^"'\\>]+)/gi, function (m, ruta) {
+    if (esRutaRelativa(ruta)) { n++; }
+    return m;
+  });
+  return n;
+}
+
+function reescribirImagenes(texto, base, quitarFiles) {
+  var b = base.trim();
+  if (!b) { return { texto: texto, n: 0 }; }
+  if (!/\/$/.test(b)) { b += '/'; }
+  var n = 0;
+  var salida = texto.replace(/(<img\b[^>]*?\bsrc\s*=\s*\\?["'])([^"'\\>]+)/gi, function (m, pre, ruta) {
+    if (!esRutaRelativa(ruta)) { return m; }
+    var r = ruta.replace(/^\.\//, '');
+    if (quitarFiles) { r = r.replace(/^[^\/]*_files\//i, ''); }
+    if (r.indexOf('%') === -1) { r = encodeURI(r); }
+    n++;
+    return pre + b + r;
+  });
+  return { texto: salida, n: n };
+}
+
+function convertir(texto, opc) {
+  if (texto.indexOf('HPK:inicio') !== -1) {
+    throw new Error('Este archivo ya está convertido.');
+  }
+  var info = analizar(texto);
+  if (!info.tipo) {
+    throw new Error('No parece una actividad de Hot Potatoes (no se encuentran sus funciones de corrección).');
+  }
+  var out = texto;
+  var avisos = [];
+
+  // Codificación: se guarda siempre en UTF-8
+  if (/<meta[^>]*charset/i.test(out)) {
+    out = out.replace(/(<meta[^>]*charset\s*=\s*["']?)[\w-]+/i, '$1utf-8');
+  } else {
+    out = out.replace(/<head[^>]*>/i, function (m) { return m + '<meta charset="utf-8">'; });
+  }
+
+  // Imágenes
+  var nReescritas = 0;
+  if (opc.base.trim()) {
+    var r = reescribirImagenes(out, opc.base, opc.quitarFiles);
+    out = r.texto; nReescritas = r.n;
+  } else {
+    var rel = contarImagenesRelativas(out);
+    if (rel > 0) {
+      avisos.push('Tiene ' + rel + ' imágenes con ruta relativa. Deben estar en el mismo sitio que el archivo, o puedes indicar la dirección base en las opciones avanzadas.');
+    }
+  }
+
+  // El arranque de la actividad (onload del body) se retrasa hasta que se rellenan los datos
+  var onloadReescrito = false;
+  out = out.replace(/(<body\b[^>]*?\sonload\s*=\s*)(["'])([\s\S]*?)\2/i, function (m, a, q, x) {
+    onloadReescrito = true;
+    return a + q + 'HPK_iniciar(function(){' + x + '})' + q;
+  });
+
+  var cfg = {
+    url: opc.url.trim(),
+    minimo: opc.minimo,
+    tipo: info.corto,
+    actividad: info.titulo || 'Actividad Hot Potatoes',
+    onloadReescrito: onloadReescrito
+  };
+  var cfgJson = JSON.stringify(cfg).replace(/</g, '\\u003c');
+
+  var bloque = '\n<!-- HPK:inicio -->\n' +
+    '<style id="hpk-css">\n' + HPK_CSS + '\n</style>\n' +
+    '<script id="hpk-js">\n(' + HPK_RUNTIME.toString() + ')(' + cfgJson + ');\n<\/script>\n' +
+    '<!-- HPK:fin -->\n';
+
+  if (/<\/head>/i.test(out)) {
+    out = out.replace(/<\/head>/i, function () { return bloque + '</head>'; });
+  } else if (/<body\b/i.test(out)) {
+    out = out.replace(/<body\b/i, function (m) { return bloque + m; });
+  } else {
+    throw new Error('No se encuentra la etiqueta </head> ni <body> en el archivo.');
+  }
+
+  return { texto: out, info: info, avisos: avisos, nReescritas: nReescritas, onloadReescrito: onloadReescrito };
+}
+
+function nombreSalida(original, sufijo, extOpc) {
+  var m = original.match(/^(.*?)(\.[^.]+)?$/);
+  var base = m[1];
+  var ext = m[2] || '.html';
+  if (extOpc !== 'igual') { ext = extOpc; }
+  return base + sufijo + ext;
+}
+
+function leerAjustes() {
+  var min = parseInt(document.getElementById('cfg-minimo').value, 10);
+  if (isNaN(min)) { min = 70; }
+  min = Math.max(0, Math.min(100, min));
+  return {
+    url: document.getElementById('cfg-url').value,
+    minimo: min,
+    ext: document.getElementById('cfg-ext').value,
+    sufijo: document.getElementById('cfg-sufijo').value.trim(),
+    base: document.getElementById('cfg-base').value,
+    quitarFiles: document.getElementById('cfg-quitar-files').checked
+  };
+}
+
+function descargar(item) {
+  var url = URL.createObjectURL(item.blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = item.nombre;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+}
+
+function crearFicha(f) {
+  var d = document.createElement('div');
+  d.className = 'ficha ' + (f.error ? 'mal' : 'ok');
+
+  var izq = document.createElement('div');
+  var n = document.createElement('div');
+  n.className = 'nombre';
+  n.textContent = f.error ? f.original : f.nombre;
+  izq.appendChild(n);
+  var meta = document.createElement('div');
+  meta.className = 'meta';
+  if (!f.error) {
+    meta.textContent = f.tipo + (f.titulo ? ' · ' + f.titulo : '');
+    if (f.nombre !== f.original) { meta.textContent += ' · original: ' + f.original; }
+  }
+  if (meta.textContent) { izq.appendChild(meta); }
+  d.appendChild(izq);
+
+  if (!f.error) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'btn';
+    b.textContent = 'Descargar';
+    b.addEventListener('click', function () { descargar(f); });
+    d.appendChild(b);
+    f.avisos.forEach(function (t) {
+      var av = document.createElement('div');
+      av.className = 'aviso';
+      av.textContent = t;
+      d.appendChild(av);
+    });
+  } else {
+    var e = document.createElement('div');
+    e.className = 'err';
+    e.textContent = f.error;
+    d.appendChild(e);
+  }
+  return d;
+}
+
+function procesar(lista) {
+  var ajustes = leerAjustes();
+  var pendientes = Array.prototype.slice.call(lista);
+  if (!pendientes.length) { return; }
+  var zonaLista = document.getElementById('lista');
+  document.getElementById('resultados').hidden = false;
+
+  pendientes.forEach(function (file) {
+    var lector = new FileReader();
+    lector.onload = function () {
+      var ficha;
+      try {
+        var texto = decodificar(lector.result);
+        var r = convertir(texto, ajustes);
+        var nombre = nombreSalida(file.name, ajustes.sufijo, ajustes.ext);
+        ficha = {
+          original: file.name,
+          nombre: nombre,
+          blob: new Blob([r.texto], { type: 'text/html;charset=utf-8' }),
+          tipo: r.info.tipo,
+          titulo: r.info.titulo,
+          avisos: r.avisos
+        };
+        convertidos.push(ficha);
+      } catch (err) {
+        ficha = { original: file.name, error: err.message };
+      }
+      zonaLista.appendChild(crearFicha(ficha));
+    };
+    lector.onerror = function () {
+      zonaLista.appendChild(crearFicha({ original: file.name, error: 'No se ha podido leer el archivo.' }));
+    };
+    lector.readAsArrayBuffer(file);
+  });
+}
+
+(function iniciar() {
+  var entrada = document.getElementById('ficheros');
+  var zona = document.getElementById('zona');
+
+  entrada.addEventListener('change', function () {
+    procesar(entrada.files);
+    entrada.value = '';
+  });
+
+  ['dragenter', 'dragover'].forEach(function (ev) {
+    zona.addEventListener(ev, function (e) { e.preventDefault(); zona.classList.add('sobre'); });
+  });
+  ['dragleave', 'drop'].forEach(function (ev) {
+    zona.addEventListener(ev, function (e) { e.preventDefault(); zona.classList.remove('sobre'); });
+  });
+  zona.addEventListener('drop', function (e) {
+    if (e.dataTransfer && e.dataTransfer.files) { procesar(e.dataTransfer.files); }
+  });
+
+  document.getElementById('btn-todos').addEventListener('click', function () {
+    convertidos.forEach(function (item, i) {
+      setTimeout(function () { descargar(item); }, i * 500);
+    });
+  });
+})();
+</script>
+</body>
+</html>
