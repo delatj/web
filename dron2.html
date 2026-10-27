@@ -219,6 +219,9 @@
         <input type="text" id="name2-first" autocomplete="off" placeholder="Nombre. Ej: Marcos"><br>
         <input type="text" id="name2-last" autocomplete="off" placeholder="Apellidos. Ej: Díaz Ruiz">
       </div>
+      <label style="display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; margin:8px 0;">
+        <input type="checkbox" id="solo-check" onchange="toggleSolo()"> Un único jugador (sin pareja)
+      </label>
       <input type="text" id="student-group" autocomplete="off" placeholder="Curso y grupo. Ej: 2º ESO A">
       <div id="team-error"></div>
       <button onclick="startGame()" style="margin-top:15px; padding:15px 40px; background:var(--primary); color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">INICIAR</button>
@@ -438,19 +441,33 @@
     function cleanName(v) { return v.trim().replace(/\s+/g, ' '); }
     const getVal = id => cleanName(document.getElementById(id).value);
 
+    let soloMode = false;
+
+    function toggleSolo() {
+      const solo = document.getElementById('solo-check').checked;
+      ['name2-first', 'name2-last'].forEach(id => {
+        const el = document.getElementById(id);
+        el.disabled = solo;
+        if (solo) el.value = '';
+      });
+    }
+
     function startGame() {
+      soloMode = document.getElementById('solo-check').checked;
       const err = document.getElementById('team-error');
       const msgs = [];
       if (getVal('name1-first').length < 2) msgs.push('Escribe el nombre del alumno/a 1.');
       if (getVal('name1-last').length < 2) msgs.push('Escribe los apellidos del alumno/a 1.');
-      if (getVal('name2-first').length < 2) msgs.push('Escribe el nombre del alumno/a 2.');
-      if (getVal('name2-last').length < 2) msgs.push('Escribe los apellidos del alumno/a 2.');
+      if (!soloMode) {
+        if (getVal('name2-first').length < 2) msgs.push('Escribe el nombre del alumno/a 2 (o marca «Un único jugador»).');
+        if (getVal('name2-last').length < 2) msgs.push('Escribe los apellidos del alumno/a 2 (o marca «Un único jugador»).');
+      }
       if (!getVal('student-group')) msgs.push('Indica el curso y grupo.');
       if (msgs.length) { err.innerHTML = msgs.join('<br>'); return; }
       err.innerHTML = '';
 
       state.p1.name = getVal('name1-first') + ' ' + getVal('name1-last');
-      state.p2.name = getVal('name2-first') + ' ' + getVal('name2-last');
+      state.p2.name = soloMode ? 'Jugador 2' : getVal('name2-first') + ' ' + getVal('name2-last');
       document.getElementById('label-n1').innerText = state.p1.name;
       document.getElementById('label-n2').innerText = state.p2.name;
       
@@ -655,6 +672,62 @@
       lockTimer = setInterval(tick, 500);
     }
 
+    // Registros pendientes de enviar (uno por alumno). Se conservan si algún envío falla,
+    // para reintentar solo los que faltan sin duplicar los que ya llegaron.
+    let registrosPendientes = null;
+
+    async function enviarRegistro(params) {
+      try {
+        // Primer intento: respuesta legible (confirma la recepción)
+        const resp = await fetch(SHEET_WEBAPP_URL, { method: 'POST', body: params });
+        const data = await resp.json();
+        if (!data.ok) throw new Error(data.error || 'Respuesta no válida');
+        return true;
+      } catch (e1) {
+        try {
+          // Segundo intento sin leer respuesta (el servidor ignora duplicados por ID)
+          await fetch(SHEET_WEBAPP_URL, { method: 'POST', mode: 'no-cors', body: params });
+          return true;
+        } catch (e2) {
+          return false;
+        }
+      }
+    }
+
+    function construirRegistros() {
+      const ahora = new Date();
+      const fecha = ahora.toLocaleDateString('es-ES');
+      const hora = ahora.toLocaleTimeString('es-ES', { hour12: false });
+      const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+      // Un registro por alumno: solo su nombre y SU nota final (puntos x 0,4, como se ve en pantalla),
+      // sin el nombre del compañero/a
+      const crear = (nombre, puntosBrutos) => {
+        const nota = Math.round(puntosBrutos * 0.4 * 10) / 10;
+        return {
+          enviado: false,
+          etiqueta: nombre + ' ' + nota.toFixed(1).replace('.', ','),
+          params: new URLSearchParams({
+            id: uid(),
+            fecha, hora,
+            alumno1: nombre,
+            alumno2: '',
+            curso: getVal('student-group'),
+            criterio: 'Dron2 - ' + criterioEtiqueta,
+            total: nota.toFixed(1),
+            puntos_alumno1: nota.toFixed(1),
+            puntos_alumno2: '',
+            puntos_brutos_alumno1: puntosBrutos,
+            puntos_brutos_alumno2: ''
+          })
+        };
+      };
+
+      const regs = [crear(state.p1.name, state.p1.score)];
+      if (!soloMode) regs.push(crear(state.p2.name, state.p2.score));
+      return regs;
+    }
+
     async function enviarResultados() {
       if (!gameStarted || enviando) return;
       const btn = document.getElementById('btn-enviar');
@@ -665,47 +738,24 @@
       btn.disabled = true; // evita pulsaciones repetidas mientras se envía
       setEstadoEnvio('Enviando resultados a la hoja de cálculo…', 'wait');
 
-      // Nota final de cada alumno = puntos x 0,4 (igual que se muestra en pantalla)
-      const nota1 = Math.round(state.p1.score * 0.4 * 10) / 10;
-      const nota2 = Math.round(state.p2.score * 0.4 * 10) / 10;
-      const ahora = new Date();
-      const params = new URLSearchParams({
-        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
-        fecha: ahora.toLocaleDateString('es-ES'),
-        hora: ahora.toLocaleTimeString('es-ES', { hour12: false }),
-        alumno1: state.p1.name,
-        alumno2: state.p2.name,
-        curso: getVal('student-group'),
-        criterio: 'Dron2 - ' + criterioEtiqueta,
-        total: (Math.round((nota1 + nota2) * 10) / 10).toFixed(1),
-        puntos_alumno1: nota1.toFixed(1),
-        puntos_alumno2: nota2.toFixed(1),
-        puntos_brutos_alumno1: state.p1.score,
-        puntos_brutos_alumno2: state.p2.score
-      });
+      if (!registrosPendientes) registrosPendientes = construirRegistros();
 
-      let ok = false;
-      try {
-        // Primer intento: respuesta legible (confirma la recepción)
-        const resp = await fetch(SHEET_WEBAPP_URL, { method: 'POST', body: params });
-        const data = await resp.json();
-        if (!data.ok) throw new Error(data.error || 'Respuesta no válida');
-        ok = true;
-        setEstadoEnvio('✔ Resultados enviados correctamente.', 'ok');
-      } catch (e1) {
-        try {
-          // Segundo intento sin leer respuesta (el servidor ignora duplicados por ID)
-          await fetch(SHEET_WEBAPP_URL, { method: 'POST', mode: 'no-cors', body: params });
-          ok = true;
-          setEstadoEnvio('✔ Resultados enviados (no se pudo leer la confirmación del servidor).', 'ok');
-        } catch (e2) {
-          setEstadoEnvio('❌ No se pudieron enviar. Comprueba la conexión y pulsa de nuevo.', 'err');
-        }
+      for (const reg of registrosPendientes) {
+        if (reg.enviado) continue;
+        reg.enviado = await enviarRegistro(reg.params);
       }
 
+      const todosEnviados = registrosPendientes.every(r => r.enviado);
       enviando = false;
-      if (ok) iniciarBloqueoEnvio();   // envío correcto: bloqueo de 5 minutos
-      else btn.disabled = false;       // si falla, se puede reintentar
+
+      if (todosEnviados) {
+        setEstadoEnvio('✔ Resultados enviados: ' + registrosPendientes.map(r => r.etiqueta).join(' · '), 'ok');
+        registrosPendientes = null;
+        iniciarBloqueoEnvio();      // envío correcto: bloqueo de 5 minutos
+      } else {
+        setEstadoEnvio('❌ No se pudieron enviar todos los datos. Comprueba la conexión y pulsa de nuevo.', 'err');
+        btn.disabled = false;       // si falla, se puede reintentar (solo se reenvía lo que faltó)
+      }
     }
 
     function abrirTeoria() {

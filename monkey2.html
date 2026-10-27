@@ -1,53 +1,84 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Donkey Kong - 2 Jugadores</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.js"></script>
+    <!-- p5.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
     <style>
+        /* Reset total para eliminar cualquier espacio superior o lateral */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        html, body {
+            width: 100%;
+            height: 100%;
+            background-color: #f4f4f9;
+            font-family: Arial, sans-serif;
+            overflow-x: hidden;
+        }
         body {
             display: flex;
             flex-direction: column;
             align-items: center;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: white;
-            overflow-x: hidden;
+            padding-top: 2px;
+        }
+        h1 {
+            margin: 2px 0;
+            font-size: 1.3rem;
+            color: #222;
+            line-height: 1.1;
         }
         #scoreboard {
             display: flex;
             justify-content: space-around;
             width: 700px;
-            font-size: 1.5rem;
+            font-size: 1.1rem;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 2px;
         }
         .score-val-large {
-            font-size: 3.5rem;
+            font-size: 2.2rem;
             font-weight: 900;
             display: inline-block;
             vertical-align: middle;
             color: #333;
+            line-height: 1;
         }
-        /* Contenedor principal que alinea instrucciones laterales y área de juego */
         #main-layout {
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            gap: 20px;
+            gap: 12px;
             width: 100%;
             max-width: 1200px;
-            margin-top: 10px;
+            margin-top: 0;
         }
         .side-instructions {
             width: 220px;
-            padding: 15px;
-            background-color: #f9f9f9;
+            padding: 8px 10px;
+            background-color: #ffffff;
             border: 1px solid #ccc;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 12px;
             color: #333;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .side-instructions h3 {
+            margin-top: 0;
+            margin-bottom: 4px;
+            font-size: 1rem;
+        }
+        .side-instructions p {
+            margin: 2px 0;
+        }
+        .side-instructions hr {
+            margin: 6px 0;
+            border: 0;
+            border-top: 1px solid #ddd;
         }
         #game-container {
             display: flex;
@@ -55,151 +86,179 @@
             align-items: center;
             width: 700px;
         }
+        /* Contenedor del Canvas p5.js con dimensiones exactas */
         #game-area {
             width: 700px;
             height: 450px;
             background-color: #ddd;
             position: relative;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        /* Asegurar que el canvas de p5 no añada márgenes inline ni desfases de bloque */
+        #game-area canvas {
+            display: block !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border-radius: 6px;
         }
         #key-display {
             display: flex;
             justify-content: space-between;
             width: 700px;
-            margin-top: 10px;
+            margin-top: 4px;
         }
         #key-display div {
-            width: 320px;
-            padding: 10px;
-            background-color: #f0f0f0;
+            width: 344px;
+            padding: 6px;
+            background-color: #ffffff;
             border: 1px solid #ccc;
+            border-radius: 6px;
             text-align: center;
             font-weight: bold;
+            font-size: 12px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
-        #player-zones {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            height: 100vh;
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: -1;
-        }
-        #player1-zone, #player2-zone {
-            width: 50%;
-            height: 100%;
-            transition: background-color 0.5s;
-        }
-        #player1-zone {
-            background-color: white;
-        }
-        #player2-zone {
-            background-color: white;
-        }
+        
+        /* Modal de nombres inicial */
         #player-names-modal {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             background-color: rgba(0, 0, 0, 0.8);
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            z-index: 10000;
         }
         #player-names-form {
             background-color: white;
-            padding: 30px;
+            padding: 20px;
             border-radius: 10px;
             text-align: center;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            max-width: 450px;
+            width: 90%;
         }
-        #player-names-form h2 {
-            margin-top: 0;
-            margin-bottom: 20px;
+        #player-names-form .team-card {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 6px 10px;
+            margin: 8px 0;
+            background: #f7f9fc;
         }
-        #player-names-form input {
-            margin: 10px;
-            padding: 12px;
-            width: 250px;
-            font-size: 16px;
-            border: 2px solid #ddd;
+        #player-names-form .team-card h3 { margin: 4px 0; font-size: 1rem; }
+        #team-error { color: #b71c1c; font-size: 0.85rem; min-height: 1em; margin-top: 4px; }
+        #player-names-form h2 { margin-top: 0; margin-bottom: 10px; font-size: 1.3rem; }
+        #player-names-form input[type="text"] {
+            margin: 4px;
+            padding: 8px;
+            width: 90%;
+            font-size: 14px;
+            border: 1px solid #ddd;
             border-radius: 5px;
         }
         #player-names-form button {
-            margin-top: 20px;
-            padding: 12px 30px;
-            font-size: 16px;
+            margin-top: 10px;
+            padding: 10px 25px;
+            font-size: 15px;
             background-color: #4CAF50;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
         }
-        #player-names-form button:hover {
-            background-color: #45a049;
+        
+        /* Panel Flotante Google Sheets */
+        #send-panel {
+            position: fixed; top: 6px; right: 6px; z-index: 900;
+            width: 200px; text-align: center;
+            background: rgba(255,255,255,0.95); border: 1px solid #333; border-radius: 8px;
+            padding: 6px;
         }
-
+        #send-btn {
+            padding: 6px 12px; font-size: 13px; font-weight: bold; color: white;
+            background-color: #e67e22; border: none; border-radius: 6px; cursor: pointer;
+            width: 100%;
+        }
+        #send-btn:disabled { background-color: #cbd5e1; color: #555; cursor: not-allowed; }
+        #send-status { font-size: 11px; margin-top: 4px; }
+        #send-status.ok { color: #1b5e20; }
+        #send-status.err { color: #b71c1c; }
+        #send-status.wait { color: #8a5a00; }
+        
+        /* Modal de Preguntas de Ciberseguridad */
         #quiz-modal {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             background-color: rgba(0, 0, 0, 0.85);
             display: none;
             justify-content: center;
             align-items: center;
-            z-index: 2000;
+            z-index: 20000;
         }
         #quiz-content {
             background-color: white;
-            padding: 35px;
-            border-radius: 15px;
+            padding: 20px;
+            border-radius: 12px;
             text-align: center;
-            width: 500px;
-            box-shadow: 0 0 30px rgba(0,0,0,0.5);
-            border: 4px solid #2196F3;
+            width: 480px;
+            max-width: 90%;
+            box-shadow: 0 0 25px rgba(0,0,0,0.5);
+            border: 3px solid #2196F3;
         }
-        #quiz-content h3 {
-            margin-top: 0;
-            color: #2196F3;
-            font-size: 22px;
-        }
-        #quiz-question {
-            font-size: 18px;
-            margin: 20px 0;
-            font-weight: bold;
-        }
+        #quiz-content h3 { margin-top: 0; color: #2196F3; font-size: 18px; }
+        #quiz-question { font-size: 15px; margin: 12px 0; font-weight: bold; }
         .quiz-option-btn {
             display: block;
             width: 100%;
-            padding: 12px;
-            margin: 10px 0;
+            padding: 8px;
+            margin: 6px 0;
             background-color: #f8f9fa;
-            border: 2px solid #ccc;
-            border-radius: 8px;
-            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
             cursor: pointer;
-            transition: all 0.2s;
         }
-        .quiz-option-btn:hover {
-            background-color: #e2e6ea;
-            border-color: #2196F3;
-        }
+        .quiz-option-btn:hover { background-color: #e2e6ea; border-color: #2196F3; }
     </style>
 </head>
 <body>
+    <!-- Modal de Registro Inicial -->
     <div id="player-names-modal" style="display: flex;">
         <div id="player-names-form">
-            <h2>Ingresa los nombres de los jugadores</h2>
-            <input type="text" id="player1-name" placeholder="Nombre del Jugador 1" required="">
-            <input type="text" id="player2-name" placeholder="Nombre del Jugador 2" required="">
+            <h2>Datos de los alumnos</h2>
+            <div class="team-card">
+                <h3 style="color:#3b3bd6">Jugador 1</h3>
+                <input type="text" id="p1-first" autocomplete="off" placeholder="Nombre. Ej: Lucía"><br>
+                <input type="text" id="p1-last" autocomplete="off" placeholder="Apellidos. Ej: Pérez Gómez">
+            </div>
+            <div class="team-card">
+                <h3 style="color:#d63b3b">Jugador 2</h3>
+                <input type="text" id="p2-first" autocomplete="off" placeholder="Nombre. Ej: Marcos"><br>
+                <input type="text" id="p2-last" autocomplete="off" placeholder="Apellidos. Ej: Díaz Ruiz">
+            </div>
+            <label style="display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; margin:6px 0; font-size: 13px;">
+                <input type="checkbox" id="solo-check" style="width:auto; margin:0;" onchange="toggleSolo()"> Un único jugador (sin pareja)
+            </label>
+            <input type="text" id="student-group" autocomplete="off" placeholder="Curso y grupo. Ej: 2º ESO A">
+            <div id="team-error"></div>
             <button id="start-game">Comenzar Juego</button>
         </div>
     </div>
 
+    <!-- Modal Quiz -->
     <div id="quiz-modal">
         <div id="quiz-content">
             <h3>🛡️ RETO DE CIBERSEGURIDAD Y REDES 🛡️</h3>
@@ -208,19 +267,24 @@
         </div>
     </div>
 
-    <div id="player-zones">
-        <div id="player1-zone"></div>
-        <div id="player2-zone"></div>
+    <!-- Panel de Envío de Resultados -->
+    <div id="send-panel">
+        <button id="send-btn" type="button" onmousedown="event.preventDefault()" onclick="sendResults()">📤 Enviar datos</button>
+        <div id="send-status"></div>
     </div>
-    
+
+    <!-- Título superior -->
     <h1>Donkey Kong - Modo 2 Jugadores</h1>
+    
+    <!-- Marcador -->
     <div id="scoreboard">
         <div><span id="label1">Jugador 1</span>: <span id="score1" class="score-val-large">0.0</span></div>
         <div><span id="label2">Jugador 2</span>: <span id="score2" class="score-val-large">0.0</span></div>
     </div>
     
+    <!-- Layout Principal -->
     <div id="main-layout">
-        <!-- Instrucciones Jugador 1 a la Izquierda -->
+        <!-- Instrucciones Izquierda (J1) -->
         <div class="side-instructions">
             <h3>Jugador 1</h3>
             <p><strong>Controles:</strong></p>
@@ -229,6 +293,7 @@
             <p>Pulsa <strong>X</strong> para ejecutar la secuencia.</p>
         </div>
 
+        <!-- Contenedor del Juego -->
         <div id="game-container">
             <div id="game-area"></div>
             <div id="key-display">
@@ -237,7 +302,7 @@
             </div>
         </div>
 
-        <!-- Instrucciones Jugador 2 a la Derecha -->
+        <!-- Instrucciones Derecha (J2) -->
         <div class="side-instructions">
             <h3>Jugador 2</h3>
             <p><strong>Controles:</strong></p>
@@ -259,6 +324,8 @@
         let player1Name = "";
         let player2Name = "";
         let activeQuizPlayer = null;
+        let zoneColor1 = "white";
+        let zoneColor2 = "white";
 
         const cybersecurityQuestions = [
             { q: "¿Qué es el phishing?", options: ["Un tipo de estafa para robar datos mediante falsos mensajes", "Un antivirus gratuito", "Una red social segura"], correct: 0 },
@@ -296,22 +363,52 @@
         function setup() {
             let canvas = createCanvas(700, 450);
             canvas.parent('game-area');
-            
             document.getElementById('start-game').addEventListener('click', startGame);
             generateRandomLadders();
         }
 
+        const SHEET_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyiOndS6GMYhgiSGLVAXUOOHhMKtBXqcLUeOppbNZIkrxU-HiMlgmhlYCj1xYZQG0io/exec";
+        const ACTIVIDAD = "Monkey2";
+        const BLOQUEO_ENVIO_MS = 5 * 60 * 1000;
+
+        let gameStarted = false;
+        let soloMode = false;
+        let sendingNow = false;
+        let lockTimer = null;
+        let pendingRecords = null;
+
+        function cleanName(v) { return v.trim().replace(/\s+/g, ' '); }
+        const getVal = id => cleanName(document.getElementById(id).value);
+
+        function toggleSolo() {
+            const solo = document.getElementById('solo-check').checked;
+            ['p2-first', 'p2-last'].forEach(id => {
+                const el = document.getElementById(id);
+                el.disabled = solo;
+                if (solo) el.value = '';
+            });
+        }
+
         function startGame() {
-            player1Name = document.getElementById('player1-name').value.trim();
-            player2Name = document.getElementById('player2-name').value.trim();
-            
-            if (!player1Name || !player2Name) {
-                alert("Por favor ingresa nombres para ambos jugadores");
-                return;
+            soloMode = document.getElementById('solo-check').checked;
+            const err = document.getElementById('team-error');
+            const msgs = [];
+            if (getVal('p1-first').length < 2) msgs.push('Escribe el nombre del jugador 1.');
+            if (getVal('p1-last').length < 2) msgs.push('Escribe los apellidos del jugador 1.');
+            if (!soloMode) {
+                if (getVal('p2-first').length < 2) msgs.push('Escribe el nombre del jugador 2 (o marca «Un único jugador»).');
+                if (getVal('p2-last').length < 2) msgs.push('Escribe los apellidos del jugador 2 (o marca «Un único jugador»).');
             }
+            if (!getVal('student-group')) msgs.push('Indica el curso y grupo.');
+            if (msgs.length) { err.innerHTML = msgs.join('<br>'); return; }
+            err.innerHTML = '';
+
+            player1Name = getVal('p1-first') + ' ' + getVal('p1-last');
+            player2Name = soloMode ? '' : getVal('p2-first') + ' ' + getVal('p2-last');
+            gameStarted = true;
             
             document.getElementById('label1').innerText = player1Name;
-            document.getElementById('label2').innerText = player2Name;
+            document.getElementById('label2').innerText = soloMode ? 'Jugador 2' : player2Name;
             
             document.getElementById('player-names-modal').style.display = 'none';
             
@@ -331,39 +428,48 @@
             mono2.visualY = mono2.initialPos.y;
             mono2.path = [];
             
-            updateScoreDisplay('score1', mono1.puntos, 'player1-zone');
-            updateScoreDisplay('score2', mono2.puntos, 'player2-zone');
+            updateScoreDisplay('score1', mono1.puntos, 1);
+            updateScoreDisplay('score2', mono2.puntos, 2);
             
-            document.getElementById('player1-zone').style.backgroundColor = "white";
-            document.getElementById('player2-zone').style.backgroundColor = "white";
+            zoneColor1 = "white";
+            zoneColor2 = "white";
             
             generateRandomLadders();
         }
 
         function draw() {
-            background(220);
+            // Fondo coloreado según los puntos de cada jugador en su mitad correspondientes
+            noStroke();
+            fill(zoneColor1);
+            rect(0, 0, width / 2, height);
+            fill(zoneColor2);
+            rect(width / 2, 0, width / 2, height);
             
+            // Vigas del mapa
             fill(200);
             for (let i = 0; i < 4; i++) {
                 rect(0, i * 112.5, width, 112.5);
             }
             
+            // Escaleras
             fill(150);
             for (let ladder of ladders1) {
                 rect(ladder.x, ladder.y, 40, 112.5);
             }
-            
             for (let ladder of ladders2) {
                 rect(ladder.x, ladder.y, 40, 112.5);
             }
             
+            // Toneles
             fill(255, 204, 0);
             ellipse(tonel1.x, tonel1.y + 15, 30, 30);
             ellipse(tonel2.x, tonel2.y + 15, 30, 30);
             
+            // Trazados de recorrido
             if (mono1.path.length > 0) {
                 noFill();
                 stroke(255, 0, 0);
+                strokeWeight(2);
                 beginShape();
                 for (let pos of mono1.path) {
                     vertex(pos.x, pos.y);
@@ -374,6 +480,7 @@
             if (mono2.path.length > 0) {
                 noFill();
                 stroke(0, 0, 255);
+                strokeWeight(2);
                 beginShape();
                 for (let pos of mono2.path) {
                     vertex(pos.x, pos.y);
@@ -381,12 +488,16 @@
                 endShape();
             }
             
+            // Personajes
+            noStroke();
             fill(100, 100, 255);
             ellipse(mono1.visualX, mono1.visualY + 15, 30, 30);
             fill(255, 100, 100);
             ellipse(mono2.visualX, mono2.visualY + 15, 30, 30);
             
+            // Línea divisoria central
             stroke(0);
+            strokeWeight(1);
             line(width / 2, 0, width / 2, height);
         }
 
@@ -407,11 +518,10 @@
         }
 
         function keyPressed() {
-            if (document.getElementById('player-names-modal').style.display === 'flex' || activeQuizPlayer !== null) {
+            if (document.getElementById('player-names-modal').style.display === 'flex' || activeQuizPlayer !== null || !gameStarted) {
                 return;
             }
 
-            // Evitar que las teclas de control mueva la página web hacia arriba o abajo
             if (['a', 'd', 'w', 's', 'q', 'e', 'x', 'm', 'arrowleft', 'arrowright', 'arrowup', 'arrowdown', 'p', 'i'].includes(key.toLowerCase()) || 
                 ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
                 event.preventDefault();
@@ -427,13 +537,13 @@
             }
 
             if (key === 'x') {
-                executeSequence(mono1, sequence1, 0, width / 2, tonel1, 'score1', ladders1, 'player1-zone', 1);
+                executeSequence(mono1, sequence1, 0, width / 2, tonel1, 'score1', ladders1, 1);
                 sequence1 = [];
                 document.getElementById('keys1').innerText = "Secuencia J1: ";
             }
 
             if (key === 'm') {
-                executeSequence(mono2, sequence2, width / 2, width, tonel2, 'score2', ladders2, 'player2-zone', 2);
+                executeSequence(mono2, sequence2, width / 2, width, tonel2, 'score2', ladders2, 2);
                 sequence2 = [];
                 document.getElementById('keys2').innerText = "Secuencia J2: ";
             }
@@ -455,7 +565,7 @@
             }
         }
 
-        function executeSequence(mono, sequence, xStart, xEnd, tonel, scoreId, ladders, zoneId, playerNum) {
+        function executeSequence(mono, sequence, xStart, xEnd, tonel, scoreId, ladders, playerNum) {
             if (sequence.length === 0) return;
             
             let delay = 500;
@@ -484,7 +594,7 @@
 
                             if (mono.puntos >= mono.nextQuizThreshold) {
                                 mono.nextQuizThreshold += 5;
-                                triggerQuiz(playerNum, scoreId, zoneId);
+                                triggerQuiz(playerNum, scoreId);
                             }
                         } else {
                             mono.x = mono.initialPos.x;
@@ -494,7 +604,7 @@
                     mono.path.push({ x: mono.x, y: mono.y });
                     mono.visualX = mono.x;
                     mono.visualY = mono.y;
-                    updateScoreDisplay(scoreId, mono.puntos, zoneId);
+                    updateScoreDisplay(scoreId, mono.puntos, playerNum);
                     index++;
                     
                     if (activeQuizPlayer === null) {
@@ -506,7 +616,7 @@
             nextStep();
         }
 
-        function triggerQuiz(playerNum, scoreId, zoneId) {
+        function triggerQuiz(playerNum, scoreId) {
             activeQuizPlayer = playerNum;
             const randIndex = Math.floor(Math.random() * cybersecurityQuestions.length);
             const qObj = cybersecurityQuestions[randIndex];
@@ -525,10 +635,10 @@
                 btn.onclick = () => {
                     let mono = (playerNum === 1) ? mono1 : mono2;
                     if (!optData.isCorrect) {
-                        mono.puntos = Math.max(0, mono.puntos - 2); // Resta 2 puntos base (-0.4 finales)
+                        mono.puntos = Math.max(0, mono.puntos - 2);
                         mono.nextQuizThreshold = Math.max(5, Math.floor(mono.puntos / 5) * 5 + 5);
                     }
-                    updateScoreDisplay(scoreId, mono.puntos, zoneId);
+                    updateScoreDisplay(scoreId, mono.puntos, playerNum);
                     document.getElementById('quiz-modal').style.display = 'none';
                     activeQuizPlayer = null;
                 };
@@ -538,30 +648,129 @@
             document.getElementById('quiz-modal').style.display = 'flex';
         }
 
-        function updateScoreDisplay(scoreId, rawPoints, zoneId) {
-            let finalScore = rawPoints * 0.2; // Multiplicación por 0.2
+        function updateScoreDisplay(scoreId, rawPoints, playerNum) {
+            let finalScore = rawPoints * 0.2;
             document.getElementById(scoreId).innerText = finalScore.toFixed(1);
-            updateZoneColor(finalScore, zoneId);
+            updateZoneColor(finalScore, playerNum);
         }
 
-        function updateZoneColor(finalScore, zoneId) {
+        function updateZoneColor(finalScore, playerNum) {
             let color = "white";
-            if (finalScore > 30) {
-                color = "red";
-            } else if (finalScore > 25) {
-                color = "orange";
-            } else if (finalScore > 20) {
-                color = "yellow";
-            } else if (finalScore > 15) {
-                color = "green";
-            } else if (finalScore > 10) {
-                color = "purple";
-            } else if (finalScore > 5) {
-                color = "blue";
-            } else if (finalScore > 2) {
-                color = "gray";
+            if (finalScore > 30) color = "#ff4d4d";
+            else if (finalScore > 25) color = "#ffa500";
+            else if (finalScore > 20) color = "#ffff66";
+            else if (finalScore > 15) color = "#66ff66";
+            else if (finalScore > 10) color = "#d8b4fe";
+            else if (finalScore > 5) color = "#93c5fd";
+            else if (finalScore > 2) color = "#e2e8f0";
+
+            if (playerNum === 1) zoneColor1 = color;
+            else zoneColor2 = color;
+        }
+
+        function setSendStatus(text, cls) {
+            const st = document.getElementById('send-status');
+            st.innerText = text;
+            st.className = cls || '';
+        }
+
+        function startSendLock() {
+            const btn = document.getElementById('send-btn');
+            const until = Date.now() + BLOQUEO_ENVIO_MS;
+            btn.disabled = true;
+            clearInterval(lockTimer);
+            const tick = () => {
+                const left = until - Date.now();
+                if (left <= 0) {
+                    clearInterval(lockTimer);
+                    btn.disabled = false;
+                    btn.innerText = '📤 Enviar datos';
+                    setSendStatus('Ya puedes enviar de nuevo si quieres actualizar tu puntuación.', 'wait');
+                    return;
+                }
+                const s = Math.ceil(left / 1000);
+                btn.innerText = '🔒 Bloqueado ' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+            };
+            tick();
+            lockTimer = setInterval(tick, 500);
+        }
+
+        async function postRecord(params) {
+            try {
+                const resp = await fetch(SHEET_WEBAPP_URL, { method: 'POST', body: params });
+                const data = await resp.json();
+                if (!data.ok) throw new Error(data.error || 'Respuesta no válida');
+                return true;
+            } catch (e1) {
+                try {
+                    await fetch(SHEET_WEBAPP_URL, { method: 'POST', mode: 'no-cors', body: params });
+                    return true;
+                } catch (e2) {
+                    return false;
+                }
             }
-            document.getElementById(zoneId).style.backgroundColor = color;
+        }
+
+        function buildRecords() {
+            const now = new Date();
+            const fecha = now.toLocaleDateString('es-ES');
+            const hora = now.toLocaleTimeString('es-ES', { hour12: false });
+            const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+            const make = (nombre, puntosBrutos) => {
+                const nota = Math.round(puntosBrutos * 0.2 * 10) / 10;
+                return {
+                    enviado: false,
+                    etiqueta: nombre + ' ' + nota.toFixed(1).replace('.', ','),
+                    params: new URLSearchParams({
+                        id: uid(),
+                        fecha, hora,
+                        alumno1: nombre,
+                        alumno2: '',
+                        curso: getVal('student-group'),
+                        criterio: ACTIVIDAD,
+                        total: nota.toFixed(1),
+                        puntos_alumno1: nota.toFixed(1),
+                        puntos_alumno2: '',
+                        puntos_brutos_alumno1: puntosBrutos,
+                        puntos_brutos_alumno2: ''
+                    })
+                };
+            };
+
+            const recs = [make(player1Name, mono1.puntos)];
+            if (!soloMode) recs.push(make(player2Name, mono2.puntos));
+            return recs;
+        }
+
+        async function sendResults() {
+            if (!gameStarted || sendingNow) return;
+            const btn = document.getElementById('send-btn');
+            if (btn.disabled) return;
+            btn.blur();
+
+            sendingNow = true;
+            btn.disabled = true;
+            setSendStatus('Enviando resultados a la hoja de cálculo…', 'wait');
+
+            if (!pendingRecords) pendingRecords = buildRecords();
+
+            for (const rec of pendingRecords) {
+                if (rec.enviado) continue;
+                rec.enviado = await postRecord(rec.params);
+            }
+
+            const todosEnviados = pendingRecords.every(r => r.enviado);
+            sendingNow = false;
+
+            if (todosEnviados) {
+                setSendStatus('✔ Resultados enviados: ' + pendingRecords.map(r => r.etiqueta).join(' · '), 'ok');
+                pendingRecords = null;
+                startSendLock();
+            } else {
+                setSendStatus('❌ No se pudieron enviar todos los datos. Comprueba la conexión y pulsa de nuevo.', 'err');
+                btn.disabled = false;
+            }
         }
 
         function isOnLadder(mono, ladders) {
@@ -573,5 +782,5 @@
             return false;
         }
     </script>
-
-</body></html>
+</body>
+</html>

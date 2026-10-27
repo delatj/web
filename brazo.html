@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- saved from url=(0039)https://delatj.github.io/web/brazo.html -->
-<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
     <title>Robot Game - Alcance Corregido</title>
     <style>
         :root {
@@ -20,9 +20,8 @@
             transition: background 1.2s ease; 
         }
 
-        .sidebar { width: 310px; background: var(--panel); padding: 15px; display: flex; flex-direction: column; gap: 8px; z-index: 1000; box-shadow: 5px 0 15px rgba(0,0,0,0.5); }
+        .sidebar { width: 310px; background: var(--panel); padding: 15px; display: flex; flex-direction: column; gap: 8px; z-index: 1000; box-shadow: 5px 0 15px rgba(0,0,0,0.5); overflow-y: auto; }
         .header-score { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; border: 2px solid var(--accent); }
-        /* Puntuación multiplicada por tres en tamaño */
         .score-box { font-size: 5.4rem; font-weight: bold; color: var(--accent); line-height: 1; }
         .instructions { background: #111; padding: 12px; border-radius: 8px; border-left: 5px solid #2ecc71; min-height: 50px; font-size: 0.85rem; }
         
@@ -35,13 +34,32 @@
         .btn-grip { background: #9b59b6; color: white; }
         .btn-save { background: #3498db; color: white; grid-column: span 2; }
 
-        .pos-list { flex-grow: 1; background: #111; border-radius: 6px; padding: 10px; overflow-y: auto; border: 1px solid #444; }
+        .pos-list { flex-grow: 1; background: #111; border-radius: 6px; padding: 10px; overflow-y: auto; border: 1px solid #444; max-height: 150px; }
         .pos-card { background: #222; margin-bottom: 5px; padding: 8px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid var(--accent); }
         .pos-actions { display: flex; gap: 5px; }
 
         #player-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 2000; }
-        .modal-box { background: white; padding: 35px; border-radius: 12px; text-align: center; color: #333; width: 320px; }
-        .modal-box input { margin: 15px 0; width: 90%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        .modal-box { background: white; padding: 30px; border-radius: 12px; text-align: center; color: #333; width: 90%; max-width: 440px; box-sizing: border-box; max-height: 94vh; overflow-y: auto; }
+        .modal-box input[type="text"] { margin: 6px 0; width: calc(100% - 20px); padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        
+        .team-card { border: 1px solid #ccc; border-radius: 8px; padding: 8px 10px 12px; margin: 10px 0; background: #f7f9fc; text-align: left; }
+        .team-card h3 { margin: 4px 0 8px; font-size: 1rem; text-align: center; }
+        #team-error { color: #b71c1c; font-size: 0.85rem; min-height: 1.2em; margin-top: 6px; text-align: center; }
+
+        /* Panel de envío de resultados */
+        #send-panel {
+            background: rgba(0,0,0,0.3); border: 2px solid var(--accent); border-radius: 8px;
+            padding: 8px; text-align: center; margin-top: 5px;
+        }
+        #send-btn {
+            width: 100%; padding: 10px; font-size: 14px; font-weight: bold; color: white;
+            background-color: #3498db; border: none; border-radius: 6px; cursor: pointer; text-transform: uppercase;
+        }
+        #send-btn:disabled { background-color: #cbd5e1; color: #555; cursor: not-allowed; }
+        #send-status { font-size: 12px; margin-top: 5px; color: #fff; }
+        #send-status.ok { color: #2ecc71; }
+        #send-status.err { color: #e74c3c; }
+        #send-status.wait { color: #f1c40f; }
 
         #status-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 2001; }
         #status-msg { background: white; padding: 25px; border-radius: 8px; color: #155724; font-weight: bold; border: 4px solid var(--primary); text-align: center; max-width: 450px; }
@@ -58,7 +76,6 @@
         .claw-l { left: 8px; bottom: -45px; }
         .claw-r { right: 8px; bottom: -45px; }
         
-        /* Piezas con borde negro añadido para mayor visibilidad */
         .piece { position: absolute; width: 40px; height: 40px; border-radius: 6px; z-index: 50; border: 2px solid #000; box-sizing: border-box; }
         
         .box { position: absolute; bottom: 90px; width: 110px; height: 80px; border: 5px solid #fff; background: rgba(255,255,255,0.1); border-top: none; z-index: 20; transition: left 0.5s ease-out; }
@@ -71,9 +88,28 @@
     <div id="player-modal">
         <div class="modal-box">
             <h2>Ingeniería Robótica</h2>
-            <p>Introduce tu nombre:</p>
-            <input type="text" id="nombre-operario" placeholder="Nombre del Alumno">
-            <button onclick="iniciarSesion()" style="background:var(--primary); color:white; width:100%; padding:12px; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">CONECTAR BRAZO</button>
+            <p style="font-size:0.9rem; color:#555;">Introduce los datos de los alumnos:</p>
+            
+            <div class="team-card">
+                <h3 style="color:#3b3bd6">Jugador 1</h3>
+                <input type="text" id="p1-first" autocomplete="off" placeholder="Nombre. Ej: Lucía">
+                <input type="text" id="p1-last" autocomplete="off" placeholder="Apellidos. Ej: Pérez Gómez">
+            </div>
+
+            <div class="team-card" id="p2-card">
+                <h3 style="color:#d63b3b">Jugador 2</h3>
+                <input type="text" id="p2-first" autocomplete="off" placeholder="Nombre. Ej: Marcos">
+                <input type="text" id="p2-last" autocomplete="off" placeholder="Apellidos. Ej: Díaz Ruiz">
+            </div>
+
+            <label style="display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; margin:8px 0; font-size:0.85rem; color:#333;">
+                <input type="checkbox" id="solo-check" style="width:auto; margin:0; padding:0;" onchange="toggleSolo()"> Un único jugador (sin pareja)
+            </label>
+
+            <input type="text" id="student-group" autocomplete="off" placeholder="Curso y grupo. Ej: 2º ESO A">
+            <div id="team-error"></div>
+
+            <button onclick="iniciarSesion()" style="background:var(--primary); color:white; width:100%; padding:12px; border:none; border-radius:6px; cursor:pointer; font-weight:bold; margin-top:8px;">CONECTAR BRAZO</button>
         </div>
     </div>
 
@@ -83,7 +119,7 @@
 
     <div class="sidebar">
         <div class="header-score">
-            <span id="label-user">OP: ---</span>
+            <span id="label-user" style="font-size: 0.85rem; font-weight: bold;">OP: ---</span>
             <div class="score-box" id="puntos">0</div>
         </div>
         <div class="instructions" id="mision-txt">Esperando conexión...</div>
@@ -102,6 +138,11 @@
         </div>
         
         <div class="pos-list" id="posList"></div>
+
+        <div id="send-panel">
+            <button id="send-btn" type="button" onmousedown="event.preventDefault()" onclick="sendResults()">📤 Enviar datos</button>
+            <div id="send-status"></div>
+        </div>
     </div>
 
     <div class="viewport" id="factory">
@@ -119,15 +160,23 @@
     </div>
 
     <script>
+        const SHEET_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyiOndS6GMYhgiSGLVAXUOOHhMKtBXqcLUeOppbNZIkrxU-HiMlgmhlYCj1xYZQG0io/exec";
+        const ACTIVIDAD = "Brazo";
+        const BLOQUEO_ENVIO_MS = 5 * 60 * 1000;
+
         let puntos = 0;
         let isClawClosed = false;
         let itemHeld = null;
         let savedPositions = [];
-        let operarioNombre = "";
+        let player1Name = "", player2Name = "";
+        let soloMode = false;
+        let sendingNow = false;
+        let lockTimer = null;
+        let pendingRecords = null;
+
         const colors = { 'rojo': '#e74c3c', 'azul': '#3498db', 'verde': '#2ecc71', 'amarillo': '#f1c40f', 'naranja': '#e67e22' };
         let misionesActivas = [];
 
-        // Banco de 30 preguntas de ciberseguridad, redes e internet
         const bancoPreguntas = [
             { q: "¿Qué es una contraseña segura?", options: ["Una combinación de letras, números y símbolos", "Tu fecha de cumpleaños", "La palabra 'contraseña'"], correct: 0 },
             { q: "¿Qué debes hacer si recibes un mensaje sospechoso de alguien desconocido?", options: ["Hacer clic en todos los enlaces", "Ignorarlo y no compartir datos personales", "Enviar tus contraseñas"], correct: 1 },
@@ -138,7 +187,7 @@
             { q: "¿Qué debes hacer con el software y sistema operativo de tus dispositivos?", options: ["No actualizarlos nunca", "Actualizarlos regularmente para corregir fallos de seguridad", "Borrar el sistema"], correct: 1 },
             { q: "¿Qué es el ciberacoso (cyberbullying)?", options: ["Jugar videojuegos en red", "Usar medios digitales para acosar o intimidar a alguien", "Un tipo de virus informático"], correct: 1 },
             { q: "¿Qué es un software malicioso o 'malware'?", options: ["Un programa útil para estudiar", "Un software diseñado para dañar o infiltrarse en sistemas", "Un componente físico del ordenador"], correct: 1 },
-            { q: "¿Por qué es importante cerrar sesión en ordenadores compartidos?", options: ["Para ahorrar electricidad", "Para evitar que otros accedan a tus cuentas personales", "Para que la pantalla brille menos"], correct: 1 },
+            { q: "¿Por qué es importante cerrar sesión en ordenadores compartidos?", options: ["Para ahorrar electricidad", "Para evitar que otros accedan à tus cuentas personales", "Para que la pantalla brille menos"], correct: 1 },
             { q: "¿Qué debes hacer si alguien te pide fotos íntimas en internet?", options: ["Enviarlas si es un amigo", "Rechazarlo, bloquear y avisar a un adulto de confianza", "Publicarlas en un perfil público"], correct: 1 },
             { q: "¿Qué es una copia de seguridad (backup)?", options: ["Borrar archivos antiguos", "Duplicar y guardar datos importantes en otro lugar seguro", "Imprimir documentos en papel"], correct: 1 },
             { q: "¿Qué indica un protocolo HTTPS en una página web?", options: ["Que la conexión está cifrada y es más segura", "Que la página es muy rápida", "Que la web es gratuita"], correct: 0 },
@@ -165,11 +214,45 @@
             if (e.code === "Space") { e.preventDefault(); toggleClaw(); }
         });
 
+        function cleanName(v) { return v.trim().replace(/\s+/g, ' '); }
+        const getVal = id => cleanName(document.getElementById(id).value);
+
+        function toggleSolo() {
+            soloMode = document.getElementById('solo-check').checked;
+            const p2Card = document.getElementById('p2-card');
+            ['p2-first', 'p2-last'].forEach(id => {
+                const el = document.getElementById(id);
+                el.disabled = soloMode;
+                if (soloMode) el.value = '';
+            });
+            p2Card.style.opacity = soloMode ? '0.4' : '1';
+        }
+
         function iniciarSesion() {
-            const nom = document.getElementById('nombre-operario').value.trim();
-            if(!nom) return alert("Escribe tu nombre.");
-            operarioNombre = nom;
-            document.getElementById('label-user').innerText = "OP: " + nom.split(" ")[0];
+            soloMode = document.getElementById('solo-check').checked;
+            const err = document.getElementById('team-error');
+            const msgs = [];
+
+            if (getVal('p1-first').length < 2) msgs.push('Escribe el nombre del jugador 1.');
+            if (getVal('p1-last').length < 2) msgs.push('Escribe los apellidos del jugador 1.');
+
+            if (!soloMode) {
+                if (getVal('p2-first').length < 2) msgs.push('Escribe el nombre del jugador 2 (o marca «Un único jugador»).');
+                if (getVal('p2-last').length < 2) msgs.push('Escribe los apellidos del jugador 2 (o marca «Un único jugador»).');
+            }
+
+            if (!getVal('student-group')) msgs.push('Indica el curso y grupo.');
+
+            if (msgs.length) {
+                err.innerHTML = msgs.join('<br>');
+                return;
+            }
+            err.innerHTML = '';
+
+            player1Name = getVal('p1-first') + ' ' + getVal('p1-last');
+            player2Name = soloMode ? '' : getVal('p2-first') + ' ' + getVal('p2-last');
+
+            document.getElementById('label-user').innerText = soloMode ? "OP: " + player1Name.split(" ")[0] : "OPs: " + player1Name.split(" ")[0] + " & " + player2Name.split(" ")[0];
             document.getElementById('player-modal').style.display = 'none';
             updateBackground();
             setMision(true);
@@ -184,7 +267,8 @@
             if (shouldChangePos) {
                 document.querySelectorAll('.box').forEach(b => b.remove());
                 misionesActivas = [];
-                const safeX = (Math.random() * 280) - 140; 
+                // CORRECCIÓN DE ALCANCE: Limitado a un rango seguro [-90, +90] para que el brazo siempre llegue
+                const safeX = (Math.random() * 180) - 90; 
                 createBox(safeX, nextColor);
             } else {
                 if (misionesActivas.length > 0) {
@@ -357,7 +441,7 @@
         }
 
         function createPiece() {
-            if (!operarioNombre) return;
+            if (document.getElementById('player-modal').style.display !== 'none') return;
             const keys = Object.keys(colors);
             const c = keys[Math.floor(Math.random()*keys.length)];
             const p = document.createElement('div');
@@ -415,6 +499,115 @@
         }, 16);
 
         setInterval(createPiece, 4000);
+
+        /* ====== ENVÍO DE RESULTADOS A LA HOJA DE CÁLCULO ====== */
+        function setSendStatus(text, cls) {
+            const st = document.getElementById('send-status');
+            st.innerText = text;
+            st.className = cls || '';
+        }
+
+        function startSendLock() {
+            const btn = document.getElementById('send-btn');
+            const until = Date.now() + BLOQUEO_ENVIO_MS;
+            btn.disabled = true;
+            clearInterval(lockTimer);
+            const tick = () => {
+                const left = until - Date.now();
+                if (left <= 0) {
+                    clearInterval(lockTimer);
+                    btn.disabled = false;
+                    btn.innerText = '📤 Enviar datos';
+                    setSendStatus('Ya puedes enviar de nuevo si quieres actualizar tu puntuación.', 'wait');
+                    return;
+                }
+                const s = Math.ceil(left / 1000);
+                btn.innerText = '🔒 Bloqueado ' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+            };
+            tick();
+            lockTimer = setInterval(tick, 500);
+        }
+
+        async function postRecord(params) {
+            try {
+                const resp = await fetch(SHEET_WEBAPP_URL, { method: 'POST', body: params });
+                const data = await resp.json();
+                if (!data.ok) throw new Error(data.error || 'Respuesta no válida');
+                return true;
+            } catch (e1) {
+                try {
+                    await fetch(SHEET_WEBAPP_URL, { method: 'POST', mode: 'no-cors', body: params });
+                    return true;
+                } catch (e2) {
+                    return false;
+                }
+            }
+        }
+
+        function buildRecords() {
+            const now = new Date();
+            const fecha = now.toLocaleDateString('es-ES');
+            const hora = now.toLocaleTimeString('es-ES', { hour12: false });
+            const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+            const make = (nombre, puntosBrutos) => {
+                const nota = Math.round(puntosBrutos * 10) / 10;
+                return {
+                    enviado: false,
+                    etiqueta: nombre + ' ' + nota.toFixed(1).replace('.', ','),
+                    params: new URLSearchParams({
+                        id: uid(),
+                        fecha, hora,
+                        alumno1: nombre,
+                        alumno2: '',
+                        curso: getVal('student-group'),
+                        criterio: ACTIVIDAD,
+                        total: nota.toFixed(1),
+                        puntos_alumno1: nota.toFixed(1),
+                        puntos_alumno2: '',
+                        puntos_brutos_alumno1: puntosBrutos,
+                        puntos_brutos_alumno2: ''
+                    })
+                };
+            };
+
+            const recs = [make(player1Name, puntos)];
+            if (!soloMode && player2Name) {
+                recs.push(make(player2Name, puntos));
+            }
+            return recs;
+        }
+
+        async function sendResults() {
+            if (document.getElementById('player-modal').style.display !== 'none' || sendingNow) return;
+            const btn = document.getElementById('send-btn');
+            if (btn.disabled) return;
+            btn.blur();
+
+            sendingNow = true;
+            btn.disabled = true;
+            setSendStatus('Enviando resultados a la hoja de cálculo…', 'wait');
+
+            if (!pendingRecords) pendingRecords = buildRecords();
+
+            for (const rec of pendingRecords) {
+                if (rec.enviado) continue;
+                rec.enviado = await postRecord(rec.params);
+            }
+
+            const todosEnviados = pendingRecords.every(r => r.enviado);
+            sendingNow = false;
+
+            if (todosEnviados) {
+                setSendStatus('✔ Resultados enviados: ' + pendingRecords.map(r => r.etiqueta).join(' · '), 'ok');
+                pendingRecords = null;
+                startSendLock();
+            } else {
+                setSendStatus('❌ No se pudieron enviar todos los datos. Comprueba la conexión y pulsa de nuevo.', 'err');
+                btn.disabled = false;
+            }
+        }
     </script>
 
-</body></html>
+</body>
+</html>

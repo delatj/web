@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<!-- saved from url=(0038)https://delatj.github.io/web/dron.html -->
-<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dron Pilot: El Bucle Infinito de Programación</title>
     <style>
         :root {
@@ -26,7 +27,6 @@
         /* --- PANEL IZQUIERDO --- */
         .sidebar { width: 320px; background: var(--panel); padding: 15px; display: flex; flex-direction: column; box-shadow: 5px 0 15px rgba(0,0,0,0.3); z-index: 100; overflow-y: auto; }
         #timer-container { font-size: 1.8rem; text-align: center; background: #c0392b; color: white; padding: 10px; border-radius: 6px; margin-bottom: 5px; font-family: monospace; border: 2px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
-        /* Puntuación 4 veces más grande (de 1.2rem a 4.8rem) */
         #score-container { font-size: 4.8rem; font-weight: bold; text-align: center; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px; margin-bottom: 10px; border-bottom: 3px solid var(--primary); line-height: 1.1; }
         textarea { height: 180px; width: 100%; background: #111; color: #00ff00; border: 1px solid #444; border-radius: 6px; padding: 10px; font-family: 'Courier New', monospace; resize: none; box-sizing: border-box; font-size: 1rem; transition: 0.3s;}
         textarea:disabled { opacity: 0.5; background: #333; cursor: not-allowed; }
@@ -85,19 +85,46 @@
         @keyframes spin { to { transform: rotateZ(360deg); } }
         
         #meta { position: absolute; width: 80px; height: 80px; border: 5px solid var(--primary); border-radius: 50%; background: rgba(46, 204, 113, 0.2); box-shadow: 0 0 15px var(--primary); pointer-events: none; z-index: 20; }
-        
-        /* Círculo de solución para cuando fallan */
         #meta-puzzle { position: absolute; width: 80px; height: 80px; border: 5px solid var(--danger); border-radius: 50%; background: rgba(231, 76, 60, 0.4); box-shadow: 0 0 15px var(--danger); pointer-events: none; display: none; z-index: 25; }
 
         #status-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 3000; }
 
-        /* --- UI Puzzle Info (Movida a la esquina superior izquierda) --- */
+        /* --- UI Puzzle Info --- */
         #puzzle-info {
             position: fixed; top: 20px; left: 350px; 
             background: rgba(230,126,34,0.95); padding: 15px 30px; border-radius: 10px;
             z-index: 1000; display: none; border: 2px solid white; text-align: center;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5); backdrop-filter: blur(5px);
         }
+
+        /* Formulario inicial */
+        .team-card {
+            border: 1px solid #ccc; border-radius: 8px;
+            padding: 8px 12px 12px; margin: 10px 0; background: #f7f9fc; text-align: left;
+        }
+        .team-card h3 { margin: 4px 0 8px; font-size: 1rem; text-align: center; }
+        #modal-inicio input[type="text"] {
+            padding: 8px 10px; width: calc(100% - 20px); margin: 4px 0;
+            border: 1px solid #ccc; border-radius: 5px; font-size: 0.9rem; box-sizing: border-box;
+        }
+        #team-error { color: #b71c1c; font-size: 0.85rem; min-height: 1.2em; margin-top: 6px; text-align: center; }
+
+        /* Panel de envío de resultados */
+        #send-panel {
+            position: fixed; top: 8px; right: 8px; z-index: 900;
+            width: 230px; text-align: center;
+            background: rgba(255,255,255,0.95); border: 2px solid #333; border-radius: 10px;
+            padding: 8px; color: #333;
+        }
+        #send-btn {
+            padding: 10px 20px; font-size: 16px; font-weight: bold; color: white;
+            background-color: #e67e22; border: none; border-radius: 8px; cursor: pointer;
+        }
+        #send-btn:disabled { background-color: #cbd5e1; color: #555; cursor: not-allowed; }
+        #send-status { font-size: 13px; margin-top: 6px; }
+        #send-status.ok { color: #1b5e20; }
+        #send-status.err { color: #b71c1c; }
+        #send-status.wait { color: #8a5a00; }
     </style>
 </head>
 <body>
@@ -107,14 +134,37 @@
     <div id="status-overlay"><div style="background:white; padding:30px; border-radius:10px; color:black; text-align:center;" id="status-message"></div></div>
 
     <div id="modal-inicio" style="position:fixed; inset:0; background:rgba(0,0,0,0.9); display:flex; justify-content:center; align-items:center; z-index:2000;">
-        <div style="background:white; padding:30px; border-radius:15px; text-align:center; color:#333; max-width: 420px;">
-            <h2>Misión: El Bucle de Control</h2>
-            <p>Tienes <b>4 minutos</b> para aterrizar. Si fallas, el rombo te hará repetir el camino.</p>
-            <p style="font-size: 0.85rem; color: #e67e22;"><i>En 1 Pto. y cada 5 Ptos. se activará el Modo Análisis de Diagramas.</i></p>
-            <input type="text" id="nombre-input" placeholder="Nombre del Alumno" style="padding:10px; width:80%;">
-            <br><br>
-            <button onclick="comenzar()" class="btn btn-run">EMPEZAR ENTRENAMIENTO</button>
+        <div style="background:white; padding:25px; border-radius:15px; text-align:center; color:#333; width: 90%; max-width: 440px; box-sizing:border-box;">
+            <h2 style="margin-top:0;">Misión: El Bucle de Control</h2>
+            <p style="font-size:0.9rem; margin-bottom:10px;">Tienes <b>4 minutos</b> para aterrizar. Si fallas, el rombo te hará repetir el camino.</p>
+            <p style="font-size: 0.8rem; color: #e67e22; margin-bottom:15px;"><i>En 1 Pto. y cada 5 Ptos. se activará el Modo Análisis de Diagramas.</i></p>
+            
+            <div class="team-card">
+                <h3 style="color:#3b3bd6">Jugador 1</h3>
+                <input type="text" id="p1-first" autocomplete="off" placeholder="Nombre. Ej: Lucía">
+                <input type="text" id="p1-last" autocomplete="off" placeholder="Apellidos. Ej: Pérez Gómez">
+            </div>
+
+            <div class="team-card" id="p2-card">
+                <h3 style="color:#d63b3b">Jugador 2</h3>
+                <input type="text" id="p2-first" autocomplete="off" placeholder="Nombre. Ej: Marcos">
+                <input type="text" id="p2-last" autocomplete="off" placeholder="Apellidos. Ej: Díaz Ruiz">
+            </div>
+
+            <label style="display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; margin:8px 0; font-size:0.85rem;">
+                <input type="checkbox" id="solo-check" style="width:auto; margin:0; padding:0;" onchange="toggleSolo()"> Un único jugador (sin pareja)
+            </label>
+
+            <input type="text" id="student-group" autocomplete="off" placeholder="Curso y grupo. Ej: 2º ESO A">
+            <div id="team-error"></div>
+
+            <button onclick="comenzar()" class="btn btn-run" style="margin-top:12px; font-size:1rem; padding:10px;">EMPEZAR ENTRENAMIENTO</button>
         </div>
+    </div>
+
+    <div id="send-panel">
+        <button id="send-btn" type="button" onmousedown="event.preventDefault()" onclick="sendResults()">📤 Enviar datos</button>
+        <div id="send-status"></div>
     </div>
 
     <div id="puzzle-info">
@@ -189,9 +239,19 @@ aterrizar"></textarea>
     </div>
 
     <script>
+        const SHEET_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyiOndS6GMYhgiSGLVAXUOOHhMKtBXqcLUeOppbNZIkrxU-HiMlgmhlYCj1xYZQG0io/exec";
+        const ACTIVIDAD = "Dron1";
+        const BLOQUEO_ENVIO_MS = 5 * 60 * 1000;
+
         let posX = 50, posY = 50, lastBaseX = 50, lastBaseY = 50;
         let posZ = 0, angulo = 0, puntos = 0;
-        let metaX = 250, metaY = 250, alumnoNombre = "";
+        let metaX = 250, metaY = 250;
+        let player1Name = "", player2Name = "";
+        let soloMode = false;
+        let sendingNow = false;
+        let lockTimer = null;
+        let pendingRecords = null;
+
         const GRID = 50;
         let timeLeft = 240;
         let timerInterval;
@@ -203,7 +263,20 @@ aterrizar"></textarea>
         let puzzleMetaX = 0, puzzleMetaY = 0;
         let puzzleComandos = [];
 
-        // --- SISTEMA DE NOTIFICACIONES ---
+        function cleanName(v) { return v.trim().replace(/\s+/g, ' '); }
+        const getVal = id => cleanName(document.getElementById(id).value);
+
+        function toggleSolo() {
+            soloMode = document.getElementById('solo-check').checked;
+            const p2Card = document.getElementById('p2-card');
+            ['p2-first', 'p2-last'].forEach(id => {
+                const el = document.getElementById(id);
+                el.disabled = soloMode;
+                if (soloMode) el.value = '';
+            });
+            p2Card.style.opacity = soloMode ? '0.4' : '1';
+        }
+
         function mostrarNotificacion(mensaje, tipo="info", duracion=3000) {
             const noti = document.getElementById('notificacion-juego');
             noti.innerHTML = mensaje;
@@ -219,12 +292,32 @@ aterrizar"></textarea>
         }
 
         function comenzar() {
-            alumnoNombre = document.getElementById('nombre-input').value.trim();
-            if(alumnoNombre) {
-                document.getElementById('piloto-tag').innerText = "Piloto: " + alumnoNombre;
-                document.getElementById('modal-inicio').style.display = 'none';
-                startTimer();
+            soloMode = document.getElementById('solo-check').checked;
+            const err = document.getElementById('team-error');
+            const msgs = [];
+
+            if (getVal('p1-first').length < 2) msgs.push('Escribe el nombre del jugador 1.');
+            if (getVal('p1-last').length < 2) msgs.push('Escribe los apellidos del jugador 1.');
+
+            if (!soloMode) {
+                if (getVal('p2-first').length < 2) msgs.push('Escribe el nombre del jugador 2 (o marca «Un único jugador»).');
+                if (getVal('p2-last').length < 2) msgs.push('Escribe los apellidos del jugador 2 (o marca «Un único jugador»).');
             }
+
+            if (!getVal('student-group')) msgs.push('Indica el curso y grupo.');
+
+            if (msgs.length) {
+                err.innerHTML = msgs.join('<br>');
+                return;
+            }
+            err.innerHTML = '';
+
+            player1Name = getVal('p1-first') + ' ' + getVal('p1-last');
+            player2Name = soloMode ? '' : getVal('p2-first') + ' ' + getVal('p2-last');
+
+            document.getElementById('piloto-tag').innerText = soloMode ? "Piloto: " + player1Name : "Pilotos: " + player1Name + " y " + player2Name;
+            document.getElementById('modal-inicio').style.display = 'none';
+            startTimer();
         }
 
         function startTimer() {
@@ -355,7 +448,6 @@ aterrizar"></textarea>
                 document.getElementById('val-puntos').innerText = puntos;
                 lastBaseX = posX; lastBaseY = posY;
                 
-                // Entrar al puzzle en 1 punto y cada 5
                 if (puntos === 1 || (puntos > 0 && puntos % 5 === 0)) {
                     mostrarNotificacion("¡Aterrizaje! Generando Análisis de Vuelo...", "info", 2500);
                     actualizarFondo();
@@ -379,21 +471,18 @@ aterrizar"></textarea>
             m.style.left = metaX + "px"; m.style.top = metaY + "px";
         }
 
-        /* --- ACTUALIZACIÓN DE FONDO SEGÚN PUNTUACIÓN --- */
         function actualizarFondo() {
-            let bg = "#1a1a1a"; // Gris por defecto (0 a 2 puntos)
-            if (puntos > 2 && puntos <= 5) bg = "#005a9e";   // Pasa de 2: Azul
-            else if (puntos > 5 && puntos <= 10) bg = "#8e44ad";  // Pasa de 5: Morado
-            else if (puntos > 10 && puntos <= 15) bg = "#107c10"; // Pasa de 10: Verde
-            else if (puntos > 15 && puntos <= 20) bg = "#d29200"; // Pasa de 15: Amarillo
-            else if (puntos > 20 && puntos <= 25) bg = "#e67e22"; // Pasa de 20: Naranja
-            else if (puntos > 25 && puntos <= 30) bg = "#c0392b"; // Pasa de 25: Rojo
-            else if (puntos > 30) bg = "#900c3f";                // Pasa de 30: Rojo fuerte
+            let bg = "#1a1a1a";
+            if (puntos > 2 && puntos <= 5) bg = "#005a9e";
+            else if (puntos > 5 && puntos <= 10) bg = "#8e44ad";
+            else if (puntos > 10 && puntos <= 15) bg = "#107c10";
+            else if (puntos > 15 && puntos <= 20) bg = "#d29200";
+            else if (puntos > 20 && puntos <= 25) bg = "#e67e22";
+            else if (puntos > 25 && puntos <= 30) bg = "#c0392b";
+            else if (puntos > 30) bg = "#900c3f";
             
             document.body.style.backgroundColor = bg;
         }
-
-        // --- FUNCIONES DEL MODO ANÁLISIS ---
 
         function iniciarPuzzle() {
             puzzleModoActivo = true;
@@ -480,7 +569,6 @@ aterrizar"></textarea>
             container.appendChild(crearNodo("FIN DE ANÁLISIS", "node-terminal"));
         }
 
-        // --- SISTEMA DE CLIC MEJORADO ---
         document.getElementById('zona-vuelo').addEventListener('click', function(e) {
             if (!puzzleModoActivo || mostrandoSolucion) return;
             
@@ -535,6 +623,115 @@ aterrizar"></textarea>
             startTimer();
             actualizarFondo();
         }
+
+        /* ====== ENVÍO DE RESULTADOS A LA HOJA DE CÁLCULO ====== */
+        function setSendStatus(text, cls) {
+            const st = document.getElementById('send-status');
+            st.innerText = text;
+            st.className = cls || '';
+        }
+
+        function startSendLock() {
+            const btn = document.getElementById('send-btn');
+            const until = Date.now() + BLOQUEO_ENVIO_MS;
+            btn.disabled = true;
+            clearInterval(lockTimer);
+            const tick = () => {
+                const left = until - Date.now();
+                if (left <= 0) {
+                    clearInterval(lockTimer);
+                    btn.disabled = false;
+                    btn.innerText = '📤 Enviar datos';
+                    setSendStatus('Ya puedes enviar de nuevo si quieres actualizar tu puntuación.', 'wait');
+                    return;
+                }
+                const s = Math.ceil(left / 1000);
+                btn.innerText = '🔒 Bloqueado ' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+            };
+            tick();
+            lockTimer = setInterval(tick, 500);
+        }
+
+        async function postRecord(params) {
+            try {
+                const resp = await fetch(SHEET_WEBAPP_URL, { method: 'POST', body: params });
+                const data = await resp.json();
+                if (!data.ok) throw new Error(data.error || 'Respuesta no válida');
+                return true;
+            } catch (e1) {
+                try {
+                    await fetch(SHEET_WEBAPP_URL, { method: 'POST', mode: 'no-cors', body: params });
+                    return true;
+                } catch (e2) {
+                    return false;
+                }
+            }
+        }
+
+        function buildRecords() {
+            const now = new Date();
+            const fecha = now.toLocaleDateString('es-ES');
+            const hora = now.toLocaleTimeString('es-ES', { hour12: false });
+            const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+            const make = (nombre, puntosBrutos) => {
+                const nota = Math.round(puntosBrutos * 10) / 10;
+                return {
+                    enviado: false,
+                    etiqueta: nombre + ' ' + nota.toFixed(1).replace('.', ','),
+                    params: new URLSearchParams({
+                        id: uid(),
+                        fecha, hora,
+                        alumno1: nombre,
+                        alumno2: '',
+                        curso: getVal('student-group'),
+                        criterio: ACTIVIDAD,
+                        total: nota.toFixed(1),
+                        puntos_alumno1: nota.toFixed(1),
+                        puntos_alumno2: '',
+                        puntos_brutos_alumno1: puntosBrutos,
+                        puntos_brutos_alumno2: ''
+                    })
+                };
+            };
+
+            const recs = [make(player1Name, puntos)];
+            if (!soloMode && player2Name) {
+                recs.push(make(player2Name, puntos));
+            }
+            return recs;
+        }
+
+        async function sendResults() {
+            if (document.getElementById('modal-inicio').style.display !== 'none' || sendingNow) return;
+            const btn = document.getElementById('send-btn');
+            if (btn.disabled) return;
+            btn.blur();
+
+            sendingNow = true;
+            btn.disabled = true;
+            setSendStatus('Enviando resultados a la hoja de cálculo…', 'wait');
+
+            if (!pendingRecords) pendingRecords = buildRecords();
+
+            for (const rec of pendingRecords) {
+                if (rec.enviado) continue;
+                rec.enviado = await postRecord(rec.params);
+            }
+
+            const todosEnviados = pendingRecords.every(r => r.enviado);
+            sendingNow = false;
+
+            if (todosEnviados) {
+                setSendStatus('✔ Resultados enviados: ' + pendingRecords.map(r => r.etiqueta).join(' · '), 'ok');
+                pendingRecords = null;
+                startSendLock();
+            } else {
+                setSendStatus('❌ No se pudieron enviar todos los datos. Comprueba la conexión y pulsa de nuevo.', 'err');
+                btn.disabled = false;
+            }
+        }
     </script>
 
-</body></html>
+</body>
+</html>

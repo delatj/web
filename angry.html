@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<!-- saved from url=(0039)https://delatj.github.io/web/angry.html -->
-<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Derriba la Torre - 2 Jugadores</title>
   <style>
     :root {
@@ -24,12 +24,12 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       min-height: 100vh;
     }
     
     h1 {
-      margin: 0 0 20px;
+      margin: 10px 0 20px;
       font-size: 24px;
       text-align: center;
     }
@@ -60,12 +60,27 @@
       box-shadow: 0 6px 18px rgba(0,0,0,0.3);
       min-width: 400px;
       max-width: 600px;
+      max-height: 94vh;
+      overflow-y: auto;
+      box-sizing: border-box;
     }
     
     #player-names-form h2 {
       margin-top: 0;
       margin-bottom: 20px;
     }
+
+    #player-names-form .team-card {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 4px 10px 10px;
+      margin: 10px 0;
+      background: #f7f9fc;
+      text-align: left;
+    }
+
+    #player-names-form .team-card h3 { margin: 6px 0 10px; font-size: 1.05rem; text-align: center; }
+    #team-error { color: #b71c1c; font-size: 0.9rem; min-height: 1em; margin-top: 6px; }
 
     #question-form h2 {
       color: #1f6feb;
@@ -74,10 +89,10 @@
     }
     
     #player-names-form input {
-      margin: 10px;
-      padding: 12px;
-      width: 250px;
-      font-size: 16px;
+      margin: 8px 0;
+      padding: 10px;
+      width: calc(100% - 20px);
+      font-size: 15px;
       border: 2px solid #ddd;
       border-radius: 6px;
       display: block;
@@ -100,6 +115,23 @@
     #player-names-form button:hover {
       background-color: #45a049;
     }
+
+    /* Envío de resultados */
+    #send-panel {
+      position: fixed; top: 8px; right: 8px; z-index: 900;
+      width: 230px; text-align: center;
+      background: rgba(255,255,255,0.95); border: 2px solid #333; border-radius: 10px;
+      padding: 8px;
+    }
+    #send-btn {
+      padding: 10px 20px; font-size: 16px; font-weight: bold; color: white;
+      background-color: #e67e22; border: none; border-radius: 8px; cursor: pointer;
+    }
+    #send-btn:disabled { background-color: #cbd5e1; color: #555; cursor: not-allowed; }
+    #send-status { font-size: 13px; margin-top: 6px; }
+    #send-status.ok { color: #1b5e20; }
+    #send-status.err { color: #b71c1c; }
+    #send-status.wait { color: #8a5a00; }
 
     /* Estilos para las preguntas de ciberseguridad */
     .option-btn {
@@ -192,7 +224,7 @@
     }
     
     .score-display {
-      font-size: 20px;
+      font-size: 16px;
       font-weight: 700;
       background: rgba(255,255,255,0.9);
       padding: 5px 15px;
@@ -200,22 +232,12 @@
       border: 2px solid #000000; 
       display: flex;
       align-items: center;
-      gap: 15px;
-    }
-    
-    .score-display.player1 {
-      border-color: #000000;
-      color: #000000 !important; 
-    }
-    
-    .score-display.player2 {
-      border-color: #000000;
-      color: #000000 !important; 
+      gap: 10px;
     }
 
     .multiplier {
       color: #e67e22;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       font-weight: 900;
       display: flex;
       align-items: center;
@@ -225,12 +247,14 @@
     .res-final {
       color: black;
       font-weight: bold;
-      font-size: 3em;
+      font-size: 2.2em;
     }
     
     .canvas-container {
       position: relative;
       margin-bottom: 15px;
+      display: flex;
+      justify-content: center;
     }
     
     canvas {
@@ -266,13 +290,11 @@
     .coord-value.x {
       background: rgba(76, 175, 80, 0.1);
       border-color: #4CAF50;
-      color: #000000 !important;
     }
     
     .coord-value.y {
       background: rgba(33, 150, 243, 0.1);
       border-color: #2196F3;
-      color: #000000 !important;
     }
     
     .message {
@@ -352,9 +374,27 @@
 <body>
   <div id="player-names-modal">
     <div id="player-names-form">
-      <h2>Ingresa los nombres de los jugadores</h2>
-      <input type="text" id="player1-name-input" placeholder="Nombre del Jugador 1" required="">
-      <input type="text" id="player2-name-input" placeholder="Nombre del Jugador 2" required="">
+      <h2>Datos de los alumnos</h2>
+      
+      <div class="team-card">
+        <h3 style="color:#3b3bd6">Jugador 1</h3>
+        <input type="text" id="p1-first" autocomplete="off" placeholder="Nombre. Ej: Lucía">
+        <input type="text" id="p1-last" autocomplete="off" placeholder="Apellidos. Ej: Pérez Gómez">
+      </div>
+      
+      <div class="team-card" id="p2-card">
+        <h3 style="color:#d63b3b">Jugador 2</h3>
+        <input type="text" id="p2-first" autocomplete="off" placeholder="Nombre. Ej: Marcos">
+        <input type="text" id="p2-last" autocomplete="off" placeholder="Apellidos. Ej: Díaz Ruiz">
+      </div>
+      
+      <label style="display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; margin:10px 0;">
+        <input type="checkbox" id="solo-check" style="width:auto; margin:0; padding:0;" onchange="toggleSolo()"> Un único jugador (sin pareja)
+      </label>
+      
+      <input type="text" id="student-group" autocomplete="off" placeholder="Curso y grupo. Ej: 2º ESO A">
+      <div id="team-error"></div>
+      
       <button id="start-game">Comenzar Juego</button>
     </div>
   </div>
@@ -367,6 +407,11 @@
       <div id="q-options"></div>
       <div id="question-feedback"></div>
     </div>
+  </div>
+
+  <div id="send-panel">
+    <button id="send-btn" type="button" onmousedown="event.preventDefault()" onclick="sendResults()">📤 Enviar datos</button>
+    <div id="send-status"></div>
   </div>
   
   <h1 id="game-title" style="display: none;">Derriba la Torre - 2 Jugadores</h1>
@@ -439,7 +484,7 @@
         <div class="control-item"><span class="key">E</span> Lanzar bola</div>
       </div>
       
-      <div class="player-controls player2">
+      <div class="player-controls player2" id="controls-player2">
         <h4>Controles Jugador 2 (Azul)</h4>
         <div class="control-item"><span class="key">I</span> Incrementar X</div>
         <div class="control-item"><span class="key">K</span> Decrementar X</div>
@@ -457,11 +502,19 @@
     const PADDING = 10;
     const POINTS_PER_FULL_TOWER = 2;
     
+    const SHEET_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyiOndS6GMYhgiSGLVAXUOOHhMKtBXqcLUeOppbNZIkrxU-HiMlgmhlYCj1xYZQG0io/exec";
+    const ACTIVIDAD = "Angry2";
+    const BLOQUEO_ENVIO_MS = 5 * 60 * 1000;
+
     let player1Name = "";
     let player2Name = "";
+    let soloMode = false;
     let player1Game, player2Game;
 
     let isQuestionActive = false;
+    let sendingNow = false;
+    let lockTimer = null;
+    let pendingRecords = null;
     
     const playerNamesModal = document.getElementById('player-names-modal');
     const gameArea = document.getElementById('game-area');
@@ -469,7 +522,6 @@
     const gameInstructions = document.getElementById('game-instructions');
     const startGameButton = document.getElementById('start-game');
     
-    // Banco de 30 preguntas sobre ciberseguridad, redes y uso adecuado de internet[cite: 4]
     const cyberQuestions = [
       { q: "¿Qué es el Phishing?", options: ["Un deporte náutico", "Engaño por email para robar claves", "Un tipo de cable de red"], correct: 1 },
       { q: "¿Qué contraseña es más segura?", options: ["12345678", "pAssw0rd!", "D0m1ng0_2024*"], correct: 2 },
@@ -503,24 +555,51 @@
       { q: "Cerrar sesión en ordenadores públicos es:", options: ["Opcional si tengo prisa", "Fundamental para proteger mis cuentas", "Malo para el ordenador"], correct: 1 }
     ];
 
+    function cleanName(v) { return v.trim().replace(/\s+/g, ' '); }
+    const getVal = id => cleanName(document.getElementById(id).value);
+
+    function toggleSolo() {
+      soloMode = document.getElementById('solo-check').checked;
+      const p2Card = document.getElementById('p2-card');
+      const p2Controls = document.getElementById('controls-player2');
+      const p2Container = document.getElementById('player2-container');
+      
+      ['p2-first', 'p2-last'].forEach(id => {
+        const el = document.getElementById(id);
+        el.disabled = soloMode;
+        if (soloMode) el.value = '';
+      });
+
+      p2Card.style.opacity = soloMode ? '0.4' : '1';
+      p2Controls.style.display = soloMode ? 'none' : 'block';
+      p2Container.style.display = soloMode ? 'none' : 'block';
+    }
+
     startGameButton.addEventListener('click', startGame);
     
-    document.getElementById('player1-name-input').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') startGameButton.click();
-    });
-    
-    document.getElementById('player2-name-input').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') startGameButton.click();
-    });
-    
     function startGame() {
-      player1Name = document.getElementById('player1-name-input').value.trim();
-      player2Name = document.getElementById('player2-name-input').value.trim();
+      soloMode = document.getElementById('solo-check').checked;
+      const err = document.getElementById('team-error');
+      const msgs = [];
       
-      if (!player1Name || !player2Name) {
-        alert("Por favor ingresa nombres para ambos jugadores");
-        return;
+      if (getVal('p1-first').length < 2) msgs.push('Escribe el nombre del jugador 1.');
+      if (getVal('p1-last').length < 2) msgs.push('Escribe los apellidos del jugador 1.');
+      
+      if (!soloMode) {
+        if (getVal('p2-first').length < 2) msgs.push('Escribe el nombre del jugador 2 (o marca «Un único jugador»).');
+        if (getVal('p2-last').length < 2) msgs.push('Escribe los apellidos del jugador 2 (o marca «Un único jugador»).');
       }
+      
+      if (!getVal('student-group')) msgs.push('Indica el curso y grupo.');
+      
+      if (msgs.length) { 
+        err.innerHTML = msgs.join('<br>'); 
+        return; 
+      }
+      err.innerHTML = '';
+
+      player1Name = getVal('p1-first') + ' ' + getVal('p1-last');
+      player2Name = soloMode ? '' : getVal('p2-first') + ' ' + getVal('p2-last');
       
       playerNamesModal.style.display = 'none';
       gameArea.style.display = 'flex';
@@ -528,7 +607,9 @@
       gameInstructions.style.display = 'block';
       
       document.getElementById('player1-name').textContent = player1Name;
-      document.getElementById('player2-name').textContent = player2Name;
+      if (!soloMode) {
+        document.getElementById('player2-name').textContent = player2Name;
+      }
       
       initializeGames();
     }
@@ -569,7 +650,6 @@
         this.generateStructure();
         this.drawGrid();
         this.updateCoordinatesDisplay();
-        this.setupCanvasEvents();
       }
       
       randInt(a, b) {
@@ -835,43 +915,29 @@
         this.updateBlocksCount();
       }
       
-      setupCanvasEvents() {}
-      
       updatePlayerColor() {
         let bgColor = '#ffffff';
-        let colorName = 'Blanco';
-        
         const finalScore = this.score * 0.4;
         
-        if (finalScore > 30) {
-          bgColor = '#ff0000'; colorName = 'Rojo';
+        if (finalScore > 35) {
+          bgColor = '#ff0000';
+        } else if (finalScore > 30) {
+          bgColor = '#ff4500';
         } else if (finalScore > 25) {
-          bgColor = '#ffa500'; colorName = 'Naranja';
+          bgColor = '#ffa500';
         } else if (finalScore > 20) {
-          bgColor = '#ffff00'; colorName = 'Amarillo';
+          bgColor = '#ffff00';
         } else if (finalScore > 15) {
-          bgColor = '#008000'; colorName = 'Verde';
+          bgColor = '#008000';
         } else if (finalScore > 10) {
-          bgColor = '#800080'; colorName = 'Morado';
+          bgColor = '#800080';
         } else if (finalScore > 5) {
-          bgColor = '#0000ff'; colorName = 'Azul';
+          bgColor = '#0000ff';
         } else if (finalScore > 2) {
-          bgColor = '#808080'; colorName = 'Gris';
+          bgColor = '#808080';
         }
 
         this.container.style.backgroundColor = bgColor;
-        this.container.style.color = '#000000';
-      }
-      
-      reset() {
-        this.generateStructure();
-        this.drawGrid();
-        this.messageElement.textContent = 'Nueva torre generada';
-        setTimeout(() => { this.messageElement.textContent = ''; }, 1500);
-      }
-      
-      getScore() {
-        return this.score;
       }
     }
 
@@ -933,8 +999,118 @@
     function initializeGames() {
       player1Game = new PlayerGame('game1', 'score1', 'message1', 'blocksCount1', 
                                    'player1-container', 'coordX1', 'coordY1', 1, player1Name);
-      player2Game = new PlayerGame('game2', 'score2', 'message2', 'blocksCount2', 
-                                   'player2-container', 'coordX2', 'coordY2', 2, player2Name);
+      if (!soloMode) {
+        player2Game = new PlayerGame('game2', 'score2', 'message2', 'blocksCount2', 
+                                     'player2-container', 'coordX2', 'coordY2', 2, player2Name);
+      }
+    }
+
+    /* ====== ENVÍO DE RESULTADOS A LA HOJA DE CÁLCULO ====== */
+    function setSendStatus(text, cls) {
+      const st = document.getElementById('send-status');
+      st.innerText = text;
+      st.className = cls || '';
+    }
+
+    function startSendLock() {
+      const btn = document.getElementById('send-btn');
+      const until = Date.now() + BLOQUEO_ENVIO_MS;
+      btn.disabled = true;
+      clearInterval(lockTimer);
+      const tick = () => {
+        const left = until - Date.now();
+        if (left <= 0) {
+          clearInterval(lockTimer);
+          btn.disabled = false;
+          btn.innerText = '📤 Enviar datos';
+          setSendStatus('Ya puedes enviar de nuevo si quieres actualizar tu puntuación.', 'wait');
+          return;
+        }
+        const s = Math.ceil(left / 1000);
+        btn.innerText = '🔒 Bloqueado ' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+      };
+      tick();
+      lockTimer = setInterval(tick, 500);
+    }
+
+    async function postRecord(params) {
+      try {
+        const resp = await fetch(SHEET_WEBAPP_URL, { method: 'POST', body: params });
+        const data = await resp.json();
+        if (!data.ok) throw new Error(data.error || 'Respuesta no válida');
+        return true;
+      } catch (e1) {
+        try {
+          await fetch(SHEET_WEBAPP_URL, { method: 'POST', mode: 'no-cors', body: params });
+          return true;
+        } catch (e2) {
+          return false;
+        }
+      }
+    }
+
+    function buildRecords() {
+      const now = new Date();
+      const fecha = now.toLocaleDateString('es-ES');
+      const hora = now.toLocaleTimeString('es-ES', { hour12: false });
+      const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+      const make = (nombre, puntosBrutos) => {
+        const nota = Math.round(puntosBrutos * 0.4 * 10) / 10;
+        return {
+          enviado: false,
+          etiqueta: nombre + ' ' + nota.toFixed(1).replace('.', ','),
+          params: new URLSearchParams({
+            id: uid(),
+            fecha, hora,
+            alumno1: nombre,
+            alumno2: '',
+            curso: getVal('student-group'),
+            criterio: ACTIVIDAD,
+            total: nota.toFixed(1),
+            puntos_alumno1: nota.toFixed(1),
+            puntos_alumno2: '',
+            puntos_brutos_alumno1: puntosBrutos,
+            puntos_brutos_alumno2: ''
+          })
+        };
+      };
+
+      const recs = [make(player1Name, player1Game.score)];
+      if (!soloMode && player2Game) {
+        recs.push(make(player2Name, player2Game.score));
+      }
+      return recs;
+    }
+
+    async function sendResults() {
+      if (playerNamesModal.style.display === 'flex' || sendingNow) return;
+      const btn = document.getElementById('send-btn');
+      if (btn.disabled) return;
+      btn.blur();
+
+      sendingNow = true;
+      btn.disabled = true;
+      setSendStatus('Enviando resultados a la hoja de cálculo…', 'wait');
+
+      if (!pendingRecords) pendingRecords = buildRecords();
+
+      for (const rec of pendingRecords) {
+        if (rec.enviado) continue;
+        rec.enviado = await postRecord(rec.params);
+      }
+
+      const todosEnviados = pendingRecords.every(r => r.enviado);
+      sendingNow = false;
+
+      if (todosEnviados) {
+        setSendStatus('✔ Resultados enviados: ' + pendingRecords.map(r => r.etiqueta).join(' · '), 'ok');
+        pendingRecords = null;
+        startSendLock();
+      } else {
+        setSendStatus('❌ No se pudieron enviar todos los datos. Comprueba la conexión y pulsa de nuevo.', 'err');
+        btn.disabled = false;
+      }
     }
     
     document.addEventListener('keydown', (e) => {
@@ -949,12 +1125,14 @@
       else if (key === 's') { player1Game.adjustY(-1); e.preventDefault(); } 
       else if (key === 'e') { player1Game.launch(); e.preventDefault(); }
       
-      if (key === 'i') { player2Game.adjustX(1); e.preventDefault(); } 
-      else if (key === 'k') { player2Game.adjustX(-1); e.preventDefault(); } 
-      else if (key === 'o') { player2Game.adjustY(1); e.preventDefault(); } 
-      else if (key === 'l') { player2Game.adjustY(-1); e.preventDefault(); } 
-      else if (key === 'p') { player2Game.launch(); e.preventDefault(); }
+      if (!soloMode && player2Game) {
+        if (key === 'i') { player2Game.adjustX(1); e.preventDefault(); } 
+        else if (key === 'k') { player2Game.adjustX(-1); e.preventDefault(); } 
+        else if (key === 'o') { player2Game.adjustY(1); e.preventDefault(); } 
+        else if (key === 'l') { player2Game.adjustY(-1); e.preventDefault(); } 
+        else if (key === 'p') { player2Game.launch(); e.preventDefault(); }
+      }
     });
   </script>
-
-</body></html>
+</body>
+</html>

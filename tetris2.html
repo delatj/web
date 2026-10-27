@@ -71,18 +71,57 @@
             border: 2px solid #eee; border-radius: 8px; cursor: pointer; font-weight: bold;
         }
         .retry-btn { background: #2ecc71; color: white; border: none; font-size: 1.1rem; }
+
+        /* Formulario inicial */
+        #lobby-card { text-align:center; background:white; padding:30px 40px; border-radius:20px; border:2px solid #ccc; width:440px; max-width:92%; max-height:94vh; overflow-y:auto; box-sizing:border-box; }
+        #lobby-card .team-card { border:1px solid #ccc; border-radius:8px; padding:4px 10px 10px; margin:10px 0; background:#f7f9fc; }
+        #lobby-card .team-card h3 { margin:6px 0 4px; font-size:1.05rem; }
+        #lobby-card input[type="text"] { width:85%; padding:10px; margin:4px; box-sizing:border-box; }
+        #lobby-card input:disabled { background:#e9ecef; }
+        #team-error { color:#b71c1c; font-size:0.9rem; min-height:1em; margin-top:6px; }
+
+        /* Envío de resultados */
+        #send-panel {
+            position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%);
+            background: white; border: 2px solid #333; border-radius: 10px;
+            padding: 8px 12px; text-align: center; z-index: 900; max-width: 260px; display: none;
+        }
+        #send-btn { padding: 9px 16px; background-color: #e67e22; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 15px; }
+        #send-btn:disabled { background-color: #cbd5e1; color: #555; cursor: not-allowed; }
+        #send-status { font-size: 13px; margin-top: 6px; }
+        #send-status.ok { color: #1b5e20; }
+        #send-status.err { color: #b71c1c; }
+        #send-status.wait { color: #8a5a00; }
     </style>
 </head>
 <body>
 
 <div id="lobby">
-    <div style="text-align:center; background:white; padding:40px; border-radius:20px; border: 2px solid #ccc;">
+    <div id="lobby-card">
         <h2>🎮 TETRIS CYBER-DUELO</h2>
-        <p>Cada punto vale 0,5 | Cada 10 pts: TEST | Morir: -25% puntos</p>
-        <input type="text" id="p1-in" value="ALUMNO 1" style="padding:10px; margin:5px;"><br>
-        <input type="text" id="p2-in" value="ALUMNO 2" style="padding:10px; margin:5px;"><br>
+        <p>Cada punto vale 0,5 | Cada 10 pts: TEST | Morir: -2 puntos</p>
+        <div class="team-card">
+            <h3 style="color:var(--p1-color)">Alumno/a 1</h3>
+            <input type="text" id="p1-first" autocomplete="off" placeholder="Nombre. Ej: Lucía"><br>
+            <input type="text" id="p1-last" autocomplete="off" placeholder="Apellidos. Ej: Pérez Gómez">
+        </div>
+        <div class="team-card">
+            <h3 style="color:var(--p2-color)">Alumno/a 2</h3>
+            <input type="text" id="p2-first" autocomplete="off" placeholder="Nombre. Ej: Marcos"><br>
+            <input type="text" id="p2-last" autocomplete="off" placeholder="Apellidos. Ej: Díaz Ruiz">
+        </div>
+        <label style="display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; margin:8px 0;">
+            <input type="checkbox" id="solo-check" onchange="toggleSolo()"> Trabajo en solitario (sin pareja)
+        </label>
+        <input type="text" id="student-group" autocomplete="off" placeholder="Curso y grupo. Ej: 2º ESO A">
+        <div id="team-error"></div>
         <button onclick="initGames()" style="padding:12px 40px; margin-top:15px; cursor:pointer; background:#3498db; color:white; border:none; border-radius:5px; font-weight:bold;">EMPEZAR JUEGO</button>
     </div>
+</div>
+
+<div id="send-panel">
+    <button id="send-btn" type="button" onmousedown="event.preventDefault()" onclick="sendResults()">📤 Enviar resultados</button>
+    <div id="send-status"></div>
 </div>
 
 <div class="player-section" id="section-0">
@@ -282,7 +321,7 @@
 
         gameOver() {
             this.paused = true;
-            this.score = Math.floor(this.score * 0.75);
+            this.score = Math.max(0, this.score - 2);
             this.updateUI();
 
             this.overlayEl.style.display = 'flex';
@@ -292,7 +331,7 @@
                 this.overlayEl.innerHTML = `
                     <div class="death-card">
                         <h2>¡BLOQUEADO!</h2>
-                        <p>Penalización: -25% puntos</p>
+                        <p>Penalización: -2 puntos</p>
                         <p style="font-size:20px">Espera: <b>${countdown}s</b></p>
                     </div>`;
             };
@@ -327,15 +366,170 @@
         }
     }
 
+    /* ====== DATOS DE LOS ALUMNOS, INICIO Y ENVÍO DE RESULTADOS ====== */
+    const SHEET_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyiOndS6GMYhgiSGLVAXUOOHhMKtBXqcLUeOppbNZIkrxU-HiMlgmhlYCj1xYZQG0io/exec";
+    const ACTIVIDAD = "Tetris2";
+    const BLOQUEO_ENVIO_MS = 5 * 60 * 1000; // 5 minutos tras un envío correcto
+
+    let gameStarted = false;
+    let sending = false;
+    let lockTimer = null;
+    let teamInfo = { alumno1: '', alumno2: '', curso: '', solo: false };
+
+    function cleanName(v) { return v.trim().replace(/\s+/g, ' '); }
+    const getVal = id => cleanName(document.getElementById(id).value);
+
+    function toggleSolo() {
+        const solo = document.getElementById('solo-check').checked;
+        ['p2-first', 'p2-last'].forEach(id => {
+            const el = document.getElementById(id);
+            el.disabled = solo;
+            if (solo) el.value = '';
+        });
+    }
+
     function initGames() {
-        const p1 = document.getElementById('p1-in').value;
-        const p2 = document.getElementById('p2-in').value;
+        const err = document.getElementById('team-error');
+        const solo = document.getElementById('solo-check').checked;
+        const msgs = [];
+
+        if (getVal('p1-first').length < 2) msgs.push('Escribe el nombre del alumno/a 1.');
+        if (getVal('p1-last').length < 2) msgs.push('Escribe los apellidos del alumno/a 1.');
+        if (!solo) {
+            if (getVal('p2-first').length < 2) msgs.push('Escribe el nombre del alumno/a 2 (o marca «Trabajo en solitario»).');
+            if (getVal('p2-last').length < 2) msgs.push('Escribe los apellidos del alumno/a 2 (o marca «Trabajo en solitario»).');
+        }
+        if (!getVal('student-group')) msgs.push('Indica el curso y grupo.');
+
+        if (msgs.length) { err.innerHTML = msgs.join('<br>'); return; }
+        err.innerHTML = '';
+
+        const p1 = getVal('p1-first') + ' ' + getVal('p1-last');
+        const p2 = solo ? '' : getVal('p2-first') + ' ' + getVal('p2-last');
+        teamInfo = { alumno1: p1, alumno2: p2, curso: getVal('student-group'), solo };
+
         document.getElementById('lobby').style.display = 'none';
+        document.getElementById('send-panel').style.display = 'block';
+
         games[0] = new TetrisGame(0, p1, '#3498db');
-        games[1] = new TetrisGame(1, p2, '#e91e63');
+        games[1] = new TetrisGame(1, solo ? 'Jugador 2' : p2, '#e91e63');
+        gameStarted = true;
+    }
+
+    function setSendStatus(text, cls) {
+        const st = document.getElementById('send-status');
+        st.textContent = text;
+        st.className = cls || '';
+    }
+
+    function startSendLock() {
+        const btn = document.getElementById('send-btn');
+        const until = Date.now() + BLOQUEO_ENVIO_MS;
+        btn.disabled = true;
+        clearInterval(lockTimer);
+        const tick = () => {
+            const left = until - Date.now();
+            if (left <= 0) {
+                clearInterval(lockTimer);
+                btn.disabled = false;
+                btn.textContent = '📤 Enviar resultados';
+                setSendStatus('Ya puedes enviar de nuevo si quieres actualizar tu puntuación.', 'wait');
+                return;
+            }
+            const s = Math.ceil(left / 1000);
+            btn.textContent = '🔒 Bloqueado ' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+        };
+        tick();
+        lockTimer = setInterval(tick, 500);
+    }
+
+    // Registros pendientes de enviar (uno por alumno). Se conservan si algún envío falla,
+    // para reintentar solo los que faltan sin duplicar los que ya llegaron.
+    let pendingRecords = null;
+
+    async function postRecord(params) {
+        try {
+            // Primer intento: respuesta legible (confirma la recepción)
+            const resp = await fetch(SHEET_WEBAPP_URL, { method: 'POST', body: params });
+            const data = await resp.json();
+            if (!data.ok) throw new Error(data.error || 'Respuesta no válida');
+            return true;
+        } catch (e1) {
+            try {
+                // Segundo intento sin leer respuesta (el servidor ignora duplicados por ID)
+                await fetch(SHEET_WEBAPP_URL, { method: 'POST', mode: 'no-cors', body: params });
+                return true;
+            } catch (e2) {
+                return false;
+            }
+        }
+    }
+
+    function buildRecords() {
+        const now = new Date();
+        const fecha = now.toLocaleDateString('es-ES');
+        const hora = now.toLocaleTimeString('es-ES', { hour12: false });
+        const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+        // Un registro por alumno: su propio nombre en "alumno1", su compañero/a en "alumno2"
+        // y SU puntuación final (puntos x 0,5, como se ve en pantalla) en "total".
+        const make = (propio, companero, brutos) => ({
+            enviado: false,
+            etiqueta: propio + ' ' + (brutos * 0.5).toFixed(1).replace('.', ','),
+            params: new URLSearchParams({
+                id: uid(),
+                fecha, hora,
+                alumno1: propio,
+                alumno2: companero,
+                curso: teamInfo.curso,
+                criterio: ACTIVIDAD,
+                total: (brutos * 0.5).toFixed(1),
+                puntos_alumno1: (brutos * 0.5).toFixed(1),
+                puntos_alumno2: '',
+                puntos_brutos_alumno1: brutos,
+                puntos_brutos_alumno2: ''
+            })
+        });
+
+        const recs = [make(teamInfo.alumno1, teamInfo.alumno2, games[0].score)];
+        if (!teamInfo.solo) recs.push(make(teamInfo.alumno2, teamInfo.alumno1, games[1].score));
+        return recs;
+    }
+
+    async function sendResults() {
+        if (!gameStarted || sending) return;
+        const btn = document.getElementById('send-btn');
+        if (btn.disabled) return;
+        btn.blur();
+
+        sending = true;
+        btn.disabled = true; // evita pulsaciones repetidas mientras se envía
+        setSendStatus('Enviando resultados a la hoja de cálculo…', 'wait');
+
+        if (!pendingRecords) pendingRecords = buildRecords();
+
+        for (const rec of pendingRecords) {
+            if (rec.enviado) continue;
+            rec.enviado = await postRecord(rec.params);
+        }
+
+        const todosEnviados = pendingRecords.every(r => r.enviado);
+        sending = false;
+
+        if (todosEnviados) {
+            setSendStatus('✔ Resultados enviados: ' + pendingRecords.map(r => r.etiqueta).join(' · '), 'ok');
+            pendingRecords = null;
+            startSendLock();          // envío correcto: bloqueo de 5 minutos
+        } else {
+            setSendStatus('❌ No se pudieron enviar todos los datos. Comprueba la conexión y pulsa de nuevo.', 'err');
+            btn.disabled = false;     // si falla, se puede reintentar (solo se reenvía lo que faltó)
+        }
     }
 
     window.addEventListener('keydown', e => {
+        if (!gameStarted) return; // no mover piezas mientras se escriben los datos
+        const t = e.target;
+        if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
         const k = e.key.toLowerCase();
         if (k === 'a') games[0].move(-1, 0);
         if (k === 'd') games[0].move(1, 0);

@@ -192,6 +192,9 @@
                 <input type="text" id="player2-first" autocomplete="off" placeholder="Nombre. Ej: Marcos">
                 <input type="text" id="player2-last" autocomplete="off" placeholder="Apellidos. Ej: Díaz Ruiz">
             </div>
+            <label style="display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; margin:8px 0;">
+                <input type="checkbox" id="solo-check" style="width:auto; margin:0;" onchange="toggleSolo()"> Un único jugador (sin pareja)
+            </label>
             <input type="text" id="student-group" autocomplete="off" placeholder="Curso y grupo. Ej: 2º ESO A">
             <div id="team-error" class="team-error"></div>
             <button id="start-game">Comenzar Juego</button>
@@ -445,14 +448,28 @@
         function cleanName(v) { return v.trim().replace(/\s+/g, ' '); }
         const getVal = id => cleanName(document.getElementById(id).value);
 
+        let soloMode = false;
+
+        function toggleSolo() {
+            const solo = document.getElementById('solo-check').checked;
+            ['player2-first', 'player2-last'].forEach(id => {
+                const el = document.getElementById(id);
+                el.disabled = solo;
+                if (solo) el.value = '';
+            });
+        }
+
         document.getElementById('start-game').addEventListener('click', () => {
+            soloMode = document.getElementById('solo-check').checked;
             const err = document.getElementById('team-error');
             const msgs = [];
 
             if (getVal('player1-first').length < 2) msgs.push('Escribe el nombre del alumno/a 1.');
             if (getVal('player1-last').length < 2) msgs.push('Escribe los apellidos del alumno/a 1.');
-            if (getVal('player2-first').length < 2) msgs.push('Escribe el nombre del alumno/a 2.');
-            if (getVal('player2-last').length < 2) msgs.push('Escribe los apellidos del alumno/a 2.');
+            if (!soloMode) {
+                if (getVal('player2-first').length < 2) msgs.push('Escribe el nombre del alumno/a 2 (o marca «Un único jugador»).');
+                if (getVal('player2-last').length < 2) msgs.push('Escribe los apellidos del alumno/a 2 (o marca «Un único jugador»).');
+            }
             if (!getVal('student-group')) msgs.push('Indica el curso y grupo.');
 
             if (msgs.length) {
@@ -462,13 +479,13 @@
             err.innerHTML = '';
 
             const player1Name = getVal('player1-first') + ' ' + getVal('player1-last');
-            const player2Name = getVal('player2-first') + ' ' + getVal('player2-last');
+            const player2Name = soloMode ? '' : getVal('player2-first') + ' ' + getVal('player2-last');
 
             players.left.name = player1Name;
             players.right.name = player2Name;
 
             document.getElementById('player1-title').textContent = player1Name;
-            document.getElementById('player2-title').textContent = player2Name;
+            document.getElementById('player2-title').textContent = soloMode ? 'Jugador 2' : player2Name;
 
             document.getElementById('player-names-modal').style.display = 'none';
             document.getElementById('send-panel').style.display = 'block';
@@ -507,6 +524,59 @@
             lockTimer = setInterval(tick, 500);
         }
 
+        // Registros pendientes de enviar (uno por alumno). Se conservan si algún envío falla,
+        // para reintentar solo los que faltan sin duplicar los que ya llegaron.
+        let pendingRecords = null;
+
+        async function postRecord(params) {
+            try {
+                // Primer intento: respuesta legible (confirma la recepción)
+                const resp = await fetch(SHEET_WEBAPP_URL, { method: 'POST', body: params });
+                const data = await resp.json();
+                if (!data.ok) throw new Error(data.error || 'Respuesta no válida');
+                return true;
+            } catch (e1) {
+                try {
+                    // Segundo intento sin leer respuesta (el servidor ignora duplicados por ID)
+                    await fetch(SHEET_WEBAPP_URL, { method: 'POST', mode: 'no-cors', body: params });
+                    return true;
+                } catch (e2) {
+                    return false;
+                }
+            }
+        }
+
+        function buildRecords() {
+            const now = new Date();
+            const fecha = now.toLocaleDateString('es-ES');
+            const hora = now.toLocaleTimeString('es-ES', { hour12: false });
+            const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+            // Un registro por alumno: solo su nombre y SU puntuación (sin el nombre del compañero/a)
+            const make = (nombre, puntos) => {
+                const pts = Math.round(puntos * 10) / 10;
+                return {
+                    enviado: false,
+                    etiqueta: nombre + ' ' + pts.toFixed(1).replace('.', ','),
+                    params: new URLSearchParams({
+                        id: uid(),
+                        fecha, hora,
+                        alumno1: nombre,
+                        alumno2: '',
+                        curso: getVal('student-group'),
+                        criterio: ACTIVIDAD,
+                        total: pts.toFixed(1),
+                        puntos_alumno1: pts.toFixed(1),
+                        puntos_alumno2: ''
+                    })
+                };
+            };
+
+            const recs = [make(players.left.name, players.left.score)];
+            if (!soloMode) recs.push(make(players.right.name, players.right.score));
+            return recs;
+        }
+
         async function sendResults() {
             if (!gameStarted || sending) return;
             const btn = document.getElementById('send-btn');
@@ -516,44 +586,24 @@
             btn.disabled = true; // evita pulsaciones repetidas mientras se envía
             setSendStatus('Enviando resultados a la hoja de cálculo…', 'wait');
 
-            const puntosIzq = Math.round(players.left.score * 10) / 10;
-            const puntosDer = Math.round(players.right.score * 10) / 10;
-            const now = new Date();
-            const params = new URLSearchParams({
-                id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
-                fecha: now.toLocaleDateString('es-ES'),
-                hora: now.toLocaleTimeString('es-ES', { hour12: false }),
-                alumno1: players.left.name,
-                alumno2: players.right.name,
-                curso: getVal('student-group'),
-                criterio: ACTIVIDAD,
-                total: (Math.round((puntosIzq + puntosDer) * 10) / 10).toFixed(1),
-                puntos_alumno1: puntosIzq.toFixed(1),
-                puntos_alumno2: puntosDer.toFixed(1)
-            });
+            if (!pendingRecords) pendingRecords = buildRecords();
 
-            let ok = false;
-            try {
-                // Primer intento: respuesta legible (confirma la recepción)
-                const resp = await fetch(SHEET_WEBAPP_URL, { method: 'POST', body: params });
-                const data = await resp.json();
-                if (!data.ok) throw new Error(data.error || 'Respuesta no válida');
-                ok = true;
-                setSendStatus('✔ Resultados enviados correctamente.', 'ok');
-            } catch (e1) {
-                try {
-                    // Segundo intento sin leer respuesta (el servidor ignora duplicados por ID)
-                    await fetch(SHEET_WEBAPP_URL, { method: 'POST', mode: 'no-cors', body: params });
-                    ok = true;
-                    setSendStatus('✔ Resultados enviados (no se pudo leer la confirmación del servidor).', 'ok');
-                } catch (e2) {
-                    setSendStatus('❌ No se pudieron enviar. Comprueba la conexión y pulsa de nuevo.', 'err');
-                }
+            for (const rec of pendingRecords) {
+                if (rec.enviado) continue;
+                rec.enviado = await postRecord(rec.params);
             }
 
+            const todosEnviados = pendingRecords.every(r => r.enviado);
             sending = false;
-            if (ok) startSendLock();      // envío correcto: bloqueo de 3 minutos
-            else btn.disabled = false;    // si falla, se puede reintentar
+
+            if (todosEnviados) {
+                setSendStatus('✔ Resultados enviados: ' + pendingRecords.map(r => r.etiqueta).join(' · '), 'ok');
+                pendingRecords = null;
+                startSendLock();          // envío correcto: bloqueo de 3 minutos
+            } else {
+                setSendStatus('❌ No se pudieron enviar todos los datos. Comprueba la conexión y pulsa de nuevo.', 'err');
+                btn.disabled = false;     // si falla, se puede reintentar (solo se reenvía lo que faltó)
+            }
         }
 
         document.getElementById('send-btn').addEventListener('click', sendResults);
