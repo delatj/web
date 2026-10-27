@@ -4,11 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Consulta de Resultados de Alumnos</title>
-  <!-- Estilos y Librería PapaParse para parsear los datos de Google Sheets -->
+  <!-- Librería PapaParse para leer Google Sheets -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <style>
     :root {
       --primary-color: #2563eb;
+      --primary-hover: #1d4ed8;
       --bg-color: #f8fafc;
       --card-bg: #ffffff;
       --text-color: #1e293b;
@@ -42,11 +43,71 @@
       padding: 20px;
       border-radius: 12px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      margin-bottom: 24px;
+      margin-bottom: 20px;
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 16px;
       align-items: end;
+    }
+
+    .sort-card {
+      background: var(--card-bg);
+      padding: 16px 20px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      margin-bottom: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .sort-label {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #475569;
+      margin-right: 8px;
+    }
+
+    .btn-sort {
+      background-color: #f1f5f9;
+      color: #334155;
+      border: 1px solid var(--border-color);
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-sort:hover {
+      background-color: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .btn-sort.active {
+      background-color: var(--primary-color);
+      color: #ffffff;
+      border-color: var(--primary-color);
+      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+    }
+
+    .btn-reset {
+      background-color: transparent;
+      border: 1px solid transparent;
+      color: #64748b;
+      font-size: 0.85rem;
+      cursor: pointer;
+      text-decoration: underline;
+      padding: 8px;
+    }
+
+    .btn-reset:hover {
+      color: #0f172a;
     }
 
     .form-group {
@@ -153,17 +214,17 @@
     <p>Panel interactivo de consulta en tiempo real desde Google Sheets</p>
   </header>
 
-  <!-- Filtros -->
+  <!-- Selección de Día y Tramo -->
   <div class="filters-card">
     <div class="form-group">
-      <label for="fechaSelect">Seleccionar Día:</label>
+      <label for="fechaSelect">1. Seleccionar Día:</label>
       <select id="fechaSelect">
         <option value="">Cargando fechas...</option>
       </select>
     </div>
 
     <div class="form-group">
-      <label for="tramoSelect">Tramo Horario:</label>
+      <label for="tramoSelect">2. Tramo Horario:</label>
       <select id="tramoSelect">
         <option value="TODOS">Todos los tramos</option>
         <option value="08:00-09:00">08:00 - 09:00</option>
@@ -176,9 +237,21 @@
     </div>
 
     <div class="form-group">
-      <label for="busquedaInput">Buscar por alumno / grupo:</label>
+      <label for="busquedaInput">Buscar por nombre o grupo:</label>
       <input type="text" id="busquedaInput" placeholder="Escribe para buscar...">
     </div>
+  </div>
+
+  <!-- Botones de Ordenación -->
+  <div class="sort-card">
+    <span class="sort-label">3. Ordenar resultados por:</span>
+    <button id="sortBtnAlumno1" class="btn-sort">
+      🔤 Apellido Alumno 1 $\rightarrow$ Nota ↓
+    </button>
+    <button id="sortBtnAlumno2" class="btn-sort">
+      🔤 Apellido Alumno 2 $\rightarrow$ Nota ↓
+    </button>
+    <button id="resetSortBtn" class="btn-reset" style="display: none;">Quitar ordenación</button>
   </div>
 
   <!-- Barra de Estadísticas -->
@@ -209,14 +282,13 @@
 </div>
 
 <script>
-  // ID de la hoja proporcionado
   const SPREADSHEET_ID = '1VpcYNdyvFqZiYaE_YcOEPFQR8jwcy3AnTNM6C7GrHHQ';
   const SHEET_NAME = 'Hoja 1';
   const CSV_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
 
   let rawData = [];
+  let currentSortMode = null; // 'alumno1' | 'alumno2' | null
 
-  // Tramos Horarios en minutos desde las 00:00
   const TRAMOS = {
     '08:00-09:00': { start: 8 * 60, end: 9 * 60 },
     '09:00-10:00': { start: 9 * 60, end: 10 * 60 },
@@ -226,7 +298,6 @@
     '13:30-14:30': { start: 13 * 60 + 30, end: 14 * 60 + 30 },
   };
 
-  // Convertir string de hora (HH:MM:SS) a minutos del día
   function parseTimeToMinutes(timeStr) {
     if (!timeStr) return -1;
     const parts = timeStr.toString().trim().split(':');
@@ -234,7 +305,6 @@
     return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
   }
 
-  // Normalizar fechas a formato YYYY-MM-DD
   function parseDateStandard(dateStr) {
     if (!dateStr) return '';
     const d = new Date(dateStr);
@@ -244,7 +314,14 @@
     return dateStr.toString().trim();
   }
 
-  // Cargar datos al iniciar la página
+  // Extraer el apellido (todo lo que viene después del primer nombre)
+  function getLastName(fullName) {
+    if (!fullName) return '';
+    const parts = fullName.toString().trim().split(/\s+/);
+    if (parts.length <= 1) return parts[0] || '';
+    return parts.slice(1).join(' ');
+  }
+
   function loadData() {
     Papa.parse(CSV_URL, {
       download: true,
@@ -262,7 +339,6 @@
     });
   }
 
-  // Rellenar el selector de fechas únicas
   function populateDateDropdown() {
     const dateSelect = document.getElementById('fechaSelect');
     const dates = new Set();
@@ -277,30 +353,27 @@
     const sortedDates = Array.from(dates).sort();
     dateSelect.innerHTML = sortedDates.map(d => `<option value="${d}">${d}</option>`).join('');
     
-    // Seleccionar la última fecha por defecto si existe
     if (sortedDates.length > 0) {
       dateSelect.value = sortedDates[sortedDates.length - 1];
     }
   }
 
-  // Filtrar y renderizar en la tabla
   function filterAndDisplayData() {
     const selectedDate = document.getElementById('fechaSelect').value;
     const selectedTramo = document.getElementById('tramoSelect').value;
     const busqueda = document.getElementById('busquedaInput').value.toLowerCase();
 
-    const filtered = rawData.filter(row => {
+    // 1. Filtrado de filas
+    let filtered = rawData.filter(row => {
       const fechaRow = parseDateStandard(row['Fecha']);
       if (selectedDate && fechaRow !== selectedDate) return false;
 
-      // Filtro de tramo horario
       if (selectedTramo !== 'TODOS' && TRAMOS[selectedTramo]) {
         const timeMinutes = parseTimeToMinutes(row['Hora']);
         const range = TRAMOS[selectedTramo];
         if (timeMinutes < range.start || timeMinutes > range.end) return false;
       }
 
-      // Filtro de búsqueda por texto
       if (busqueda) {
         const textRow = `${row['Alumno/a 1']} ${row['Alumno/a 2']} ${row['Curso y grupo']} ${row['Criterio evaluado']}`.toLowerCase();
         if (!textRow.includes(busqueda)) return false;
@@ -309,10 +382,38 @@
       return true;
     });
 
+    // 2. Ordenación según el botón activo
+    if (currentSortMode) {
+      const fieldKey = currentSortMode === 'alumno1' ? 'Alumno/a 1' : 'Alumno/a 2';
+
+      filtered.sort((a, b) => {
+        const valA = (a[fieldKey] || '').toString().trim();
+        const valB = (b[fieldKey] || '').toString().trim();
+
+        // Mandar casillas vacías al final
+        if (!valA && valB) return 1;
+        if (valA && !valB) return -1;
+        if (!valA && !valB) return 0;
+
+        // Comparar Apellidos (A-Z)
+        const lastNameA = getLastName(valA);
+        const lastNameB = getLastName(valB);
+        const surnameCompare = lastNameA.localeCompare(lastNameB, 'es', { sensitivity: 'base' });
+
+        if (surnameCompare !== 0) {
+          return surnameCompare;
+        }
+
+        // Si los apellidos coinciden, ordenar por Nota de mayor a menor
+        const scoreA = parseFloat(a['Puntuación total (sobre 100)']) || 0;
+        const scoreB = parseFloat(b['Puntuación total (sobre 100)']) || 0;
+        return scoreB - scoreA;
+      });
+    }
+
     renderTable(filtered);
   }
 
-  // Dibujar tabla y actualizar métricas
   function renderTable(data) {
     const tbody = document.getElementById('tableBody');
     const countStat = document.getElementById('countStat');
@@ -356,12 +457,40 @@
     avgStat.textContent = validScores > 0 ? (sumScores / validScores).toFixed(1) : '0';
   }
 
-  // Listeners para actualización automática
+  // Gestores de eventos para los botones de ordenación
+  const btnAlumno1 = document.getElementById('sortBtnAlumno1');
+  const btnAlumno2 = document.getElementById('sortBtnAlumno2');
+  const btnReset = document.getElementById('resetSortBtn');
+
+  function updateSortUI() {
+    btnAlumno1.classList.toggle('active', currentSortMode === 'alumno1');
+    btnAlumno2.classList.toggle('active', currentSortMode === 'alumno2');
+    btnReset.style.display = currentSortMode ? 'inline-block' : 'none';
+  }
+
+  btnAlumno1.addEventListener('click', () => {
+    currentSortMode = 'alumno1';
+    updateSortUI();
+    filterAndDisplayData();
+  });
+
+  btnAlumno2.addEventListener('click', () => {
+    currentSortMode = 'alumno2';
+    updateSortUI();
+    filterAndDisplayData();
+  });
+
+  btnReset.addEventListener('click', () => {
+    currentSortMode = null;
+    updateSortUI();
+    filterAndDisplayData();
+  });
+
+  // Eventos de los filtros desplegables
   document.getElementById('fechaSelect').addEventListener('change', filterAndDisplayData);
   document.getElementById('tramoSelect').addEventListener('change', filterAndDisplayData);
   document.getElementById('busquedaInput').addEventListener('input', filterAndDisplayData);
 
-  // Inicializar al cargar
   window.addEventListener('DOMContentLoaded', loadData);
 </script>
 
