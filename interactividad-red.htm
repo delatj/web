@@ -1939,8 +1939,8 @@ function DownTime(){
       '<input type="text" id="hpk-a2" autocomplete="off" placeholder="Ej: Marcos Díaz Ruiz"></div>',
       '</div>',
       '<label class="hpk-solo"><input type="checkbox" id="hpk-solo"> Trabajo en solitario (sin pareja)</label>',
-      '<div class="hpk-grupo"><label for="hpk-curso">Curso y grupo</label>',
-      '<input type="text" id="hpk-curso" autocomplete="off" placeholder="Ej: 2º ESO A"></div>',
+      '<div class="hpk-grupo"><label for="hpk-curso">Nombre del profesor/a</label>',
+      '<input type="text" id="hpk-curso" autocomplete="off" placeholder="Ej: Eduardo"></div>',
       '<div id="hpk-err" class="hpk-err" role="alert"></div>',
       '<button type="button" id="hpk-go" class="hpk-btn">Empezar la actividad</button>',
       '</div>'
@@ -1974,7 +1974,7 @@ function DownTime(){
         if (!nombreValido(a2)) { m.push('Escribe nombre y apellidos del alumno/a 2 (o marca «Trabajo en solitario»).'); }
         else if (a1.toLowerCase() === a2.toLowerCase()) { m.push('Los dos alumnos no pueden tener el mismo nombre.'); }
       }
-      if (curso.length < 2) { m.push('Indica el curso y grupo.'); }
+      if (curso.length < 2) { m.push('Indica el nombre del profesor/a.'); }
       if (m.length) {
         $('hpk-err').innerHTML = m.map(esc).join('<br>');
         $('hpk-err').className = 'hpk-err hpk-ver';
@@ -2043,7 +2043,7 @@ function DownTime(){
       '<button type="button" class="hpk-x" id="hpk-ocultar" aria-label="Ocultar resultado">✕</button>',
       '<div class="hpk-nota">' + r.pct + '%</div>',
       '<div class="hpk-cuerpo">',
-      '<div class="hpk-equipo">' + equipo + ' · ' + esc(r.curso) + (r.aciertos ? ' · aciertos ' + esc(r.aciertos) : '') + '</div>',
+      '<div class="hpk-equipo">' + equipo + ' · Prof: ' + esc(r.curso) + (r.aciertos ? ' · aciertos ' + esc(r.aciertos) : '') + '</div>',
       '<div class="hpk-msg">' + msg + '</div>',
       '<div id="hpk-estado" class="hpk-estado"></div>',
       '<div class="hpk-acciones">',
