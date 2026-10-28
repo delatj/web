@@ -1,7 +1,6 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Conversor de actividades Hot Potatoes</title>
 <style>
@@ -103,8 +102,7 @@
     <p class="ayuda">Vienen rellenados con los mismos datos de tus simuladores. Solo tienes que tocarlos si algo cambia.</p>
     <div class="campos">
       <label class="campo ancho">Dirección de envío a la hoja de cálculo (Apps Script)
-        <input type="text" id="cfg-url" spellcheck="false"
-               value="https://script.google.com/macros/s/AKfycbyiOndS6GMYhgiSGLVAXUOOHhMKtBXqcLUeOppbNZIkrxU-HiMlgmhlYCj1xYZQG0io/exec">
+        <input type="text" id="cfg-url" spellcheck="false" value="https://script.google.com/macros/s/AKfycbyiOndS6GMYhgiSGLVAXUOOHhMKtBXqcLUeOppbNZIkrxU-HiMlgmhlYCj1xYZQG0io/exec">
       </label>
       <label class="campo">Nota mínima para enviar (%)
         <input type="number" id="cfg-minimo" min="0" max="100" step="1" value="70">
@@ -112,7 +110,7 @@
       </label>
       <label class="campo">Extensión del archivo descargado
         <select id="cfg-ext">
-          <option value="igual" selected>La misma que el archivo original</option>
+          <option value="igual" selected="">La misma que el archivo original</option>
           <option value=".htm">.htm</option>
           <option value=".html">.html</option>
         </select>
@@ -132,7 +130,7 @@
           <small>Solo si las imágenes se cargan con rutas relativas y quieres apuntarlas al repositorio.</small>
         </label>
         <label class="check ancho">
-          <input type="checkbox" id="cfg-quitar-files" checked>
+          <input type="checkbox" id="cfg-quitar-files" checked="">
           <span>Al usar la dirección base, quitar la carpeta «…_files/» que añade el navegador al guardar una página</span>
         </label>
       </div>
@@ -145,11 +143,11 @@
     <label class="zona" id="zona" for="ficheros">
       <strong>Pulsa aquí o arrastra tus archivos .htm / .html</strong>
       <span>Actividades de relacionar imágenes, tests y rellenar huecos</span>
-      <input type="file" id="ficheros" accept=".htm,.html" multiple>
+      <input type="file" id="ficheros" accept=".htm,.html" multiple="">
     </label>
   </section>
 
-  <section id="resultados" hidden>
+  <section id="resultados" hidden="">
     <div class="barra">
       <h2 style="margin:0">Archivos convertidos</h2>
       <button type="button" class="btn" id="btn-todos">Descargar todos</button>
@@ -160,10 +158,10 @@
   <section>
     <h2>Qué hace el archivo convertido</h2>
     <ol class="que-hace">
-      <li>Antes de empezar pide, de forma obligatoria, nombre y apellidos de los dos miembros del grupo (con casilla para trabajo en solitario) y el curso y grupo.</li>
+      <li>Antes de empezar pide, de forma obligatoria, nombre y apellidos de los dos miembros del grupo (con casilla para trabajo en solitario) y el nombre del profesor/a.</li>
       <li>El tiempo de la actividad no empieza hasta que se rellenan esos datos.</li>
       <li>Al terminar la actividad, o al acabarse el tiempo, muestra la nota en grande.</li>
-      <li>Si se llega a la nota mínima, envía fecha, hora, alumnos, curso, actividad y nota a la hoja de cálculo. Si no, avisa de que no se ha enviado y permite repetir.</li>
+      <li>Si se llega a la nota mínima, envía fecha, hora, alumnos, profesor/a, actividad y nota a la hoja de cálculo. Si no, avisa de que no se ha enviado y permite repetir.</li>
     </ol>
   </section>
 
@@ -220,8 +218,8 @@ function HPK_RUNTIME(CFG) {
       '<input type="text" id="hpk-a2" autocomplete="off" placeholder="Ej: Marcos Díaz Ruiz"></div>',
       '</div>',
       '<label class="hpk-solo"><input type="checkbox" id="hpk-solo"> Trabajo en solitario (sin pareja)</label>',
-      '<div class="hpk-grupo"><label for="hpk-curso">Curso y grupo</label>',
-      '<input type="text" id="hpk-curso" autocomplete="off" placeholder="Ej: 2º ESO A"></div>',
+      '<div class="hpk-grupo"><label for="hpk-curso">Nombre del profesor/a</label>',
+      '<input type="text" id="hpk-curso" autocomplete="off" placeholder="Ej: Eduardo"></div>',
       '<div id="hpk-err" class="hpk-err" role="alert"></div>',
       '<button type="button" id="hpk-go" class="hpk-btn">Empezar la actividad</button>',
       '</div>'
@@ -255,7 +253,7 @@ function HPK_RUNTIME(CFG) {
         if (!nombreValido(a2)) { m.push('Escribe nombre y apellidos del alumno/a 2 (o marca «Trabajo en solitario»).'); }
         else if (a1.toLowerCase() === a2.toLowerCase()) { m.push('Los dos alumnos no pueden tener el mismo nombre.'); }
       }
-      if (curso.length < 2) { m.push('Indica el curso y grupo.'); }
+      if (curso.length < 2) { m.push('Indica el nombre del profesor/a.'); }
       if (m.length) {
         $('hpk-err').innerHTML = m.map(esc).join('<br>');
         $('hpk-err').className = 'hpk-err hpk-ver';
@@ -324,7 +322,7 @@ function HPK_RUNTIME(CFG) {
       '<button type="button" class="hpk-x" id="hpk-ocultar" aria-label="Ocultar resultado">✕</button>',
       '<div class="hpk-nota">' + r.pct + '%</div>',
       '<div class="hpk-cuerpo">',
-      '<div class="hpk-equipo">' + equipo + ' · ' + esc(r.curso) + (r.aciertos ? ' · aciertos ' + esc(r.aciertos) : '') + '</div>',
+      '<div class="hpk-equipo">' + equipo + ' · Prof: ' + esc(r.curso) + (r.aciertos ? ' · aciertos ' + esc(r.aciertos) : '') + '</div>',
       '<div class="hpk-msg">' + msg + '</div>',
       '<div id="hpk-estado" class="hpk-estado"></div>',
       '<div class="hpk-acciones">',
@@ -752,5 +750,6 @@ function procesar(lista) {
   });
 })();
 </script>
-</body>
-</html>
+
+
+</body></html>
