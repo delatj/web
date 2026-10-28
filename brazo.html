@@ -106,7 +106,7 @@
                 <input type="checkbox" id="solo-check" style="width:auto; margin:0; padding:0;" onchange="toggleSolo()"> Un único jugador (sin pareja)
             </label>
 
-            <input type="text" id="student-group" autocomplete="off" placeholder="Curso y grupo. Ej: 2º ESO A">
+            <input type="text" id="student-group" autocomplete="off" placeholder="Nombre profesor. Ej: Eduardo">
             <div id="team-error"></div>
 
             <button onclick="iniciarSesion()" style="background:var(--primary); color:white; width:100%; padding:12px; border:none; border-radius:6px; cursor:pointer; font-weight:bold; margin-top:8px;">CONECTAR BRAZO</button>
@@ -241,7 +241,7 @@
                 if (getVal('p2-last').length < 2) msgs.push('Escribe los apellidos del jugador 2 (o marca «Un único jugador»).');
             }
 
-            if (!getVal('student-group')) msgs.push('Indica el curso y grupo.');
+            if (!getVal('student-group')) msgs.push('Indica el nombre profesor.');
 
             if (msgs.length) {
                 err.innerHTML = msgs.join('<br>');

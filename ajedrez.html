@@ -100,7 +100,7 @@
             <input type="text" id="p2-last" autocomplete="off" placeholder="Apellidos. Ej: Díaz Ruiz">
         </div>
 
-        <input type="text" id="student-group" autocomplete="off" placeholder="Curso y grupo. Ej: 2º ESO A" style="width: calc(100% - 20px); padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px;">
+        <input type="text" id="student-group" autocomplete="off" placeholder="Nombre profesor. Ej: Eduardo" style="width: calc(100% - 20px); padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px;">
         <div id="team-error"></div>
 
         <button class="btn-send" onclick="initGame()">COMENZAR PARTIDA</button>
@@ -245,7 +245,7 @@
             if (getVal('p2-last').length < 2) msgs.push('Escribe los apellidos del jugador negro.');
         }
 
-        if (!getVal('student-group')) msgs.push('Indica el curso y grupo.');
+        if (!getVal('student-group')) msgs.push('Indica el nombre del profesor.');
 
         if (msgs.length) {
             err.innerHTML = msgs.join('<br>');

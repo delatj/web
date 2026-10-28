@@ -252,7 +252,7 @@
             <label style="display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; margin:6px 0; font-size: 13px;">
                 <input type="checkbox" id="solo-check" style="width:auto; margin:0;" onchange="toggleSolo()">
             </label>
-            <input type="text" id="student-group" autocomplete="off" placeholder="Curso y grupo. Ej: 2º ESO A">
+            <input type="text" id="student-group" autocomplete="off" placeholder="Nombre del profesor. Ej: Eduardo">
             <div id="team-error"></div>
             <button id="start-game">Comenzar Juego</button>
         </div>
@@ -399,7 +399,7 @@
                 if (getVal('p2-first').length < 2) msgs.push('Escribe el nombre del jugador 2 (o marca «Un único jugador»).');
                 if (getVal('p2-last').length < 2) msgs.push('Escribe los apellidos del jugador 2 (o marca «Un único jugador»).');
             }
-            if (!getVal('student-group')) msgs.push('Indica el curso y grupo.');
+            if (!getVal('student-group')) msgs.push('Indica el nombre del profesor.');
             if (msgs.length) { err.innerHTML = msgs.join('<br>'); return; }
             err.innerHTML = '';
 
