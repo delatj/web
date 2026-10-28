@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
+<!-- saved from url=(0048)https://delatj.github.io/web/consultas-hoja.html -->
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Consulta de Resultados de Alumnos</title>
   <!-- Librería PapaParse para leer Google Sheets -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="./Consulta de Resultados de Alumnos_files/papaparse.min.js"></script>
   <style>
     :root {
       --primary-color: #2563eb;
@@ -135,6 +135,35 @@
       border-color: var(--primary-color);
     }
 
+    .prof-chips {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .prof-chips .chips-label {
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: #475569;
+    }
+
+    .prof-chip {
+      padding: 5px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 999px;
+      background: #fff;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .prof-chip:hover, .prof-chip.active {
+      background: var(--primary-color);
+      border-color: var(--primary-color);
+      color: #fff;
+    }
+
     .stats-bar {
       display: flex;
       gap: 16px;
@@ -218,9 +247,7 @@
   <div class="filters-card">
     <div class="form-group">
       <label for="fechaSelect">1. Seleccionar Día:</label>
-      <select id="fechaSelect">
-        <option value="">Cargando fechas...</option>
-      </select>
+      <select id="fechaSelect"><option value="18/10/2026">18/10/2026</option><option value="19/10/2026">19/10/2026</option><option value="20/10/2026">20/10/2026</option><option value="2026-10-18">2026-10-18</option><option value="21/10/2026">21/10/2026</option><option value="22/10/2026">22/10/2026</option><option value="23/10/2026">23/10/2026</option><option value="26/10/2026">26/10/2026</option><option value="27/10/2026">27/10/2026</option><option value="28/10/2026">28/10/2026</option></select>
     </div>
 
     <div class="form-group">
@@ -237,14 +264,22 @@
     </div>
 
     <div class="form-group">
-      <label for="busquedaInput">Buscar por nombre o grupo:</label>
+      <label for="profesorInput">3. Profesor/a (escribe las primeras letras):</label>
+      <input type="text" id="profesorInput" list="profesorList" autocomplete="off" placeholder="Todos los profesores">
+      <datalist id="profesorList"></datalist>
+    </div>
+
+    <div class="form-group">
+      <label for="busquedaInput">Buscar por alumno o criterio:</label>
       <input type="text" id="busquedaInput" placeholder="Escribe para buscar...">
     </div>
+
+    <div class="prof-chips" id="profChips"></div>
   </div>
 
   <!-- Botones de Ordenación -->
   <div class="sort-card">
-    <span class="sort-label">3. Ordenar resultados por:</span>
+    <span class="sort-label">4. Ordenar resultados por:</span>
     <button id="sortBtnAlumno1" class="btn-sort">
       🔤 Apellido Alumno 1 Nota ↓
     </button>
@@ -256,8 +291,8 @@
 
   <!-- Barra de Estadísticas -->
   <div class="stats-bar">
-    <div class="stat-box">Entregas encontradas: <span id="countStat" class="stat-value">0</span></div>
-    <div class="stat-box">Puntuación Media: <span id="avgStat" class="stat-value">0</span></div>
+    <div class="stat-box">Entregas encontradas: <span id="countStat" class="stat-value">127</span></div>
+    <div class="stat-box">Puntuación Media: <span id="avgStat" class="stat-value">37.1</span></div>
   </div>
 
   <!-- Tabla de Resultados -->
@@ -269,13 +304,1281 @@
           <th>Hora</th>
           <th>Alumno/a 1</th>
           <th>Alumno/a 2</th>
-          <th>Curso/Grupo</th>
+          <th>Profesor/a</th>
           <th>Criterio Evaluado</th>
           <th>Puntuación Total</th>
         </tr>
       </thead>
       <tbody id="tableBody">
-        <tr><td colspan="7" class="loading">Cargando datos desde Google Sheets...</td></tr>
+        <tr>
+          <td>28/10/2026</td>
+          <td>12:48:07</td>
+          <td><strong>Mari Carmen</strong></td>
+          <td>Duran Martin</td>
+          <td>-</td>
+          <td>TEMA: Introducción a la programación</td>
+          <td><span class="badge badge-danger">21.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>12:53:47</td>
+          <td><strong>Profe Miguel Soto</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Milogo2</td>
+          <td><span class="badge badge-danger">-</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>12:55:16</td>
+          <td><strong>Mari Carmen Durán</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>TEMA: Introducción a la programación</td>
+          <td><span class="badge badge-danger">42.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>12:57:08</td>
+          <td><strong>ivan guarnido</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Dron2 - Criterio 6.1 (Tec y digit)/ 1.1 (Comput)</td>
+          <td><span class="badge badge-danger">30.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:05:55</td>
+          <td><strong>JUAN JOSE PÁEZ MATAS</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Dron2 - Criterio 6.1 (Tec y digit)/ 1.1 (Comput)</td>
+          <td><span class="badge badge-danger">-</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:06:50</td>
+          <td><strong>robot uno</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Dron2 - Criterio 6.1 (Tec y digit)/ 1.1 (Comput)</td>
+          <td><span class="badge badge-danger">-</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:06:50</td>
+          <td><strong>reyes santos</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Dron2 - Criterio 6.1 (Tec y digit)/ 1.1 (Comput)</td>
+          <td><span class="badge badge-danger">30.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:07:02</td>
+          <td><strong>lucia perez</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Dron2 - Criterio 6.1 (Tec y digit)/ 1.1 (Comput)</td>
+          <td><span class="badge badge-danger">-</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:12:53</td>
+          <td><strong>Gabriel González Sánchez</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Dron2 - Criterio 6.1 (Tec y digit)/ 1.1 (Comput)</td>
+          <td><span class="badge badge-danger">-</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:15:46</td>
+          <td><strong>miguel moreno</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Angry2</td>
+          <td><span class="badge badge-danger">-</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:17:21</td>
+          <td><strong>Lola Bernal Cabeza</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Dron2 - Criterio 6.1 (Tec y digit)/ 1.1 (Comput)</td>
+          <td><span class="badge badge-danger">-</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:18:16</td>
+          <td><strong>ALEJANDRA FERNÁNDEZ QUINTERO</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Dron2 - Criterio 6.1 (Tec y digit)/ 1.1 (Comput)</td>
+          <td><span class="badge badge-danger">-</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:19:44</td>
+          <td><strong>juan perez</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Dron2 - Criterio 6.1 (Tec y digit)/ 1.1 (Comput)</td>
+          <td><span class="badge badge-danger">-</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:19:44</td>
+          <td><strong>eduardo de la torre</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Dron2 - Criterio 6.1 (Tec y digit)/ 1.1 (Comput)</td>
+          <td><span class="badge badge-danger">-</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:21:35</td>
+          <td><strong>Lucas Guerra García</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Milogo2</td>
+          <td><span class="badge badge-danger">18.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:22:47</td>
+          <td><strong>aa aa</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Dron2 - Criterio 6.1 (Tec y digit)/ 1.1 (Comput)</td>
+          <td><span class="badge badge-danger">-</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:22:47</td>
+          <td><strong>bb bb</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Dron2 - Criterio 6.1 (Tec y digit)/ 1.1 (Comput)</td>
+          <td><span class="badge badge-danger">2.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:24:15</td>
+          <td><strong>JUAN JOSE PAEZ MATAS</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Ajedrez Pro</td>
+          <td><span class="badge badge-danger">15.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:24:45</td>
+          <td><strong>jesus moreno</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Dron2 - Criterio 6.1 (Tec y digit)/ 1.1 (Comput)</td>
+          <td><span class="badge badge-danger">-</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:26:29</td>
+          <td><strong>.. ...</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Milogo2</td>
+          <td><span class="badge badge-danger">-</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:26:29</td>
+          <td><strong>andre falcon</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Milogo2</td>
+          <td><span class="badge badge-danger">12.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:26:46</td>
+          <td><strong>ivan guarnido</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Serpiente2</td>
+          <td><span class="badge badge-danger">15.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:26:57</td>
+          <td><strong>rafael carrasco nuñez</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Milogo2</td>
+          <td><span class="badge badge-danger">11.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:26:58</td>
+          <td><strong>marcos rodriguez</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Milogo2</td>
+          <td><span class="badge badge-danger">-</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:26:59</td>
+          <td><strong>francisco javier cueto garcia</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Milogo2</td>
+          <td><span class="badge badge-danger">7.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:27:00</td>
+          <td><strong>Manuel Sánchez Benítez</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Milogo2</td>
+          <td><span class="badge badge-danger">10.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:27:01</td>
+          <td><strong>moi duran rodriguez</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Milogo2</td>
+          <td><span class="badge badge-danger">13.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:26:59</td>
+          <td><strong>juanfri begines lozano</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Milogo2</td>
+          <td><span class="badge badge-danger">12.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:27:00</td>
+          <td><strong>Raúl busto estevez</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Milogo2</td>
+          <td><span class="badge badge-danger">15.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:27:05</td>
+          <td><strong>raul pepito</strong></td>
+          <td>daniel marquez sivianes</td>
+          <td>-</td>
+          <td>Tetris2</td>
+          <td><span class="badge badge-danger">-</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:27:05</td>
+          <td><strong>manuel candel jimenez</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Milogo2</td>
+          <td><span class="badge badge-danger">26.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:27:06</td>
+          <td><strong>triana moreno quintero</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Milogo2</td>
+          <td><span class="badge badge-danger">6.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:27:05</td>
+          <td><strong>daniel marquez sivianes</strong></td>
+          <td>raul pepito</td>
+          <td>-</td>
+          <td>Tetris2</td>
+          <td><span class="badge badge-danger">5.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:27:05</td>
+          <td><strong>hugo garcía gavira</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Milogo2</td>
+          <td><span class="badge badge-danger">15.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:27:06</td>
+          <td><strong>inés morales garcía</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Milogo2</td>
+          <td><span class="badge badge-danger">10.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:27:26</td>
+          <td><strong>Lucas Guerra García</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Milogo2</td>
+          <td><span class="badge badge-danger">19.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:27:28</td>
+          <td><strong>Pablo Romero Acosta</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Milogo2</td>
+          <td><span class="badge badge-danger">21.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:27:28</td>
+          <td><strong>Ismael Martinez Crespo</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Milogo2</td>
+          <td><span class="badge badge-danger">20.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:27:33</td>
+          <td><strong>carlos begines paez</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Milogo2</td>
+          <td><span class="badge badge-danger">11.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:27:35</td>
+          <td><strong>triana espinosa conejo</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Milogo2</td>
+          <td><span class="badge badge-danger">-</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:27:33</td>
+          <td><strong>marco martin gomez</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Milogo2</td>
+          <td><span class="badge badge-danger">14.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:27:42</td>
+          <td><strong>nadie no juega</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Milogo2</td>
+          <td><span class="badge badge-danger">-</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:27:42</td>
+          <td><strong>mario martin nuñez</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Milogo2</td>
+          <td><span class="badge badge-danger">16.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:27:57</td>
+          <td><strong>helena garcia arriaza</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Milogo2</td>
+          <td><span class="badge badge-danger">-</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:33:49</td>
+          <td><strong>nadie nasienadie</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-danger">-</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:34:50</td>
+          <td><strong>blanca gallonavarro</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-danger">-</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:35:20</td>
+          <td><strong>Triana CaballeroDelgado</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-danger">-</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:35:37</td>
+          <td><strong>Laura CidLuna</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-danger">-</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:36:47</td>
+          <td><strong>Francis Jimenez</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-danger">-</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:38:25</td>
+          <td><strong>ZERE GGGGGO</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-danger">-</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:38:25</td>
+          <td><strong>Francis Jimenez</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-danger">-</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:46:12</td>
+          <td><strong>Diego Perez</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-danger">31.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:46:12</td>
+          <td><strong>Rubén Luna</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-danger">31.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:47:20</td>
+          <td><strong>antonio humanes</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-danger">3.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:48:23</td>
+          <td><strong>leo bustobaez</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-danger">39.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:48:23</td>
+          <td><strong>leo bustobaez</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-danger">39.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:49:30</td>
+          <td><strong>aaron paezgarcia</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-danger">31.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:49:40</td>
+          <td><strong>nadie nadie</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-danger">31.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:49:40</td>
+          <td><strong>Laura CidLuna</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-danger">31.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:50:32</td>
+          <td><strong>ZERE GGGGGO</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-danger">31.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:50:32</td>
+          <td><strong>Francis Jimenez</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-danger">31.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:52:50</td>
+          <td><strong>eugenio manuel rigo lopez</strong></td>
+          <td>eugenio manuel rigo lopez</td>
+          <td>-</td>
+          <td>Instalación y Configuración - Linux Lite</td>
+          <td><span class="badge badge-success">80.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:53:01</td>
+          <td><strong>Agustín Vidal</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-danger">31.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:53:05</td>
+          <td><strong>miguel martingonzalez</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-danger">36.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:53:05</td>
+          <td><strong>rubén bohórquezlovera</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-danger">36.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:53:15</td>
+          <td><strong>nerea gomez leon</strong></td>
+          <td>maria sanches bejumea</td>
+          <td>-</td>
+          <td>Instalación y Configuración - Linux Lite</td>
+          <td><span class="badge badge-success">100.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:55:17</td>
+          <td><strong>Ana_Isabel Bautista_Sánchez</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-danger">31.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:56:36</td>
+          <td><strong>martin linares</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-danger">47.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:56:36</td>
+          <td><strong>alvaro rodriguez</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-danger">47.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:58:16</td>
+          <td><strong>miguel martingonzalez</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-danger">46.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:58:16</td>
+          <td><strong>rubén bohórquezlovera</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-danger">46.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:59:34</td>
+          <td><strong>Diana Dutulete</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-danger">31.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>13:59:34</td>
+          <td><strong>Paula MorenoJiménez</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-danger">31.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>14:05:14</td>
+          <td><strong>tatiana amador rodriguez</strong></td>
+          <td>daniel jimenez herrera</td>
+          <td>-</td>
+          <td>Instalación y Configuración - Linux Lite</td>
+          <td><span class="badge badge-success">100.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>14:06:11</td>
+          <td><strong>antonio humanes</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-danger">41.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>14:06:45</td>
+          <td><strong>adrian condan</strong></td>
+          <td>martin muñoz</td>
+          <td>-</td>
+          <td>TEMA: Fabricación</td>
+          <td><span class="badge badge-danger">-</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>14:08:44</td>
+          <td><strong>ANA MUÑOZ</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>TEMA: Fabricación</td>
+          <td><span class="badge badge-danger">-</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>14:09:22</td>
+          <td><strong>Noleia Páez Matas</strong></td>
+          <td>Carla Maria Caro Jiménez</td>
+          <td>-</td>
+          <td>Instalación y Configuración - Linux Lite</td>
+          <td><span class="badge badge-success">90.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>14:11:26</td>
+          <td><strong>Laura Cid Luna</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Productos y Materiales</td>
+          <td><span class="badge badge-success">92.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>14:15:13</td>
+          <td><strong>ana belen fernandez garcia</strong></td>
+          <td>alejandra fernandez garcia</td>
+          <td>-</td>
+          <td>Instalación y Configuración - Linux Lite</td>
+          <td><span class="badge badge-success">90.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>14:21:26</td>
+          <td><strong>Diana Dutulete</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Serpiente2</td>
+          <td><span class="badge badge-danger">-</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>14:21:26</td>
+          <td><strong>Paula Moreno</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Serpiente2</td>
+          <td><span class="badge badge-danger">3.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>14:25:07</td>
+          <td><strong>martin sainz</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-danger">31.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>14:25:07</td>
+          <td><strong>ivan saborido</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-danger">31.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>14:25:28</td>
+          <td><strong>nadie nadie</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-success">96.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>14:25:28</td>
+          <td><strong>Triana Caballerodelgado</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-success">96.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>14:26:13</td>
+          <td><strong>Ana MuñozVivancos</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Brazo</td>
+          <td><span class="badge badge-danger">31.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>15:44:29</td>
+          <td><strong>Lola Ramos Díaz</strong></td>
+          <td>Angela Maestre Fernandez</td>
+          <td>-</td>
+          <td>TEMA:LA MADERA TEST</td>
+          <td><span class="badge badge-warning">67.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>15:50:49</td>
+          <td><strong>Lola Ramos DIaz</strong></td>
+          <td>Angela MAestre Fernandez</td>
+          <td>-</td>
+          <td>TEMA:LA MADERA TEST</td>
+          <td><span class="badge badge-success">88.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>15:58:31</td>
+          <td><strong>Lola RAmos Diaz</strong></td>
+          <td>angela maestre fernandez</td>
+          <td>-</td>
+          <td>TEMA:LA MADERA TEST</td>
+          <td><span class="badge badge-success">97.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>16:01:36</td>
+          <td><strong>lola ramos</strong></td>
+          <td>angela maestre</td>
+          <td>-</td>
+          <td>TEMA: MADERA QUIÉN 1</td>
+          <td><span class="badge badge-success">83.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>16:03:09</td>
+          <td><strong>lola ramos</strong></td>
+          <td>angela maestre</td>
+          <td>-</td>
+          <td>TEMA: MADERA QUIÉN 1</td>
+          <td><span class="badge badge-success">100.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>16:05:08</td>
+          <td><strong>lola ramos</strong></td>
+          <td>angela maestre</td>
+          <td>-</td>
+          <td>TEMA: MADERA QUIÉN 2</td>
+          <td><span class="badge badge-success">100.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>16:06:52</td>
+          <td><strong>lola ramos</strong></td>
+          <td>angela maestre</td>
+          <td>-</td>
+          <td>TEMA: MADERA QUIÉN 3</td>
+          <td><span class="badge badge-success">100.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>16:12:15</td>
+          <td><strong>lola ramos</strong></td>
+          <td>angela maestre</td>
+          <td>-</td>
+          <td>TEMA:LA MADERA TEST</td>
+          <td><span class="badge badge-success">89.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>16:18:27</td>
+          <td><strong>lola ramos</strong></td>
+          <td>angela maestre</td>
+          <td>-</td>
+          <td>TEMA: MATERIALES TEST</td>
+          <td><span class="badge badge-success">90.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>16:36:05</td>
+          <td><strong>a b g</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>TEMA:LA MADERA TEST</td>
+          <td><span class="badge badge-success">88.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>16:43:49</td>
+          <td><strong>d p b</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>TEMA:LA MADERA TEST</td>
+          <td><span class="badge badge-success">88.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>17:34:31</td>
+          <td><strong>aa aaa</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Dron2 - Criterio 6.1 (Tec y digit)/ 1.1 (Comput)</td>
+          <td><span class="badge badge-danger">-</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>17:34:31</td>
+          <td><strong>bb bb</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Dron2 - Criterio 6.1 (Tec y digit)/ 1.1 (Comput)</td>
+          <td><span class="badge badge-danger">-</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>18:34:25</td>
+          <td><strong>pepe pe pe</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>TEMA:LA MADERA TEST</td>
+          <td><span class="badge badge-danger">5.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>18:45:10</td>
+          <td><strong>pe pe pe</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>TEMA:LA MADERA TEST</td>
+          <td><span class="badge badge-danger">48.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>18:51:09</td>
+          <td><strong>kdkdk h h</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>TEMA:LA MADERA TEST</td>
+          <td><span class="badge badge-warning">59.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>18:56:54</td>
+          <td><strong>Álvaro Maestre Romero</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>TEMA:LA MADERA TEST</td>
+          <td><span class="badge badge-success">72.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>19:02:26</td>
+          <td><strong>Álvaro Maestre Romero</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>TEMA:LA MADERA TEST</td>
+          <td><span class="badge badge-success">81.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>19:08:43</td>
+          <td><strong>Álvaro Maestre Romero</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>TEMA:LA MADERA TEST</td>
+          <td><span class="badge badge-success">95.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>19:12:51</td>
+          <td><strong>Álvaro Maestre Romero</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>TEMA:LA MADERA TEST</td>
+          <td><span class="badge badge-success">98.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>19:19:37</td>
+          <td><strong>d d d</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>TEMA:LA MADERA TEST</td>
+          <td><span class="badge badge-success">95.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>19:25:57</td>
+          <td><strong>d d d</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>TEMA:LA MADERA TEST</td>
+          <td><span class="badge badge-success">97.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>21:02:07</td>
+          <td><strong>lola ramos</strong></td>
+          <td>angela maestre</td>
+          <td>-</td>
+          <td>TEMA: MATERIALES TEST</td>
+          <td><span class="badge badge-success">96.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>21:02:18</td>
+          <td><strong>edu ccc</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>TEMA:LA MADERA TEST</td>
+          <td><span class="badge badge-danger">14.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>21:10:32</td>
+          <td><strong>LOLA RAMOS</strong></td>
+          <td>ANGELA MAESTRE</td>
+          <td>-</td>
+          <td>TEMA: MADERA QUIÉN 1</td>
+          <td><span class="badge badge-success">100.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>21:12:28</td>
+          <td><strong>LOLA RAMOS</strong></td>
+          <td>ANGELA MAESTRE</td>
+          <td>-</td>
+          <td>TEMA: MADERA QUIÉN 2</td>
+          <td><span class="badge badge-success">77.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>21:13:56</td>
+          <td><strong>LOLS RSMOS</strong></td>
+          <td>ANGELA MAESTRE</td>
+          <td>-</td>
+          <td>TEMA: MADERA QUIÉN 2</td>
+          <td><span class="badge badge-success">100.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>21:14:38</td>
+          <td><strong>LOLA RAMOS</strong></td>
+          <td>ANGELA MAESTRE</td>
+          <td>-</td>
+          <td>TEMA: MADERA QUIÉN 3</td>
+          <td><span class="badge badge-success">100.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>21:20:21</td>
+          <td><strong>LOLA RAMOS</strong></td>
+          <td>ANGELA MAESTRE</td>
+          <td>-</td>
+          <td>TEMA:LA MADERA TEST</td>
+          <td><span class="badge badge-success">82.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>21:25:47</td>
+          <td><strong>lola ramos</strong></td>
+          <td>angela maestre</td>
+          <td>-</td>
+          <td>TEMA:LA MADERA TEST</td>
+          <td><span class="badge badge-success">97.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>22:32:27</td>
+          <td><strong>dkldkkd kd kd kd</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>TEMA:LA MADERA TEST</td>
+          <td><span class="badge badge-success">97.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>22:36:22</td>
+          <td><strong>dd dd</strong></td>
+          <td>fff ff</td>
+          <td>-</td>
+          <td>Productos y Materiales</td>
+          <td><span class="badge badge-danger">30.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>22:39:57</td>
+          <td><strong>sd df df</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>TEMA:LA MADERA TEST</td>
+          <td><span class="badge badge-success">97.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>22:44:04</td>
+          <td><strong>dd d d d</strong></td>
+          <td>-</td>
+          <td>-</td>
+          <td>TEMA:LA MADERA TEST</td>
+          <td><span class="badge badge-success">100.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>22:51:28</td>
+          <td><strong>ff ff</strong></td>
+          <td>dd fff</td>
+          <td>-</td>
+          <td>Cuaderno Técnico - Mecanismos (4º ESO)</td>
+          <td><span class="badge badge-danger">-</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>22:52:41</td>
+          <td><strong>ddd fff</strong></td>
+          <td>ee ddd</td>
+          <td>-</td>
+          <td>Cuaderno Técnico - Mecanismos (4º ESO)</td>
+          <td><span class="badge badge-danger">5.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>22:55:12</td>
+          <td><strong>fff ggg</strong></td>
+          <td>fff ggg3</td>
+          <td>-</td>
+          <td>TEMA: MADERA QUIÉN 1</td>
+          <td><span class="badge badge-success">83.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>22:56:27</td>
+          <td><strong>ddd fff</strong></td>
+          <td>ggg ggg</td>
+          <td>-</td>
+          <td>TEMA: Introducción a la programación</td>
+          <td><span class="badge badge-danger">5.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>23:00:28</td>
+          <td><strong>sss rr</strong></td>
+          <td>sss ttt</td>
+          <td>-</td>
+          <td>Cuaderno Técnico - Electricidad y Circuitos (4º ESO)</td>
+          <td><span class="badge badge-danger">2.0</span></td>
+        </tr>
+      
+        <tr>
+          <td>28/10/2026</td>
+          <td>23:03:10</td>
+          <td><strong>ddd bbb</strong></td>
+          <td>bbb bbb</td>
+          <td>-</td>
+          <td>Productos y Materiales</td>
+          <td><span class="badge badge-danger">14.0</span></td>
+        </tr>
       </tbody>
     </table>
   </div>
@@ -288,6 +1591,72 @@
 
   let rawData = [];
   let currentSortMode = null; // 'alumno1' | 'alumno2' | null
+  let profKey = 'Curso y grupo'; // columna del profesor (antes curso y grupo)
+
+  // Normaliza texto: minúsculas, sin tildes y sin espacios sobrantes
+  function norm(t) {
+    return (t || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+  }
+
+  function detectProfKey() {
+    const keys = rawData.length ? Object.keys(rawData[0]) : [];
+    return keys.find(k => /profesor|docente/i.test(k)) || 'Curso y grupo';
+  }
+
+  function getProf(row) {
+    return (row[profKey] || '').toString().replace(/\s+/g, ' ').trim();
+  }
+
+  // Coincide si lo escrito es el inicio del nombre o de cualquiera de sus palabras
+  function profMatches(profName, typed) {
+    const n = norm(profName);
+    const q = norm(typed);
+    if (!q) return true;
+    return n.startsWith(q) || n.split(' ').some(w => w.startsWith(q)) || n.includes(' ' + q);
+  }
+
+  // Filas que cumplen día y tramo (sin profesor ni búsqueda)
+  function rowsInInterval() {
+    const selectedDate = document.getElementById('fechaSelect').value;
+    const selectedTramo = document.getElementById('tramoSelect').value;
+    return rawData.filter(row => {
+      const fechaRow = parseDateStandard(row['Fecha']);
+      if (selectedDate && fechaRow !== selectedDate) return false;
+      if (selectedTramo !== 'TODOS' && TRAMOS[selectedTramo]) {
+        const timeMinutes = parseTimeToMinutes(row['Hora']);
+        const range = TRAMOS[selectedTramo];
+        if (timeMinutes < range.start || timeMinutes > range.end) return false;
+      }
+      return true;
+    });
+  }
+
+  // Lista de profesores que existen en el día y tramo consultados
+  function refreshProfessors() {
+    const byKey = new Map();
+    rowsInInterval().forEach(row => {
+      const name = getProf(row);
+      if (name && name !== '-' && !byKey.has(norm(name))) byKey.set(norm(name), name);
+    });
+    const names = Array.from(byKey.values()).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+
+    document.getElementById('profesorList').innerHTML =
+      names.map(n => `<option value="${n.replace(/"/g, '&quot;')}"></option>`).join('');
+
+    const chips = document.getElementById('profChips');
+    chips.innerHTML = names.length
+      ? `<span class="chips-label">Profesores en este tramo:</span>` +
+        names.map(n => `<button type="button" class="prof-chip" data-name="${n.replace(/"/g, '&quot;')}">${n}</button>`).join('')
+      : '';
+    updateChipsUI();
+  }
+
+  function updateChipsUI() {
+    const typed = norm(document.getElementById('profesorInput').value);
+    document.querySelectorAll('.prof-chip').forEach(c => {
+      c.classList.toggle('active', norm(c.dataset.name) === typed);
+    });
+  }
 
   const TRAMOS = {
     '08:00-09:00': { start: 8 * 60, end: 9 * 60 },
@@ -329,7 +1698,9 @@
       skipEmptyLines: true,
       complete: function(results) {
         rawData = results.data;
+        profKey = detectProfKey();
         populateDateDropdown();
+        refreshProfessors();
         filterAndDisplayData();
       },
       error: function(err) {
@@ -362,6 +1733,7 @@
     const selectedDate = document.getElementById('fechaSelect').value;
     const selectedTramo = document.getElementById('tramoSelect').value;
     const busqueda = document.getElementById('busquedaInput').value.toLowerCase();
+    const profTyped = document.getElementById('profesorInput').value;
 
     // 1. Filtrado de filas
     let filtered = rawData.filter(row => {
@@ -374,8 +1746,10 @@
         if (timeMinutes < range.start || timeMinutes > range.end) return false;
       }
 
+      if (profTyped.trim() && !profMatches(getProf(row), profTyped)) return false;
+
       if (busqueda) {
-        const textRow = `${row['Alumno/a 1']} ${row['Alumno/a 2']} ${row['Curso y grupo']} ${row['Criterio evaluado']}`.toLowerCase();
+        const textRow = `${row['Alumno/a 1']} ${row['Alumno/a 2']} ${getProf(row)} ${row['Criterio evaluado']}`.toLowerCase();
         if (!textRow.includes(busqueda)) return false;
       }
 
@@ -445,7 +1819,7 @@
           <td>${row['Hora'] || '-'}</td>
           <td><strong>${row['Alumno/a 1'] || '-'}</strong></td>
           <td>${row['Alumno/a 2'] || '-'}</td>
-          <td>${row['Curso y grupo'] || '-'}</td>
+          <td>${getProf(row) || '-'}</td>
           <td>${row['Criterio evaluado'] || '-'}</td>
           <td><span class="badge ${badgeClass}">${score ? score.toFixed(1) : '-'}</span></td>
         </tr>
@@ -487,12 +1861,21 @@
   });
 
   // Eventos de los filtros desplegables
-  document.getElementById('fechaSelect').addEventListener('change', filterAndDisplayData);
-  document.getElementById('tramoSelect').addEventListener('change', filterAndDisplayData);
+  document.getElementById('fechaSelect').addEventListener('change', () => { refreshProfessors(); filterAndDisplayData(); });
+  document.getElementById('tramoSelect').addEventListener('change', () => { refreshProfessors(); filterAndDisplayData(); });
   document.getElementById('busquedaInput').addEventListener('input', filterAndDisplayData);
+  document.getElementById('profesorInput').addEventListener('input', () => { updateChipsUI(); filterAndDisplayData(); });
+  document.getElementById('profChips').addEventListener('click', e => {
+    const chip = e.target.closest('.prof-chip');
+    if (!chip) return;
+    const input = document.getElementById('profesorInput');
+    input.value = norm(input.value) === norm(chip.dataset.name) ? '' : chip.dataset.name;
+    updateChipsUI();
+    filterAndDisplayData();
+  });
 
   window.addEventListener('DOMContentLoaded', loadData);
 </script>
 
-</body>
-</html>
+
+</body></html>
