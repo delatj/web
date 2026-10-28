@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Consulta de Resultados de Alumnos</title>
-  <!-- Librería PapaParse para leer Google Sheets -->
-  <script src="./Consulta de Resultados de Alumnos_files/papaparse.min.js"></script>
+  <!-- Librería PapaParse desde CDN oficial -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <style>
     :root {
       --primary-color: #2563eb;
@@ -293,7 +294,7 @@
   const CSV_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
 
   let rawData = [];
-  let currentSortMode = null; // 'alumno1' | 'alumno2' | null
+  let currentSortMode = null;
 
   const TRAMOS = {
     '08:00-09:00': { start: 8 * 60, end: 9 * 60 },
@@ -304,6 +305,39 @@
     '13:30-14:30': { start: 13 * 60 + 30, end: 14 * 60 + 30 },
   };
 
+  // Normalizador uniforme de fechas a formato DD/MM/YYYY
+  function formatDate(dateStr) {
+    if (!dateStr) return '';
+    let str = dateStr.toString().trim();
+    if (!str || str.toLowerCase() === 'monk-tablet') return '';
+
+    if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+      const parts = str.split('T')[0].split('-');
+      return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+    }
+
+    if (str.includes('/')) {
+      const parts = str.split(' ')[0].split('/');
+      if (parts.length === 3) {
+        let day = parts[0].padStart(2, '0');
+        let month = parts[1].padStart(2, '0');
+        let year = parts[2];
+        if (year.length === 2) year = '20' + year;
+        return `${day}/${month}/${year}`;
+      }
+    }
+    return str;
+  }
+
+  function dateToISO(dateDDMMYYYY) {
+    if (!dateDDMMYYYY) return '';
+    const parts = dateDDMMYYYY.split('/');
+    if (parts.length === 3) {
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+    return dateDDMMYYYY;
+  }
+
   function parseTimeToMinutes(timeStr) {
     if (!timeStr) return -1;
     const parts = timeStr.toString().trim().split(':');
@@ -311,20 +345,81 @@
     return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
   }
 
-  function parseDateStandard(dateStr) {
-    if (!dateStr) return '';
-    const d = new Date(dateStr);
-    if (!isNaN(d.getTime())) {
-      return d.toISOString().split('T')[0];
-    }
-    return dateStr.toString().trim();
-  }
-
   function getLastName(fullName) {
     if (!fullName) return '';
     const parts = fullName.toString().trim().split(/\s+/);
     if (parts.length <= 1) return parts[0] || '';
     return parts.slice(1).join(' ');
+  }
+
+  // Búsqueda flexible de campos en las filas
+  function getVal(row, possibleKeys) {
+    if (!row) return '';
+    for (let key of possibleKeys) {
+      if (row[key] !== undefined && row[key] !== null) {
+        return row[key].toString().trim();
+      }
+    }
+    for (let k in row) {
+      const kClean = k.trim().toLowerCase();
+      for (let key of possibleKeys) {
+        if (kClean === key.toLowerCase()) {
+          return row[k].toString().trim();
+        }
+      }
+    }
+    return '';
+  }
+
+  function getFecha(row) {
+    return formatDate(getVal(row, ['Fecha', 'fecha']));
+  }
+
+  function getHora(row) {
+    return getVal(row, ['Hora', 'hora']);
+  }
+
+  function getAlumno1(row) {
+    return getVal(row, ['Alumno/a 1', 'Alumno 1', 'Alumno1']) || '-';
+  }
+
+  function getAlumno2(row) {
+    return getVal(row, ['Alumno/a 2', 'Alumno 2', 'Alumno2']) || '-';
+  }
+
+  function getProfesor(row) {
+    const val = getVal(row, [
+      'Nombre del profesor',
+      'Nombre del Profesor',
+      'nombre del profesor',
+      'Profesor',
+      'profesor',
+      'Curso y grupo',
+      'Curso/Grupo'
+    ]);
+    if (val) return val;
+    for (let k in row) {
+      if (k.toLowerCase().includes('profe') || k.toLowerCase().includes('curso')) {
+        if (row[k]) return row[k].toString().trim();
+      }
+    }
+    return '-';
+  }
+
+  function getCriterio(row) {
+    return getVal(row, ['Criterio evaluado', 'Criterio Evaluado', 'Criterio']) || '-';
+  }
+
+  function getScore(row) {
+    const val = getVal(row, [
+      'Puntuación total (sobre 100)',
+      'Puntuación total',
+      'Puntuacion total',
+      'Puntuación',
+      'Nota'
+    ]);
+    const num = parseFloat(val);
+    return isNaN(num) ? NaN : num;
   }
 
   function loadData() {
@@ -350,18 +445,21 @@
     const dates = new Set();
 
     rawData.forEach(row => {
-      const fecha = parseDateStandard(row['Fecha']);
-      if (fecha && fecha.toLowerCase() !== 'monk-tablet') {
+      const fecha = getFecha(row);
+      if (fecha) {
         dates.add(fecha);
       }
     });
 
-    const sortedDates = Array.from(dates).sort();
-    dateSelect.innerHTML = sortedDates.map(d => `<option value="${d}">${d}</option>`).join('');
+    const sortedDates = Array.from(dates).sort((a, b) => dateToISO(a).localeCompare(dateToISO(b)));
     
-    if (sortedDates.length > 0) {
-      dateSelect.value = sortedDates[sortedDates.length - 1];
+    if (sortedDates.length === 0) {
+      dateSelect.innerHTML = '<option value="">Sin fechas disponibles</option>';
+      return;
     }
+
+    dateSelect.innerHTML = sortedDates.map(d => `<option value="${d}">${d}</option>`).join('');
+    dateSelect.value = sortedDates[sortedDates.length - 1];
   }
 
   function populateProfesorDropdown() {
@@ -372,18 +470,17 @@
 
     const profesores = new Set();
 
-    // Filtra únicamente los profesores que tienen entregas en el día y tramo seleccionados
     rawData.forEach(row => {
-      const fechaRow = parseDateStandard(row['Fecha']);
+      const fechaRow = getFecha(row);
       if (selectedDate && fechaRow !== selectedDate) return;
 
       if (selectedTramo !== 'TODOS' && TRAMOS[selectedTramo]) {
-        const timeMinutes = parseTimeToMinutes(row['Hora']);
+        const timeMinutes = parseTimeToMinutes(getHora(row));
         const range = TRAMOS[selectedTramo];
         if (timeMinutes < range.start || timeMinutes > range.end) return;
       }
 
-      const profe = (row['Nombre del profesor'] || row['Profesor'] || row['Curso y grupo'] || '').toString().trim();
+      const profe = getProfesor(row);
       if (profe && profe !== '-') {
         profesores.add(profe);
       }
@@ -395,7 +492,6 @@
     html += sortedProfesores.map(p => `<option value="${p}">${p}</option>`).join('');
     profesorSelect.innerHTML = html;
 
-    // Mantener la selección previa si el profesor existe dentro de ese tramo
     if (sortedProfesores.includes(previousProfesor)) {
       profesorSelect.value = previousProfesor;
     } else {
@@ -407,55 +503,51 @@
     const selectedDate = document.getElementById('fechaSelect').value;
     const selectedTramo = document.getElementById('tramoSelect').value;
     const selectedProfesor = document.getElementById('profesorSelect').value;
-    const busqueda = document.getElementById('busquedaInput').value.toLowerCase();
+    const busqueda = document.getElementById('busquedaInput').value.toLowerCase().trim();
 
-    // 1. Filtrado de filas
     let filtered = rawData.filter(row => {
-      const fechaRow = parseDateStandard(row['Fecha']);
+      const fechaRow = getFecha(row);
       if (selectedDate && fechaRow !== selectedDate) return false;
 
       if (selectedTramo !== 'TODOS' && TRAMOS[selectedTramo]) {
-        const timeMinutes = parseTimeToMinutes(row['Hora']);
+        const timeMinutes = parseTimeToMinutes(getHora(row));
         const range = TRAMOS[selectedTramo];
         if (timeMinutes < range.start || timeMinutes > range.end) return false;
       }
 
       if (selectedProfesor !== 'TODOS') {
-        const profeRow = (row['Nombre del profesor'] || row['Profesor'] || row['Curso y grupo'] || '').toString().trim();
+        const profeRow = getProfesor(row);
         if (profeRow !== selectedProfesor) return false;
       }
 
       if (busqueda) {
-        const profeVal = row['Nombre del profesor'] || row['Profesor'] || row['Curso y grupo'] || '';
-        const textRow = `${row['Alumno/a 1']} ${row['Alumno/a 2']} ${profeVal} ${row['Criterio evaluado']}`.toLowerCase();
+        const textRow = `${getAlumno1(row)} ${getAlumno2(row)} ${getProfesor(row)} ${getCriterio(row)}`.toLowerCase();
         if (!textRow.includes(busqueda)) return false;
       }
 
       return true;
     });
 
-    // 2. Ordenación según el botón activo
     if (currentSortMode) {
-      const fieldKey = currentSortMode === 'alumno1' ? 'Alumno/a 1' : 'Alumno/a 2';
-
       filtered.sort((a, b) => {
-        const valA = (a[fieldKey] || '').toString().trim();
-        const valB = (b[fieldKey] || '').toString().trim();
+        const valA = currentSortMode === 'alumno1' ? getAlumno1(a) : getAlumno2(a);
+        const valB = currentSortMode === 'alumno1' ? getAlumno1(b) : getAlumno2(b);
 
-        if (!valA && valB) return 1;
-        if (valA && !valB) return -1;
-        if (!valA && !valB) return 0;
+        const cleanA = (valA === '-' ? '' : valA).trim();
+        const cleanB = (valB === '-' ? '' : valB).trim();
 
-        const lastNameA = getLastName(valA);
-        const lastNameB = getLastName(valB);
+        if (!cleanA && cleanB) return 1;
+        if (cleanA && !cleanB) return -1;
+        if (!cleanA && !cleanB) return 0;
+
+        const lastNameA = getLastName(cleanA);
+        const lastNameB = getLastName(cleanB);
         const surnameCompare = lastNameA.localeCompare(lastNameB, 'es', { sensitivity: 'base' });
 
-        if (surnameCompare !== 0) {
-          return surnameCompare;
-        }
+        if (surnameCompare !== 0) return surnameCompare;
 
-        const scoreA = parseFloat(a['Puntuación total (sobre 100)']) || 0;
-        const scoreB = parseFloat(b['Puntuación total (sobre 100)']) || 0;
+        const scoreA = getScore(a) || 0;
+        const scoreB = getScore(b) || 0;
         return scoreB - scoreA;
       });
     }
@@ -468,7 +560,7 @@
     const countStat = document.getElementById('countStat');
     const avgStat = document.getElementById('avgStat');
 
-    if (data.length === 0) {
+    if (!data || data.length === 0) {
       tbody.innerHTML = `<tr><td colspan="7" class="no-data">Sin entregas para esta combinación de día, tramo y profesor.</td></tr>`;
       countStat.textContent = '0';
       avgStat.textContent = '0';
@@ -479,26 +571,27 @@
     let validScores = 0;
 
     const rowsHtml = data.map(row => {
-      const score = parseFloat(row['Puntuación total (sobre 100)']);
+      const score = getScore(row);
       let badgeClass = 'badge-danger';
+      let scoreDisplay = '-';
+
       if (!isNaN(score)) {
         sumScores += score;
         validScores++;
+        scoreDisplay = score.toFixed(1);
         if (score >= 70) badgeClass = 'badge-success';
         else if (score >= 50) badgeClass = 'badge-warning';
       }
 
-      const profeNombre = row['Nombre del profesor'] || row['Profesor'] || row['Curso y grupo'] || '-';
-
       return `
         <tr>
-          <td>${parseDateStandard(row['Fecha']) || '-'}</td>
-          <td>${row['Hora'] || '-'}</td>
-          <td><strong>${row['Alumno/a 1'] || '-'}</strong></td>
-          <td>${row['Alumno/a 2'] || '-'}</td>
-          <td>${profeNombre}</td>
-          <td>${row['Criterio evaluado'] || '-'}</td>
-          <td><span class="badge ${badgeClass}">${!isNaN(score) ? score.toFixed(1) : '-'}</span></td>
+          <td>${getFecha(row) || '-'}</td>
+          <td>${getHora(row) || '-'}</td>
+          <td><strong>${getAlumno1(row)}</strong></td>
+          <td>${getAlumno2(row)}</td>
+          <td>${getProfesor(row)}</td>
+          <td>${getCriterio(row)}</td>
+          <td><span class="badge ${badgeClass}">${scoreDisplay}</span></td>
         </tr>
       `;
     }).join('');
@@ -536,7 +629,6 @@
     filterAndDisplayData();
   });
 
-  // Al cambiar Día o Tramo se re-evalúan los profesores presentes en ese tramo
   document.getElementById('fechaSelect').addEventListener('change', () => {
     populateProfesorDropdown();
     filterAndDisplayData();
