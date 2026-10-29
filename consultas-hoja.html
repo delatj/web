@@ -96,20 +96,6 @@
       box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
     }
 
-    .btn-reset {
-      background-color: transparent;
-      border: 1px solid transparent;
-      color: #64748b;
-      font-size: 0.85rem;
-      cursor: pointer;
-      text-decoration: underline;
-      padding: 8px;
-    }
-
-    .btn-reset:hover {
-      color: #0f172a;
-    }
-
     .form-group {
       display: flex;
       flex-direction: column;
@@ -204,6 +190,11 @@
       padding: 40px;
       color: #64748b;
     }
+
+    .partner-tag {
+      color: #64748b;
+      font-size: 0.85rem;
+    }
   </style>
 </head>
 <body>
@@ -211,7 +202,7 @@
 <div class="container">
   <header>
     <h1>Consulta de Actividades de Alumnos</h1>
-    <p>Panel interactivo de consulta en tiempo real desde Google Sheets</p>
+    <p>Panel interactivo con desglose individual, ordenación por apellidos y nota máxima retenida</p>
   </header>
 
   <!-- Filtros Secuenciales: Día -> Tramo -> Profesor -->
@@ -236,13 +227,11 @@
 
     <div class="form-group">
       <label for="profesorSelect">3. Seleccionar Profesor/a:</label>
-      <select id="profesorSelect">
-        <option value="TODOS">Todos los profesores del tramo</option>
-      </select>
+      <select id="profesorSelect"></select>
     </div>
 
     <div class="form-group">
-      <label for="busquedaInput">Buscar por alumno, profe o criterio:</label>
+      <label for="busquedaInput">Buscar por alumno, pareja o actividad:</label>
       <input type="text" id="busquedaInput" placeholder="Escribe para buscar...">
     </div>
   </div>
@@ -250,38 +239,35 @@
   <!-- Botones de Ordenación -->
   <div class="sort-card">
     <span class="sort-label">4. Ordenar resultados por:</span>
-    <button id="sortBtnAlumno1" class="btn-sort">
-      🔤 Apellido Alumno 1 Nota ↓
-    </button>
-    <button id="sortBtnAlumno2" class="btn-sort">
-      🔤 Apellido Alumno 2 Nota ↓
-    </button>
-    <button id="resetSortBtn" class="btn-reset" style="display: none;">Quitar ordenación</button>
+    <button id="sortBtnApellidos" class="btn-sort active">🔤 Apellidos (A-Z)</button>
+    <button id="sortBtnNotaDesc" class="btn-sort">📊 Nota (Mayor a Menor ↓)</button>
+    <button id="sortBtnNotaAsc" class="btn-sort">📊 Nota (Menor a Mayor ↑)</button>
+    <button id="sortBtnHora" class="btn-sort">🕒 Hora de Entrega</button>
   </div>
 
   <!-- Barra de Estadísticas -->
   <div class="stats-bar">
-    <div class="stat-box">Entregas encontradas: <span id="countStat" class="stat-value">0</span></div>
-    <div class="stat-box">Puntuación Media: <span id="avgStat" class="stat-value">0</span></div>
+    <div class="stat-box">Alumnos / Registros: <span id="countStat" class="stat-value">0</span></div>
+    <div class="stat-box">Puntuación Media: <span id="avgStat" class="stat-value">0.0</span></div>
   </div>
 
   <!-- Tabla de Resultados -->
   <div class="table-container">
     <table id="dataTable">
       <thead>
-        <tr id="tableHeader">
+        <tr>
           <th>Fecha</th>
           <th>Hora</th>
-          <th>Alumno/a 1</th>
-          <th>Alumno/a 2</th>
+          <th>Alumno/a (Apellidos, Nombre)</th>
+          <th>Pareja / Compañero/a</th>
           <th>Profesor/a</th>
           <th>Criterio Evaluado</th>
-          <th>Puntuación Total</th>
+          <th>Puntuación Máxima</th>
         </tr>
       </thead>
       <tbody id="tableBody">
         <tr>
-          <td colspan="7" class="loading">Cargando datos...</td>
+          <td colspan="7" class="loading">Cargando datos de la hoja de cálculo...</td>
         </tr>
       </tbody>
     </table>
@@ -294,7 +280,7 @@
   const CSV_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
 
   let rawData = [];
-  let currentSortMode = null;
+  let currentSortMode = 'apellidos'; // Default: orden por Apellidos (A-Z)
 
   const TRAMOS = {
     '08:00-09:00': { start: 8 * 60, end: 9 * 60 },
@@ -305,7 +291,62 @@
     '13:30-14:30': { start: 13 * 60 + 30, end: 14 * 60 + 30 },
   };
 
-  // Normalizador uniforme de fechas a formato DD/MM/YYYY
+  // Formateador a Title Case
+  function toTitleCase(str) {
+    if (!str) return '';
+    return str.trim().split(/\s+/).map(word => {
+      if (!word) return '';
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    }).join(' ');
+  }
+
+  // Parseador de nombres para extraer Apellidos y Nombre
+  function parseName(fullName) {
+    if (!fullName || fullName === '-' || fullName.trim() === '') {
+      return { raw: '-', titleName: '-', nombre: '', apellidos: '', displaySorted: '-', sortKey: 'zzz' };
+    }
+
+    const clean = toTitleCase(fullName);
+    const parts = clean.split(/\s+/);
+
+    if (parts.length === 1) {
+      return {
+        raw: fullName,
+        titleName: clean,
+        nombre: clean,
+        apellidos: '',
+        displaySorted: clean,
+        sortKey: clean.toLowerCase()
+      };
+    }
+
+    // Nombres compuestos habituales en español
+    const compoundFirsts = [
+      'ana', 'maría', 'maria', 'juan', 'josé', 'jose', 'luis', 'miguel',
+      'francisco', 'rosa', 'aurora', 'luz', 'vítor', 'vitor', 'carlos'
+    ];
+
+    let firstNameCount = 1;
+    if (parts.length >= 3 && compoundFirsts.includes(parts[0].toLowerCase())) {
+      firstNameCount = 2;
+    }
+
+    const nombre = parts.slice(0, firstNameCount).join(' ');
+    const apellidos = parts.slice(firstNameCount).join(' ');
+    const displaySorted = `${apellidos}, ${nombre}`;
+    const sortKey = `${apellidos} ${nombre}`.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    return {
+      raw: fullName,
+      titleName: clean,
+      nombre: nombre,
+      apellidos: apellidos,
+      displaySorted: displaySorted,
+      sortKey: sortKey
+    };
+  }
+
+  // Normalizador uniforme de fechas (DD/MM/YYYY)
   function formatDate(dateStr) {
     if (!dateStr) return '';
     let str = dateStr.toString().trim();
@@ -345,14 +386,6 @@
     return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
   }
 
-  function getLastName(fullName) {
-    if (!fullName) return '';
-    const parts = fullName.toString().trim().split(/\s+/);
-    if (parts.length <= 1) return parts[0] || '';
-    return parts.slice(1).join(' ');
-  }
-
-  // Búsqueda flexible de campos en las filas
   function getVal(row, possibleKeys) {
     if (!row) return '';
     for (let key of possibleKeys) {
@@ -371,32 +404,13 @@
     return '';
   }
 
-  function getFecha(row) {
-    return formatDate(getVal(row, ['Fecha', 'fecha']));
-  }
-
-  function getHora(row) {
-    return getVal(row, ['Hora', 'hora']);
-  }
-
-  function getAlumno1(row) {
-    return getVal(row, ['Alumno/a 1', 'Alumno 1', 'Alumno1']) || '-';
-  }
-
-  function getAlumno2(row) {
-    return getVal(row, ['Alumno/a 2', 'Alumno 2', 'Alumno2']) || '-';
-  }
-
+  function getFecha(row) { return formatDate(getVal(row, ['Fecha', 'fecha'])); }
+  function getHora(row) { return getVal(row, ['Hora', 'hora']); }
+  function getAlumno1(row) { return getVal(row, ['Alumno/a 1', 'Alumno 1', 'Alumno1']); }
+  function getAlumno2(row) { return getVal(row, ['Alumno/a 2', 'Alumno 2', 'Alumno2']); }
+  
   function getProfesor(row) {
-    const val = getVal(row, [
-      'Nombre del profesor',
-      'Nombre del Profesor',
-      'nombre del profesor',
-      'Profesor',
-      'profesor',
-      'Curso y grupo',
-      'Curso/Grupo'
-    ]);
+    const val = getVal(row, ['Nombre del profesor', 'Nombre del Profesor', 'nombre del profesor', 'Profesor', 'profesor', 'Curso y grupo', 'Curso/Grupo']);
     if (val) return val;
     for (let k in row) {
       if (k.toLowerCase().includes('profe') || k.toLowerCase().includes('curso')) {
@@ -406,18 +420,10 @@
     return '-';
   }
 
-  function getCriterio(row) {
-    return getVal(row, ['Criterio evaluado', 'Criterio Evaluado', 'Criterio']) || '-';
-  }
-
+  function getCriterio(row) { return getVal(row, ['Criterio evaluado', 'Criterio Evaluado', 'Criterio']) || '-'; }
+  
   function getScore(row) {
-    const val = getVal(row, [
-      'Puntuación total (sobre 100)',
-      'Puntuación total',
-      'Puntuacion total',
-      'Puntuación',
-      'Nota'
-    ]);
+    const val = getVal(row, ['Puntuación total (sobre 100)', 'Puntuación total', 'Puntuacion total', 'Puntuación', 'Nota']);
     const num = parseFloat(val);
     return isNaN(num) ? NaN : num;
   }
@@ -435,7 +441,7 @@
       },
       error: function(err) {
         document.getElementById('tableBody').innerHTML = 
-          `<tr><td colspan="7" class="no-data">Error al cargar la hoja de cálculo. Revisa que la hoja esté compartida públicamente.</td></tr>`;
+          `<tr><td colspan="7" class="no-data">Error al cargar la hoja de cálculo. Verifica que el enlace sea público.</td></tr>`;
       }
     });
   }
@@ -446,9 +452,7 @@
 
     rawData.forEach(row => {
       const fecha = getFecha(row);
-      if (fecha) {
-        dates.add(fecha);
-      }
+      if (fecha) dates.add(fecha);
     });
 
     const sortedDates = Array.from(dates).sort((a, b) => dateToISO(a).localeCompare(dateToISO(b)));
@@ -459,7 +463,7 @@
     }
 
     dateSelect.innerHTML = sortedDates.map(d => `<option value="${d}">${d}</option>`).join('');
-    dateSelect.value = sortedDates[sortedDates.length - 1];
+    dateSelect.value = sortedDates[sortedDates.length - 1]; // Fecha más reciente por defecto
   }
 
   function populateProfesorDropdown() {
@@ -481,9 +485,7 @@
       }
 
       const profe = getProfesor(row);
-      if (profe && profe !== '-') {
-        profesores.add(profe);
-      }
+      if (profe && profe !== '-') profesores.add(profe);
     });
 
     const sortedProfesores = Array.from(profesores).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
@@ -499,13 +501,83 @@
     }
   }
 
+  // Desglosa las parejas en filas individuales
+  function getIndividualEntries(rows) {
+    const entries = [];
+
+    rows.forEach(row => {
+      const fecha = getFecha(row);
+      const hora = getHora(row);
+      const a1 = getAlumno1(row);
+      const a2 = getAlumno2(row);
+      const profesor = getProfesor(row);
+      const criterio = getCriterio(row);
+      const score = getScore(row);
+
+      const hasA1 = a1 && a1 !== '-';
+      const hasA2 = a2 && a2 !== '-';
+
+      if (hasA1) {
+        entries.push({
+          fecha,
+          hora,
+          alumno: a1,
+          pareja: hasA2 ? a2 : '-',
+          profesor,
+          criterio,
+          score
+        });
+      }
+
+      if (hasA2) {
+        entries.push({
+          fecha,
+          hora,
+          alumno: a2,
+          pareja: hasA1 ? a1 : '-',
+          profesor,
+          criterio,
+          score
+        });
+      }
+    });
+
+    return entries;
+  }
+
+  // Agrupa por (Alumno + Actividad) y retiene SOLO la NOTA MÁXIMA
+  function deduplicateMaxScores(entries) {
+    const maxMap = new Map();
+
+    entries.forEach(entry => {
+      const normStudent = entry.alumno.toLowerCase().trim().replace(/\s+/g, ' ');
+      const normActivity = entry.criterio.toLowerCase().trim().replace(/\s+/g, ' ');
+      const key = `${normStudent}___${normActivity}`;
+
+      if (!maxMap.has(key)) {
+        maxMap.set(key, entry);
+      } else {
+        const existing = maxMap.get(key);
+        const scoreNew = isNaN(entry.score) ? -Infinity : entry.score;
+        const scoreOld = isNaN(existing.score) ? -Infinity : existing.score;
+
+        if (scoreNew > scoreOld) {
+          maxMap.set(key, entry);
+        }
+      }
+    });
+
+    return Array.from(maxMap.values());
+  }
+
   function filterAndDisplayData() {
     const selectedDate = document.getElementById('fechaSelect').value;
     const selectedTramo = document.getElementById('tramoSelect').value;
     const selectedProfesor = document.getElementById('profesorSelect').value;
     const busqueda = document.getElementById('busquedaInput').value.toLowerCase().trim();
 
-    let filtered = rawData.filter(row => {
+    // 1. Filtrar filas de la hoja de cálculo
+    let filteredRows = rawData.filter(row => {
       const fechaRow = getFecha(row);
       if (selectedDate && fechaRow !== selectedDate) return false;
 
@@ -528,50 +600,66 @@
       return true;
     });
 
-    if (currentSortMode) {
-      filtered.sort((a, b) => {
-        const valA = currentSortMode === 'alumno1' ? getAlumno1(a) : getAlumno2(a);
-        const valB = currentSortMode === 'alumno1' ? getAlumno1(b) : getAlumno2(b);
+    // 2. Desglosar parejas a registros individuales
+    let individualEntries = getIndividualEntries(filteredRows);
 
-        const cleanA = (valA === '-' ? '' : valA).trim();
-        const cleanB = (valB === '-' ? '' : valB).trim();
+    // 3. Deduplicar manteniendo la nota MÁXIMA por alumno y actividad
+    let finalEntries = deduplicateMaxScores(individualEntries);
 
-        if (!cleanA && cleanB) return 1;
-        if (cleanA && !cleanB) return -1;
-        if (!cleanA && !cleanB) return 0;
+    // 4. Ordenación
+    finalEntries.sort((a, b) => {
+      const nameA = parseName(a.alumno);
+      const nameB = parseName(b.alumno);
 
-        const lastNameA = getLastName(cleanA);
-        const lastNameB = getLastName(cleanB);
-        const surnameCompare = lastNameA.localeCompare(lastNameB, 'es', { sensitivity: 'base' });
+      if (currentSortMode === 'apellidos') {
+        const cmp = nameA.sortKey.localeCompare(nameB.sortKey, 'es', { sensitivity: 'base' });
+        if (cmp !== 0) return cmp;
+        return a.criterio.localeCompare(b.criterio, 'es', { sensitivity: 'base' });
+      } 
+      
+      if (currentSortMode === 'notaDesc') {
+        const sA = isNaN(a.score) ? -Infinity : a.score;
+        const sB = isNaN(b.score) ? -Infinity : b.score;
+        if (sB !== sA) return sB - sA;
+        return nameA.sortKey.localeCompare(nameB.sortKey, 'es', { sensitivity: 'base' });
+      }
 
-        if (surnameCompare !== 0) return surnameCompare;
+      if (currentSortMode === 'notaAsc') {
+        const sA = isNaN(a.score) ? Infinity : a.score;
+        const sB = isNaN(b.score) ? Infinity : b.score;
+        if (sA !== sB) return sA - sB;
+        return nameA.sortKey.localeCompare(nameB.sortKey, 'es', { sensitivity: 'base' });
+      }
 
-        const scoreA = getScore(a) || 0;
-        const scoreB = getScore(b) || 0;
-        return scoreB - scoreA;
-      });
-    }
+      if (currentSortMode === 'hora') {
+        const tA = parseTimeToMinutes(a.hora);
+        const tB = parseTimeToMinutes(b.hora);
+        return tA - tB;
+      }
 
-    renderTable(filtered);
+      return 0;
+    });
+
+    renderTable(finalEntries);
   }
 
-  function renderTable(data) {
+  function renderTable(entries) {
     const tbody = document.getElementById('tableBody');
     const countStat = document.getElementById('countStat');
     const avgStat = document.getElementById('avgStat');
 
-    if (!data || data.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" class="no-data">Sin entregas para esta combinación de día, tramo y profesor.</td></tr>`;
+    if (!entries || entries.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" class="no-data">Sin entregas encontradas para los filtros seleccionados.</td></tr>`;
       countStat.textContent = '0';
-      avgStat.textContent = '0';
+      avgStat.textContent = '0.0';
       return;
     }
 
     let sumScores = 0;
     let validScores = 0;
 
-    const rowsHtml = data.map(row => {
-      const score = getScore(row);
+    const rowsHtml = entries.map(entry => {
+      const score = entry.score;
       let badgeClass = 'badge-danger';
       let scoreDisplay = '-';
 
@@ -583,51 +671,44 @@
         else if (score >= 50) badgeClass = 'badge-warning';
       }
 
+      const parsedStudent = parseName(entry.alumno);
+      const parsedPartner = parseName(entry.pareja);
+
       return `
         <tr>
-          <td>${getFecha(row) || '-'}</td>
-          <td>${getHora(row) || '-'}</td>
-          <td><strong>${getAlumno1(row)}</strong></td>
-          <td>${getAlumno2(row)}</td>
-          <td>${getProfesor(row)}</td>
-          <td>${getCriterio(row)}</td>
+          <td>${entry.fecha || '-'}</td>
+          <td>${entry.hora || '-'}</td>
+          <td><strong>${parsedStudent.displaySorted}</strong></td>
+          <td class="partner-tag">${parsedPartner.displaySorted !== '-' ? parsedPartner.displaySorted : '-'}</td>
+          <td>${entry.profesor}</td>
+          <td>${entry.criterio}</td>
           <td><span class="badge ${badgeClass}">${scoreDisplay}</span></td>
         </tr>
       `;
     }).join('');
 
     tbody.innerHTML = rowsHtml;
-    countStat.textContent = data.length;
-    avgStat.textContent = validScores > 0 ? (sumScores / validScores).toFixed(1) : '0';
+    countStat.textContent = entries.length;
+    avgStat.textContent = validScores > 0 ? (sumScores / validScores).toFixed(1) : '0.0';
   }
 
-  const btnAlumno1 = document.getElementById('sortBtnAlumno1');
-  const btnAlumno2 = document.getElementById('sortBtnAlumno2');
-  const btnReset = document.getElementById('resetSortBtn');
+  // Controladores de interfaz de ordenación
+  const btnApellidos = document.getElementById('sortBtnApellidos');
+  const btnNotaDesc = document.getElementById('sortBtnNotaDesc');
+  const btnNotaAsc  = document.getElementById('sortBtnNotaAsc');
+  const btnHora     = document.getElementById('sortBtnHora');
 
   function updateSortUI() {
-    btnAlumno1.classList.toggle('active', currentSortMode === 'alumno1');
-    btnAlumno2.classList.toggle('active', currentSortMode === 'alumno2');
-    btnReset.style.display = currentSortMode ? 'inline-block' : 'none';
+    btnApellidos.classList.toggle('active', currentSortMode === 'apellidos');
+    btnNotaDesc.classList.toggle('active', currentSortMode === 'notaDesc');
+    btnNotaAsc.classList.toggle('active', currentSortMode === 'notaAsc');
+    btnHora.classList.toggle('active', currentSortMode === 'hora');
   }
 
-  btnAlumno1.addEventListener('click', () => {
-    currentSortMode = 'alumno1';
-    updateSortUI();
-    filterAndDisplayData();
-  });
-
-  btnAlumno2.addEventListener('click', () => {
-    currentSortMode = 'alumno2';
-    updateSortUI();
-    filterAndDisplayData();
-  });
-
-  btnReset.addEventListener('click', () => {
-    currentSortMode = null;
-    updateSortUI();
-    filterAndDisplayData();
-  });
+  btnApellidos.addEventListener('click', () => { currentSortMode = 'apellidos'; updateSortUI(); filterAndDisplayData(); });
+  btnNotaDesc.addEventListener('click', () => { currentSortMode = 'notaDesc'; updateSortUI(); filterAndDisplayData(); });
+  btnNotaAsc.addEventListener('click', () => { currentSortMode = 'notaAsc'; updateSortUI(); filterAndDisplayData(); });
+  btnHora.addEventListener('click', () => { currentSortMode = 'hora'; updateSortUI(); filterAndDisplayData(); });
 
   document.getElementById('fechaSelect').addEventListener('change', () => {
     populateProfesorDropdown();
