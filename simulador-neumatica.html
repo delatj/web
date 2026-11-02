@@ -611,12 +611,12 @@
         </div>
 
         <label class="solo-check-wrapper">
-          <input type="checkbox" id="soloCheck" onchange="toggleSoloMode()"> Trabajo en solitario (sin pareja)
+          <input type="checkbox" id="soloCheck" onchange="toggleSoloMode()"> 
         </label>
 
         <div>
           <label for="studentCourseInput">Nombre profesor:</label>
-          <input type="text" id="studentCourseInput" autocomplete="off" placeholder="Ej. Eduaardo">
+          <input type="text" id="studentCourseInput" autocomplete="off" placeholder="Ej. Eduardo">
         </div>
       </div>
 
@@ -1232,21 +1232,16 @@
       };
 
       const statusEl = document.getElementById('sendStatus');
-      if (passed) {
-        if (totalPercent > sentPercent) {
-          sendResults();
-        } else {
-          statusEl.className = 'send-status ok';
-          statusEl.innerText = '✔ Este resultado ya se había enviado a la hoja de cálculo.';
-        }
+      if (totalPercent > sentPercent) {
+        sendResults();
       } else {
-        statusEl.className = 'send-status';
-        statusEl.style.display = 'none';
+        statusEl.className = 'send-status ok';
+        statusEl.innerText = '✔ Este resultado ya se había enviado a la hoja de cálculo.';
       }
     }
 
     async function sendResults() {
-      if (!examResultData || !examResultData.passed || examResultData.sent || sendingNow) return;
+      if (!examResultData || examResultData.sent || sendingNow) return;
       const statusEl = document.getElementById('sendStatus');
       const retryBtn = document.getElementById('btnRetrySend');
       retryBtn.style.display = 'none';
@@ -1274,7 +1269,12 @@
         total: examResultData.total,
         testScore: examResultData.testScore,
         simScore: examResultData.simScore,
-        aciertosNetos: examResultData.aciertosNetos
+        aciertosNetos: examResultData.aciertosNetos,
+        // Compatibilidad con los campos esperados por la hoja de cálculo
+        simuladores: examResultData.simScore,
+        calculos: examResultData.simScore,
+        test: examResultData.testScore,
+        aciertos: examResultData.aciertosNetos
       });
 
       const markSent = (msg) => {
