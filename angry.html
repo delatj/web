@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
+<!-- saved from url=(0039)https://delatj.github.io/web/angry.html -->
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Derriba la Torre - 2 Jugadores</title>
   <style>
@@ -235,19 +235,10 @@
       gap: 10px;
     }
 
-    .multiplier {
-      color: #e67e22;
-      font-size: 1.1rem;
-      font-weight: 900;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-    
     .res-final {
       color: black;
       font-weight: bold;
-      font-size: 2.2em;
+      font-size: 1.5em;
     }
     
     .canvas-container {
@@ -421,8 +412,7 @@
       <div class="player-header player1">
         <div class="player-name player1" id="player1-name">Jugador 1</div>
         <div class="score-display player1">
-          <div>Puntos: <span id="score1">0</span></div>
-          <div class="multiplier">[ <span id="score-base1">0</span> x 0.4 = <span id="score-mult1" class="res-final">0.0</span> ]</div>
+          <div>Puntos: <span id="score1" class="res-final">0</span></div>
         </div>
       </div>
       
@@ -447,8 +437,7 @@
       <div class="player-header player2">
         <div class="player-name player2" id="player2-name">Jugador 2</div>
         <div class="score-display player2">
-          <div>Puntos: <span id="score2">0</span></div>
-          <div class="multiplier">[ <span id="score-base2">0</span> x 0.4 = <span id="score-mult2" class="res-final">0.0</span> ]</div>
+          <div>Puntos: <span id="score2" class="res-final">0</span></div>
         </div>
       </div>
       
@@ -472,7 +461,7 @@
   
   <div class="instructions" id="game-instructions">
     <h3>Instrucciones del juego</h3>
-    <p>Observa la cuadrícula (origen en la esquina inferior izquierda). Ajusta las coordenadas X e Y usando las teclas y luego lanza la bola. Al derribar una torre sumas 2 puntos. <b>¡Cada 5 puntos se lanzará una pregunta de ciberseguridad, redes y uso de internet; si fallas, se restarán 2 puntos antes de aplicar el multiplicador (0.4)!</b> ¡Continúa hasta que no quede ningún bloque!</p>
+    <p>Observa la cuadrícula (origen en la esquina inferior izquierda). Ajusta las coordenadas X e Y usando las teclas y luego lanza la bola. Al derribar una torre sumas 5 puntos. <b>¡Cada 5 puntos se lanzará una pregunta de ciberseguridad, redes y uso de internet; si fallas, se restarán 2 puntos!</b> ¡Continúa hasta que no quede ningún bloque!</p>
     
     <div class="controls-info">
       <div class="player-controls player1">
@@ -621,9 +610,6 @@
         this.ctx = this.canvas.getContext('2d');
         this.scoreElement = document.getElementById(scoreId);
         
-        this.scoreBaseElement = document.getElementById('score-base' + playerNumber);
-        this.scoreMultElement = document.getElementById('score-mult' + playerNumber);
-        
         this.messageElement = document.getElementById(messageId);
         this.blocksCountElement = document.getElementById(blocksCountId);
         this.container = document.getElementById(containerId);
@@ -703,8 +689,6 @@
 
       updateScoreUI() {
         this.scoreElement.textContent = this.score;
-        this.scoreBaseElement.textContent = this.score;
-        this.scoreMultElement.textContent = (this.score * 0.4).toFixed(1);
         this.updatePlayerColor();
       }
       
@@ -917,7 +901,7 @@
       
       updatePlayerColor() {
         let bgColor = '#ffffff';
-        const finalScore = this.score * 0.4;
+        const finalScore = this.score;
         
         if (finalScore > 35) {
           bgColor = '#ff0000';
@@ -983,7 +967,7 @@
         feedbackElement.style.color = "#28a745";
       } else {
         buttonElement.classList.add('wrong');
-        feedbackElement.textContent = "¡Incorrecto! Pierdes 2 puntos antes del multiplicador.";
+        feedbackElement.textContent = "¡Incorrecto! Pierdes 2 puntos.";
         feedbackElement.style.color = "#dc3545";
         
         player.score = Math.max(0, player.score - 2); 
@@ -1056,7 +1040,7 @@
       const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
       const make = (nombre, puntosBrutos) => {
-        const nota = Math.round(puntosBrutos * 0.4 * 10) / 10;
+        const nota = puntosBrutos;
         return {
           enviado: false,
           etiqueta: nombre + ' ' + nota.toFixed(1).replace('.', ','),
@@ -1134,5 +1118,5 @@
       }
     });
   </script>
-</body>
-</html>
+
+</body></html>
