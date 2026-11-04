@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador Data Scraping FP - Criterio 4.3</title>
+    <title>Simulador Data Scraping y Big Data FP - Criterio 4.3</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -29,7 +29,6 @@
             user-select: none;
             pointer-events: none;
         }
-        /* Smooth background color transition */
         body {
             transition: background-color 0.8s ease-in-out, color 0.3s ease;
         }
@@ -37,7 +36,7 @@
 </head>
 <body id="main-body" class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 min-h-full flex flex-col">
 
-    <!-- 1. MANDATORY INITIAL REGISTRATION MODAL -->
+    <!-- 1. REGISTRATION MODAL -->
     <div id="modal-registration" class="fixed inset-0 z-50 bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-800 w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-6 sm:p-8 space-y-5">
             
@@ -47,27 +46,25 @@
                 </div>
                 <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100">Registro de Alumnos y Equipo</h2>
                 <p class="text-xs text-slate-500 dark:text-slate-400">
-                    Introduce los datos obligatorios para iniciar la prueba de Data Scraping (Criterio 4.3).
+                    Introduce los datos obligatorios para iniciar la prueba de Data Scraping y Big Data.
                 </p>
+            </div>
+
+            <!-- Notice box for individual work -->
+            <div class="p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 rounded-xl text-xs text-amber-800 dark:text-amber-300 flex items-start space-x-2">
+                <i class="fa-solid fa-circle-info text-amber-600 dark:text-amber-400 text-sm mt-0.5 shrink-0"></i>
+                <span><strong>Nota para trabajo individual:</strong> Si realizas la prueba solo/a, introduce <strong>exactamente el mismo Nombre y Apellidos</strong> en ambos casilleros (Alumno 1 y Alumno 2).</span>
             </div>
 
             <form id="form-registration" onsubmit="event.preventDefault(); startExamSimulator();" class="space-y-4">
                 
-                <!-- Group -->
+                <!-- Teacher Name -->
                 <div>
                     <label class="block text-xs font-bold uppercase text-slate-600 dark:text-slate-300 mb-1">
-                        <i class="fa-solid fa-graduation-cap text-indigo-600 mr-1"></i>
-                        Grupo / Curso *
+                        <i class="fa-solid fa-chalkboard-user text-indigo-600 mr-1"></i>
+                        Nombre Profesor *
                     </label>
-                    <input type="text" id="reg-group" required placeholder="Ej: 1º DAM A, 2º SMR..." class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                </div>
-
-                <!-- Individual Toggle -->
-                <div class="flex items-center space-x-2 pt-1">
-                    <input type="checkbox" id="reg-individual" onchange="toggleIndividualMode()" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500">
-                    <label for="reg-individual" class="text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer">
-                        Trabajo individual (solo 1 persona)
-                    </label>
+                    <input type="text" id="reg-teacher" required placeholder="Ej: Eduardo" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
                 </div>
 
                 <!-- Student 1 -->
@@ -85,7 +82,7 @@
                         <i class="fa-solid fa-user-plus text-indigo-600 mr-1"></i>
                         Alumno 2 (Nombre y Apellidos - Mínimo 2 palabras) *
                     </label>
-                    <input type="text" id="reg-student2" required placeholder="Ej: Carlos Pérez" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <input type="text" id="reg-student2" required placeholder="Ej: Carlos Pérez (o repite Alumno 1)" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
                 </div>
 
                 <button type="submit" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
@@ -105,31 +102,22 @@
                 <!-- Title & Student Data -->
                 <div class="flex items-center space-x-3">
                     <div class="bg-slate-900 text-white dark:bg-indigo-600 p-2.5 rounded-xl shadow-md">
-                        <i class="fa-solid fa-spider text-xl"></i>
+                        <i class="fa-solid fa-database text-xl"></i>
                     </div>
                     <div>
-                        <h1 class="text-sm sm:text-base font-bold leading-tight">Data Scraping Lab FP</h1>
+                        <h1 class="text-sm sm:text-base font-bold leading-tight">Data Scraping & Big Data Lab FP</h1>
                         <p id="header-team-display" class="text-xs text-indigo-600 dark:text-indigo-400 font-semibold truncate max-w-[200px] sm:max-w-md">
-                            Equipo: Pendiente de Registro
+                            Profesor / Alumnos: Pendiente de Registro
                         </p>
                     </div>
                 </div>
 
-                <!-- Timer & Theory Button -->
+                <!-- Timer -->
                 <div class="flex items-center space-x-3">
-                    
-                    <!-- 5 MINUTE TIMER -->
                     <div id="timer-box" class="px-3.5 py-1.5 bg-amber-50 dark:bg-amber-900/40 border border-amber-300 dark:border-amber-700 rounded-xl flex items-center space-x-2">
                         <i class="fa-solid fa-clock text-amber-600 dark:text-amber-400 text-sm animate-pulse"></i>
                         <span id="timer-display" class="font-mono font-black text-amber-700 dark:text-amber-300 text-base">05:00</span>
                     </div>
-
-                    <!-- Theory Modal Button -->
-                    <button onclick="openTheoryModal()" class="px-3 py-1.5 text-xs font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/40 border border-indigo-200 dark:border-indigo-800 rounded-lg hover:bg-indigo-100 transition flex items-center space-x-1.5">
-                        <i class="fa-solid fa-book-open"></i>
-                        <span class="hidden sm:inline">Ver Teoría</span>
-                    </button>
-
                 </div>
             </div>
         </div>
@@ -157,19 +145,28 @@
         </div>
     </div>
 
-    <!-- ENLARGED FINAL SCREENSHOT BADGE (VISIBLE UPON VALIDATION) -->
+    <!-- ENLARGED FINAL SCREENSHOT BADGE -->
     <div id="final-screenshot-card" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
         <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border-4 border-amber-400 p-6 rounded-2xl shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6 text-slate-800 dark:text-slate-100">
-            <div class="space-y-1 text-center md:text-left">
+            <div class="space-y-2 text-center md:text-left">
                 <span class="inline-block px-3 py-1 bg-amber-400 text-slate-900 font-extrabold text-xs rounded-full uppercase tracking-wider">
-                    <i class="fa-solid fa-camera mr-1"></i> Captura para el Profesor
+                    <i class="fa-solid fa-camera mr-1"></i> Registro de Calificación
                 </span>
                 <h2 id="card-team-names" class="text-base sm:text-lg font-bold text-indigo-600 dark:text-indigo-400">
-                    Alumnos: -
+                    Profesor: - | Alumnos: -
                 </h2>
                 <p id="card-hits-text" class="text-xs font-semibold text-slate-600 dark:text-slate-300">
                     Aciertos Test: - | Práctica Scraping: Completada
                 </p>
+                <div id="status-sheet-sent" class="pt-2 text-[12px] font-bold flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    <span id="sending-status-text">Enviando resultados a la hoja de cálculo…</span>
+                </div>
+                <div id="reintentar-btn-box" class="hidden pt-1">
+                    <button onclick="reintentarEnvioManual()" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-lg shadow">
+                        <i class="fa-solid fa-rotate-right mr-1"></i> Reintentar envío a la hoja de cálculo
+                    </button>
+                </div>
             </div>
 
             <div class="text-center md:text-right bg-slate-900 text-white px-8 py-4 rounded-xl shadow-inner border border-slate-700 shrink-0">
@@ -191,7 +188,7 @@
                 </button>
                 <button onclick="switchTab('quiz')" id="tab-btn-quiz" class="tab-btn py-3 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 font-bold text-sm flex items-center space-x-2">
                     <i class="fa-solid fa-list-check"></i>
-                    <span>2. Test Teórico (80%)</span>
+                    <span>2. Test Datos Masivos y Metadatos (80%)</span>
                 </button>
             </nav>
         </div>
@@ -274,10 +271,8 @@
                         <span>Dataset Resultante (Formato CSV)</span>
                     </h3>
 
-                    <pre id="dataset-preview-container" class="bg-slate-900 text-emerald-400 p-3 rounded-xl text-[11px] font-mono overflow-x-auto max-h-[220px] min-h-[140px]">
-// Formato CSV (Compatible con OpenOffice Calc / Excel)
-// Al extraer aparecerán las filas de datos...
-                    </pre>
+                    <pre id="dataset-preview-container" class="bg-slate-900 text-emerald-400 p-3 rounded-xl text-[11px] font-mono overflow-x-auto max-h-[220px] min-h-[140px]">// Formato CSV (Compatible con OpenOffice Calc / Excel)
+// Al extraer aparecerán las filas de datos...</pre>
 
                     <div class="space-y-2">
                         <button onclick="downloadWikiCSVDataset()" id="btn-download-csv" disabled class="w-full py-2.5 px-4 bg-slate-300 dark:bg-slate-700 text-slate-500 font-bold text-xs rounded-xl flex items-center justify-center space-x-2 cursor-not-allowed transition">
@@ -294,17 +289,28 @@
 
         </section>
 
-        <!-- TAB 2: 10-QUESTION RANDOMIZED EVALUATION TEST (80%) -->
+        <!-- TAB 2: 10-QUESTION BIG DATA & METADATA TEST (80%) -->
         <section id="tab-quiz" class="tab-content hidden max-w-4xl mx-auto space-y-6">
             
+            <!-- INDICACIÓN EXCLUSIVA SOBRE EL TEST -->
+            <div class="bg-amber-50 dark:bg-amber-900/30 border-2 border-amber-400 dark:border-amber-600 p-4 rounded-2xl shadow-sm flex items-center space-x-3 text-amber-900 dark:text-amber-200">
+                <div class="w-10 h-10 bg-amber-400 text-slate-900 rounded-xl flex items-center justify-center text-lg shrink-0 font-bold">
+                    <i class="fa-solid fa-book-bookmark"></i>
+                </div>
+                <div class="text-xs sm:text-sm">
+                    <p class="font-extrabold uppercase tracking-wide text-amber-800 dark:text-amber-300">Material de Consulta Permitido</p>
+                    <p class="font-medium">Las respuestas a estas preguntas las encuentras en el <strong>minilibro del tema de Datos Masivos</strong> en la página web del profesor.</p>
+                </div>
+            </div>
+
             <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div>
                     <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center space-x-2">
                         <i class="fa-solid fa-clipboard-question text-indigo-600"></i>
-                        <span>Test Teórico: 10 Preguntas (80%)</span>
+                        <span>Test Teórico: Datos Masivos y Metadatos (10 Preguntas - 80%)</span>
                     </h2>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">
-                        Cada acierto vale un 8%. El orden de preguntas y respuestas se aleatoriza en cada recarga.
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        Responde a las 10 preguntas seleccionando la opción correcta.
                     </p>
                 </div>
 
@@ -314,21 +320,34 @@
                 </div>
             </div>
 
+            <!-- Quiz Completed Box (Hidden until submit) -->
+            <div id="quiz-locked-notice" class="hidden p-6 bg-slate-900 text-white rounded-2xl border border-slate-700 shadow-xl text-center space-y-3">
+                <div class="w-12 h-12 bg-amber-500/20 text-amber-400 rounded-full flex items-center justify-center mx-auto text-xl">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                <h3 class="text-base font-bold text-amber-300">Test Entregado y Enviado con Éxito</h3>
+                <p class="text-xs text-slate-300 leading-relaxed max-w-md mx-auto">
+                    Las preguntas del test han sido ocultadas para proteger la solución del examen. Los datos han sido registrados automáticamente. Si necesitas repasar los contenidos, consulta el <strong>minilibro del tema de Datos Masivos</strong> en la página web del profesor.
+                </p>
+            </div>
+
             <!-- 10 Questions Container -->
             <form id="quiz-form" onsubmit="event.preventDefault();" class="space-y-5">
                 
-                <div id="quiz-questions-container" class="space-y-5"></div>
+                <div id="quiz-questions-container" class="space-y-5">
+                    <!-- Dynamic rendering via JS -->
+                </div>
 
                 <!-- Lock Action Card -->
                 <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 sticky bottom-4 z-20">
                     <p class="text-xs text-amber-700 dark:text-amber-400 flex items-center space-x-2">
-                        <i class="fa-solid fa-lock text-sm"></i>
-                        <span>Al validar se bloquean las respuestas y se muestra la nota gigante.</span>
+                        <i class="fa-solid fa-paper-plane text-sm"></i>
+                        <span>Al validar se oculta el test y se envían automáticamente los datos del examen completo.</span>
                     </p>
 
                     <button type="button" id="btn-submit-quiz" onclick="validateQuizAndFinish()" class="w-full sm:w-auto px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-md transition flex items-center justify-center space-x-2 shrink-0">
                         <i class="fa-solid fa-check-double"></i>
-                        <span>Validar Respuestas</span>
+                        <span>Validar Respuestas y Enviar</span>
                     </button>
                 </div>
 
@@ -338,139 +357,94 @@
 
     </main>
 
-    <!-- CONCISE THEORY MODAL -->
-    <div id="theory-modal" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-200">
-        <div class="bg-white dark:bg-slate-800 w-full max-w-3xl rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 flex flex-col max-h-[85vh] overflow-hidden">
-            
-            <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center space-x-2">
-                    <i class="fa-solid fa-book-open text-indigo-600"></i>
-                    <span>Resumen Teórico: Data Scraping (Criterio 4.3)</span>
-                </h3>
-                <button onclick="closeTheoryModal()" class="text-slate-400 hover:text-slate-600 p-2 rounded-lg">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-
-            <div class="p-6 overflow-y-auto space-y-4 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed custom-scrollbar">
-                
-                <div class="space-y-1">
-                    <h4 class="font-bold text-indigo-600 dark:text-indigo-400 text-sm">1. ¿Qué es Data Scraping?</h4>
-                    <p>Es la técnica automatizada para extraer información no estructurada alojada en páginas web y transformarla en datos estructurados.</p>
-                </div>
-
-                <div class="space-y-1">
-                    <h4 class="font-bold text-indigo-600 dark:text-indigo-400 text-sm">2. Protocolo HTTP y Peticiones GET</h4>
-                    <p>Un scraper envía una petición con el método <strong>HTTP GET</strong>. Si la solicitud es exitosa, el servidor responde con el código <strong>200 OK</strong>.</p>
-                </div>
-
-                <div class="space-y-1">
-                    <h4 class="font-bold text-indigo-600 dark:text-indigo-400 text-sm">3. Identificación mediante User-Agent</h4>
-                    <p>La cabecera <strong>User-Agent</strong> identifica al cliente o programa ante el servidor web.</p>
-                </div>
-
-                <div class="space-y-1">
-                    <h4 class="font-bold text-indigo-600 dark:text-indigo-400 text-sm">4. Modelo DOM y Selectores HTML</h4>
-                    <p>El <strong>DOM (Document Object Model)</strong> representa la web como un árbol de elementos HTML:</p>
-                    <ul class="list-disc list-inside pl-2 space-y-0.5 font-mono text-xs">
-                        <li><code>&lt;h1&gt;</code>: Título principal de primer nivel.</li>
-                        <li><code>&lt;p&gt;</code>: Párrafo de texto.</li>
-                        <li><code>&lt;a&gt;</code> con atributo <code>href</code>: Enlace de hipertexto.</li>
-                        <li>Selector <code>#firstHeading</code> en Wikipedia: Identifica el título principal.</li>
-                    </ul>
-                </div>
-
-                <div class="space-y-1">
-                    <h4 class="font-bold text-indigo-600 dark:text-indigo-400 text-sm">5. Formatos de Salida (JSON y CSV)</h4>
-                    <p>Los datos extraídos se exportan en formatos estándar como <strong>JSON</strong> (pares clave-valor) o <strong>CSV</strong> (filas y columnas separadas por comas).</p>
-                </div>
-
-                <div class="space-y-1">
-                    <h4 class="font-bold text-indigo-600 dark:text-indigo-400 text-sm">6. Ética y Archivo robots.txt</h4>
-                    <p>El archivo <strong>robots.txt</strong> ubicado en el servidor especifica las reglas de acceso y restricciones permitidas para los robots automáticos.</p>
-                </div>
-
-            </div>
-
-            <div class="px-6 py-3 bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex justify-end">
-                <button onclick="closeTheoryModal()" class="px-4 py-2 bg-indigo-600 text-white font-bold text-xs rounded-xl hover:bg-indigo-700">
-                    Entendido
-                </button>
-            </div>
-
-        </div>
-    </div>
-
     <!-- JAVASCRIPT APP LOGIC -->
     <script>
         const TARGET_URL = "https://es.wikipedia.org/wiki/Internet";
 
-        // MASTER QUESTIONS (100% LITERAL MAPPING TO THEORY MODAL)
+        // URL del Web App de Google Apps Script de la hoja de cálculo del profesor
+        const GOOGLE_SHEETS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyiOndS6GMYhgiSGLVAXUOOHhMKtBXqcLUeOppbNZIkrxU-HiMlgmhlYCj1xYZQG0io/exec";
+
+        // LAS 10 PREGUNTAS LITERALES EXTRAÍDAS DEL EXAMEN OFICIAL (MINILIBRO DE DATOS MASIVOS)
         const MASTER_QUESTIONS = [
             {
-                question: "¿Qué es el Data Scraping?",
+                question: "¿Qué define principalmente a los datos masivos o big data?",
                 options: [
-                    "Técnica para reparar cables de red.",
-                    "Técnica automatizada para extraer datos no estructurados de webs y estructurarlos.",
-                    "Un virus de ordenador.",
-                    "Copiar textos manualmente con Ctrl+C."
-                ],
-                correctText: "Técnica automatizada para extraer datos no estructurados de webs y estructurarlos.",
-                explanation: "Extrae información no estructurada alojada en páginas web y la transforma en datos estructurados."
+                    { text: "Conjuntos de información masivos que superan las herramientas tradicionales.", correct: true },
+                    { text: "Archivos comprimidos guardados exclusivamente en memorias USB externas.", correct: false },
+                    { text: "Bases de datos pequeñas diseñadas para hojas de cálculo sencillas.", correct: false }
+                ]
             },
             {
-                question: "¿Qué método HTTP utiliza un scraper para solicitar una página web?",
-                options: ["HTTP POST", "HTTP GET", "HTTP DELETE", "HTTP PUT"],
-                correctText: "HTTP GET",
-                explanation: "Un scraper envía una petición mediante el método HTTP GET."
+                question: "¿Cómo se clasifican las tres categorías principales de metadatos?",
+                options: [
+                    { text: "Se clasifican en metadatos Descriptivos, Administrativos y Estructurales.", correct: true },
+                    { text: "Se clasifican en metadatos Públicos, Privados y de Acceso restringido.", correct: false },
+                    { text: "Se clasifican en metadatos Primarios, Secundarios y de Almacenamiento.", correct: false }
+                ]
             },
             {
-                question: "¿Qué código de estado HTTP indica que la petición fue exitosa?",
-                options: ["404 Not Found", "200 OK", "500 Internal Error", "301 Redirect"],
-                correctText: "200 OK",
-                explanation: "Si la solicitud es exitosa, el servidor responde con el código 200 OK."
+                question: "¿Qué función cumplen específicamente los metadatos descriptivos?",
+                options: [
+                    { text: "Proporcionan información detallada referente al contenido de los datos.", correct: true },
+                    { text: "Describen la creación técnica y la gestión administrativa de los archivos.", correct: false },
+                    { text: "Detallan únicamente la estructura física y el formato del disco duro.", correct: false }
+                ]
             },
             {
-                question: "¿Qué cabecera HTTP identifica al cliente o robot ante el servidor web?",
-                options: ["Content-Type", "User-Agent", "Cookie", "Authorization"],
-                correctText: "User-Agent",
-                explanation: "La cabecera User-Agent identifica al cliente ante el servidor."
+                question: "¿Cuáles son los usos principales de los metadatos en los sistemas?",
+                options: [
+                    { text: "Facilitar la organización, la gestión y la interoperabilidad de datos.", correct: true },
+                    { text: "Incrementar la velocidad del procesador y desfragmentar el disco local.", correct: false },
+                    { text: "Encriptar contraseñas de red y bloquear el acceso a páginas externas.", correct: false }
+                ]
             },
             {
-                question: "¿Qué significan las siglas DOM en desarrollo web?",
-                options: ["Digital Online Mode", "Document Object Model", "Data Output Machine", "Direct Object Method"],
-                correctText: "Document Object Model",
-                explanation: "El DOM (Document Object Model) representa la estructura en árbol de la web."
+                question: "¿Dónde se pueden almacenar los metadatos de un sistema?",
+                options: [
+                    { text: "Dentro de los propios archivos de datos o en bases de datos dedicadas.", correct: true },
+                    { text: "Únicamente en la memoria RAM volátil del ordenador mientras esté encendido.", correct: false },
+                    { text: "Exclusivamente en servidores externos que carecen de conexión a internet.", correct: false }
+                ]
             },
             {
-                question: "¿Qué etiqueta HTML define el título principal de primer nivel?",
-                options: ["<p>", "<h1>", "<a>", "<div>"],
-                correctText: "<h1>",
-                explanation: "<h1> define el título principal de primer nivel."
+                question: "¿En qué consiste exactamente la técnica de data scraping?",
+                options: [
+                    { text: "Extraer información web para convertir datos no estructurados en estructurados.", correct: true },
+                    { text: "Borrar archivos duplicados del disco duro para liberar memoria física.", correct: false },
+                    { text: "Comprimir carpetas grandes de texto para enviarlas rápidamente por correo.", correct: false }
+                ]
             },
             {
-                question: "¿Qué etiqueta HTML define un enlace de hipertexto e incluye el atributo href?",
-                options: ["<img>", "<a>", "<span>", "<form>"],
-                correctText: "<a>",
-                explanation: "<a> con atributo href define un enlace de hipertexto."
+                question: "¿Qué fuentes de datos recopila un supermercado con análisis de big data?",
+                options: [
+                    { text: "Transacciones, historiales de clientes, inventario y datos meteorológicos.", correct: true },
+                    { text: "Únicamente las facturas impresas en papel y las firmas físicas recibidas.", correct: false },
+                    { text: "Solamente los correos electrónicos de los empleados de la plantilla.", correct: false }
+                ]
             },
             {
-                question: "En Wikipedia, ¿qué selector localiza el título principal del artículo?",
-                options: [".title-box", "#firstHeading", "div.header", "span.wiki-title"],
-                correctText: "#firstHeading",
-                explanation: "El selector #firstHeading localiza el título del artículo en Wikipedia."
+                question: "¿Cómo utiliza un supermercado el análisis de patrones de compra?",
+                options: [
+                    { text: "Comprende tendencias estacionales y personaliza promociones según el clima.", correct: true },
+                    { text: "Establece el salario de los empleados en función del volumen de clientes.", correct: false },
+                    { text: "Aumenta los precios de forma aleatoria durante los fines de semana.", correct: false }
+                ]
             },
             {
-                question: "¿En qué formato se representan los datos estructurados en pares de clave-valor?",
-                options: ["MP3", "JSON", "PNG", "ZIP"],
-                correctText: "JSON",
-                explanation: "JSON representa datos estructurados en pares clave-valor."
+                question: "¿Cómo ayuda el big data a la optimización del inventario?",
+                options: [
+                    { text: "Prevé demandas ajustando existencias automáticamente ante eventos locales.", correct: true },
+                    { text: "Reduce a cero el espacio de almacenamiento disponible en el almacén.", correct: false },
+                    { text: "Elimina los productos perecederos de la tienda antes de que caduquen.", correct: false }
+                ]
             },
             {
-                question: "¿Qué archivo ubicado en el servidor especifica las reglas de acceso para los robots?",
-                options: ["index.html", "robots.txt", "style.css", "config.json"],
-                correctText: "robots.txt",
-                explanation: "El archivo robots.txt especifica las reglas y restricciones para robots automáticos."
+                question: "¿De qué manera mejora la experiencia del cliente gracias a la información recopilada?",
+                options: [
+                    { text: "Optimiza la ubicación de productos en tienda y personaliza la publicidad.", correct: true },
+                    { text: "Envía publicidad genérica de forma masiva a usuarios sin registrar.", correct: false },
+                    { text: "Obliga a los clientes a comprar exclusivamente a través de la web.", correct: false }
+                ]
             }
         ];
 
@@ -483,16 +457,17 @@
         let isExamFinished = false;
         
         // Student Information
-        let studentGroup = "";
+        let teacherName = "";
         let student1Name = "";
         let student2Name = "";
-        let isIndividual = false;
+        let hitsCountGlobal = 0;
+        let lastPayload = null;
 
         let extractedCSVContent = "";
 
         // Fisher-Yates Shuffle Algorithm
         function shuffleArray(array) {
-            const arr = [...array];
+            const arr = array.map(item => ({ ...item }));
             for (let i = arr.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [arr[i], arr[j]] = [arr[j], arr[i]];
@@ -500,7 +475,7 @@
             return arr;
         }
 
-        // Helper to validate at least 2 words (Nombre + Apellido)
+        // Validate Minimum two words
         function isValidFullName(str) {
             if (!str) return false;
             const words = str.trim().split(/\s+/);
@@ -512,50 +487,29 @@
             prepareRandomizedQuestions();
         });
 
-        // 1. REGISTRATION LOGIC WITH STRICT TWO-WORD VALIDATION
-        function toggleIndividualMode() {
-            isIndividual = document.getElementById('reg-individual').checked;
-            const containerS2 = document.getElementById('container-student2');
-            const inputS2 = document.getElementById('reg-student2');
-
-            if (isIndividual) {
-                containerS2.classList.add('hidden');
-                inputS2.required = false;
-                inputS2.value = '';
-            } else {
-                containerS2.classList.remove('hidden');
-                inputS2.required = true;
-            }
-        }
-
         function startExamSimulator() {
-            studentGroup = document.getElementById('reg-group').value.trim();
+            teacherName = document.getElementById('reg-teacher').value.trim();
             student1Name = document.getElementById('reg-student1').value.trim();
-            isIndividual = document.getElementById('reg-individual').checked;
             student2Name = document.getElementById('reg-student2').value.trim();
 
-            if (!studentGroup) {
-                alert("Por favor, introduce el Grupo / Curso.");
+            if (!teacherName) {
+                alert("Por favor, introduce el Nombre del Profesor.");
                 return;
             }
 
-            // Strict Validation: Minimum two words for Student 1
             if (!isValidFullName(student1Name)) {
-                alert("Debes escribir al menos nombre y apellido para el Alumno 1, separados por un espacio (ejemplo: 'Laura García').");
+                alert("Debes escribir al menos Nombre y Apellido para el Alumno 1 (ejemplo: 'Laura García').");
                 document.getElementById('reg-student1').focus();
                 return;
             }
 
-            // Strict Validation: Minimum two words for Student 2 if not individual
-            if (!isIndividual && !isValidFullName(student2Name)) {
-                alert("Debes escribir al menos nombre y apellido para el Alumno 2, separados por un espacio (ejemplo: 'Carlos Pérez').");
+            if (!isValidFullName(student2Name)) {
+                alert("Debes escribir al menos Nombre y Apellido para el Alumno 2 (ejemplo: 'Carlos Pérez' o repetir el Alumno 1 si es individual).");
                 document.getElementById('reg-student2').focus();
                 return;
             }
 
-            let teamText = `Grupo: ${studentGroup} | Alumno 1: ${student1Name}`;
-            if (!isIndividual) teamText += ` | Alumno 2: ${student2Name}`;
-
+            let teamText = `Profesor: ${teacherName} | Alumno 1: ${student1Name} | Alumno 2: ${student2Name}`;
             document.getElementById('header-team-display').innerText = teamText;
             document.getElementById('card-team-names').innerText = teamText;
             document.getElementById('modal-registration').classList.add('hidden');
@@ -563,7 +517,7 @@
             startCountdownTimer();
         }
 
-        // 2. 5-MINUTE TIMER
+        // TIMER LOGIC
         function startCountdownTimer() {
             updateTimerDisplay();
             timerInterval = setInterval(() => {
@@ -572,7 +526,7 @@
 
                 if (timerSeconds <= 0) {
                     clearInterval(timerInterval);
-                    alert("¡El tiempo de 5 minutos ha finalizado! Evaluando simulador...");
+                    alert("¡El tiempo de 5 minutos ha finalizado! Evaluando y enviando prueba...");
                     finishExamAndEvaluate();
                 }
             }, 1000);
@@ -585,7 +539,7 @@
                 `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         }
 
-        // 3. CANVAS URL RENDERER (UNCOPYABLE)
+        // CANVAS URL RENDERER
         function renderUncopyableCanvasUrl() {
             const canvas = document.getElementById('url-target-canvas');
             if (!canvas) return;
@@ -594,7 +548,6 @@
             ctx.fillStyle = "#0f172a";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Noise pattern
             ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
             for (let x = 0; x < canvas.width; x += 12) {
                 ctx.beginPath();
@@ -608,7 +561,7 @@
             ctx.fillText(TARGET_URL, 15, 26);
         }
 
-        // 4. SCRAPING PRACTICAL
+        // WIKIPEDIA SCRAPER
         async function runRealWikipediaScraper() {
             if (isExamFinished) return;
 
@@ -619,7 +572,6 @@
 
             alertBox.classList.add('hidden');
 
-            // EXACT MATCH VALIDATION
             if (inputUrl !== TARGET_URL) {
                 alertBox.classList.remove('hidden');
                 statusBadge.innerText = 'Error en URL';
@@ -647,7 +599,6 @@
 
                 const totalLinks = data.parse.links.length;
 
-                // BUILD CSV DATA (UTF-8 BOM + Comma-Separated Values)
                 extractedCSVContent = `\uFEFFClave,Valor\n`;
                 extractedCSVContent += `"URL_Solicitada","${inputUrl}"\n`;
                 extractedCSVContent += `"Codigo_HTTP","200 OK"\n`;
@@ -680,27 +631,19 @@
             }
         }
 
-        // DOWNLOAD CSV DATASET WITH MANDATORY STUDENT NAME FILENAME
+        // DOWNLOAD CSV DATASET
         function downloadWikiCSVDataset() {
             if (!extractedCSVContent) return;
 
-            // Ensure registration data exists
             if (!student1Name) {
                 alert("Debes completar el registro con tus datos de alumno primero.");
                 return;
             }
 
-            // Create customized filename with student name(s)
             let safeS1 = student1Name.replace(/[^a-zA-Z0-9]/g, '_');
-            let filename = `scraping_wikipedia_${studentGroup.replace(/[^a-zA-Z0-9]/g, '_')}_${safeS1}`;
-            
-            if (!isIndividual && student2Name) {
-                let safeS2 = student2Name.replace(/[^a-zA-Z0-9]/g, '_');
-                filename += `_${safeS2}`;
-            }
-            filename += `.csv`;
+            let safeS2 = student2Name.replace(/[^a-zA-Z0-9]/g, '_');
+            let filename = `scraping_wikipedia_${safeS1}_${safeS2}.csv`;
 
-            // Download CSV Blob
             const blob = new Blob([extractedCSVContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -711,14 +654,13 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
-            // Award 20% practical score
             practicalPercent = 20;
             document.getElementById('practical-note-msg').innerHTML = 
                 `<span class="text-emerald-600 font-bold"><i class="fa-solid fa-circle-check"></i> Práctica completada con éxito (+20%). Archivo descargado: ${filename}</span>`;
             updateScoreUI();
         }
 
-        // 5. RANDOMIZED QUESTIONS PREPARATION
+        // RANDOMIZED QUESTIONS & OPTIONS ON EACH HTML INITIALIZATION
         function prepareRandomizedQuestions() {
             const shuffledQuestions = shuffleArray(MASTER_QUESTIONS);
             
@@ -727,9 +669,7 @@
                 return {
                     id: idx + 1,
                     question: q.question,
-                    options: shuffledOpts,
-                    correctText: q.correctText,
-                    explanation: q.explanation
+                    options: shuffledOpts
                 };
             });
 
@@ -740,6 +680,8 @@
             const container = document.getElementById('quiz-questions-container');
             container.innerHTML = '';
 
+            const letters = ['a', 'b', 'c'];
+
             activeQuestions.forEach((q, idx) => {
                 const card = document.createElement('div');
                 card.className = 'bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-3';
@@ -747,10 +689,11 @@
 
                 let optionsHtml = '';
                 q.options.forEach((opt, optIdx) => {
+                    const letter = letters[optIdx] || '';
                     optionsHtml += `
-                        <label class="flex items-start p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/30 hover:bg-slate-100 dark:hover:bg-slate-700/60 cursor-pointer transition text-xs sm:text-sm" id="label-q${q.id}-opt${optIdx}">
-                            <input type="radio" name="question-${q.id}" value="${escapeHtml(opt)}" class="mt-0.5 mr-3 text-indigo-600 focus:ring-indigo-500">
-                            <span class="text-slate-700 dark:text-slate-200">${escapeHtml(opt)}</span>
+                        <label class="flex items-start p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/30 hover:bg-slate-100 dark:hover:bg-slate-700/60 cursor-pointer transition text-xs sm:text-sm">
+                            <input type="radio" name="question-${q.id}" value="${opt.correct ? 'true' : 'false'}" class="mt-0.5 mr-3 text-indigo-600 focus:ring-indigo-500">
+                            <span class="text-slate-700 dark:text-slate-200"><strong>${letter})</strong> ${escapeHtml(opt.text)}</span>
                         </label>
                     `;
                 });
@@ -760,17 +703,15 @@
                         <h3 class="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100">
                             ${idx + 1}. ${q.question}
                         </h3>
-                        <span id="badge-q${q.id}" class="hidden px-2 py-0.5 text-[10px] font-bold rounded shrink-0"></span>
                     </div>
                     <div class="space-y-2">${optionsHtml}</div>
-                    <div id="feedback-q${q.id}" class="hidden p-3 rounded-xl text-xs border space-y-1"></div>
                 `;
 
                 container.appendChild(card);
             });
         }
 
-        // 6. VALIDATION & FINAL EVALUATION IN PERCENTAGES (%)
+        // VALIDATE TEST & AUTOMATICALLY SEND DATA
         function validateQuizAndFinish() {
             if (isExamFinished) return;
 
@@ -778,38 +719,14 @@
 
             activeQuestions.forEach(q => {
                 const selectedInput = document.querySelector(`input[name="question-${q.id}"]:checked`);
-                const badge = document.getElementById(`badge-q${q.id}`);
-                const feedback = document.getElementById(`feedback-q${q.id}`);
-
-                // LOCK RADIOS PERMANENTLY
-                document.querySelectorAll(`input[name="question-${q.id}"]`).forEach(inp => {
-                    inp.disabled = true;
-                    inp.closest('label').classList.add('cursor-not-allowed', 'opacity-70');
-                });
-
-                const isCorrect = selectedInput && selectedInput.value === q.correctText;
-
-                if (isCorrect) {
+                if (selectedInput && selectedInput.value === 'true') {
                     hitsCount++;
-                    badge.className = 'px-2 py-0.5 text-[10px] font-bold rounded bg-green-100 text-green-800';
-                    badge.innerText = 'Correcto (+8%)';
-                    badge.classList.remove('hidden');
-
-                    feedback.className = 'p-3 rounded-xl text-xs border bg-green-50 text-green-900 border-green-200 dark:bg-green-950/40 dark:text-green-300';
-                    feedback.innerHTML = `<strong><i class="fa-solid fa-check"></i> Correcto:</strong> ${q.explanation}`;
-                    feedback.classList.remove('hidden');
-                } else {
-                    badge.className = 'px-2 py-0.5 text-[10px] font-bold rounded bg-red-100 text-red-800';
-                    badge.innerText = 'Incorrecto (0%)';
-                    badge.classList.remove('hidden');
-
-                    feedback.className = 'p-3 rounded-xl text-xs border bg-red-50 text-red-900 border-red-200 dark:bg-red-950/40 dark:text-red-300';
-                    feedback.innerHTML = `<strong><i class="fa-solid fa-xmark"></i> Explicación:</strong> ${q.explanation}`;
-                    feedback.classList.remove('hidden');
                 }
             });
 
-            quizPercent = hitsCount * 8; // 8% per correct hit (80% max)
+            hitsCountGlobal = hitsCount;
+            // 10 preguntas en total: 80% / 10 = 8% por acierto
+            quizPercent = hitsCount * 8; 
             
             const hitsDisplay = document.getElementById('hits-count-display');
             hitsDisplay.innerText = `Aciertos: ${hitsCount} / 10`;
@@ -820,31 +737,106 @@
 
             document.getElementById('quiz-score-pill').innerText = `${quizPercent}% / 80%`;
 
-            finishExamAndEvaluate();
+            // HIDE QUIZ FORM IMMEDIATELY (NO ANSWERS REVEALED)
+            document.getElementById('quiz-form').classList.add('hidden');
+            document.getElementById('quiz-locked-notice').classList.remove('hidden');
+
+            finishExamAndEvaluate(hitsCount);
         }
 
-        function finishExamAndEvaluate() {
+        function finishExamAndEvaluate(hitsCount = 0) {
             if (isExamFinished) return;
             isExamFinished = true;
 
             clearInterval(timerInterval);
 
-            // Lock Submit Button
-            const btnSubmit = document.getElementById('btn-submit-quiz');
-            btnSubmit.disabled = true;
-            btnSubmit.className = 'w-full sm:w-auto px-6 py-3 bg-slate-400 text-white font-bold text-sm rounded-xl cursor-not-allowed';
-            btnSubmit.innerHTML = `<i class="fa-solid fa-lock"></i><span>Respuestas Validadas</span>`;
-
             updateScoreUI();
 
             const totalPercent = practicalPercent + quizPercent;
 
-            // ENLARGE FINAL PERCENTAGE DISPLAY FOR SCREENSHOT
             document.getElementById('giant-grade-text').innerText = `${totalPercent}%`;
             document.getElementById('final-screenshot-card').classList.remove('hidden');
 
-            // APPLY DYNAMIC BACKGROUND COLOR ACCORDING TO PERCENTAGE SCALE
             applyScoreBackgroundColor(totalPercent);
+
+            const ahora = new Date();
+            const idUnico = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+            // PREPARE TRANSMISSION PAYLOAD EXACTLY AS REQUIRED BY GOOGLE SHEETS
+            lastPayload = {
+                id: idUnico,
+                fecha: ahora.toLocaleDateString('es-ES'),
+                hora: ahora.toLocaleTimeString('es-ES', { hour12: false }),
+                alumno1: student1Name,
+                alumno2: student2Name,
+                curso: teacherName, // Nombre del profesor
+                criterio: "Datos Masivos (Big Data) y Metadatos",
+                actividad: "Examen: Datos Masivos y Metadatos",
+                tipo: "test",
+                total: totalPercent,
+                test: quizPercent,
+                practica: practicalPercent,
+                aciertos: `${hitsCountGlobal}/10`
+            };
+
+            sendDataToGoogleSheets(lastPayload);
+        }
+
+        // GOOGLE SHEETS AUTOMATIC TRANSMITTER (Matching HotPotatoes/HPK_RUNTIME logic)
+        function sendDataToGoogleSheets(payload) {
+            const statusText = document.getElementById('sending-status-text');
+            const statusBox = document.getElementById('status-sheet-sent');
+            const reintentarBox = document.getElementById('reintentar-btn-box');
+
+            if (!GOOGLE_SHEETS_SCRIPT_URL || GOOGLE_SHEETS_SCRIPT_URL.includes("TURE_URL_SCRIPT")) {
+                statusBox.className = "pt-2 text-[12px] font-bold flex items-center gap-1.5 text-amber-600 dark:text-amber-400";
+                statusText.innerHTML = "⚠ Dirección URL de la hoja de cálculo no configurada.";
+                return;
+            }
+
+            statusBox.className = "pt-2 text-[12px] font-bold flex items-center gap-1.5 text-amber-600 dark:text-amber-400";
+            statusText.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando resultados a la hoja de cálculo…';
+            reintentarBox.classList.add('hidden');
+
+            // Format as URLSearchParams to avoid CORS OPTIONS preflight errors in Google Apps Script
+            const params = new URLSearchParams(payload);
+
+            fetch(GOOGLE_SHEETS_SCRIPT_URL, {
+                method: 'POST',
+                body: params
+            })
+            .then(resp => resp.json())
+            .then(data => {
+                if (data && data.ok === false) {
+                    throw new Error(data.error || "Error del servidor");
+                }
+                statusBox.className = "pt-2 text-[12px] font-bold flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400";
+                statusText.innerHTML = '<i class="fa-solid fa-circle-check"></i> Resultados enviados correctamente a la hoja de cálculo.';
+            })
+            .catch(() => {
+                // Secondary Fallback Fetch with mode: 'no-cors'
+                fetch(GOOGLE_SHEETS_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: params
+                })
+                .then(() => {
+                    statusBox.className = "pt-2 text-[12px] font-bold flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400";
+                    statusText.innerHTML = '<i class="fa-solid fa-circle-check"></i> Resultados enviados a la hoja de cálculo.';
+                })
+                .catch(err => {
+                    console.error("Error al enviar resultados:", err);
+                    statusBox.className = "pt-2 text-[12px] font-bold flex items-center gap-1.5 text-red-600 dark:text-red-400";
+                    statusText.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> No se pudieron enviar los resultados. Comprueba la conexión.';
+                    reintentarBox.classList.remove('hidden');
+                });
+            });
+        }
+
+        function reintentarEnvioManual() {
+            if (lastPayload) {
+                sendDataToGoogleSheets(lastPayload);
+            }
         }
 
         function updateScoreUI() {
@@ -855,25 +847,24 @@
             document.getElementById('score-total').innerText = `${total}%`;
         }
 
-        // BACKGROUND COLOR PERCENTAGE SCALE LOGIC
         function applyScoreBackgroundColor(percentage) {
             const body = document.getElementById('main-body');
             body.classList.remove('bg-slate-50', 'dark:bg-slate-900');
 
-            let colorHex = "#6B7280"; // 0% to 19.99%: Gray
+            let colorHex = "#6B7280";
 
             if (percentage >= 100) {
                 colorHex = "#DC2626"; // 100%: Red
             } else if (percentage >= 80) {
-                colorHex = "#EA580C"; // 80% to 89.99%: Orange
+                colorHex = "#EA580C"; // 80% to 89%: Orange
             } else if (percentage >= 60) {
-                colorHex = "#EAB308"; // 60% to 79.99%: Yellow
+                colorHex = "#EAB308"; // 60% to 79%: Yellow
             } else if (percentage >= 40) {
-                colorHex = "#16A34A"; // 40% to 59.99%: Green
+                colorHex = "#16A34A"; // 40% to 59%: Green
             } else if (percentage >= 20) {
-                colorHex = "#2563EB"; // 20% to 39.99%: Blue
+                colorHex = "#2563EB"; // 20% to 39%: Blue
             } else {
-                colorHex = "#6B7280"; // 0% to 19.99%: Gray
+                colorHex = "#6B7280"; // 0% to 19%: Gray
             }
 
             body.style.backgroundColor = colorHex;
@@ -893,23 +884,11 @@
             activeBtn.classList.add('border-indigo-600', 'text-indigo-600', 'dark:text-indigo-400');
         }
 
-        // MODAL CONTROLS
-        function openTheoryModal() {
-            const m = document.getElementById('theory-modal');
-            m.classList.remove('hidden');
-            setTimeout(() => m.classList.remove('opacity-0'), 10);
-        }
-
-        function closeTheoryModal() {
-            const m = document.getElementById('theory-modal');
-            m.classList.add('opacity-0');
-            setTimeout(() => m.classList.add('hidden'), 200);
-        }
-
         function escapeHtml(str) {
             if (typeof str !== 'string') return str;
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
     </script>
+
 </body>
 </html>
