@@ -302,29 +302,20 @@
                     }
 
                     // --- Detalle de actividades agrupado en UNA sola tabla ---
-                    const hayDetalle = grupos.length > 0 || sinCriterio.T.length + sinCriterio.C.length + sinCriterio.P.length > 0 || otrasCols.length > 0;
-                    if (hayDetalle) {
+                    // --- Detalle de actividades: cuadrícula horizontal (nombre arriba, nota debajo) ---
+                    // Cada columna del CSV sale una sola vez, agrupadas por tipo: T, C, P y después las otras columnas
+                    const ordenTipo = { T: 0, C: 1, P: 2, M: 3, O: 4 };
+                    const colsDetalle = [];
+                    cols.forEach((c, idx) => { if (idx > 0 && ordenTipo[c.tipo] !== undefined) colsDetalle.push(idx); });
+                    colsDetalle.sort((x, y) => (ordenTipo[cols[x].tipo] - ordenTipo[cols[y].tipo]) || (x - y));
+                    if (colsDetalle.length > 0) {
                         tablesHTML += '<h3>Detalle de actividades</h3>\n';
-                        tablesHTML += '<div class="tabla-wrap"><table class="t-grande t-detalle"><thead><tr><th>Actividad</th><th>Tipo</th><th>Puntos</th><th>Máximo</th><th>% sobre 100</th></tr></thead><tbody>\n';
-                        grupos.forEach(g => {
-                            let usados = [];
-                            ['T', 'C', 'P'].forEach(tp => { if (g[tp].length) usados.push(tp); });
-                            tablesHTML += '<tr class="fila-crit"><td colspan="4">CRITERIO ' + esc(g.k) + ' · nota del criterio (media de ' + usados.join(', ') + ')</td><td class="num">' + fmt(notasCriterio[g.k]) + '</td></tr>\n';
-                            usados.forEach(tp => { tablesHTML += filasGrupo(stu, tp, g[tp], maxGrupo[g.k][tp]); });
+                        tablesHTML += '<p class="leyenda">Cada recuadro es una actividad (tarea, prueba o proyecto) con los puntos obtenidos. «—» significa sin nota (cuenta como 0).</p>\n';
+                        tablesHTML += '<div class="act-grid">';
+                        colsDetalle.forEach(ix => {
+                            tablesHTML += '<div class="act"><div class="act-h" style="background-color:' + COLOR_TIPO[cols[ix].tipo] + ';"><span class="act-t">' + cols[ix].tipo + '</span> ' + esc(cols[ix].header) + '</div><div class="act-v">' + celdaNota(stu.cols[ix]) + '</div></div>';
                         });
-                        if (sinCriterio.T.length + sinCriterio.C.length + sinCriterio.P.length > 0) {
-                            tablesHTML += '<tr class="fila-crit"><td colspan="5">SIN CRITERIO ASIGNADO</td></tr>\n';
-                            ['T', 'C', 'P'].forEach(tp => {
-                                if (sinCriterio[tp].length) tablesHTML += filasGrupo(stu, tp, sinCriterio[tp], maxSin[tp]);
-                            });
-                        }
-                        if (otrasCols.length > 0) {
-                            tablesHTML += '<tr class="fila-crit"><td colspan="5">OTRAS COLUMNAS</td></tr>\n';
-                            otrasCols.forEach(ix => {
-                                tablesHTML += '<tr><td>' + esc(cols[ix].header) + '</td><td class="tipo" style="background-color:' + COLOR_TIPO[cols[ix].tipo] + ';">' + cols[ix].tipo + '</td><td class="num">' + celdaNota(stu.cols[ix]) + '</td><td class="num mx"></td><td class="num"></td></tr>\n';
-                            });
-                        }
-                        tablesHTML += '</tbody></table></div>\n';
+                        tablesHTML += '</div>\n';
                     }
 
                     const r2 = (v) => v === null ? null : Math.round(v * 100) / 100;
@@ -408,6 +399,12 @@
   .fila-media-crit td:first-child { text-align: right; }
   .t-detalle td.tipo { text-align: center; font-weight: bold; width: 60px; }
   .t-detalle td.num { width: 15%; }
+  .act-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 0; border-top: 1px solid #999; border-left: 1px solid #999; background: white; }
+  .act { border-right: 1px solid #999; border-bottom: 1px solid #999; display: flex; flex-direction: column; min-width: 0; }
+  .act-h { font-size: 12px; font-weight: bold; padding: 6px 5px; text-align: center; line-height: 1.25; flex: 1; word-break: break-word; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 4px; }
+  .act-t { background: rgba(0,0,0,0.55); color: white; border-radius: 4px; padding: 0 5px; font-size: 11px; }
+  .act-v { text-align: center; font-weight: bold; font-size: 16px; padding: 7px 4px; background: white; }
+  .act-v .vacio { font-weight: normal; }
   .aviso { color: #dc3545; font-size: 14px; margin-top: 15px; display: none; }
   
   .secret-trigger { cursor: pointer; transition: color 0.3s; }
@@ -760,6 +757,10 @@
                     let label = td.getAttribute('data-label');
                     if (label && label.includes('MEDIA')) {
                         let val = td.querySelector('.grade-val').innerText;
+                        if (label === 'MEDIA CRITERIOS') {
+                            let num = parseFloat(String(val).replace(',', '.'));
+                            if (!isNaN(num)) val = (num / 10).toFixed(1).replace('.', ',');
+                        }
                         medias.push(label + ': ' + val);
                     }
                 });
