@@ -36,10 +36,9 @@ th:first-child,td:first-child{text-align:left}
 [hidden]{display:none!important}
 .tag{background:var(--fill);color:var(--ac);padding:7px 12px;border-radius:10px;font-weight:700;font-size:.85rem;cursor:pointer;border:1px solid var(--bd)}
 .lg{display:inline-flex;align-items:center;gap:5px;font-weight:700;margin-right:10px;white-space:nowrap}.lg::before{content:"";width:12px;height:12px;border-radius:50%;background:var(--c)}
-#mod{position:fixed;inset:0;background:#0f172a99;z-index:50;overflow-y:auto;padding:16px;display:flex;justify-content:center;align-items:flex-start}
+#mod{position:fixed;inset:0;background:#0f172ae6;z-index:50;overflow-y:auto;padding:16px;display:flex;justify-content:center;align-items:flex-start}
 .mc{background:var(--card);border:1px solid var(--bd);border-radius:16px;max-width:560px;width:100%;padding:16px;margin:auto;position:relative}
-.mc h2{font-size:1.1rem;margin:0 0 10px;padding-right:34px}.mc label{display:block;font-size:.72rem;font-weight:700;color:var(--mu);text-transform:uppercase;margin:8px 0 3px}.mc input{width:100%;flex:none}
-.mc .x{position:absolute;right:10px;top:10px;padding:4px 9px}
+.mc h2{font-size:1.1rem;margin:0 0 10px}.mc label{display:block;font-size:.72rem;font-weight:700;color:var(--mu);text-transform:uppercase;margin:8px 0 3px}.mc input{width:100%;flex:none}
 .info{background:var(--fill);border:1px solid var(--ac);color:var(--tx);padding:10px;border-radius:12px;margin-bottom:12px;font-size:.85rem;line-height:1.4}
 .box{border:1px solid var(--bd);border-radius:12px;padding:10px;margin-bottom:10px}
 #team-error{color:var(--ko);font-weight:700;font-size:.85rem;margin-bottom:8px}
@@ -114,7 +113,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 </div>
 </div>
 </main>
-<div id="mod" hidden onclick="if(event.target===this)mc()"><div class="mc" id="mcb"></div></div><div id="toast"></div>
+<div id="mod" hidden><div class="mc" id="mcb"></div></div><div id="toast"></div>
 
 <script>
 const LV={facil:{n:3,h:2,min:4,max:6,nm:"Fácil"},medio:{n:3,h:3,min:6,max:9,nm:"Medio"},dificil:{n:4,h:3,min:9,max:14,nm:"Difícil"}};
@@ -362,17 +361,16 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",
 
 let TD={al1_nom:"",al1_ape:"",al2_nom:"",al2_ape:"",prof:"",lockUntil:0};
 function toast(m){const t=$("toast");t.textContent=m;t.style.opacity=1;setTimeout(()=>t.style.opacity=0,2800)}
-function modal(x){$("mcb").innerHTML=`<button class="x" onclick="mc()">✖</button>${x}`;$("mod").hidden=false}
-function mc(){$("mod").hidden=true}
+function modal(x){$("mcb").innerHTML=x;$("mod").hidden=false}
 function updateParejaDisplay(){
   const a1=(TD.al1_nom+" "+TD.al1_ape).trim(),a2=(TD.al2_nom+" "+TD.al2_ape).trim();
   $("pareja-txt").textContent=(a1||a2)?((a1.toLowerCase()===a2.toLowerCase()||!a2)?a1:a1+" | "+a2):"Sin datos";
 }
 function openDatosModal(errMsg){
   const eh=errMsg?`<div style="color:var(--ko);background:var(--card);border:1px solid var(--ko);padding:10px;border-radius:10px;margin-bottom:10px;font-weight:600">${errMsg}</div>`:"";
-  modal(`<h2>👥 Datos de los Alumnos (Pareja)</h2>
-  <div class="info"><b>ℹ️ INFORMACIÓN IMPORTANTE:</b> Es obligatorio rellenar el nombre y los dos apellidos de ambos alumnos.<br>
-  <b>Si la práctica la realizas de forma INDIVIDUAL</b>, debes escribir el <b>MISMO nombre y MISMOS apellidos</b> en los recuadros del Alumno 1 y del Alumno 2.</div>${eh}
+  modal(`<h2>👥 Datos de los Alumnos (Pareja o Individual)</h2>
+  <div class="info"><b>ℹ️ OBLIGATORIO:</b> Es obligatorio rellenar el nombre y los dos apellidos de ambos alumnos y el profesor para poder utilizar la aplicación.<br>
+  <b>Si la práctica es individual</b>, escribe el <b>MISMO nombre y apellidos</b> en los apartados de Alumno 1 y Alumno 2.</div>${eh}
   <div class="box"><b style="color:var(--ac)">👤 Alumno 1</b>
     <label>Nombre</label><input type="text" id="al1_nom_in" value="${esc(TD.al1_nom)}" placeholder="Nombre. Ej: Lucía">
     <label>Apellidos (los dos apellidos)</label><input type="text" id="al1_ape_in" value="${esc(TD.al1_ape)}" placeholder="Apellidos. Ej: Pérez Gómez"></div>
@@ -381,15 +379,15 @@ function openDatosModal(errMsg){
     <label>Apellidos (los dos apellidos)</label><input type="text" id="al2_ape_in" value="${esc(TD.al2_ape)}" placeholder="Apellidos. Ej: Díaz Ruiz (o Pérez Gómez si es individual)"></div>
   <div class="box" style="border:0;padding:0"><label>Nombre del Profesor</label><input type="text" id="prof_in" value="${esc(TD.prof)}" placeholder="Nombre profesor. Ej: Eduardo"></div>
   <div id="team-error"></div>
-  <button class="p" style="width:100%;padding:11px" onclick="saveDatosForm()">💾 Guardar Datos</button>`);
+  <button class="p" style="width:100%;padding:11px;margin-top:10px" onclick="saveDatosForm()">💾 Guardar y Comenzar</button>`);
 }
 function validarDatos(){
   const n1=TD.al1_nom.trim(),a1=TD.al1_ape.trim(),n2=TD.al2_nom.trim(),a2=TD.al2_ape.trim(),pr=TD.prof.trim(),errs=[];
   if(n1.length<2)errs.push("Escribe el nombre del Alumno 1.");
   if(a1.length<2)errs.push("Escribe los apellidos del Alumno 1.");
-  if(n2.length<2)errs.push("Escribe el nombre del Alumno 2 (si es individual, repite el del Alumno 1).");
-  if(a2.length<2)errs.push("Escribe los apellidos del Alumno 2 (si es individual, repite los del Alumno 1).");
-  if(pr.length<2)errs.push("Indica nombre profesor.");
+  if(n2.length<2)errs.push("Escribe el nombre del Alumno 2.");
+  if(a2.length<2)errs.push("Escribe los apellidos del Alumno 2.");
+  if(pr.length<2)errs.push("Indica el nombre del profesor.");
   return errs;
 }
 function saveDatosForm(){
@@ -398,7 +396,10 @@ function saveDatosForm(){
   TD.prof=($("prof_in").value||"").trim();
   const errs=validarDatos();
   if(errs.length){$("team-error").innerHTML=errs.join("<br>");return false}
-  $("team-error").innerHTML="";updateParejaDisplay();mc();toast("✔ Datos guardados correctamente");return true;
+  $("team-error").innerHTML="";updateParejaDisplay();
+  $("mod").hidden=true;
+  toast("✔ Datos guardados correctamente");
+  return true;
 }
 
 const SHEET_WEBAPP_URL="https://script.google.com/macros/s/AKfycbyiOndS6GMYhgiSGLVAXUOOHhMKtBXqcLUeOppbNZIkrxU-HiMlgmhlYCj1xYZQG0io/exec";
@@ -432,7 +433,7 @@ async function sendResults(){
   const enviado=await postRecord(params);
   sendingNow=false;
   if(enviado){toast("✔ Resultados enviados correctamente");startSendLock()}
-  else{toast("❌ No se pudieron enviar los datos. Comprueba la conexión.");btn.disabled=false}
+  else{toast("❌ No se pudieron enviar los datos. Comprueba la conexión. béné");btn.disabled=false}
 }
 function startSendLock(untilTime){
   const btn=$("send-btn");
@@ -446,7 +447,7 @@ function startSendLock(untilTime){
 }
 
 stats();fresh();updateParejaDisplay();
-setTimeout(()=>openDatosModal(),200);
+openDatosModal();
 </script>
 </body>
 </html>
