@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- saved from url=(0047)https://delatj.github.io/web/simulador-app.html -->
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>AppStudio Móvil - Prácticas</title>
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:system-ui,Segoe UI,Arial,sans-serif;background:#d1d5db;color:#1e293b;font-size:14px}
 header{background:#fff;border-bottom:1px solid #cbd5e1;padding:8px 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;position:sticky;top:0;z-index:20}
 h1{font-size:17px;margin:0 auto 0 0}h3{margin:0 0 8px}small{color:#64748b;font-weight:400}
-button,select,input{font:inherit}input,select{width:100%;padding:6px 8px;border:1px solid #cbd5e1;border-radius:8px;background:#fff}input[type=color]{height:34px;padding:2px}
+button,select,input,textarea{font:inherit}textarea{resize:vertical}input,select,textarea{width:100%;padding:6px 8px;border:1px solid #cbd5e1;border-radius:8px;background:#fff}input[type=color]{height:34px;padding:2px}
 .b{width:auto;border:0;border-radius:10px;padding:7px 12px;font-weight:700;cursor:pointer;background:#e2e8f0;color:#1e293b}.b:hover{filter:brightness(.94)}
 .pr{background:#4f46e5;color:#fff}.ok{background:#10b981;color:#fff}.am{background:#f59e0b;color:#fff}.rd{background:#fee2e2;color:#b91c1c}
 .bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 14px;background:#e5e7eb;border-bottom:1px solid #bfc5cf}
@@ -38,22 +39,56 @@ table{width:100%;border-collapse:collapse;font-size:13px}td{padding:6px;border-b
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:9px 16px;border-radius:12px;opacity:0;transition:.3s;z-index:60;pointer-events:none}
 .pareja-tag{background:#e0e7ff;color:#3730a3;padding:6px 12px;border-radius:10px;font-weight:700;font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer;transition:background .2s}
 .pareja-tag:hover{background:#c7d2fe}
+.sb{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;margin-bottom:10px}.sb .chip{padding:4px 10px;font-size:12px}
+.nv{display:flex;justify-content:space-around;align-items:center;padding:8px 20px 0;color:#64748b;font-size:15px}.nv button{background:none;border:0;color:#fff;font-size:20px;cursor:pointer;padding:0 16px}.nv button.off{opacity:.3;cursor:default}
+.tx{background:#ffffffd9;border:1px solid #cbd5e1;border-radius:12px;padding:8px 10px;font-size:15px;line-height:1.4;white-space:pre-wrap;word-break:break-word}
+.pg{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#fff;text-align:center;min-height:0}.pg img{max-width:100%;max-height:480px;border-radius:12px}.pg iframe{width:100%;flex:1;min-height:440px;border:0;border-radius:12px;background:#fff}.pg .u{font-size:11px;word-break:break-all;opacity:.7}.pg a{color:#93c5fd;font-size:12px}
+.pg.web{align-items:stretch;justify-content:flex-start;gap:6px}.bar2{background:#1e293b;border-radius:10px;padding:6px 10px;font-size:12px;color:#e2e8f0;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wb{position:relative;flex:1;display:flex;min-height:420px}.wb iframe{flex:1;width:100%;min-height:420px}.ld{position:absolute;top:10px;left:0;right:0;text-align:center;color:#334155;font-size:12px;z-index:2;pointer-events:none}
+.er{margin:auto;padding:18px;background:#fff;color:#7f1d1d;border-radius:12px;font-size:13px;line-height:1.5}
 </style></head><body>
 <header>
   <h1>📱 AppStudio Móvil <small>· Prácticas</small></h1>
   <div id="pareja-box" class="pareja-tag" onclick="openDatosModal()" title="Haz clic para modificar los datos">👥 <span id="pareja-txt">Sin datos</span></div>
   <button class="b am" onclick="info()">📋 Prácticas</button>
+  <button class="b pr" onclick="infoAv()">🚀 Prácticas avanzadas</button>
   <button class="b pr" onclick="fin()">🏆 Nota final</button>
   <button id="send-btn" class="b ok" onclick="sendResults()">📤 Enviar datos</button>
 </header>
-<div class="bar" id="bar"></div>
+<div class="bar" id="bar"><b>Práctica:</b><button class="chip on" onclick="go(1)">P1 · sin nota</button><button class="chip " onclick="go(2)">P2 · sin nota</button><button class="chip " onclick="go(3)">P3 · sin nota</button><button class="chip " onclick="go(4)">P4 · sin nota</button><button class="b ok" onclick="ev()">✅ Evaluar esta práctica</button><button class="b pr" onclick="dl()">⬇️ Descargar app (.html)</button><button class="b rd" onclick="clr()">🗑 Vaciar</button></div>
 <main>
-<section class="card"><h3>🧩 Elementos</h3><p class="m">Arrástralos hasta el móvil (o haz clic para añadirlos al final).</p><div id="pal"></div></section>
-<section><div class="tg"><button class="b" id="me" onclick="setMode('edit')">✏️ Editar</button><button class="b" id="mt" onclick="setMode('test')">▶️ Probar</button></div>
-<div class="phone"><div class="st"><span>10:30</span><span>📶 🔋</span></div><div id="scr"></div></div></section>
-<section class="card" id="pr"></section>
+<section class="card"><h3>🧩 Elementos</h3><p class="m">Arrástralos hasta el móvil (o haz clic para añadirlos al final).</p><div id="pal"><div class="it" draggable="true" ondragstart="event.dataTransfer.setData('text/plain','new:label')" onclick="add('label')"><span style="font-size:20px">🏷️</span>Etiqueta</div><div class="it" draggable="true" ondragstart="event.dataTransfer.setData('text/plain','new:image')" onclick="add('image')"><span style="font-size:20px">🖼️</span>Imagen por URL</div><div class="it" draggable="true" ondragstart="event.dataTransfer.setData('text/plain','new:img')" onclick="add('img')"><span style="font-size:20px">🖼️</span>Botón: mostrar imagen</div><div class="it" draggable="true" ondragstart="event.dataTransfer.setData('text/plain','new:bg')" onclick="add('bg')"><span style="font-size:20px">🎨</span>Botón: cambiar fondo</div><div class="it" draggable="true" ondragstart="event.dataTransfer.setData('text/plain','new:sound')" onclick="add('sound')"><span style="font-size:20px">🔔</span>Botón: reproducir tono</div><div class="it" draggable="true" ondragstart="event.dataTransfer.setData('text/plain','new:url')" onclick="add('url')"><span style="font-size:20px">🌐</span>Botón: abrir web</div></div></section>
+<section><div class="tg"><button class="b on" id="me" onclick="setMode('edit')">✏️ Editar</button><button class="b" id="mt" onclick="setMode('test')">▶️ Probar</button></div>
+<div class="sb" id="sb"></div>
+<div class="phone"><div class="st"><span>10:30</span><span>📶 🔋</span></div><div id="scr" class="edit" style="background: rgb(255, 255, 255);"><div class="ttl" style="color: rgb(15, 23, 42);">Mi App</div><div class="hint">⬅️ Arrastra aquí etiquetas,<br>botones e imágenes</div></div><div class="nv"><button id="bk" class="off" onclick="back()" title="Atrás">◀</button><span>●</span><span>■</span></div></div></section>
+<section class="card" id="pr"><h3>⚙️ Aplicación</h3><label>Nombre de la app</label><input value="Mi App" oninput="A().name=this.value;rScr();save()"><label>Color de fondo de la app</label><input type="color" value="#ffffff" oninput="A().bg=this.value;rScr();save()"><hr style="margin:14px 0;border:0;border-top:1px solid #e2e8f0"><p class="m">Pulsa un elemento del móvil (modo ✏️ Editar) para cambiar su texto, color y acción.</p></section>
 </main>
-<div id="mod" onclick="if(event.target===this)mc()"></div><div id="toast"></div>
+<div id="mod" onclick="if(event.target===this)mc()" style="display: flex;"><div class="mc"><button class="b x" onclick="mc()">✖</button><h2>👥 Datos de los Alumnos (Pareja)</h2>
+ <div style="background:#f0f9ff;border:1px solid #0284c7;color:#0369a1;padding:12px;border-radius:12px;margin-bottom:14px;font-size:13px;line-height:1.4">
+   <b>ℹ️ INFORMACIÓN IMPORTANTE:</b> Es obligatorio rellenar el nombre y los dos apellidos de ambos alumnos.<br>
+   <b>Si la práctica la realizas de forma INDIVIDUAL</b>, debes escribir el <b>MISMO nombre y MISMOS apellidos</b> en los recuadros del Alumno 1 y del Alumno 2.
+ </div>
+ 
+ <div style="border:1px solid #cbd5e1;border-radius:12px;padding:12px;margin-bottom:12px;background:#f8fafc">
+   <h3 style="margin:0 0 8px;color:#4f46e5;font-size:14px">👤 Alumno 1</h3>
+   <label>Nombre</label>
+   <input type="text" id="al1_nom_in" value="" placeholder="Nombre. Ej: Lucía">
+   <label>Apellidos (los dos apellidos)</label>
+   <input type="text" id="al1_ape_in" value="" placeholder="Apellidos. Ej: Pérez Gómez">
+ </div>
+ <div style="border:1px solid #cbd5e1;border-radius:12px;padding:12px;margin-bottom:12px;background:#f8fafc">
+   <h3 style="margin:0 0 8px;color:#0284c7;font-size:14px">👤 Alumno 2</h3>
+   <label>Nombre</label>
+   <input type="text" id="al2_nom_in" value="" placeholder="Nombre. Ej: Marcos (o Lucía si es individual)">
+   <label>Apellidos (los dos apellidos)</label>
+   <input type="text" id="al2_ape_in" value="" placeholder="Apellidos. Ej: Díaz Ruiz (o Pérez Gómez si es individual)">
+ </div>
+ <div style="margin-bottom:14px">
+   <label>Nombre del Profesor</label>
+   <input type="text" id="prof_in" value="" placeholder="Nombre profesor. Ej: Eduardo">
+ </div>
+ <div id="team-error" style="color:#b71c1c;font-weight:700;font-size:13px;margin-bottom:10px"></div>
+ <button class="b pr" style="width:100%;padding:10px;font-size:15px" onclick="saveDatosForm()">💾 Guardar Datos</button></div></div><div id="toast"></div>
 <script>
 const $=id=>document.getElementById(id);
 const SHEET_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyiOndS6GMYhgiSGLVAXUOOHhMKtBXqcLUeOppbNZIkrxU-HiMlgmhlYCj1xYZQG0io/exec";
@@ -68,30 +103,34 @@ sirena:{n:'Sirena',k:['sirena','alarma'],w:'sawtooth',f:[[0,500],[.5,900],[1,500
 laser:{n:'Láser',k:['laser','disparo'],w:'square',f:[[0,1500],[.3,200]],d:.3},
 tambor:{n:'Tambor',k:['tambor','golpe','bombo'],w:'sine',f:[[0,160],[.25,45]],d:.3},
 victoria:{n:'Victoria',k:['victoria','fanfarria','exito'],w:'triangle',f:[[0,523],[.14,523],[.141,659],[.28,659],[.281,784],[.45,784]],d:.5}};
-const PAL=[['label','🏷️','Etiqueta'],['image','🖼️','Imagen por URL'],['img','🖼️','Botón: mostrar imagen'],['bg','🎨','Botón: cambiar fondo'],['sound','🔔','Botón: reproducir tono'],['url','🌐','Botón: abrir web']];
+const PAL=[['label','🏷️','Etiqueta'],['text','📝','Texto'],['image','🖼️','Imagen por URL'],['img','🖼️','Botón: mostrar imagen'],['bg','🎨','Botón: cambiar fondo'],['sound','🔔','Botón: reproducir tono'],['url','🌐','Botón: abrir web'],['screen','📲','Botón: ir a otra pantalla']];
 const PR=[{t:'Colores de pantalla',s:['Arrastra una Etiqueta al móvil y escribe tu nombre.','Arrastra dos botones "Cambiar fondo".','Cambia el texto de cada botón (ej.: "Azul", "Verde") y el color del propio botón.','En cada botón elige un color de pantalla distinto.','Cambia también el color de fondo de la aplicación.','Pulsa ▶️ Probar, comprueba que la pantalla cambia y pulsa ✅ Evaluar.']},
 {t:'Mi foto y mis sonidos',s:['Arrastra una Etiqueta y escribe tu nombre.','Debajo, arrastra una Imagen por URL y pega la dirección de una foto (https://...).','Añade dos botones "Reproducir tono" y elige un sonido distinto en cada uno.','Pon a cada botón el nombre del sonido (ej.: "Campana", "Sirena") y cámbiale el color.','Cambia el color de fondo de la aplicación.','Pruébalo en ▶️ y pulsa ✅ Evaluar.']},
-{t:'Mi Pueblo',s:['Pon como nombre de la app "Mi Pueblo".','Añade una Etiqueta con el texto "Mi Pueblo".','Añade un botón "Mostrar imagen", cambia su texto y su color.','Pega en el botón la URL de una foto de tu pueblo.','Cambia el color de fondo de la aplicación.','En ▶️ Probar, al pulsar el botón la foto se verá 10 segundos y volverás a la app. Pulsa ✅ Evaluar.']},
-{t:'Mis 3 webs favoritas',s:['Añade una Etiqueta con el texto "Mis 3 webs favoritas".','Añade tres botones "Abrir web".','Cambia el texto y el color de cada botón (el nombre de cada web).','Pega una URL distinta en cada botón (https://...).','Cambia el color de fondo de la aplicación.','En ▶️ Probar, cada web se abre 10 segundos y vuelves a la app. Pulsa ✅ Evaluar.']}];
+{t:'Mi Pueblo',s:['Pon como nombre de la app "Mi Pueblo".','Añade una Etiqueta con el texto "Mi Pueblo".','Añade un botón "Mostrar imagen", cambia su texto y su color.','Pega en el botón la URL de una foto de tu pueblo.','Cambia el color de fondo de la aplicación.','En ▶️ Probar, al pulsar el botón la foto se abre en otra pantalla y vuelves a la app con la flecha ◀ de abajo. Pulsa ✅ Evaluar.']},
+{t:'Mis 3 webs favoritas',s:['Añade una Etiqueta con el texto "Mis 3 webs favoritas".','Añade tres botones "Abrir web".','Cambia el texto y el color de cada botón (el nombre de cada web).','Pega una URL distinta en cada botón (https://...).','Cambia el color de fondo de la aplicación.','En ▶️ Probar, cada web se abre en otra pantalla y vuelves a la app con la flecha ◀ de abajo. Pulsa ✅ Evaluar.']}];
 const norm=s=>(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 const okUrl=u=>/^https?:\/\/[^\s.\/]+\.\S+/i.test((u||'').trim());
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 const contrast=c=>{const n=parseInt(c.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;return(r*299+g*587+b*114)/1000>140?'#0f172a':'#fff'};
-const blank=()=>({name:'Mi App',bg:'#ffffff',els:[]});
+const blank=()=>({name:'Mi App',bg:'#ffffff',els:[],scr:[]});
+const yt=u=>{const m=(u||'').match(/(?:youtube\.com\/watch\?(?:\S*&)?v=|youtu\.be\/|youtube\.com\/shorts\/)([\w-]{11})/);return m?'https://www.youtube.com/embed/'+m[1]:u};
+const BLK=/(^|\.)(google\.[a-z.]+|facebook\.com|instagram\.com|twitter\.com|x\.com|tiktok\.com|netflix\.com|linkedin\.com|amazon\.[a-z.]+|pinterest\.[a-z.]+|reddit\.com|whatsapp\.com|spotify\.com|github\.com|bing\.com|yahoo\.com|duckduckgo\.com)$/i;
+const noEmbed=u=>{try{const x=new URL(u),h=x.hostname.replace(/^www\./,'');if(/(^|\.)youtube\.com$/.test(h)||h==='youtu.be')return !/^\/embed\//.test(x.pathname);return BLK.test(h)}catch(e){return true}};
 
 try{localStorage.removeItem('am_movil')}catch(e){}
-let S={cur:1,al1_nom:'',al1_ape:'',al2_nom:'',al2_ape:'',prof:'',lockUntil:0,P:{1:blank(),2:blank(),3:blank(),4:blank()},R:{}};
+let S={cur:1,al1_nom:'',al1_ape:'',al2_nom:'',al2_ape:'',prof:'',lockUntil:0,P:{1:blank(),2:blank(),3:blank(),4:blank(),5:blank()},R:{}};
 
 const save=()=>{try{localStorage.setItem('am_movil',JSON.stringify(S))}catch(e){}};
-let sel=null,mode='edit',rb=null,tm=null,wn=null,ac;
-const A=()=>S.P[S.cur],E=()=>A().els.find(e=>e.id===sel);
+let sel=null,mode='edit',rb=null,tm=null,wn=null,ac,vw=0,rbv=0,nav=[{k:'s',i:0}];
+const A=()=>S.P[S.cur],SC=i=>i===0?A():(A().scr||[])[i-1]||A(),V=()=>SC(vw),cur=()=>mode==='test'?nav[nav.length-1]:{k:'s',i:vw},E=()=>V().els.find(e=>e.id===sel);
 function toast(m){const t=$('toast');t.textContent=m;t.style.opacity=1;setTimeout(()=>t.style.opacity=0,2400)}
 function tone(id){try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();const t=T[id],o=ac.createOscillator(),g=ac.createGain(),n=ac.currentTime;o.type=t.w;t.f.forEach(([x,f],i)=>i?o.frequency.linearRampToValueAtTime(f,n+x):o.frequency.setValueAtTime(f,n));g.gain.setValueAtTime(.2,n);g.gain.exponentialRampToValueAtTime(.001,n+t.d);o.connect(g);g.connect(ac.destination);o.start(n);o.stop(n+t.d)}catch(e){}}
 function mk(k){const id='e'+Date.now()+Math.random().toString(36).slice(2,5);
  if(k==='label')return{id,t:'label',text:'Etiqueta',color:'#1e293b'};
+ if(k==='text')return{id,t:'text',text:'Escribe aquí tu texto',color:'#1e293b',h:80,align:'left'};
  if(k==='image')return{id,t:'image',src:''};
- return{id,t:'button',text:'Botón',color:'#4f46e5',act:k,param:k==='bg'?'#cbd5e1':k==='sound'?'beep':''}}
-function add(k,i){const e=mk(k),a=A().els;if(i==null)a.push(e);else a.splice(i,0,e);sel=e.id;if(mode!=='edit'){mode='edit';rb=null}render()}
+ return{id,t:'button',text:'Botón',color:'#4f46e5',act:k,param:k==='bg'?'#cbd5e1':k==='sound'?'beep':k==='screen'?'1':''}}
+function add(k,i){const e=mk(k),a=V().els;if(i==null)a.push(e);else a.splice(i,0,e);sel=e.id;if(mode!=='edit'){mode='edit';rb=null}render()}
 function updateParejaDisplay(){
  const box=$('pareja-txt');
  if(!box) return;
@@ -107,72 +146,107 @@ function updateParejaDisplay(){
   box.textContent='Sin datos';
  }
 }
-function render(){rBar();rScr();rPr();$('me').classList.toggle('on',mode==='edit');$('mt').classList.toggle('on',mode==='test');checkSendLockOnLoad();updateParejaDisplay();save()}
-function rBar(){$('bar').innerHTML='<b>Práctica:</b>'+[1,2,3,4].map(n=>`<button class="chip ${n===S.cur?'on':''}" onclick="go(${n})">P${n} · ${S.R[n]?S.R[n].s+'/100':'sin nota'}</button>`).join('')+'<button class="b ok" onclick="ev()">✅ Evaluar esta práctica</button><button class="b pr" onclick="dl()">⬇️ Descargar app (.html)</button><button class="b rd" onclick="clr()">🗑 Vaciar</button>'}
-function rScr(){const s=$('scr'),a=A();s.className=mode;s.style.background=rb||a.bg;s.innerHTML='';
- const h=document.createElement('div');h.className='ttl';h.textContent=a.name;h.style.color=contrast(rb||a.bg);s.appendChild(h);
+function render(){rBar();rSb();rScr();rPr();$('me').classList.toggle('on',mode==='edit');$('mt').classList.toggle('on',mode==='test');checkSendLockOnLoad();updateParejaDisplay();save()}
+function rBar(){$('bar').innerHTML='<b>Práctica:</b>'+[1,2,3,4].map(n=>`<button class="chip ${n===S.cur?'on':''}" onclick="go(${n})">P${n} · ${S.R[n]?S.R[n].s+'/100':'sin nota'}</button>`).join('')+`<button class="chip ${S.cur===5?'on':''}" onclick="go(5)">🚀 Avanzada · sin nota</button>`+'<button class="b ok" onclick="ev()">✅ Evaluar esta práctica</button><button class="b pr" onclick="dl()">⬇️ Descargar app (.html)</button><button class="b rd" onclick="clr()">🗑 Vaciar</button>'}
+function rSb(){const a=A(),sc=a.scr||[];$('sb').innerHTML='<b>Pantalla:</b>'+['Principal'].concat(sc.map(x=>x.name)).map((n,i)=>`<button class="chip ${i===vw?'on':''}" onclick="gv(${i})">${i?'📄':'📱'} ${esc(n)}</button>`).join('')+'<button class="b" onclick="addScr()">➕ Pantalla</button>'+(vw?'<button class="b rd" onclick="delScr()">🗑 Quitar pantalla</button>':'')}
+function gv(i){cl();sel=null;vw=i;if(mode!=='edit'){mode='edit';rb=null}render()}
+function addScr(){const a=A();a.scr=a.scr||[];if(a.scr.length>=5){toast('Máximo 5 pantallas adicionales');return}a.scr.push({name:'Pantalla '+(a.scr.length+2),bg:'#ffffff',els:[]});vw=a.scr.length;sel=null;if(mode!=='edit'){mode='edit';rb=null}render()}
+function delScr(){const a=A(),k=vw;if(!k||!confirm('¿Quitar esta pantalla?'))return;a.scr.splice(k-1,1);[a].concat(a.scr).forEach(x=>x.els.forEach(e=>{if(e.t==='button'&&e.act==='screen'){const p=+e.param;if(p===k)e.param='1';else if(p>k)e.param=String(p-1)}}));vw=0;sel=null;render()}
+function back(){if(mode==='test'){if(nav.length>1){nav.pop();rScr()}}else if(vw>0)gv(0)}
+function rPage(s,c){s.className='test';s.style.background='#0f172a';s.innerHTML='';const d=document.createElement('div');d.className='pg';
+ if(c.k==='img'){const m=document.createElement('img');m.src=c.u;m.onerror=()=>m.replaceWith(ph('No se pudo cargar la imagen'));d.appendChild(m)}
+ else{let host='';try{host=new URL(c.u).hostname}catch(e){}
+  d.className='pg web';d.innerHTML=`<div class="bar2">🔒 ${esc(host)}</div><div class="wb"></div><div class="u">ℹ️ En el móvil real se abrirá en una pestaña nueva del navegador.</div><a href="${esc(c.u)}" target="_blank" rel="noopener">Abrir aquí en una pestaña nueva ↗</a>`;
+  const wb=d.querySelector('.wb'),fail=()=>{wb.innerHTML='<div class="er">⚠️<br><b>No se puede ver correctamente</b><br>Esta página no permite mostrarse dentro del simulador.<br>Inténtalo descargando el archivo HTML (⬇️ Descargar app) y ábrelo en el móvil.</div>'};
+  if(noEmbed(c.u))fail();
+  else{wb.innerHTML='<div class="ld">Cargando…</div>';const f=document.createElement('iframe');f.title='Web';let ok=false;const t=setTimeout(()=>{if(wb.isConnected&&!ok)fail()},10000);f.onload=()=>{ok=true;clearTimeout(t);const l=wb.querySelector('.ld');if(l)l.remove()};f.onerror=fail;f.src=c.u;wb.appendChild(f)}}
+ s.appendChild(d)}
+function rScr(){const s=$('scr'),c=cur(),bk=$('bk');if(bk)bk.className=(mode==='test'?nav.length<2:vw===0)?'off':'';
+ if(c.k!=='s'){rPage(s,c);return}
+ const a=SC(c.i),bgc=(rb&&rbv===c.i)?rb:a.bg;s.className=mode;s.style.background=bgc;s.innerHTML='';
+ const h=document.createElement('div');h.className='ttl';h.textContent=a.name;h.style.color=contrast(bgc);s.appendChild(h);
  a.els.forEach((e,i)=>{const w=document.createElement('div');w.className='el'+(e.id===sel&&mode==='edit'?' sel':'');let n;
   if(mode==='edit'){w.draggable=true;w.ondragstart=ev=>ev.dataTransfer.setData('text/plain','move:'+i);w.onclick=()=>{sel=e.id;render()}}
-  if(e.t==='label'){n=document.createElement('div');n.className='lab';n.textContent=e.text;n.style.color=contrast(rb||a.bg)==='#fff'&&e.color==='#1e293b'?'#fff':e.color}
+  if(e.t==='label'){n=document.createElement('div');n.className='lab';n.textContent=e.text;n.style.color=contrast(bgc)==='#fff'&&e.color==='#1e293b'?'#fff':e.color}
+  else if(e.t==='text'){n=document.createElement('div');n.className='tx';n.textContent=e.text;n.style.minHeight=e.h+'px';n.style.textAlign=e.align;n.style.color=e.color}
   else if(e.t==='image'){if(okUrl(e.src)){n=document.createElement('img');n.className='im';n.draggable=false;n.src=e.src;n.onerror=()=>n.replaceWith(ph('No se pudo cargar la imagen'))}else n=ph('🖼️ Pega la URL de una imagen')}
   else{n=document.createElement('button');n.className='bt';n.textContent=e.text;n.style.background=e.color;n.style.color=contrast(e.color);n.onclick=()=>mode==='test'&&run(e)}
   w.appendChild(n);s.appendChild(w)});
  if(!a.els.length){const d=document.createElement('div');d.className='hint';d.innerHTML='⬅️ Arrastra aquí etiquetas,<br>botones e imágenes';s.appendChild(d)}}
 function ph(t){const d=document.createElement('div');d.className='ph';d.textContent=t;return d}
 const f=(l,p,v,ty)=>`<label>${l}</label><input type="${ty||'text'}" value="${esc(v)}" oninput="u('${p}',this.value)">`;
-function rPr(){const a=A(),e=E();
- let h=`<h3>⚙️ Aplicación</h3><label>Nombre de la app</label><input value="${esc(a.name)}" oninput="A().name=this.value;rScr();save()"><label>Color de fondo de la app</label><input type="color" value="${a.bg}" oninput="A().bg=this.value;rScr();save()"><hr style="margin:14px 0;border:0;border-top:1px solid #e2e8f0">`;
+function rPr(){const a=A(),e=E(),v=V();
+ let h=vw?`<h3>📄 Pantalla</h3><label>Nombre de la pantalla</label><input value="${esc(v.name)}" oninput="V().name=this.value;rSb();rScr();save()"><label>Color de fondo de la pantalla</label><input type="color" value="${v.bg}" oninput="V().bg=this.value;rScr();save()"><hr style="margin:14px 0;border:0;border-top:1px solid #e2e8f0">`:`<h3>⚙️ Aplicación</h3><label>Nombre de la app</label><input value="${esc(a.name)}" oninput="A().name=this.value;rScr();save()"><label>Color de fondo de la app</label><input type="color" value="${a.bg}" oninput="A().bg=this.value;rScr();save()"><hr style="margin:14px 0;border:0;border-top:1px solid #e2e8f0">`;
  if(!e||mode!=='edit')return $('pr').innerHTML=h+'<p class="m">Pulsa un elemento del móvil (modo ✏️ Editar) para cambiar su texto, color y acción.</p>';
- h+=`<h3>✏️ ${{label:'Etiqueta',button:'Botón',image:'Imagen'}[e.t]}</h3>`;
+ h+=`<h3>✏️ ${{label:'Etiqueta',text:'Texto',button:'Botón',image:'Imagen'}[e.t]}</h3>`;
  if(e.t==='label')h+=f('Texto de la etiqueta','text',e.text)+f('Color del texto','color',e.color,'color');
+ if(e.t==='text')h+=`<label>Texto</label><textarea rows="4" oninput="u('text',this.value)">${esc(e.text)}</textarea>`+f('Color de la letra','color',e.color,'color')+`<label>Alto del cuadro: <b id="hv">${e.h}</b> px</label><input type="range" min="40" max="400" step="10" value="${e.h}" oninput="$('hv').textContent=this.value;u('h',+this.value)"><label>Alineación del texto</label><div class="row" style="margin-top:0"><button class="b ${e.align==='left'?'pr':''}" onclick="u2('align','left')">⬅ Izquierda</button><button class="b ${e.align==='center'?'pr':''}" onclick="u2('align','center')">↔ Centrar</button></div>`;
  if(e.t==='image')h+=f('URL de la imagen (https://...)','src',e.src);
- if(e.t==='button'){h+=f('Nombre del botón','text',e.text)+f('Color del botón','color',e.color,'color')+`<label>Acción al pulsar</label><select onchange="ac_(this.value)">${[['img','🖼️ Mostrar imagen'],['bg','🎨 Cambiar fondo'],['sound','🔔 Reproducir tono'],['url','🌐 Abrir web']].map(x=>`<option value="${x[0]}" ${e.act===x[0]?'selected':''}>${x[1]}</option>`).join('')}</select>`;
+ if(e.t==='button'){h+=f('Nombre del botón','text',e.text)+f('Color del botón','color',e.color,'color')+`<label>Acción al pulsar</label><select onchange="ac_(this.value)">${[['img','🖼️ Mostrar imagen'],['bg','🎨 Cambiar fondo'],['sound','🔔 Reproducir tono'],['url','🌐 Abrir web'],['screen','📲 Ir a otra pantalla']].map(x=>`<option value="${x[0]}" ${e.act===x[0]?'selected':''}>${x[1]}</option>`).join('')}</select>`;
   if(e.act==='bg')h+=f('Color de pantalla al pulsar','param',e.param,'color');
   if(e.act==='sound')h+=`<label>Sonido</label><select onchange="u('param',this.value);tone(this.value)">${Object.keys(T).map(k=>`<option value="${k}" ${e.param===k?'selected':''}>${T[k].n}</option>`).join('')}</select><button class="b" style="margin-top:6px" onclick="tone(E().param)">▶ Escuchar</button>`;
-  if(e.act==='img')h+=f('URL de la foto (se ve 10 s)','param',e.param);
-  if(e.act==='url')h+=f('URL de la web (se abre 10 s)','param',e.param)}
+  if(e.act==='img')h+=f('URL de la foto (se abre en otra pantalla)','param',e.param);
+  if(e.act==='url')h+=f('URL de la web (en el móvil se abre en una pestaña nueva)','param',e.param)+'<p class="m">Para un vídeo de YouTube pega el enlace normal del vídeo (https://www.youtube.com/watch?v=...).</p>';
+  if(e.act==='screen'){const sc=a.scr||[];h+=sc.length?`<label>Pantalla de destino</label><select onchange="u('param',this.value)">${sc.map((x,i)=>`<option value="${i+1}" ${String(e.param)===String(i+1)?'selected':''}>${esc(x.name)}</option>`).join('')}</select>`:'<p class="m">⚠️ Primero crea la pantalla con el botón "➕ Pantalla" que hay encima del móvil.</p>'}}
  $('pr').innerHTML=h+'<div class="row"><button class="b" onclick="mv(-1)">⬆ Subir</button><button class="b" onclick="mv(1)">⬇ Bajar</button><button class="b rd" onclick="del()">🗑</button></div>'}
 function u(p,v){const e=E();if(e){e[p]=v;rScr();save()}}
-function ac_(v){const e=E();e.act=v;e.param=v==='bg'?'#cbd5e1':v==='sound'?'beep':'';render()}
-function mv(d){const a=A().els,i=a.findIndex(x=>x.id===sel),j=i+d;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];render()}
-function del(){A().els=A().els.filter(x=>x.id!==sel);sel=null;render()}
-function clr(){if(confirm('¿Vaciar esta práctica?')){S.P[S.cur]=blank();delete S.R[S.cur];sel=null;render()}}
-function go(n){cl();sel=null;rb=null;S.cur=n;render()}
-function setMode(m){cl();mode=m;rb=null;render()}
+function u2(p,v){const e=E();if(e){e[p]=v;render()}}
+function ac_(v){const e=E();e.act=v;e.param=v==='bg'?'#cbd5e1':v==='sound'?'beep':v==='screen'?'1':'';render()}
+function mv(d){const a=V().els,i=a.findIndex(x=>x.id===sel),j=i+d;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];render()}
+function del(){V().els=V().els.filter(x=>x.id!==sel);sel=null;render()}
+function clr(){if(confirm('¿Vaciar esta práctica?')){S.P[S.cur]=blank();delete S.R[S.cur];sel=null;vw=0;render()}}
+function go(n){cl();sel=null;rb=null;vw=0;nav=[{k:'s',i:0}];S.cur=n;render()}
+function setMode(m){cl();mode=m;rb=null;nav=[{k:'s',i:0}];render()}
 function cl(){clearInterval(tm);const o=$('ov');if(o)o.remove();if(wn){try{wn.close()}catch(e){}wn=null}}
 function ov(html,s){cl();const o=document.createElement('div');o.id='ov';o.innerHTML=html+`<p style="margin:4px 0 0">Volviendo a la app en <b id="cd">${s}</b> s</p><button class="b" onclick="cl()">Volver ya</button>`;$('scr').appendChild(o);let n=s;tm=setInterval(()=>{n--;const c=$('cd');if(c)c.textContent=n;if(n<=0)cl()},1000)}
 function run(e){
- if(e.act==='bg'){rb=e.param;rScr()}
+ if(e.act==='bg'){rb=e.param;rbv=cur().i;rScr()}
  else if(e.act==='sound')tone(e.param);
+ else if(e.act==='screen'){const i=+e.param;if(!(A().scr||[])[i-1])toast('Este botón no tiene pantalla de destino');else{nav.push({k:'s',i});rScr()}}
  else if(!okUrl(e.param))toast('Este botón no tiene una URL válida (https://...)');
- else if(e.act==='img')ov(`<img src="${esc(e.param)}" alt="">`,10);
- else if(e.act==='url'){
-  ov(`<iframe src="${esc(e.param)}" style="width:100%;height:360px;border:0;border-radius:12px;background:#fff" title="Web"></iframe><div class="u">${esc(e.param)}</div>`,10);
- }}
+ else if(e.act==='img'){nav.push({k:'img',u:e.param.trim()});rScr()}
+ else if(e.act==='url'){nav.push({k:'web',u:yt(e.param.trim())});rScr()}}
 function mset(){const sc=$('scr');sc.ondragover=e=>{e.preventDefault();sc.classList.add('drop')};sc.ondragleave=()=>sc.classList.remove('drop');
- sc.ondrop=e=>{e.preventDefault();sc.classList.remove('drop');const d=e.dataTransfer.getData('text/plain');if(!d)return;const a=A().els,ws=[...sc.querySelectorAll('.el')];let i=a.length;
+ sc.ondrop=e=>{e.preventDefault();sc.classList.remove('drop');const d=e.dataTransfer.getData('text/plain');if(!d)return;const a=V().els,ws=[...sc.querySelectorAll('.el')];let i=a.length;
   for(let k=0;k<ws.length;k++){const r=ws[k].getBoundingClientRect();if(e.clientY<r.top+r.height/2){i=k;break}}
   const[m,v]=d.split(':');if(m==='new')add(v,i);else if(m==='move'&&mode==='edit'){const fr=+v,[x]=a.splice(fr,1);a.splice(i>fr?i-1:i,0,x);render()}}}
 
 /* ---- Descargar la app de la práctica actual como HTML independiente ---- */
+function appRT(){
+ const $=i=>document.getElementById(i);let rb=null,rbv=0,nav=[{k:'s',i:0}],ac,hb=false;
+ const ct=c=>{const n=parseInt(c.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;return(r*299+g*587+b*114)/1000>140?'#0f172a':'#fff'};
+ const ok=u=>/^https?:\/\/[^\s.\/]+\.\S+/i.test((u||'').trim());
+ const es=s=>String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+ const SC=i=>i===0?D:(D.scr||[])[i-1]||D;
+ function tone(id){try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();const t=D.T[id],o=ac.createOscillator(),g=ac.createGain(),n=ac.currentTime;o.type=t.w;t.f.forEach(function(x,i){i?o.frequency.linearRampToValueAtTime(x[1],n+x[0]):o.frequency.setValueAtTime(x[1],n)});g.gain.setValueAtTime(.2,n);g.gain.exponentialRampToValueAtTime(.001,n+t.d);o.connect(g);g.connect(ac.destination);o.start(n);o.stop(n+t.d)}catch(e){}}
+ function push(en){nav.push(en);try{history.pushState({d:nav.length},'')}catch(e){hb=true}draw()}
+ window.addEventListener('popstate',function(ev){var d=(ev.state&&ev.state.d)||1;if(nav.length>d){nav.length=d;draw()}});
+ try{history.replaceState({d:1},'')}catch(e){}
+ function run(e){
+  if(e.act==='bg'){rb=e.param;rbv=nav[nav.length-1].i;draw()}
+  else if(e.act==='sound')tone(e.param);
+  else if(e.act==='screen'){const i=+e.param;if(!(D.scr||[])[i-1])alert('Este botón no tiene pantalla de destino');else push({k:'s',i:i})}
+  else if(!ok(e.param))alert('Este botón no tiene una URL válida');
+  else if(e.act==='img')push({k:'img',u:e.param.trim()});
+  else if(e.act==='url'){const u=e.param.trim();let w=null;try{w=window.open(u,'_blank')}catch(x){}if(w){try{w.opener=null}catch(x){}}else location.href=u}}
+ function draw(){
+  const c=nav[nav.length-1],s=$('s');window.scrollTo(0,0);
+  if(c.k!=='s'){document.body.style.background='#0f172a';s.className='pg';s.innerHTML='<img src="'+es(c.u)+'" alt="">'}
+  else{const a=SC(c.i),bg=(rb&&rbv===c.i)?rb:a.bg,k=ct(bg);document.body.style.background=bg;s.className='';
+   s.innerHTML='<div class="ttl" style="color:'+k+'">'+es(a.name)+'</div>';
+   a.els.forEach(function(e){let n;
+    if(e.t==='label'){n=document.createElement('div');n.className='lab';n.textContent=e.text;n.style.color=(k==='#fff'&&e.color==='#1e293b')?'#fff':e.color}
+    else if(e.t==='text'){n=document.createElement('div');n.className='tx';n.textContent=e.text;n.style.minHeight=e.h+'px';n.style.textAlign=e.align;n.style.color=e.color}
+    else if(e.t==='image'){if(!ok(e.src))return;n=document.createElement('img');n.className='im';n.src=e.src}
+    else{n=document.createElement('button');n.className='bt';n.textContent=e.text;n.style.background=e.color;n.style.color=ct(e.color);n.onclick=function(){run(e)}}
+    s.appendChild(n)})}
+  if(hb&&nav.length>1){const b=document.createElement('button');b.className='bt';b.textContent='◀ Volver';b.style.background='#0f172a';b.style.color='#fff';b.onclick=function(){nav.pop();draw()};s.insertBefore(b,s.firstChild)}}
+ draw();
+}
 function dl(){const a=A();if(!a.els.length){toast('Esta app está vacía: añade elementos antes de descargarla');return}
- const d=JSON.stringify({name:a.name,bg:a.bg,els:a.els,T:Object.fromEntries(Object.entries(T).map(([k,v])=>[k,{w:v.w,f:v.f,d:v.d}]))}).replace(/</g,'\\u003c');
- const css='*{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:system-ui,Segoe UI,Arial,sans-serif;transition:background .2s}#s{max-width:460px;margin:auto;padding:20px 16px;display:flex;flex-direction:column;gap:12px}.ttl{text-align:center;font-weight:800;font-size:15px;padding-bottom:8px;border-bottom:1px solid #0001}.lab{font-size:22px;font-weight:800;text-align:center;word-break:break-word}.bt{width:100%;padding:14px;border:0;border-radius:14px;font-weight:800;font-size:16px;cursor:pointer;box-shadow:0 2px 4px #0003}.bt:active{transform:scale(.97)}.im{width:100%;max-height:320px;object-fit:cover;border-radius:16px;display:block}#ov{position:fixed;inset:0;background:#0f172af2;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;color:#fff;text-align:center}#ov img{max-width:100%;max-height:70vh;border-radius:12px}#ov .u{font-size:12px;word-break:break-all;opacity:.7}#ov button{border:0;border-radius:10px;padding:8px 14px;font-weight:700;cursor:pointer}';
- const js="const D="+d+";const $=i=>document.getElementById(i);let rb=null,tm,wn,ac;"
- +"const ct=c=>{const n=parseInt(c.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;return(r*299+g*587+b*114)/1000>140?'#0f172a':'#fff'};"
- +"const ok=u=>/^https?:\\/\\/[^\\s.\\/]+\\.\\S+/i.test((u||'').trim());"
- +"const es=s=>String(s).replace(/&/g,'&amp;').replace(/\"/g,'&quot;').replace(/</g,'&lt;');"
- +"function tone(id){try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();const t=D.T[id],o=ac.createOscillator(),g=ac.createGain(),n=ac.currentTime;o.type=t.w;t.f.forEach(function(x,i){i?o.frequency.linearRampToValueAtTime(x[1],n+x[0]):o.frequency.setValueAtTime(x[1],n)});g.gain.setValueAtTime(.2,n);g.gain.exponentialRampToValueAtTime(.001,n+t.d);o.connect(g);g.connect(ac.destination);o.start(n);o.stop(n+t.d)}catch(e){}}"
- +"function cl(){clearInterval(tm);var o=$('ov');if(o)o.remove();if(wn){try{wn.close()}catch(e){}wn=null}}"
- +"function ov(h,s){cl();var o=document.createElement('div');o.id='ov';o.innerHTML=h+'<p style=\"margin:4px 0 0\">Volviendo a la app en <b id=\"cd\">'+s+'</b> s</p><button onclick=\"cl()\">Volver ya</button>';document.body.appendChild(o);var n=s;tm=setInterval(function(){n--;var c=$('cd');if(c)c.textContent=n;if(n<=0)cl()},1000)}"
- +"function run(e){if(e.act==='bg'){rb=e.param;draw()}else if(e.act==='sound')tone(e.param);else if(!ok(e.param))alert('Este botón no tiene una URL válida');"
- +"else if(e.act==='img')ov('<img src=\"'+es(e.param)+'\" alt=\"\">',10);"
- +"else if(e.act==='url'){ov('<iframe src=\"'+es(e.param)+'\" style=\"width:100%;height:360px;border:0;border-radius:12px;background:#fff\"></iframe><div class=\"u\">'+es(e.param)+'</div>',10);}}"
- +"function draw(){var s=$('s'),c=ct(rb||D.bg);document.body.style.background=rb||D.bg;s.innerHTML='<div class=\"ttl\" style=\"color:'+c+'\">'+es(D.name)+'</div>';"
- +"D.els.forEach(function(e){var n;if(e.t==='label'){n=document.createElement('div');n.className='lab';n.textContent=e.text;n.style.color=(c==='#fff'&&e.color==='#1e293b')?'#fff':e.color}"
- +"else if(e.t==='image'){if(!ok(e.src))return;n=document.createElement('img');n.className='im';n.src=e.src}"
- +"else{n=document.createElement('button');n.className='bt';n.textContent=e.text;n.style.background=e.color;n.style.color=ct(e.color);n.onclick=function(){run(e)}}"
- +"s.appendChild(n)})}draw();";
+ const d=JSON.stringify({name:a.name,bg:a.bg,els:a.els,scr:a.scr||[],T:Object.fromEntries(Object.entries(T).map(([k,v])=>[k,{w:v.w,f:v.f,d:v.d}]))}).replace(/</g,'\\u003c');
+ const css='*{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:system-ui,Segoe UI,Arial,sans-serif;transition:background .2s}#s{max-width:460px;margin:auto;padding:20px 16px;display:flex;flex-direction:column;gap:12px}.ttl{text-align:center;font-weight:800;font-size:15px;padding-bottom:8px;border-bottom:1px solid #0001}.lab{font-size:22px;font-weight:800;text-align:center;word-break:break-word}.tx{background:#ffffffd9;border:1px solid #cbd5e1;border-radius:14px;padding:10px 12px;font-size:17px;line-height:1.4;white-space:pre-wrap;word-break:break-word}.bt{width:100%;padding:14px;border:0;border-radius:14px;font-weight:800;font-size:16px;cursor:pointer;box-shadow:0 2px 4px #0003}.bt:active{transform:scale(.97)}.im{width:100%;max-height:320px;object-fit:cover;border-radius:16px;display:block}#s.pg{align-items:center;justify-content:center;min-height:100vh}#s.pg img{max-width:100%;max-height:90vh;border-radius:12px}';
+ const js="const D="+d+";("+appRT.toString()+")();";
  const html='<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(a.name)+'</title><style>'+css+'</style></head><body><div id="s"></div><script>'+js+'<\/script></body></html>';
  const fn=(norm(a.name).replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'')||'mi_app')+'.html',l=document.createElement('a');
  l.href=URL.createObjectURL(new Blob([html],{type:'text/html'}));l.download=fn;document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(l.href),1000);toast('Descargada: '+fn)}
@@ -376,6 +450,7 @@ a=>{const b=bt(a,'url');return[['Etiqueta sobre tus webs favoritas',10,lb(a).som
 const edL=e=>e.text.trim().length>=3&&e.text.trim()!=='Etiqueta';
 
 function ev(){
+ if(S.cur===5){modal('<h2>🚀 Práctica avanzada</h2><p class="m">Esta práctica <b>no se evalúa aquí ni cuenta en la nota</b>. Cuando la termines pulsa ⬇️ Descargar app (.html) y envíale el archivo a tu profesor, que la corregirá individualmente.</p>');return}
  const d=CK[S.cur-1](A()).map(([l,p,x])=>[l,p,Math.round(p*x*100)/100]),s=Math.round(d.reduce((t,x)=>t+x[2],0)*10)/10;
  S.R[S.cur]={s,d};
  render();
@@ -412,6 +487,7 @@ function fin(){
 }
 
 function info(){modal('<h2>📋 Prácticas</h2><p class="m">Cada práctica tiene su propia app. Al terminar, pulsa ✅ Evaluar. La nota final es la media de las 4.</p>'+PR.map((p,i)=>`<div class="pc"><b>P${i+1} · ${p.t}</b><ol>${p.s.map(x=>`<li>${x}</li>`).join('')}</ol><button class="b pr" onclick="go(${i+1});mc()">Trabajar en P${i+1}</button></div>`).join(''))}
+function infoAv(){modal(`<h2>🚀 Prácticas avanzadas</h2><p class="m">Práctica alternativa para cursos más avanzados. <b>No cuenta en la nota</b> de las 4 prácticas ni se envía con 📤 Enviar datos: tu profesor la corregirá individualmente. Al terminar pulsa ⬇️ Descargar app (.html) y envíale el archivo.</p><div class="pc"><b>Descripción general (válida para cualquier tema)</b><ol><li>En la página principal cambia el color de fondo, añade una etiqueta con el tema que has elegido para la aplicación y ponle de nombre a la aplicación ese mismo tema. <b>(3 puntos)</b></li><li>Añade un primer botón que abra una imagen relacionada con el tema elegido, ponle de título "Fotos" y cámbiale el fondo a color azul. <b>(2 puntos)</b></li><li>Añade un segundo botón que se llame "Noticia", cámbiale el color a verde y, cuando se pulse, debe mostrarse otra pantalla con un cuadro de texto con el chiste o la noticia, de color rojo y centrado. La segunda pantalla ha de tener también un color de fondo diferente al blanco. <b>(3 puntos)</b></li><li>Añade otro botón que se llame "Página o vídeo", cámbiale el color a amarillo y, al pulsarlo, se ha de abrir en otra pantalla la dirección de una página o de un vídeo relacionado con el tema. <b>(2 puntos)</b></li></ol><p class="m">Total: 10 puntos.<br>💡 Pistas: crea la segunda pantalla con ➕ Pantalla, usa el elemento 📝 Texto para el chiste o la noticia y el botón 📲 Ir a otra pantalla para llegar a ella.</p><button class="b pr" onclick="go(5);mc()">Trabajar en la práctica avanzada</button></div>`)}
 function modal(h){$('mod').innerHTML=`<div class="mc"><button class="b x" onclick="mc()">✖</button>${h}</div>`;$('mod').style.display='flex'}
 function mc(){$('mod').style.display='none'}
 $('pal').innerHTML=PAL.map(p=>`<div class="it" draggable="true" ondragstart="event.dataTransfer.setData('text/plain','new:${p[0]}')" onclick="add('${p[0]}')"><span style="font-size:20px">${p[1]}</span>${p[2]}</div>`).join('');
