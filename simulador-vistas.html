@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vistas de piezas · IES Almudeyne</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--tx:#1d2433;--mu:#5d6679;--ac:#3b6fe0;--ln:#1d2433;--gr:#b0b8c8;--fill:#dbe6ff;--bd:#d9deea;--ok:#2f9e44;--ko:#e03131;--ar:#ff922b;--pf:#38d9a9;--pl:#9775fa;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#11151f;--card:#1a2030;--tx:#e8ecf6;--mu:#98a2b8;--ac:#6b95f0;--ln:#e8ecf6;--gr:#4a5568;--fill:#26345a;--bd:#2b3550;--ok:#51cf66;--ko:#ff6b6b;--ar:#ff922b;--pf:#38d9a9;--pl:#9775fa}}
+:root[data-theme="dark"]{--bg:#11151f;--card:#1a2030;--tx:#e8ecf6;--mu:#98a2b8;--ac:#6b95f0;--ln:#e8ecf6;--gr:#4a5568;--fill:#26345a;--bd:#2b3550;--ok:#51cf66;--ko:#ff6b6b;--ar:#ff922b;--pf:#38d9a9;--pl:#9775fa}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:14px}
+main{max-width:760px;margin:0 auto}
+header{text-align:center;margin-bottom:12px}
+header b{font-size:1.25rem;display:block}
+header span{color:var(--mu);font-size:.85rem;display:block}
+h1{font-size:1.05rem;margin:8px 0 0;color:var(--ac)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px;margin-bottom:12px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button,select,input{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:9px 12px}
+button,select{cursor:pointer}
+input{flex:1;min-width:120px}
+button.p{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:600}
+.badge{margin-left:auto;color:var(--mu);font-size:.85rem}
+svg{width:100%;height:auto;display:block;touch-action:manipulation}
+#iso{max-height:400px}
+h2{font-size:1rem;margin:0 0 6px}
+.s{color:var(--mu);font-size:.88rem;margin:6px 0 0}
+table{width:100%;border-collapse:collapse;font-size:.92rem;margin-top:6px}
+th,td{padding:6px;text-align:center;border-bottom:1px solid var(--bd)}
+th:first-child,td:first-child{text-align:left}
+#msg{font-weight:600;margin-top:8px;font-size:.92rem;line-height:1.4;white-space:pre-line}
+[data-a]{cursor:pointer}
+[hidden]{display:none!important}
+.tag{background:var(--fill);color:var(--ac);padding:7px 12px;border-radius:10px;font-weight:700;font-size:.85rem;cursor:pointer;border:1px solid var(--bd)}
+.lg{display:inline-flex;align-items:center;gap:5px;font-weight:700;margin-right:10px;white-space:nowrap}.lg::before{content:"";width:12px;height:12px;border-radius:50%;background:var(--c)}
+#mod{position:fixed;inset:0;background:#0f172a99;z-index:50;overflow-y:auto;padding:16px;display:flex;justify-content:center;align-items:flex-start}
+.mc{background:var(--card);border:1px solid var(--bd);border-radius:16px;max-width:560px;width:100%;padding:16px;margin:auto;position:relative}
+.mc h2{font-size:1.1rem;margin:0 0 10px;padding-right:34px}.mc label{display:block;font-size:.72rem;font-weight:700;color:var(--mu);text-transform:uppercase;margin:8px 0 3px}.mc input{width:100%;flex:none}
+.mc .x{position:absolute;right:10px;top:10px;padding:4px 9px}
+.info{background:var(--fill);border:1px solid var(--ac);color:var(--tx);padding:10px;border-radius:12px;margin-bottom:12px;font-size:.85rem;line-height:1.4}
+.box{border:1px solid var(--bd);border-radius:12px;padding:10px;margin-bottom:10px}
+#team-error{color:var(--ko);font-weight:700;font-size:.85rem;margin-bottom:8px}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:9px 16px;border-radius:12px;opacity:0;transition:.3s;z-index:60;pointer-events:none;max-width:90%;text-align:center}
+button:disabled{opacity:.55;cursor:not-allowed}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <b>IES Almudeyne</b>
+  <span>Departamento de Tecnología · Profesor Pedro Antonio Vega Polo</span>
+  <h1>Vistas de una pieza · 2.º ESO</h1>
+  <div class="row" style="justify-content:center;margin-top:10px">
+    <div id="pareja-box" class="tag" onclick="openDatosModal()" title="Haz clic para modificar los datos">👥 <span id="pareja-txt">Sin datos</span></div>
+    <button id="send-btn" class="p" onclick="sendResults()">📤 Enviar datos</button>
+  </div>
+</header>
+
+<div id="app">
+<div class="card">
+  <div class="row">
+    <select id="lvl" aria-label="Nivel">
+      <option value="facil">Nivel 1 · Fácil (5 puntos)</option>
+      <option value="medio" selected>Nivel 2 · Medio (10 puntos)</option>
+      <option value="dificil">Nivel 3 · Difícil (20 puntos)</option>
+    </select>
+    <button class="p" id="new">Nueva figura</button>
+    <span class="badge" id="cnt"></span>
+  </div>
+</div>
+
+<div class="card">
+  <div class="row" style="margin-bottom:6px">
+    <h2 style="margin:0">Perspectiva isométrica</h2>
+    <span class="row" style="margin-left:auto">
+      <button id="rl" aria-label="Girar a la izquierda">⟲</button>
+      <button id="rr" aria-label="Girar a la derecha">⟳</button>
+    </span>
+  </div>
+  <svg id="iso" role="img" aria-label="Figura en perspectiva isométrica con colores por vista"></svg>
+  <p class="s" style="margin-top:8px">
+    <span class="lg" style="--c:var(--ar)">ALZADO (Naranja)</span>
+    <span class="lg" style="--c:var(--pf)">PERFIL (Verde)</span>
+    <span class="lg" style="--c:var(--pl)">PLANTA (Violeta)</span>
+  </p>
+  <p class="s">Con ⟲ ⟳ giras la figura sobre su base para ver los cubos traseros. La flecha indica siempre la vista del <b>ALZADO</b>.</p>
+</div>
+
+<div class="card">
+  <h2>Dibuja tus vistas</h2>
+  <p class="s" style="margin:0 0 8px">La cuadrícula de cada vista tiene el tamaño justo de la figura. Toca una casilla para pintarla. En las uniones: 1 toque = arista visible (línea continua); con aristas ocultas activadas, 2 toques = oculta (discontinua) y 3 = quitar. Entre dos casillas pintadas aparece una línea de puntos: tócala si en esa unión hay una arista visible.</p>
+  <div class="row" style="margin-bottom:8px"><label class="s" for="side" style="margin:0">Segunda vista:</label><select id="side"><option value="I">Perfil izquierdo</option><option value="D">Perfil derecho</option><option value="A">Perfil más representativo</option></select></div>
+  <label class="s" style="display:flex;gap:8px;align-items:center;margin:0 0 8px"><input type="checkbox" id="hid" style="flex:none;min-width:0"> Dibujar también las aristas ocultas (línea discontinua)</label>
+  <div id="views"></div>
+  <div class="row" style="margin-top:10px">
+    <button class="p" id="chk">Comprobar</button>
+    <button id="clr">Borrar</button>
+    <button id="sol">Ver solución</button>
+  </div>
+  <div id="msg"></div>
+  <div id="solbox"></div>
+</div>
+
+<div class="card">
+  <h2>Mis resultados</h2>
+  <table>
+    <thead><tr><th>Nivel</th><th>Intentadas</th><th>Bien</th><th>Puntos</th></tr></thead>
+    <tbody id="tb"></tbody>
+  </table>
+  <p class="s" id="nota" style="font-weight:600"></p>
+</div>
+</div>
+</main>
+<div id="mod" hidden onclick="if(event.target===this)mc()"><div class="mc" id="mcb"></div></div><div id="toast"></div>
+
+<script>
+const LV={facil:{n:3,h:2,min:4,max:6,nm:"Fácil"},medio:{n:3,h:3,min:6,max:9,nm:"Medio"},dificil:{n:4,h:3,min:9,max:14,nm:"Difícil"}};
+let L=LV.medio,key="medio",g=[],S={},fig={},ad=0,ir=0,ST={facil:{t:0,ok:0},medio:{t:0,ok:0},dificil:{t:0,ok:0}};
+const $=id=>document.getElementById(id);
+const rnd=n=>Math.floor(Math.random()*n);
+const VN={A:"ALZADO",P:"PERFIL IZQ.",L:"PLANTA"},VC={A:"var(--ln)",P:"var(--ln)",L:"var(--ln)"};
+
+const SEEN={facil:new Set(),medio:new Set(),dificil:new Set()},POOL={};
+const canon=a=>{let best=null,b=a;for(let i=0;i<4;i++){const s=JSON.stringify(b);if(best===null||s<best)best=s;b=rotG(b,1)}return best};
+
+function pool(){
+  if(POOL[key])return POOL[key];
+  const {n,h,min,max}=L,N=n*n,m=new Map();
+  for(let i=0,tot=Math.pow(h+1,N);i<tot;i++){let v=i,sum=0;const a=[];
+    for(let y=0;y<n;y++){a.push([]);for(let x=0;x<n;x++){const c=v%(h+1);v=(v-c)/(h+1);a[y].push(c);sum+=c}}
+    if(sum<min||sum>max||!conn(a,n))continue;
+    const c=canon(a);if(!m.has(c))m.set(c,a)}
+  return POOL[key]=[...m.entries()];
+}
+
+function gen(){
+  const {n,h,min,max}=L;
+  if(key!=="dificil"){
+    const libres=pool().filter(([c])=>!SEEN[key].has(c));
+    if(!libres.length)return null;
+    const [c,a]=libres[rnd(libres.length)];SEEN[key].add(c);return a.map(r=>r.slice());
+  }
+  for(let t=0;t<20000;t++){
+    const a=[];let sum=0;
+    for(let y=0;y<n;y++){a.push([]);for(let x=0;x<n;x++){const v=Math.random()<.4?0:1+rnd(h);a[y].push(v);sum+=v}}
+    if(sum>=min&&sum<=max&&conn(a,n)){const c=canon(a);if(!SEEN[key].has(c)){SEEN[key].add(c);return a}}
+  }
+  return null;
+}
+
+function conn(a,n){
+  const cs=[];for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(a[y][x])cs.push([x,y]);
+  if(!cs.length)return false;
+  const seen=new Set([cs[0].join()]),q=[cs[0]];
+  while(q.length){const [x,y]=q.pop();
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const X=x+dx,Y=y+dy;
+      if(X>=0&&Y>=0&&X<n&&Y<n&&a[Y][X]&&!seen.has(X+","+Y)){seen.add(X+","+Y);q.push([X,Y])}}}
+  return seen.size===cs.length;
+}
+
+const mk=a=>(x,y,z)=>x>=0&&y>=0&&x<L.n&&y<L.n&&a[y][x]>z;
+function rotG(a,k){const n=a.length;for(let i=0;i<k;i++){const b=a.map(r=>r.slice());for(let y=0;y<n;y++)for(let x=0;x<n;x++)b[x][n-1-y]=a[y][x];a=b}return a}
+
+function drawIso(){
+  const s=40,c=.866,n=L.n,H=L.h;
+  const gi=rotG(g,ir),has=mk(gi);
+  const P=(x,y,z)=>[(x+y)*c*s,(x-y)*.5*s-z*s];
+  const k=(ad-ir+4)%4;
+
+  let out="",xs=[],ys=[];
+  const addPt=(p)=>{xs.push(p[0]);ys.push(p[1]);};
+
+  const polyBox=(pts)=>{
+    const q=pts.map(p=>P(...p));
+    q.forEach(addPt);
+    out+=`<polygon points="${q.map(p=>p.map(v=>v.toFixed(1)).join()).join(" ")}" fill="rgba(220, 230, 245, 0.2)" stroke="var(--gr)" stroke-width="1.2" stroke-dasharray="4 4" stroke-linejoin="round"/>`;
+  };
+
+  polyBox([[0,0,0],[n,0,0],[n,0,H],[0,0,H]]);
+  polyBox([[0,0,0],[0,n,0],[0,n,H],[0,0,H]]);
+  polyBox([[0,0,0],[n,0,0],[n,n,0],[0,n,0]]);
+
+  const cubes=[];
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++)for(let z=0;z<gi[y][x];z++)cubes.push([x,y,z]);
+  cubes.sort((a,b)=>(a[0]-a[1]+a[2])-(b[0]-b[1]+b[2]));
+
+  const polyCube=(pts, fillAlpha)=>{
+    const q=pts.map(p=>P(...p));
+    q.forEach(addPt);
+    out+=`<polygon points="${q.map(p=>p.map(v=>v.toFixed(1)).join()).join(" ")}" fill="${fillAlpha}" stroke="var(--ln)" stroke-width="1.4" stroke-linejoin="round"/>`;
+  };
+
+  for(const [x,y,z] of cubes){
+    if(!has(x,y,z+1)) polyCube([[x,y,z+1],[x+1,y,z+1],[x+1,y+1,z+1],[x,y+1,z+1]], "rgba(151, 117, 250, 0.45)");
+    if(!has(x,y-1,z)) polyCube([[x,y,z],[x+1,y,z],[x+1,y,z+1],[x,y,z+1]], k===0?"rgba(255, 146, 43, 0.55)":"rgba(56, 217, 169, 0.45)");
+    if(!has(x+1,y,z)) polyCube([[x+1,y,z],[x+1,y+1,z],[x+1,y+1,z+1],[x+1,y,z+1]], k===3?"rgba(255, 146, 43, 0.55)":"rgba(56, 217, 169, 0.45)");
+  }
+
+  polyBox([[0,n,0],[n,n,0],[n,n,H],[0,n,H]]);
+  polyBox([[n,0,0],[n,n,0],[n,n,H],[n,0,H]]);
+  polyBox([[0,0,H],[n,0,H],[n,n,H],[0,n,H]]);
+
+  const m0=n/2, mz=Math.max(...g.flat());
+  const U=[[0,-1],[-1,0],[0,1],[1,0]];
+  const at=(u,d)=>[m0+u[0]*(n/2+d),m0+u[1]*(n/2+d),mz/2];
+  const ua=U[k];
+  const pStart=P(...at(ua,2.5)), pTarget=P(...at(ua,.1));
+  addPt(pStart); addPt(pTarget);
+
+  out += `<g>
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+        <path d="M 0 1 L 10 5 L 0 9 z" fill="var(--ar)" />
+      </marker>
+    </defs>
+    <line x1="${pStart[0].toFixed(1)}" y1="${pStart[1].toFixed(1)}" x2="${pTarget[0].toFixed(1)}" y2="${pTarget[1].toFixed(1)}" stroke="var(--ar)" stroke-width="3.5" marker-end="url(#arrow)" />
+    <rect x="${(pStart[0] - 38).toFixed(1)}" y="${(pStart[1] + 4).toFixed(1)}" width="76" height="22" rx="6" fill="var(--ar)" />
+    <text x="${pStart[0].toFixed(1)}" y="${(pStart[1] + 19).toFixed(1)}" text-anchor="middle" font-size="11.5" font-weight="800" fill="#fff">ALZADO</text>
+  </g>`;
+
+  const m=30,x0=Math.min(...xs)-m,y0=Math.min(...ys)-m;
+  const svg=$("iso");
+  svg.setAttribute("viewBox",`${x0} ${y0} ${Math.max(...xs)-x0+2*m} ${Math.max(...ys)-y0+2*m}`);
+  svg.innerHTML=out;
+}
+
+function sideNow(){const v=$("side").value;if(v!=="A")return v;return expected(mats("D").P).ed.size>expected(mats("I").P).ed.size?"D":"I"}
+function dims(){const gv=rotG(g,ad),n=L.n;let x0=n,x1=-1,y0=n,y1=-1,mz=0;for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(gv[y][x]){x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);mz=Math.max(mz,gv[y][x])}return {gv,x0,y0,y1,nx:x1-x0+1,ny:y1-y0+1,hh:mz}}
+function mats(sd){
+  sd=sd||sideNow();const {gv,x0,y0,y1,nx,ny,hh}=dims(),n=L.n,A=[],Pf=[],Pl=[],has=mk(gv),R=sd==="D";
+  for(let r=0;r<hh;r++){A.push([]);Pf.push([]);const z=hh-1-r;
+    for(let c=0;c<nx;c++){let d=null;for(let y=0;y<n&&d===null;y++)if(has(x0+c,y,z))d=y;A[r].push(d)}
+    for(let c=0;c<ny;c++){let e=null;if(R){for(let x=n-1;x>=0&&e===null;x--)if(has(x,y0+c,z))e=x}else{for(let x=0;x<n&&e===null;x++)if(has(x,y1-c,z))e=x}Pf[r].push(e)}}
+  for(let r=0;r<ny;r++){Pl.push([]);const y=y1-r;for(let c=0;c<nx;c++){const v=gv[y][x0+c];Pl[r].push(v?-v:null)}}
+  const vox=T=>{const q=new Set();for(let y=0;y<n;y++)for(let x=0;x<n;x++)for(let z=0;z<gv[y][x];z++)q.add(T(x,y,z).join());return q};
+  const H={A:hid(vox((x,y,z)=>[x,z,y]),n,L.h,n,x0,hh-1),
+    P:R?hid(vox((x,y,z)=>[y,z,n-1-x]),n,L.h,n,y0,hh-1):hid(vox((x,y,z)=>[n-1-y,z,x]),n,L.h,n,n-1-y1,hh-1),
+    L:hid(vox((x,y,z)=>[x,y,L.h-1-z]),n,n,L.h,x0,y1)};
+  return {A,P:Pf,L:Pl,H};
+}
+function expected(M,Hr){
+  const cells=new Set(),ed=new Set();
+  M.forEach((row,r)=>row.forEach((v,c)=>{if(v===null)return;cells.add(r+","+c);
+    if(M[r][c+1]!==undefined&&M[r][c+1]!==null&&M[r][c+1]!==v)ed.add(`v:${r}:${c}`);
+    if(M[r+1]&&M[r+1][c]!==null&&M[r+1][c]!==v)ed.add(`h:${r}:${c}`);}));
+  const hd=new Set();
+  if(Hr){M.forEach((row,r)=>row.forEach((v,c)=>{if(v===null)return;
+    if(row[c+1]!==undefined&&row[c+1]!==null&&Hr.hs.has("V:"+(Hr.u0+c+1)+":"+(Hr.vtop-r)))hd.add(`v:${r}:${c}`);
+    if(M[r+1]&&M[r+1][c]!==null&&Hr.hs.has("H:"+(Hr.vtop-r)+":"+(Hr.u0+c)))hd.add(`h:${r}:${c}`)}));
+    [...hd].forEach(k=>{if(ed.has(k))hd.delete(k)})}
+  return {cells,ed,hd};
+}
+const HL=()=>$("hid").checked,E0=()=>new Set();
+function hid(S,U,V,D,u0,vtop){
+  const f=(u,v,d)=>S.has(u+","+v+","+d)?1:0,hs=new Set();
+  const occ=(u,v,db)=>{for(let d=0;d<db;d++)if(f(u,v,d))return true;return false};
+  const isE=(a,b,c,e)=>{const t=a+b+c+e;return t===1||t===3||(t===2&&((a&&e)||(b&&c)))};
+  for(let u=0;u<U;u++)for(let vb=0;vb<=V;vb++)for(let db=0;db<=D;db++)
+    if(isE(f(u,vb-1,db-1),f(u,vb,db-1),f(u,vb-1,db),f(u,vb,db))&&occ(u,vb-1,db)&&occ(u,vb,db))hs.add("H:"+vb+":"+u);
+  for(let ub=0;ub<=U;ub++)for(let v=0;v<V;v++)for(let db=0;db<=D;db++)
+    if(isE(f(ub-1,v,db-1),f(ub,v,db-1),f(ub-1,v,db),f(ub,v,db))&&occ(ub-1,v,db)&&occ(ub,v,db))hs.add("V:"+ub+":"+v);
+  return {hs,u0,vtop};
+}
+const same=(a,b)=>a.size===b.size&&[...a].every(x=>b.has(x));
+
+const geo=()=>{const {nx,ny,hh}=dims(),cs=L.n===4?32:40,gap=38,top=28,R=sideNow()==="D",wa=Math.max(nx*cs,100),wp=Math.max(ny*cs,100),ax=R?2+wp+gap:2,px=R?2:2+wa+gap;
+  VN.P="PERFIL "+(R?"DER.":"IZQ.");
+  return {cs,W:Math.max(wa+wp+gap+4,Math.max(ax,px)+132),H:top+hh*cs+gap+ny*cs+4,
+  pos:{A:[ax,top,hh,nx],P:[px,top,hh,ny],L:[ax,top+hh*cs+gap,ny,nx]}}};
+
+function grid(k,ox,oy,R,C,cs,cells,ed,edit,status,hd=new Set()){
+  const lt=VN[k]+(status===true?" ✓":status===false?" ✗":""),lw=lt.length*7.3+20;
+  let o=`<rect x="${ox}" y="${oy-25}" width="${lw.toFixed(1)}" height="20" rx="10" fill="${status===true?"var(--ok)":status===false?"var(--ko)":VC[k]}"/><text x="${ox+10}" y="${oy-11}" font-size="11.5" font-weight="800" fill="#fff">${lt}</text>`;
+  
+  const f=(r,c)=>cells.has(r+","+c);
+  for(let r=0;r<R;r++)for(let c=0;c<C;c++){
+    o+=`<rect ${edit?`data-a="c:${k}:${r}:${c}"`:""} x="${ox+c*cs}" y="${oy+r*cs}" width="${cs}" height="${cs}" fill="${f(r,c)?"var(--fill)":"transparent"}" stroke="var(--gr)"/>`;
+  }
+
+  const ln=(a,b,c2,d)=>o+=`<line x1="${a}" y1="${b}" x2="${c2}" y2="${d}" stroke="var(--ln)" stroke-width="2.6" stroke-linecap="round" pointer-events="none"/>`;
+  const dash=(a,b,c2,d)=>o+=`<line x1="${a}" y1="${b}" x2="${c2}" y2="${d}" stroke="var(--ln)" stroke-width="2" stroke-dasharray="7 5" pointer-events="none"/>`;
+  const dot=(a,b,c2,d)=>o+=`<line x1="${a}" y1="${b}" x2="${c2}" y2="${d}" stroke="var(--mu)" stroke-width="1.5" stroke-dasharray="3 4" pointer-events="none"/>`;
+
+  for(let r=0;r<R;r++)for(let c=0;c<C;c++){if(!f(r,c))continue;const x=ox+c*cs,y=oy+r*cs;
+    if(!f(r-1,c))ln(x,y,x+cs,y);
+    if(!f(r,c-1))ln(x,y,x,y+cs);
+    if(!f(r,c+1)||ed.has(`v:${r}:${c}`))ln(x+cs,y,x+cs,y+cs);else if(hd.has(`v:${r}:${c}`))dash(x+cs,y,x+cs,y+cs);else if(edit)dot(x+cs,y+4,x+cs,y+cs-4);
+    if(!f(r+1,c)||ed.has(`h:${r}:${c}`))ln(x,y+cs,x+cs,y+cs);else if(hd.has(`h:${r}:${c}`))dash(x,y+cs,x+cs,y+cs);else if(edit)dot(x+4,y+cs,x+cs-4,y+cs);}
+
+  if(edit)for(let r=0;r<R;r++)for(let c=0;c<C;c++){if(!f(r,c))continue;const x=ox+c*cs,y=oy+r*cs;
+    if(f(r,c+1))o+=`<rect data-a="e:${k}:v:${r}:${c}" x="${x+cs-9}" y="${y}" width="18" height="${cs}" fill="transparent"/>`;
+    if(f(r+1,c))o+=`<rect data-a="e:${k}:h:${r}:${c}" x="${x}" y="${y+cs-9}" width="${cs}" height="18" fill="transparent"/>`;}
+  return o;
+}
+
+function drawViews(res){
+  const G=geo();let o="";
+  for(const k of["A","P","L"]){const [ox,oy,R,C]=G.pos[k];
+    o+=grid(k,ox,oy,R,C,G.cs,S[k].cells,S[k].ed,!fig.solved,res?res[k]:null,HL()?S[k].hd:E0());}
+  $("views").innerHTML=`<svg viewBox="0 0 ${G.W} ${G.H}" role="img" aria-label="Zona de dibujo">${o}</svg>`;
+}
+
+function drawSol(){
+  const G=geo(),M=mats();let o="";
+  for(const k of["A","P","L"]){const [ox,oy,R,C]=G.pos[k],e=expected(M[k],M.H[k]);o+=grid(k,ox,oy,R,C,G.cs,e.cells,e.ed,false,null,HL()?e.hd:E0())}
+  $("solbox").innerHTML=`<p class="s">Solución:</p><svg viewBox="0 0 ${G.W} ${G.H}">${o}</svg>`;
+}
+
+$("views").addEventListener("click",ev=>{
+  const a=ev.target.getAttribute&&ev.target.getAttribute("data-a");if(!a||fig.solved)return;
+  const p=a.split(":");const k=p[1];
+  const tog=(set,v)=>set.has(v)?set.delete(v):set.add(v);
+  if(p[0]==="c")tog(S[k].cells,p[2]+","+p[3]);else{const e=`${p[2]}:${p[3]}:${p[4]}`;if(!HL())tog(S[k].ed,e);else if(S[k].ed.has(e)){S[k].ed.delete(e);S[k].hd.add(e)}else if(S[k].hd.has(e))S[k].hd.delete(e);else S[k].ed.add(e)}
+  $("msg").textContent="";drawViews();
+});
+function clearS(){const q=()=>({cells:new Set(),ed:new Set(),hd:new Set()});S={A:q(),P:q(),L:q()}}
+function mark(){if(!fig.checked){fig.checked=true;ST[key].t++}}
+
+$("chk").onclick=()=>{
+  if(fig.solved)return;
+  const M=mats(),res={};let all=true;
+  for(const k of["A","P","L"]){const e=expected(M[k],M.H[k]);
+    const keep=st=>new Set([...st].filter(x=>{const [t,r,c]=x.split(":").map((v,i)=>i?+v:v);
+      const b=t==="v"?`${r},${c+1}`:`${r+1},${c}`;return S[k].cells.has(r+","+c)&&S[k].cells.has(b)}));
+    res[k]=same(S[k].cells,e.cells)&&same(keep(S[k].ed),e.ed)&&(!HL()||same(keep(S[k].hd),e.hd));if(!res[k])all=false;}
+  mark();
+  if(all){if(!fig.ok){fig.ok=true;ST[key].ok++}fig.solved=true;$("msg").style.color="var(--ok)";$("msg").textContent="¡Muy bien! Las tres vistas son correctas."}
+  else{$("msg").style.color="var(--ko)";$("msg").textContent="Hay vistas con errores (marcadas con ✗). Revísalas e inténtalo de nuevo."}
+  drawViews(res);stats();
+};
+
+$("clr").onclick=()=>{if(fig.solved)return;clearS();$("msg").textContent="";drawViews()};
+$("sol").onclick=()=>{mark();fig.solved=true;$("msg").style.color="var(--mu)";$("msg").textContent="Solución mostrada: esta figura no cuenta como acierto.";drawViews();drawSol();stats()};
+const PTS={facil:5,medio:10,dificil:20},MAX_PUNTOS=100;
+const puntos=()=>Math.min(MAX_PUNTOS,Object.keys(PTS).reduce((a,k)=>a+ST[k].ok*PTS[k],0));
+function nota(){$("nota").textContent="Puntuación: "+puntos()+" / "+MAX_PUNTOS+"  (nivel 1: 5 puntos · nivel 2: 10 puntos · nivel 3: 20 puntos por cada figura acertada)"}
+function stats(){nota();
+  const T={t:0,ok:0,p:0};
+  $("tb").innerHTML=Object.keys(LV).map((k,i)=>{const p=ST[k].ok*PTS[k];T.t+=ST[k].t;T.ok+=ST[k].ok;T.p+=p;return `<tr><td>Nivel ${i+1} · ${LV[k].nm}</td><td>${ST[k].t}</td><td>${ST[k].ok}</td><td>${p}</td></tr>`}).join("")+
+   `<tr><td><b>Total</b></td><td><b>${T.t}</b></td><td><b>${T.ok}</b></td><td><b>${T.p}</b></td></tr>`;
+}
+
+function fresh(){
+  const prev=key,want=$("lvl").value;key=want;L=LV[want];
+  const ng=gen();
+  if(!ng){key=prev;L=LV[prev];$("lvl").value=prev;
+    $("msg").style.color="var(--ok)";$("msg").textContent="🎉 ¡Has visto todas las figuras del nivel "+LV[want].nm+"! Elige otro nivel.";return}
+  g=ng;fig={};clearS();ad=0;ir=0;
+  $("msg").textContent="";$("solbox").innerHTML="";
+  drawIso();drawViews();$("cnt").textContent=g.flat().reduce((a,b)=>a+b,0)+" cubos";
+}
+$("new").onclick=fresh;$("lvl").onchange=fresh;
+$("hid").onchange=()=>{$("msg").textContent="";drawViews();if($("solbox").innerHTML)drawSol()};
+$("rl").onclick=()=>{ir=(ir+3)%4;drawIso()};
+$("rr").onclick=()=>{ir=(ir+1)%4;drawIso()};
+$("side").onchange=()=>{if(!fig.solved)S.P={cells:new Set(),ed:new Set(),hd:new Set()};$("msg").textContent="";drawIso();drawViews();if($("solbox").innerHTML)drawSol()};
+
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+let TD={al1_nom:"",al1_ape:"",al2_nom:"",al2_ape:"",prof:"",lockUntil:0};
+function toast(m){const t=$("toast");t.textContent=m;t.style.opacity=1;setTimeout(()=>t.style.opacity=0,2800)}
+function modal(x){$("mcb").innerHTML=`<button class="x" onclick="mc()">✖</button>${x}`;$("mod").hidden=false}
+function mc(){$("mod").hidden=true}
+function updateParejaDisplay(){
+  const a1=(TD.al1_nom+" "+TD.al1_ape).trim(),a2=(TD.al2_nom+" "+TD.al2_ape).trim();
+  $("pareja-txt").textContent=(a1||a2)?((a1.toLowerCase()===a2.toLowerCase()||!a2)?a1:a1+" | "+a2):"Sin datos";
+}
+function openDatosModal(errMsg){
+  const eh=errMsg?`<div style="color:var(--ko);background:var(--card);border:1px solid var(--ko);padding:10px;border-radius:10px;margin-bottom:10px;font-weight:600">${errMsg}</div>`:"";
+  modal(`<h2>👥 Datos de los Alumnos (Pareja)</h2>
+  <div class="info"><b>ℹ️ INFORMACIÓN IMPORTANTE:</b> Es obligatorio rellenar el nombre y los dos apellidos de ambos alumnos.<br>
+  <b>Si la práctica la realizas de forma INDIVIDUAL</b>, debes escribir el <b>MISMO nombre y MISMOS apellidos</b> en los recuadros del Alumno 1 y del Alumno 2.</div>${eh}
+  <div class="box"><b style="color:var(--ac)">👤 Alumno 1</b>
+    <label>Nombre</label><input type="text" id="al1_nom_in" value="${esc(TD.al1_nom)}" placeholder="Nombre. Ej: Lucía">
+    <label>Apellidos (los dos apellidos)</label><input type="text" id="al1_ape_in" value="${esc(TD.al1_ape)}" placeholder="Apellidos. Ej: Pérez Gómez"></div>
+  <div class="box"><b style="color:var(--ac)">👤 Alumno 2</b>
+    <label>Nombre</label><input type="text" id="al2_nom_in" value="${esc(TD.al2_nom)}" placeholder="Nombre. Ej: Marcos (o Lucía si es individual)">
+    <label>Apellidos (los dos apellidos)</label><input type="text" id="al2_ape_in" value="${esc(TD.al2_ape)}" placeholder="Apellidos. Ej: Díaz Ruiz (o Pérez Gómez si es individual)"></div>
+  <div class="box" style="border:0;padding:0"><label>Nombre del Profesor</label><input type="text" id="prof_in" value="${esc(TD.prof)}" placeholder="Nombre profesor. Ej: Eduardo"></div>
+  <div id="team-error"></div>
+  <button class="p" style="width:100%;padding:11px" onclick="saveDatosForm()">💾 Guardar Datos</button>`);
+}
+function validarDatos(){
+  const n1=TD.al1_nom.trim(),a1=TD.al1_ape.trim(),n2=TD.al2_nom.trim(),a2=TD.al2_ape.trim(),pr=TD.prof.trim(),errs=[];
+  if(n1.length<2)errs.push("Escribe el nombre del Alumno 1.");
+  if(a1.length<2)errs.push("Escribe los apellidos del Alumno 1.");
+  if(n2.length<2)errs.push("Escribe el nombre del Alumno 2 (si es individual, repite el del Alumno 1).");
+  if(a2.length<2)errs.push("Escribe los apellidos del Alumno 2 (si es individual, repite los del Alumno 1).");
+  if(pr.length<2)errs.push("Indica nombre profesor.");
+  return errs;
+}
+function saveDatosForm(){
+  TD.al1_nom=($("al1_nom_in").value||"").trim();TD.al1_ape=($("al1_ape_in").value||"").trim();
+  TD.al2_nom=($("al2_nom_in").value||"").trim();TD.al2_ape=($("al2_ape_in").value||"").trim();
+  TD.prof=($("prof_in").value||"").trim();
+  const errs=validarDatos();
+  if(errs.length){$("team-error").innerHTML=errs.join("<br>");return false}
+  $("team-error").innerHTML="";updateParejaDisplay();mc();toast("✔ Datos guardados correctamente");return true;
+}
+
+const SHEET_WEBAPP_URL="https://script.google.com/macros/s/AKfycbyiOndS6GMYhgiSGLVAXUOOHhMKtBXqcLUeOppbNZIkrxU-HiMlgmhlYCj1xYZQG0io/exec";
+const ACTIVIDAD="Vistas de piezas";
+const BLOQUEO_ENVIO_MS=5*60*1000;
+let sendingNow=false,lockTimer=null;
+async function postRecord(params){
+  try{
+    const resp=await fetch(SHEET_WEBAPP_URL,{method:"POST",body:params});
+    const data=await resp.json();
+    if(!data.ok)throw new Error(data.error||"Respuesta no válida");
+    return true;
+  }catch(e1){
+    try{await fetch(SHEET_WEBAPP_URL,{method:"POST",mode:"no-cors",body:params});return true}catch(e2){return false}
+  }
+}
+async function sendResults(){
+  const errs=validarDatos();
+  if(errs.length){openDatosModal(errs.join("<br>"));return}
+  const intentos=Object.keys(LV).reduce((a,k)=>a+ST[k].t,0);
+  if(intentos===0){toast("⚠️ Primero debes comprobar al menos una figura para enviar tus resultados.");return}
+  if(TD.lockUntil&&TD.lockUntil>Date.now()){toast("🔒 Espera a que finalice el tiempo de bloqueo antes de enviar de nuevo.");return}
+  if(sendingNow)return;
+  const btn=$("send-btn");if(btn.disabled)return;
+  sendingNow=true;btn.disabled=true;toast("Enviando resultados a la hoja de cálculo…");
+  const now=new Date(),fecha=now.toLocaleDateString("es-ES"),hora=now.toLocaleTimeString("es-ES",{hour12:false});
+  const uid=Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+  const nombre1=(TD.al1_nom+" "+TD.al1_ape).trim(),nombre2=(TD.al2_nom+" "+TD.al2_ape).trim(),total=puntos();
+  const params=new URLSearchParams({id:uid,fecha:fecha,hora:hora,alumno1:nombre1,alumno2:nombre2,curso:TD.prof||"",criterio:ACTIVIDAD,
+    total:total.toFixed(1),puntos_alumno1:total.toFixed(1),puntos_alumno2:total.toFixed(1),puntos_brutos_alumno1:total,puntos_brutos_alumno2:total});
+  const enviado=await postRecord(params);
+  sendingNow=false;
+  if(enviado){toast("✔ Resultados enviados correctamente");startSendLock()}
+  else{toast("❌ No se pudieron enviar los datos. Comprueba la conexión.");btn.disabled=false}
+}
+function startSendLock(untilTime){
+  const btn=$("send-btn");
+  TD.lockUntil=untilTime||(Date.now()+BLOQUEO_ENVIO_MS);btn.disabled=true;clearInterval(lockTimer);
+  const tick=()=>{
+    const left=TD.lockUntil-Date.now();
+    if(left<=0){clearInterval(lockTimer);TD.lockUntil=0;btn.disabled=false;btn.innerText="📤 Enviar datos";return}
+    const s=Math.ceil(left/1000);btn.innerText=`🔒 Bloqueado ${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;
+  };
+  tick();lockTimer=setInterval(tick,500);
+}
+
+stats();fresh();updateParejaDisplay();
+setTimeout(()=>openDatosModal(),200);
+</script>
+</body>
+</html>
