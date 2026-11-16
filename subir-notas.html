@@ -302,7 +302,7 @@
                         colsSubir.forEach(ix => { puntosSubir += numVal(stu.cols[ix]); });
                         if (colsSubir.length > 0 && mediaCrit !== null) {
                             const base = mediaCrit;
-                            mediaCrit = Math.min(100, base + puntosSubir * 10);
+                            mediaCrit = base + puntosSubir * 10;
                             tablesHTML += '<tr class="fila-sum"><td colspan="4">Media de criterios (antes de subir nota)</td><td class="num"><b>' + fmt(base) + '</b></td></tr>\n';
                             colsSubir.forEach(ix => {
                                 const pv = numVal(stu.cols[ix]);
