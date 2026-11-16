@@ -39,7 +39,7 @@
 
     <div class="app-container">
         <h1>IMPORTANTE NO PONER NADA EN LA COLUMNA DE COMENTARIOS PORQUE LUEGO APARECE</h1>
-        <p>Sube tus CSV. Los títulos de las columnas de notas empiezan por <b>T</b> (tareas), <b>C</b> (controles / pruebas de extracción) o <b>P</b> (proyectos) seguido del criterio de evaluación: <b>T1.2</b>, <b>C1.2</b>, <b>P1.1/P1.2/P1.3</b> (una actividad puede contar en varios criterios). PARA LAS PRENOTAS PULSA LA PALABRA NOTAS EN EL HTML NOTAS_ALUMNOS.</p>
+        <p>Sube tus CSV. Los títulos de las columnas de notas empiezan por <b>T</b> (tareas), <b>C</b> (controles / pruebas de extracción) o <b>P</b> (proyectos) seguido del criterio de evaluación: <b>T1.2</b>, <b>C1.2</b>, <b>S.1</b> (subir nota: cada punto suma 10 a la media de criterios), <b>P1.1/P1.2/P1.3</b> (una actividad puede contar en varios criterios). PARA LAS PRENOTAS PULSA LA PALABRA NOTAS EN EL HTML NOTAS_ALUMNOS.</p>
         
         <label class="drop-zone" for="csvFiles" id="dropArea">
             <span>📁</span>
@@ -91,7 +91,7 @@
         function parseCabecera(h) {
             const t = h.trim();
             const ini = t.charAt(0).toUpperCase();
-            const tipo = (ini === 'T' || ini === 'C' || ini === 'P') ? ini : (ini === 'M' ? 'M' : 'O');
+            const tipo = (ini === 'T' || ini === 'C' || ini === 'P') ? ini : (ini === 'M' ? 'M' : (ini === 'S' ? 'S' : 'O'));
             const criterios = [];
             if (tipo === 'T' || tipo === 'C' || tipo === 'P') {
                 const partes = t.split('/');
@@ -115,7 +115,7 @@
             return 0;
         }
         const NOMBRE_TIPO = { T: 'Tareas', C: 'Pruebas / Controles', P: 'Proyectos' };
-        const COLOR_TIPO = { T: '#cce5ff', C: '#f8d7da', P: '#d4edda', M: '#e2d9f3', O: '#ffe5b4' };
+        const COLOR_TIPO = { S: '#fff3b0', T: '#cce5ff', C: '#f8d7da', P: '#d4edda', M: '#e2d9f3', O: '#ffe5b4' };
         async function generarYDescargar() {
             if (fileInput.files.length === 0) return;
 
@@ -171,6 +171,7 @@
                 };
                 const grupos = todosCriterios.map(k => ({ k: k, T: indicesDe('T', k), C: indicesDe('C', k), P: indicesDe('P', k) }));
                 const sinCriterio = { T: indicesDe('T', null), C: indicesDe('C', null), P: indicesDe('P', null) };
+                const colsSubir = indicesDe('S', null);   // columnas S.1, S.2... (subir nota: 1 punto = +10 sobre 100)
                 const otrasCols = [];
                 cols.forEach((c, idx) => { if (idx > 0 && (c.tipo === 'M' || c.tipo === 'O')) otrasCols.push(idx); });
 
@@ -296,6 +297,19 @@
                         });
                         const validas = grupos.map(g => notasCriterio[g.k]).filter(v => v !== null);
                         mediaCrit = validas.length ? validas.reduce((x, y) => x + y, 0) / validas.length : null;
+                        // Subir nota: se suman los puntos de las columnas S (1 punto = +10 sobre 100), máximo 100
+                        let puntosSubir = 0;
+                        colsSubir.forEach(ix => { puntosSubir += numVal(stu.cols[ix]); });
+                        if (colsSubir.length > 0 && mediaCrit !== null) {
+                            const base = mediaCrit;
+                            mediaCrit = Math.min(100, base + puntosSubir * 10);
+                            tablesHTML += '<tr class="fila-sum"><td colspan="4">Media de criterios (antes de subir nota)</td><td class="num"><b>' + fmt(base) + '</b></td></tr>\n';
+                            colsSubir.forEach(ix => {
+                                const pv = numVal(stu.cols[ix]);
+                                tablesHTML += '<tr class="fila-sum"><td colspan="3" style="background-color:' + COLOR_TIPO.S + ';">' + esc(cols[ix].header) + ' · subir nota</td><td class="num">' + fmt(pv) + ' punto/s</td><td class="num">+' + fmt(pv * 10) + '</td></tr>\n';
+                            });
+                            if (colsSubir.length > 1) tablesHTML += '<tr class="fila-sum"><td colspan="4">TOTAL SUBIR NOTA</td><td class="num"><b>+' + fmt(puntosSubir * 10) + '</b></td></tr>\n';
+                        }
                         tablesHTML += '<tr class="fila-media-crit"><td colspan="4">MEDIA DE CRITERIOS</td><td class="num" data-label="MEDIA CRITERIOS"><span class="grade-val">' + (mediaCrit === null ? '—' : fmt(mediaCrit)) + '</span></td></tr>\n';
                         tablesHTML += '</tbody></table></div>\n';
                         tablesHTML += '<p class="leyenda">Σ = sumatorio de puntos. Todas las notas van sobre 100: las tareas se comparan con el mayor sumatorio de la clase; las pruebas y los proyectos se comparan siempre con 100. La nota del criterio es la media de tareas, pruebas y proyectos de ese criterio, y la media de criterios es la media de todas las notas de criterio.</p>\n';
@@ -304,7 +318,7 @@
                     // --- Detalle de actividades agrupado en UNA sola tabla ---
                     // --- Detalle de actividades: cuadrícula horizontal (nombre arriba, nota debajo) ---
                     // Cada columna del CSV sale una sola vez, agrupadas por tipo: T, C, P y después las otras columnas
-                    const ordenTipo = { T: 0, C: 1, P: 2, M: 3, O: 4 };
+                    const ordenTipo = { T: 0, C: 1, P: 2, M: 3, O: 4, S: 5 };
                     const colsDetalle = [];
                     cols.forEach((c, idx) => { if (idx > 0 && ordenTipo[c.tipo] !== undefined) colsDetalle.push(idx); });
                     colsDetalle.sort((x, y) => (ordenTipo[cols[x].tipo] - ordenTipo[cols[y].tipo]) || (x - y));
@@ -943,5 +957,6 @@
             document.body.removeChild(link);
         }
     </script>
+
 
 </body></html>
