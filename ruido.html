@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- saved from url=(0039)https://delatj.github.io/web/ruido.html -->
 <html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -467,38 +468,19 @@
             setTimeout(() => osc.stop(), 1500); 
         }
 
-        // --- SONIDO DE TIMBRE DE BICICLETA ---
+        // --- PITIDO DEL BOTÓN TIMBRE (mismo pitido que el del umbral, 3 s) ---
         function playBicycleBell() {
             if (!audioContext) return;
-            const now = audioContext.currentTime;
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
 
-            function createDing(startTime) {
-                const osc1 = audioContext.createOscillator();
-                const osc2 = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(3000, audioContext.currentTime);
 
-                osc1.type = 'sine';
-                osc2.type = 'sine';
-
-                osc1.frequency.value = 2048; 
-                osc2.frequency.value = 2800; 
-
-                gainNode.gain.setValueAtTime(0, startTime);
-                gainNode.gain.linearRampToValueAtTime(1.5, startTime + 0.02);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 1.2);
-
-                osc1.connect(gainNode);
-                osc2.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-
-                osc1.start(startTime);
-                osc2.start(startTime);
-                osc1.stop(startTime + 1.5);
-                osc2.stop(startTime + 1.5);
-            }
-
-            createDing(now);
-            createDing(now + 0.15); 
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            osc.start();
+            osc.stop(audioContext.currentTime + 3);
         }
 
         bellBtn.addEventListener('click', async () => {
@@ -513,9 +495,18 @@
             const previousText = timerDisplay.innerText;
             timerDisplay.innerText = "🚲 Avisando a la clase...";
 
+            // Evita que el propio pitido, captado por el micrófono, cuente como ruido
+            const bellGuard = !isAlarmPlaying;
+            if (bellGuard) isAlarmPlaying = true;
+
             playBicycleBell();
 
             setTimeout(() => {
+                if (bellGuard) {
+                    isAlarmPlaying = false;
+                    highLevelStartTime = null;
+                    correctionNoiseStartTime = null;
+                }
                 bellBtn.disabled = false;
                 bellBtn.innerText = "🚲 Timbre";
                 if (!isRunning) {
