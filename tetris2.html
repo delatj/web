@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- saved from url=(0041)https://delatj.github.io/web/tetris2.html -->
-<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
     <title>Cyber Tetris - Edición Captura</title>
     <style>
         :root { --p1-color: #3498db; --p2-color: #e91e63; }
@@ -471,16 +471,16 @@
         const hora = now.toLocaleTimeString('es-ES', { hour12: false });
         const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
-        // Un registro por alumno: su propio nombre en "alumno1", su compañero/a en "alumno2"
+        // Un registro individual por alumno: cada uno va en su propia fila con alumno2 vacío
         // y SU puntuación final (puntos x 0,5, como se ve en pantalla) en "total".
-        const make = (propio, companero, brutos) => ({
+        const make = (idx, propio, brutos) => ({
             enviado: false,
             etiqueta: propio + ' ' + (brutos * 0.5).toFixed(1).replace('.', ','),
             params: new URLSearchParams({
-                id: uid(),
+                id: uid() + '-' + idx,
                 fecha, hora,
                 alumno1: propio,
-                alumno2: companero,
+                alumno2: '',
                 curso: teamInfo.curso,
                 criterio: ACTIVIDAD,
                 total: (brutos * 0.5).toFixed(1),
@@ -491,8 +491,8 @@
             })
         });
 
-        const recs = [make(teamInfo.alumno1, teamInfo.alumno2, games[0].score)];
-        if (!teamInfo.solo) recs.push(make(teamInfo.alumno2, teamInfo.alumno1, games[1].score));
+        const recs = [make(1, teamInfo.alumno1, games[0].score)];
+        if (!teamInfo.solo) recs.push(make(2, teamInfo.alumno2, games[1].score));
         return recs;
     }
 
@@ -542,4 +542,5 @@
     });
 </script>
 
-</body></html>
+</body>
+</html>

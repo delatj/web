@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
+<!-- saved from url=(0039)https://delatj.github.io/web/brazo.html -->
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
     <title>Robot Game - Alcance Corregido</title>
     <style>
         :root {
@@ -103,7 +103,7 @@
             </div>
 
             <label style="display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; margin:8px 0; font-size:0.85rem; color:#333;">
-                <input type="checkbox" id="solo-check" style="width:auto; margin:0; padding:0;" onchange="toggleSolo()"> Un único jugador (sin pareja)
+                <input type="checkbox" id="solo-check" style="width:auto; margin:0; padding:0;" onchange="toggleSolo()"> 
             </label>
 
             <input type="text" id="student-group" autocomplete="off" placeholder="Nombre profesor. Ej: Eduardo">
@@ -237,8 +237,8 @@
             if (getVal('p1-last').length < 2) msgs.push('Escribe los apellidos del jugador 1.');
 
             if (!soloMode) {
-                if (getVal('p2-first').length < 2) msgs.push('Escribe el nombre del jugador 2 (o marca «Un único jugador»).');
-                if (getVal('p2-last').length < 2) msgs.push('Escribe los apellidos del jugador 2 (o marca «Un único jugador»).');
+                if (getVal('p2-first').length < 2) msgs.push('Escribe el nombre del jugador 2 (»).');
+                if (getVal('p2-last').length < 2) msgs.push('Escribe los apellidos del jugador 2 (»).');
             }
 
             if (!getVal('student-group')) msgs.push('Indica el nombre profesor.');
@@ -370,11 +370,11 @@
                             pRect.top <= boxRect.bottom
                         ) {
                             if (p.getAttribute('data-color') === m.color) {
-                                p.dataset.scored = "true";
-                                puntos++;
-                                document.getElementById('puntos').innerText = puntos;
-                                p.style.opacity = "0";
-                                updateBackground();
+    p.dataset.scored = "true";
+    puntos += 0.5; // Antes ponía: puntos++;
+    document.getElementById('puntos').innerText = puntos;
+    p.style.opacity = "0";
+    updateBackground();
                                 
                                 clearInterval(gravity);
                                 setTimeout(() => p.remove(), 500);
@@ -609,5 +609,5 @@
         }
     </script>
 
-</body>
-</html>
+
+</body></html>
