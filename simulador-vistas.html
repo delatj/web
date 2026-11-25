@@ -44,6 +44,14 @@ th:first-child,td:first-child{text-align:left}
 #team-error{color:var(--ko);font-weight:700;font-size:.85rem;margin-bottom:8px}
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:9px 16px;border-radius:12px;opacity:0;transition:.3s;z-index:60;pointer-events:none;max-width:90%;text-align:center}
 button:disabled{opacity:.55;cursor:not-allowed}
+#iso{cursor:grab;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+#iso:active{cursor:grabbing}
+.sl{display:flex;align-items:center;gap:8px;margin:4px 0}
+.sl label{font-size:.85rem;color:var(--mu);min-width:104px}
+.sl input[type=range]{flex:1;min-width:0;padding:0;border:0;background:transparent}
+.sl output{min-width:44px;text-align:right;font-size:.85rem;color:var(--mu)}
+a.vid{display:inline-block;background:#d6322c;border:1px solid #d6322c;color:#fff;font-weight:600;border-radius:10px;padding:9px 12px;text-decoration:none}
+a.vid:hover{filter:brightness(1.1)}
 </style>
 </head>
 <body>
@@ -55,6 +63,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
   <div class="row" style="justify-content:center;margin-top:10px">
     <div id="pareja-box" class="tag" onclick="openDatosModal()" title="Haz clic para modificar los datos">👥 <span id="pareja-txt">Sin datos</span></div>
     <button id="send-btn" class="p" onclick="sendResults()">📤 Enviar datos</button>
+    <a class="vid" href="https://www.youtube.com/watch?v=QZp7yjPegOE" target="_blank" rel="noopener noreferrer">▶️ Vídeo tutorial</a>
   </div>
 </header>
 
@@ -69,40 +78,35 @@ button:disabled{opacity:.55;cursor:not-allowed}
     <button class="p" id="new">Nueva figura</button>
     <span class="badge" id="cnt">8 cubos</span>
   </div>
+  <p class="s" id="nxthint" hidden style="margin:8px 0 0">En el nivel 1, para pasar a la siguiente figura primero tienes que intentar esta: pulsa <b>Comprobar</b>.</p>
 </div>
 
 <div class="card">
-  <div class="row" style="margin-bottom:6px">
-    <h2 style="margin:0">Perspectiva isométrica</h2>
-    <span class="row" style="margin-left:auto">
-      <button id="rl" aria-label="Girar a la izquierda">⟲</button>
-      <button id="rr" aria-label="Girar a la derecha">⟳</button>
-    </span>
+  <h2 style="margin:0 0 8px">Perspectiva de la figura</h2>
+  <div class="row" style="margin-bottom:8px">
+    <button class="vb" data-v="A">Alzado</button>
+    <button class="vb" data-v="P">Perfil</button>
+    <button class="vb" data-v="L">Planta</button>
+    <button class="vb" data-v="I">Isométrica</button>
   </div>
-  <svg id="iso" role="img" aria-label="Figura en perspectiva isométrica con colores por vista" viewBox="-64.64 -210 332.47999999999996 330"><polygon points="0.0,0.0 103.9,60.0 103.9,-60.0 0.0,-120.0" fill="rgba(220, 230, 245, 0.2)" stroke="var(--gr)" stroke-width="1.2" stroke-dasharray="4 4" stroke-linejoin="round"></polygon><polygon points="0.0,0.0 103.9,-60.0 103.9,-180.0 0.0,-120.0" fill="rgba(220, 230, 245, 0.2)" stroke="var(--gr)" stroke-width="1.2" stroke-dasharray="4 4" stroke-linejoin="round"></polygon><polygon points="0.0,0.0 103.9,60.0 207.8,0.0 103.9,-60.0" fill="rgba(220, 230, 245, 0.2)" stroke="var(--gr)" stroke-width="1.2" stroke-dasharray="4 4" stroke-linejoin="round"></polygon><polygon points="0.0,0.0 34.6,20.0 34.6,-20.0 0.0,-40.0" fill="rgba(255, 146, 43, 0.55)" stroke="var(--ln)" stroke-width="1.4" stroke-linejoin="round"></polygon><polygon points="34.6,-100.0 69.3,-80.0 103.9,-100.0 69.3,-120.0" fill="rgba(151, 117, 250, 0.45)" stroke="var(--ln)" stroke-width="1.4" stroke-linejoin="round"></polygon><polygon points="69.3,-40.0 103.9,-60.0 103.9,-100.0 69.3,-80.0" fill="rgba(56, 217, 169, 0.45)" stroke="var(--ln)" stroke-width="1.4" stroke-linejoin="round"></polygon><polygon points="69.3,-40.0 103.9,-20.0 138.6,-40.0 103.9,-60.0" fill="rgba(151, 117, 250, 0.45)" stroke="var(--ln)" stroke-width="1.4" stroke-linejoin="round"></polygon><polygon points="103.9,20.0 138.6,0.0 138.6,-40.0 103.9,-20.0" fill="rgba(56, 217, 169, 0.45)" stroke="var(--ln)" stroke-width="1.4" stroke-linejoin="round"></polygon><polygon points="0.0,-80.0 34.6,-60.0 69.3,-80.0 34.6,-100.0" fill="rgba(151, 117, 250, 0.45)" stroke="var(--ln)" stroke-width="1.4" stroke-linejoin="round"></polygon><polygon points="0.0,-40.0 34.6,-20.0 34.6,-60.0 0.0,-80.0" fill="rgba(255, 146, 43, 0.55)" stroke="var(--ln)" stroke-width="1.4" stroke-linejoin="round"></polygon><polygon points="34.6,20.0 69.3,40.0 69.3,0.0 34.6,-20.0" fill="rgba(255, 146, 43, 0.55)" stroke="var(--ln)" stroke-width="1.4" stroke-linejoin="round"></polygon><polygon points="69.3,40.0 103.9,20.0 103.9,-20.0 69.3,0.0" fill="rgba(56, 217, 169, 0.45)" stroke="var(--ln)" stroke-width="1.4" stroke-linejoin="round"></polygon><polygon points="34.6,-20.0 69.3,0.0 69.3,-40.0 34.6,-60.0" fill="rgba(255, 146, 43, 0.55)" stroke="var(--ln)" stroke-width="1.4" stroke-linejoin="round"></polygon><polygon points="69.3,0.0 103.9,-20.0 103.9,-60.0 69.3,-40.0" fill="rgba(56, 217, 169, 0.45)" stroke="var(--ln)" stroke-width="1.4" stroke-linejoin="round"></polygon><polygon points="34.6,-100.0 69.3,-80.0 103.9,-100.0 69.3,-120.0" fill="rgba(151, 117, 250, 0.45)" stroke="var(--ln)" stroke-width="1.4" stroke-linejoin="round"></polygon><polygon points="34.6,-60.0 69.3,-40.0 69.3,-80.0 34.6,-100.0" fill="rgba(255, 146, 43, 0.55)" stroke="var(--ln)" stroke-width="1.4" stroke-linejoin="round"></polygon><polygon points="69.3,-40.0 103.9,-60.0 103.9,-100.0 69.3,-80.0" fill="rgba(56, 217, 169, 0.45)" stroke="var(--ln)" stroke-width="1.4" stroke-linejoin="round"></polygon><polygon points="103.9,-60.0 207.8,0.0 207.8,-120.0 103.9,-180.0" fill="rgba(220, 230, 245, 0.2)" stroke="var(--gr)" stroke-width="1.2" stroke-dasharray="4 4" stroke-linejoin="round"></polygon><polygon points="103.9,60.0 207.8,0.0 207.8,-120.0 103.9,-60.0" fill="rgba(220, 230, 245, 0.2)" stroke="var(--gr)" stroke-width="1.2" stroke-dasharray="4 4" stroke-linejoin="round"></polygon><polygon points="0.0,-120.0 103.9,-60.0 207.8,-120.0 103.9,-180.0" fill="rgba(220, 230, 245, 0.2)" stroke="var(--gr)" stroke-width="1.2" stroke-dasharray="4 4" stroke-linejoin="round"></polygon><g>
-    <defs>
-      <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-        <path d="M 0 1 L 10 5 L 0 9 z" fill="var(--ar)"></path>
-      </marker>
-    </defs>
-    <line x1="-34.6" y1="20.0" x2="48.5" y2="-28.0" stroke="var(--ar)" stroke-width="3.5" marker-end="url(#arrow)"></line>
-    <rect x="-72.6" y="24.0" width="76" height="22" rx="6" fill="var(--ar)"></rect>
-    <text x="-34.6" y="39.0" text-anchor="middle" font-size="11.5" font-weight="800" fill="#fff">ALZADO</text>
-  </g></svg>
+  <svg id="iso" role="img" aria-label="Figura en perspectiva que se puede girar, con colores por vista" viewBox="-192 -192 384 384"></svg>
+  <div class="sl"><label for="camA">↻ Giro</label><input type="range" id="camA" min="-180" max="180" step="1" value="45"><output id="camAo">45°</output></div>
+  <div class="sl"><label for="camB">↕ Inclinación</label><input type="range" id="camB" min="0" max="90" step="1" value="35"><output id="camBo">35°</output></div>
+  <p class="s" id="vname" style="font-weight:600"></p>
   <p class="s" style="margin-top:8px">
     <span class="lg" style="--c:var(--ar)">ALZADO (Naranja)</span>
     <span class="lg" style="--c:var(--pf)">PERFIL (Verde)</span>
     <span class="lg" style="--c:var(--pl)">PLANTA (Violeta)</span>
   </p>
-  <p class="s">Con ⟲ ⟳ giras la figura sobre su base para ver los cubos traseros. La flecha indica siempre la vista del <b>ALZADO</b>.</p>
+  <p class="s">Gira la figura poco a poco: arrástrala con el ratón o el dedo, o usa los deslizadores. Con <b>Inclinación 0°</b> la miras de frente o de lado y con <b>90°</b> desde arriba (planta). Los botones te llevan directamente a cada vista. La flecha naranja indica siempre la cara del <b>ALZADO</b>.</p>
 </div>
 
 <div class="card">
   <h2>Dibuja tus vistas</h2>
-  <p class="s" style="margin:0 0 8px">La cuadrícula de cada vista tiene el tamaño justo de la figura. Toca una casilla para pintarla. En las uniones: 1 toque = arista visible (línea continua); con aristas ocultas activadas, 2 toques = oculta (discontinua) y 3 = quitar. Entre dos casillas pintadas aparece una línea de puntos: tócala si en esa unión hay una arista visible.</p>
+  <p class="s" style="margin:0 0 8px">La cuadrícula de cada vista tiene el tamaño justo de la figura. Toca una casilla para pintarla. En las uniones: 1 toque = arista visible (línea continua)<span id="hidhelp">; con aristas ocultas activadas, 2 toques = oculta (discontinua) y 3 = quitar</span>. Entre dos casillas pintadas aparece una línea de puntos: tócala si en esa unión hay una arista visible.</p>
   <div class="row" style="margin-bottom:8px"><label class="s" for="side" style="margin:0">Segunda vista:</label><select id="side"><option value="I">Perfil izquierdo</option><option value="D">Perfil derecho</option><option value="A">Perfil más representativo</option></select></div>
-  <label class="s" style="display:flex;gap:8px;align-items:center;margin:0 0 8px"><input type="checkbox" id="hid" style="flex:none;min-width:0"> Dibujar también las aristas ocultas (línea discontinua)</label>
-  <div id="views"><svg viewBox="0 0 272 270" role="img" aria-label="Zona de dibujo"><rect x="2" y="3" width="63.8" height="20" rx="10" fill="var(--ln)"></rect><text x="12" y="17" font-size="11.5" font-weight="800" fill="#fff">ALZADO</text><rect data-a="c:A:0:0" x="2" y="28" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:A:0:1" x="42" y="28" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:A:1:0" x="2" y="68" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:A:1:1" x="42" y="68" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:A:2:0" x="2" y="108" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:A:2:1" x="42" y="108" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect x="140" y="3" width="100.3" height="20" rx="10" fill="var(--ln)"></rect><text x="150" y="17" font-size="11.5" font-weight="800" fill="#fff">PERFIL IZQ.</text><rect data-a="c:P:0:0" x="140" y="28" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:P:0:1" x="180" y="28" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:P:1:0" x="140" y="68" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:P:1:1" x="180" y="68" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:P:2:0" x="140" y="108" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:P:2:1" x="180" y="108" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect x="2" y="161" width="63.8" height="20" rx="10" fill="var(--ln)"></rect><text x="12" y="175" font-size="11.5" font-weight="800" fill="#fff">PLANTA</text><rect data-a="c:L:0:0" x="2" y="186" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:L:0:1" x="42" y="186" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:L:1:0" x="2" y="226" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:L:1:1" x="42" y="226" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect></svg></div>
+  <label class="s" id="hidrow" style="display:flex;gap:8px;align-items:center;margin:0 0 8px"><input type="checkbox" id="hid" style="flex:none;min-width:0"> Dibujar también las aristas ocultas (línea discontinua)</label>
+  <div id="views"><svg viewBox="0 0 292 310" role="img" aria-label="Zona de dibujo"><rect x="2" y="3" width="63.8" height="20" rx="10" fill="var(--ln)"></rect><text x="12" y="17" font-size="11.5" font-weight="800" fill="#fff">ALZADO</text><rect data-a="c:A:0:0" x="2" y="28" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:A:0:1" x="42" y="28" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:A:0:2" x="82" y="28" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:A:1:0" x="2" y="68" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:A:1:1" x="42" y="68" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:A:1:2" x="82" y="68" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:A:2:0" x="2" y="108" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:A:2:1" x="42" y="108" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:A:2:2" x="82" y="108" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect x="160" y="3" width="100.3" height="20" rx="10" fill="var(--ln)"></rect><text x="170" y="17" font-size="11.5" font-weight="800" fill="#fff">PERFIL IZQ.</text><rect data-a="c:P:0:0" x="160" y="28" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:P:0:1" x="200" y="28" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:P:0:2" x="240" y="28" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:P:1:0" x="160" y="68" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:P:1:1" x="200" y="68" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:P:1:2" x="240" y="68" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:P:2:0" x="160" y="108" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:P:2:1" x="200" y="108" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:P:2:2" x="240" y="108" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect x="2" y="161" width="63.8" height="20" rx="10" fill="var(--ln)"></rect><text x="12" y="175" font-size="11.5" font-weight="800" fill="#fff">PLANTA</text><rect data-a="c:L:0:0" x="2" y="186" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:L:0:1" x="42" y="186" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:L:0:2" x="82" y="186" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:L:1:0" x="2" y="226" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:L:1:1" x="42" y="226" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:L:1:2" x="82" y="226" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:L:2:0" x="2" y="266" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:L:2:1" x="42" y="266" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect><rect data-a="c:L:2:2" x="82" y="266" width="40" height="40" fill="transparent" stroke="var(--gr)"></rect></svg></div>
   <div class="row" style="margin-top:10px">
     <button class="p" id="chk">Comprobar</button>
     <button id="clr">Borrar</button>
@@ -136,7 +140,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
   <button class="p" style="width:100%;padding:11px;margin-top:10px" onclick="saveDatosForm()">💾 Guardar y Comenzar</button></div></div><div id="toast"></div>
 
 <script>
-const LV={facil:{n:3,h:2,min:4,max:6,nm:"Fácil"},medio:{n:3,h:3,min:6,max:9,nm:"Medio"},dificil:{n:4,h:3,min:9,max:14,nm:"Difícil"}};
+const LV={facil:{n:3,h:2,min:3,max:18,nm:"Fácil"},medio:{n:3,h:3,min:6,max:9,nm:"Medio"},dificil:{n:4,h:3,min:9,max:14,nm:"Difícil"}};
 let L=LV.medio,key="medio",g=[],S={},fig={},ad=0,ir=0,ST={facil:{t:0,ok:0},medio:{t:0,ok:0},dificil:{t:0,ok:0}};
 const $=id=>document.getElementById(id);
 const rnd=n=>Math.floor(Math.random()*n);
@@ -152,20 +156,39 @@ function pool(){
     for(let y=0;y<n;y++){a.push([]);for(let x=0;x<n;x++){const c=v%(h+1);v=(v-c)/(h+1);a[y].push(c);sum+=c}}
     if(sum<min||sum>max||!conn(a,n))continue;
     const c=canon(a);if(!m.has(c))m.set(c,a)}
-  return POOL[key]=[...m.entries()];
+  let lista=[...m.entries()];
+  if(key==="facil")lista=lista.filter(([,a])=>sinOcultas(a));
+  return POOL[key]=lista;
+}
+// true si la figura no tiene aristas ocultas en ninguna vista (ni con perfil izquierdo ni derecho)
+function sinOcultas(a){
+  const gg=g;g=a;
+  try{
+    for(const sd of["I","D"]){const M=mats(sd);
+      for(const k of["A","P","L"])if(expected(M[k],M.H[k]).hd.size)return false}
+    return true;
+  }finally{g=gg}
 }
 
+const ULT={};
 function gen(){
   const {n,h,min,max}=L;
   if(key!=="dificil"){
-    const libres=pool().filter(([c])=>!SEEN[key].has(c));
-    if(!libres.length)return null;
-    const [c,a]=libres[rnd(libres.length)];SEEN[key].add(c);return a.map(r=>r.slice());
+    let libres=pool().filter(([c])=>!SEEN[key].has(c));
+    if(!libres.length){ // ya han salido todas: empieza otra vuelta (sin repetir justo la última)
+      SEEN[key].clear();if(ULT[key])SEEN[key].add(ULT[key]);
+      libres=pool().filter(([c])=>!SEEN[key].has(c));
+      if(!libres.length)libres=pool();
+    }
+    const [c,a]=libres[rnd(libres.length)];SEEN[key].add(c);ULT[key]=c;return a.map(r=>r.slice());
   }
-  for(let t=0;t<20000;t++){
-    const a=[];let sum=0;
-    for(let y=0;y<n;y++){a.push([]);for(let x=0;x<n;x++){const v=Math.random()<.4?0:1+rnd(h);a[y].push(v);sum+=v}}
-    if(sum>=min&&sum<=max&&conn(a,n)){const c=canon(a);if(!SEEN[key].has(c)){SEEN[key].add(c);return a}}
+  for(let v=0;v<2;v++){
+    for(let t=0;t<20000;t++){
+      const a=[];let sum=0;
+      for(let y=0;y<n;y++){a.push([]);for(let x=0;x<n;x++){const q=Math.random()<.4?0:1+rnd(h);a[y].push(q);sum+=q}}
+      if(sum>=min&&sum<=max&&conn(a,n)){const c=canon(a);if(!SEEN[key].has(c)){SEEN[key].add(c);ULT[key]=c;return a}}
+    }
+    SEEN[key].clear();if(ULT[key])SEEN[key].add(ULT[key]);
   }
   return null;
 }
@@ -183,68 +206,111 @@ function conn(a,n){
 const mk=a=>(x,y,z)=>x>=0&&y>=0&&x<L.n&&y<L.n&&a[y][x]>z;
 function rotG(a,k){const n=a.length;for(let i=0;i<k;i++){const b=a.map(r=>r.slice());for(let y=0;y<n;y++)for(let x=0;x<n;x++)b[x][n-1-y]=a[y][x];a=b}return a}
 
+const CAM0={a:45,b:35};
+let CAM={a:45,b:35},animId=0;
+const normA=x=>((x+180)%360+360)%360-180;
+
+function vistaTxt(){
+  const a=CAM.a,b=CAM.b,cerca=t=>Math.abs(normA(a-t))<=4;
+  if(b>=86)return "PLANTA (desde arriba)";
+  if(b<=4){
+    if(cerca(0))return "ALZADO (de frente)";
+    if(cerca(-90))return "PERFIL IZQUIERDO";
+    if(cerca(90))return "PERFIL DERECHO";
+    if(cerca(180))return "vista posterior (por detrás)";
+  }
+  return null;
+}
+function syncCam(){
+  $("camA").value=Math.round(CAM.a);$("camB").value=Math.round(CAM.b);
+  $("camAo").textContent=Math.round(CAM.a)+"°";$("camBo").textContent=Math.round(CAM.b)+"°";
+  const t=vistaTxt();
+  $("vname").innerHTML=t?`👁️ Estás viendo: <b>${t}</b>`:"👁️ Vista libre: gira la figura hasta ver el alzado, el perfil o la planta.";
+}
+
 function drawIso(){
-  const s=40,c=.866,n=L.n,H=L.h;
-  const gi=rotG(g,ir),has=mk(gi);
-  const P=(x,y,z)=>[(x+y)*c*s,(x-y)*.5*s-z*s];
-  const k=(ad-ir+4)%4;
+  const s=40,n=L.n,H=L.h,has=mk(g),sd=sideNow();
+  const al=CAM.a*Math.PI/180,be=CAM.b*Math.PI/180;
+  const sa=Math.sin(al),ca=Math.cos(al),sb=Math.sin(be),cb=Math.cos(be);
+  // d = hacia la cámara, r = derecha de la pantalla, u = arriba de la pantalla
+  const d=[sa*cb,-ca*cb,sb],r=[ca,sa,0],u=[-sb*sa,sb*ca,cb],C=[n/2,n/2,H/2];
+  const dot=(p,v)=>p[0]*v[0]+p[1]*v[1]+p[2]*v[2];
+  const P=p=>{const q=[p[0]-C[0],p[1]-C[1],p[2]-C[2]];return [dot(q,r)*s,-dot(q,u)*s]};
+  const pts=ps=>ps.map(p=>P(p).map(v=>v.toFixed(1)).join()).join(" ");
+  const EPS=1e-6,R=(n/2+1.8)*s+60;
+  const AL="rgba(255, 146, 43, 0.55)",PF="rgba(56, 217, 169, 0.45)",PL="rgba(151, 117, 250, 0.45)",NE="rgba(150, 160, 180, 0.28)";
 
-  let out="",xs=[],ys=[];
-  const addPt=(p)=>{xs.push(p[0]);ys.push(p[1]);};
+  // caja (planos de proyección): las caras traseras antes de los cubos y las delanteras después
+  const box=[
+    [[[0,0,0],[n,0,0],[n,0,H],[0,0,H]],[0,-1,0]],
+    [[[0,n,0],[n,n,0],[n,n,H],[0,n,H]],[0,1,0]],
+    [[[0,0,0],[0,n,0],[0,n,H],[0,0,H]],[-1,0,0]],
+    [[[n,0,0],[n,n,0],[n,n,H],[n,0,H]],[1,0,0]],
+    [[[0,0,0],[n,0,0],[n,n,0],[0,n,0]],[0,0,-1]],
+    [[[0,0,H],[n,0,H],[n,n,H],[0,n,H]],[0,0,1]]
+  ];
+  const cage=ps=>`<polygon points="${pts(ps)}" fill="rgba(220, 230, 245, 0.2)" stroke="var(--gr)" stroke-width="1.2" stroke-dasharray="4 4" stroke-linejoin="round"/>`;
+  const back=box.filter(([,nm])=>dot(nm,d)<=EPS).map(([ps])=>cage(ps)).join("");
+  const front=box.filter(([,nm])=>dot(nm,d)>EPS).map(([ps])=>cage(ps)).join("");
 
-  const polyBox=(pts)=>{
-    const q=pts.map(p=>P(...p));
-    q.forEach(addPt);
-    out+=`<polygon points="${q.map(p=>p.map(v=>v.toFixed(1)).join()).join(" ")}" fill="rgba(220, 230, 245, 0.2)" stroke="var(--gr)" stroke-width="1.2" stroke-dasharray="4 4" stroke-linejoin="round"/>`;
-  };
-
-  polyBox([[0,0,0],[n,0,0],[n,0,H],[0,0,H]]);
-  polyBox([[0,0,0],[0,n,0],[0,n,H],[0,0,H]]);
-  polyBox([[0,0,0],[n,0,0],[n,n,0],[0,n,0]]);
-
+  // cubos, de los más lejanos a los más cercanos a la cámara
   const cubes=[];
-  for(let y=0;y<n;y++)for(let x=0;x<n;x++)for(let z=0;z<gi[y][x];z++)cubes.push([x,y,z]);
-  cubes.sort((a,b)=>(a[0]-a[1]+a[2])-(b[0]-b[1]+b[2]));
-
-  const polyCube=(pts, fillAlpha)=>{
-    const q=pts.map(p=>P(...p));
-    q.forEach(addPt);
-    out+=`<polygon points="${q.map(p=>p.map(v=>v.toFixed(1)).join()).join(" ")}" fill="${fillAlpha}" stroke="var(--ln)" stroke-width="1.4" stroke-linejoin="round"/>`;
-  };
-
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++)for(let z=0;z<g[y][x];z++)cubes.push([x,y,z]);
+  cubes.sort((p,q)=>dot([p[0]+.5,p[1]+.5,p[2]+.5],d)-dot([q[0]+.5,q[1]+.5,q[2]+.5],d));
+  // true si no hay ningún cubo más allá en esa dirección (la cara se ve de verdad en su vista)
+  const libre=(x,y,z,dx,dy)=>{for(let X=x+dx,Y=y+dy;X>=0&&Y>=0&&X<n&&Y<n;X+=dx,Y+=dy)if(has(X,Y,z))return false;return true};
+  const face=(ps,fill)=>{const q=pts(ps);return `<polygon points="${q}" fill="var(--card)"/><polygon points="${q}" fill="${fill}" stroke="var(--ln)" stroke-width="1.4" stroke-linejoin="round"/>`};
+  let cs="";
   for(const [x,y,z] of cubes){
-    if(!has(x,y,z+1)) polyCube([[x,y,z+1],[x+1,y,z+1],[x+1,y+1,z+1],[x,y+1,z+1]], "rgba(151, 117, 250, 0.45)");
-    if(!has(x,y-1,z)) polyCube([[x,y,z],[x+1,y,z],[x+1,y,z+1],[x,y,z+1]], k===0?"rgba(255, 146, 43, 0.55)":"rgba(56, 217, 169, 0.45)");
-    if(!has(x+1,y,z)) polyCube([[x+1,y,z],[x+1,y+1,z],[x+1,y+1,z+1],[x+1,y,z+1]], k===3?"rgba(255, 146, 43, 0.55)":"rgba(56, 217, 169, 0.45)");
+    const F=[
+      [sb>EPS,!has(x,y,z+1),[[x,y,z+1],[x+1,y,z+1],[x+1,y+1,z+1],[x,y+1,z+1]],PL],
+      [ca*cb>EPS,!has(x,y-1,z),[[x,y,z],[x+1,y,z],[x+1,y,z+1],[x,y,z+1]],libre(x,y,z,0,-1)?AL:NE],
+      [-ca*cb>EPS,!has(x,y+1,z),[[x,y+1,z],[x+1,y+1,z],[x+1,y+1,z+1],[x,y+1,z+1]],NE],
+      [-sa*cb>EPS,!has(x-1,y,z),[[x,y,z],[x,y+1,z],[x,y+1,z+1],[x,y,z+1]],libre(x,y,z,-1,0)?PF:NE],
+      [sa*cb>EPS,!has(x+1,y,z),[[x+1,y,z],[x+1,y+1,z],[x+1,y+1,z+1],[x+1,y,z+1]],libre(x,y,z,1,0)?PF:NE]
+    ];
+    for(const [vis,exp,ps,fill] of F)if(vis&&exp)cs+=face(ps,fill);
   }
 
-  polyBox([[0,n,0],[n,n,0],[n,n,H],[0,n,H]]);
-  polyBox([[n,0,0],[n,n,0],[n,n,H],[n,0,H]]);
-  polyBox([[0,0,H],[n,0,H],[n,n,H],[0,n,H]]);
+  // flecha del ALZADO (siempre desde delante de la figura, mirando hacia ella)
+  const A0=P([n/2,-1.8,H/2]),A1=P([n/2,-.15,H/2]),len=Math.hypot(A1[0]-A0[0],A1[1]-A0[1]);
+  let lx,ly;
+  if(len<10){lx=-R+38;ly=-R+18}
+  else{const m=Math.hypot(A0[0],A0[1])||1;lx=A0[0]+A0[0]/m*38;ly=A0[1]+A0[1]/m*17}
+  lx=Math.max(-R+34,Math.min(R-34,lx));ly=Math.max(-R+14,Math.min(R-14,ly));
+  const arrow=`<defs><marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 1 L 10 5 L 0 9 z" fill="var(--ar)"/></marker></defs>`+
+    (len>=10?`<line x1="${A0[0].toFixed(1)}" y1="${A0[1].toFixed(1)}" x2="${A1[0].toFixed(1)}" y2="${A1[1].toFixed(1)}" stroke="var(--ar)" stroke-width="3.5" marker-end="url(#arrow)"/>`:"")+
+    `<rect x="${(lx-32).toFixed(1)}" y="${(ly-11).toFixed(1)}" width="64" height="22" rx="6" fill="var(--ar)"/><text x="${lx.toFixed(1)}" y="${(ly+4).toFixed(1)}" text-anchor="middle" font-size="11.5" font-weight="800" fill="#fff">ALZADO</text>`;
+  const arrowDetras=ca*cb<0;
 
-  const m0=n/2, mz=Math.max(...g.flat());
-  const U=[[0,-1],[-1,0],[0,1],[1,0]];
-  const at=(u,d)=>[m0+u[0]*(n/2+d),m0+u[1]*(n/2+d),mz/2];
-  const ua=U[k];
-  const pStart=P(...at(ua,2.5)), pTarget=P(...at(ua,.1));
-  addPt(pStart); addPt(pTarget);
-
-  out += `<g>
-    <defs>
-      <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-        <path d="M 0 1 L 10 5 L 0 9 z" fill="var(--ar)" />
-      </marker>
-    </defs>
-    <line x1="${pStart[0].toFixed(1)}" y1="${pStart[1].toFixed(1)}" x2="${pTarget[0].toFixed(1)}" y2="${pTarget[1].toFixed(1)}" stroke="var(--ar)" stroke-width="3.5" marker-end="url(#arrow)" />
-    <rect x="${(pStart[0] - 38).toFixed(1)}" y="${(pStart[1] + 4).toFixed(1)}" width="76" height="22" rx="6" fill="var(--ar)" />
-    <text x="${pStart[0].toFixed(1)}" y="${(pStart[1] + 19).toFixed(1)}" text-anchor="middle" font-size="11.5" font-weight="800" fill="#fff">ALZADO</text>
-  </g>`;
-
-  const m=30,x0=Math.min(...xs)-m,y0=Math.min(...ys)-m;
   const svg=$("iso");
-  svg.setAttribute("viewBox",`${x0} ${y0} ${Math.max(...xs)-x0+2*m} ${Math.max(...ys)-y0+2*m}`);
-  svg.innerHTML=out;
+  svg.setAttribute("viewBox",`${-R} ${-R} ${2*R} ${2*R}`);
+  svg.innerHTML=back+(arrowDetras?arrow:"")+cs+front+(arrowDetras?"":arrow);
+  syncCam();
 }
+
+function goTo(a,b){
+  cancelAnimationFrame(animId);
+  if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches){CAM.a=a;CAM.b=b;drawIso();return}
+  const a0=CAM.a,b0=CAM.b,da=((a-a0+540)%360)-180,db=b-b0,t0=performance.now(),T=700;
+  const step=t=>{
+    const k=Math.min(1,(t-t0)/T),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+    CAM.a=normA(a0+da*e);CAM.b=b0+db*e;drawIso();
+    if(k<1)animId=requestAnimationFrame(step);
+  };
+  animId=requestAnimationFrame(step);
+}
+document.querySelectorAll(".vb").forEach(btn=>btn.onclick=()=>{
+  const v=btn.dataset.v;
+  if(v==="A")goTo(0,0);else if(v==="P")goTo(sideNow()==="D"?90:-90,0);else if(v==="L")goTo(0,90);else goTo(CAM0.a,CAM0.b);
+});
+$("camA").oninput=()=>{cancelAnimationFrame(animId);CAM.a=+$("camA").value;drawIso()};
+$("camB").oninput=()=>{cancelAnimationFrame(animId);CAM.b=+$("camB").value;drawIso()};
+let drag=null;
+$("iso").addEventListener("pointerdown",e=>{cancelAnimationFrame(animId);drag={x:e.clientX,y:e.clientY,a:CAM.a,b:CAM.b};try{$("iso").setPointerCapture(e.pointerId)}catch(_){}});
+$("iso").addEventListener("pointermove",e=>{if(!drag)return;
+  CAM.a=normA(drag.a-(e.clientX-drag.x)*.6);CAM.b=Math.max(0,Math.min(90,drag.b+(e.clientY-drag.y)*.5));drawIso()});
+["pointerup","pointercancel"].forEach(t=>$("iso").addEventListener(t,()=>{drag=null}));
 
 function sideNow(){const v=$("side").value;if(v!=="A")return v;return expected(mats("D").P).ed.size>expected(mats("I").P).ed.size?"D":"I"}
 function dims(){const gv=rotG(g,ad),n=L.n;let x0=n,x1=-1,y0=n,y1=-1,mz=0;for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(gv[y][x]){x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);mz=Math.max(mz,gv[y][x])}return {gv,x0,y0,y1,nx:x1-x0+1,ny:y1-y0+1,hh:mz}}
@@ -272,7 +338,8 @@ function expected(M,Hr){
     [...hd].forEach(k=>{if(ed.has(k))hd.delete(k)})}
   return {cells,ed,hd};
 }
-const HL=()=>$("hid").checked,E0=()=>new Set();
+const HL=()=>key!=="facil"&&$("hid").checked,E0=()=>new Set();
+function syncHid(){const f=key==="facil";$("hidrow").hidden=f;$("hidhelp").hidden=f}
 function hid(S,U,V,D,u0,vtop){
   const f=(u,v,d)=>S.has(u+","+v+","+d)?1:0,hs=new Set();
   const occ=(u,v,db)=>{for(let d=0;d<db;d++)if(f(u,v,d))return true;return false};
@@ -336,7 +403,9 @@ $("views").addEventListener("click",ev=>{
   $("msg").textContent="";drawViews();
 });
 function clearS(){const q=()=>({cells:new Set(),ed:new Set(),hd:new Set()});S={A:q(),P:q(),L:q()}}
-function mark(){if(!fig.checked){fig.checked=true;ST[key].t++}}
+function mark(){if(!fig.checked){fig.checked=true;ST[key].t++}updateNext()}
+const puedeSiguiente=()=>key!=="facil"||!!fig.checked;
+function updateNext(){const ok=puedeSiguiente();$("new").disabled=!ok;$("nxthint").hidden=ok}
 
 $("chk").onclick=()=>{
   if(fig.solved)return;
@@ -365,16 +434,18 @@ function stats(){nota();
 function fresh(){
   const prev=key,want=$("lvl").value;key=want;L=LV[want];
   const ng=gen();
-  if(!ng){key=prev;L=LV[prev];$("lvl").value=prev;
+  if(!ng){key=prev;L=LV[prev];$("lvl").value=prev;syncHid();
     $("msg").style.color="var(--ok)";$("msg").textContent="🎉 ¡Has visto todas las figuras del nivel "+LV[want].nm+"! Elige otro nivel.";return}
-  g=ng;fig={};clearS();ad=0;ir=0;
+  g=ng;fig={};clearS();ad=0;ir=0;syncHid();cancelAnimationFrame(animId);CAM={a:CAM0.a,b:CAM0.b};updateNext();
   $("msg").textContent="";$("solbox").innerHTML="";
   drawIso();drawViews();$("cnt").textContent=g.flat().reduce((a,b)=>a+b,0)+" cubos";
 }
-$("new").onclick=fresh;$("lvl").onchange=fresh;
+$("new").onclick=()=>{if(!puedeSiguiente()){toast("Primero intenta esta figura: pulsa Comprobar.");return}fresh()};
+$("lvl").onchange=()=>{
+  if(key==="facil"&&!puedeSiguiente()&&$("lvl").value!=="facil"){$("lvl").value="facil";toast("Primero intenta esta figura: pulsa Comprobar.");return}
+  fresh();
+};
 $("hid").onchange=()=>{$("msg").textContent="";drawViews();if($("solbox").innerHTML)drawSol()};
-$("rl").onclick=()=>{ir=(ir+3)%4;drawIso()};
-$("rr").onclick=()=>{ir=(ir+1)%4;drawIso()};
 $("side").onchange=()=>{if(!fig.solved)S.P={cells:new Set(),ed:new Set(),hd:new Set()};$("msg").textContent="";drawIso();drawViews();if($("solbox").innerHTML)drawSol()};
 
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
