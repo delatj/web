@@ -196,12 +196,12 @@
     <div class="card-seleccion">
       <h2>🛸 Dron Duel - Test Evaluativo</h2>
       <p>Selecciona el bloque temático sobre el que responderás cada 5 puntos logrados en la pista:</p>
-      <button class="btn-criterio" style="background: var(--criterio-13);" onclick="seleccionarCriterio(&#39;13&#39;, &#39;Criterio 1.3 (Tec y digital)/ 6.1 a 6.4 (Comput)&#39;, &#39;var(--criterio-13)&#39;)">Criterio 1.3 (Tec y digital)/ 6.1 a 6.4 (Comput): Protección, Salud Personal y Ética Digital</button>
-      <button class="btn-criterio" style="background: var(--criterio-61);" onclick="seleccionarCriterio(&#39;61&#39;, &#39;Criterio 6.1 (Tec y digit)/ 1.1 (Comput)&#39;, &#39;var(--criterio-61)&#39;)">Criterio 6.1 (Tec y digit)/ 1.1 (Comput): Componentes, Redes y Seguridad Operativa</button>
-      <button class="btn-criterio" style="background: var(--criterio-42);" onclick="seleccionarCriterio(&#39;42&#39;, &#39;Criterio 4.2 (Digital)&#39;, &#39;var(--criterio-42)&#39;)">Criterio 4.2 (Digital): Administración Digital, Comercio Electrónico y Brecha Social</button>
-      <button class="btn-criterio" style="background: var(--criterio-43);" onclick="seleccionarCriterio(&#39;43&#39;, &#39;Criterio 4.3 (Digital)&#39;, &#39;var(--criterio-43)&#39;)">Criterio 4.3 (Digital): Libertad de Expresión, Medios Digitales y Análisis Crítico</button>
-      <button class="btn-criterio" style="background: var(--criterio-44);" onclick="seleccionarCriterio(&#39;44&#39;, &#39;Criterio 4.4 / 6.1 (4º ESO)&#39;, &#39;var(--criterio-44)&#39;)">Criterio 4.4 (Digitalización)/ 6.1 (Tecnología): Sostenibilidad y Accesibilidad Técnica y Digital</button>
-      <button class="btn-criterio" style="background: var(--criterio-todos);" onclick="seleccionarCriterio(&#39;todos&#39;, &#39;Todos los Criterios Mezclados&#39;, &#39;var(--criterio-todos)&#39;)">🔀 Todos los Criterios Mezclados</button>
+      <button class="btn-criterio" style="background: var(--criterio-13);" onclick="seleccionarCriterio('13', 'Criterio 1.3 (Tec y digital)/ 6.1 a 6.4 (Comput)', 'var(--criterio-13)')">Criterio 1.3 (Tec y digital)/ 6.1 a 6.4 (Comput): Protección, Salud Personal y Ética Digital</button>
+      <button class="btn-criterio" style="background: var(--criterio-61);" onclick="seleccionarCriterio('61', 'Criterio 6.1 (Tec y digit)/ 1.1 (Comput)', 'var(--criterio-61)')">Criterio 6.1 (Tec y digit)/ 1.1 (Comput): Componentes, Redes y Seguridad Operativa</button>
+      <button class="btn-criterio" style="background: var(--criterio-42);" onclick="seleccionarCriterio('42', 'Criterio 4.2 (Digital)', 'var(--criterio-42)')">Criterio 4.2 (Digital): Administración Digital, Comercio Electrónico y Brecha Social</button>
+      <button class="btn-criterio" style="background: var(--criterio-43);" onclick="seleccionarCriterio('43', 'Criterio 4.3 (Digital)', 'var(--criterio-43)')">Criterio 4.3 (Digital): Libertad de Expresión, Medios Digitales y Análisis Crítico</button>
+      <button class="btn-criterio" style="background: var(--criterio-44);" onclick="seleccionarCriterio('44', 'Criterio 4.4 / 6.1 (4º ESO)', 'var(--criterio-44)')">Criterio 4.4 (Digitalización)/ 6.1 (Tecnología): Sostenibilidad y Accesibilidad Técnica y Digital</button>
+      <button class="btn-criterio" style="background: var(--criterio-todos);" onclick="seleccionarCriterio('todos', 'Todos los Criterios Mezclados', 'var(--criterio-todos)')">🔀 Todos los Criterios Mezclados</button>
     </div>
   </div>
 
@@ -219,9 +219,6 @@
         <input type="text" id="name2-first" autocomplete="off" placeholder="Nombre. Ej: Marcos"><br>
         <input type="text" id="name2-last" autocomplete="off" placeholder="Apellidos. Ej: Díaz Ruiz">
       </div>
-      <label style="display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; margin:8px 0;">
-        <input type="checkbox" id="solo-check" onchange="toggleSolo()">
-      </label>
       <input type="text" id="student-group" autocomplete="off" placeholder="Nombre profesor. Ej: Eduardo">
       <div id="team-error"></div>
       <button onclick="startGame()" style="margin-top:15px; padding:15px 40px; background:var(--primary); color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">INICIAR</button>
@@ -441,33 +438,19 @@
     function cleanName(v) { return v.trim().replace(/\s+/g, ' '); }
     const getVal = id => cleanName(document.getElementById(id).value);
 
-    let soloMode = false;
-
-    function toggleSolo() {
-      const solo = document.getElementById('solo-check').checked;
-      ['name2-first', 'name2-last'].forEach(id => {
-        const el = document.getElementById(id);
-        el.disabled = solo;
-        if (solo) el.value = '';
-      });
-    }
-
     function startGame() {
-      soloMode = document.getElementById('solo-check').checked;
       const err = document.getElementById('team-error');
       const msgs = [];
       if (getVal('name1-first').length < 2) msgs.push('Escribe el nombre del alumno/a 1.');
       if (getVal('name1-last').length < 2) msgs.push('Escribe los apellidos del alumno/a 1.');
-      if (!soloMode) {
-        if (getVal('name2-first').length < 2) msgs.push('Escribe el nombre del alumno/a 2 (o marca «Un único jugador»).');
-        if (getVal('name2-last').length < 2) msgs.push('Escribe los apellidos del alumno/a 2 (o marca «Un único jugador»).');
-      }
+      if (getVal('name2-first').length < 2) msgs.push('Escribe el nombre del alumno/a 2.');
+      if (getVal('name2-last').length < 2) msgs.push('Escribe los apellidos del alumno/a 2.');
       if (!getVal('student-group')) msgs.push('Indica el nombre del profesor.');
       if (msgs.length) { err.innerHTML = msgs.join('<br>'); return; }
       err.innerHTML = '';
 
       state.p1.name = getVal('name1-first') + ' ' + getVal('name1-last');
-      state.p2.name = soloMode ? 'Jugador 2' : getVal('name2-first') + ' ' + getVal('name2-last');
+      state.p2.name = getVal('name2-first') + ' ' + getVal('name2-last');
       document.getElementById('label-n1').innerText = state.p1.name;
       document.getElementById('label-n2').innerText = state.p2.name;
       
@@ -723,9 +706,10 @@
         };
       };
 
-      const regs = [crear(state.p1.name, state.p1.score)];
-      if (!soloMode) regs.push(crear(state.p2.name, state.p2.score));
-      return regs;
+      return [
+        crear(state.p1.name, state.p1.score),
+        crear(state.p2.name, state.p2.score)
+      ];
     }
 
     async function enviarResultados() {

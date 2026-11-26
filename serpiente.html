@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
+<!-- saved from url=(0043)https://delatj.github.io/web/serpiente.html -->
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cyber Snake - Certificado de Captura</title>
     <style>
@@ -115,10 +115,6 @@
                 <input type="text" id="p2-last" autocomplete="off" placeholder="Apellidos. Ej: Díaz Ruiz">
             </div>
 
-            <label style="display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; margin:10px 0;">
-                <input type="checkbox" id="solo-check" style="width:auto; margin:0; padding:0;" onchange="toggleSolo()">
-            </label>
-
             <input type="text" id="student-group" autocomplete="off" placeholder="Nombre del profesor. Ej: Eduardo">
             <div id="team-error"></div>
 
@@ -196,24 +192,12 @@
     let games = [];
     let player1Name = "";
     let player2Name = "";
-    let soloMode = false;
     let sendingNow = false;
     let lockTimer = null;
     let pendingRecords = null;
 
     function cleanName(v) { return v.trim().replace(/\s+/g, ' '); }
     const getVal = id => cleanName(document.getElementById(id).value);
-
-    function toggleSolo() {
-        soloMode = document.getElementById('solo-check').checked;
-        const p2Card = document.getElementById('p2-card');
-        ['p2-first', 'p2-last'].forEach(id => {
-            const el = document.getElementById(id);
-            el.disabled = soloMode;
-            if (soloMode) el.value = '';
-        });
-        p2Card.style.opacity = soloMode ? '0.4' : '1';
-    }
 
     class SnakeGame {
         constructor(index, canvasId, scoreId, overlayId, areaId, nameId, color, startPos, dir) {
@@ -371,18 +355,13 @@
     }
 
     function setupPlayers() {
-        soloMode = document.getElementById('solo-check').checked;
         const err = document.getElementById('team-error');
         const msgs = [];
 
         if (getVal('p1-first').length < 2) msgs.push('Escribe el nombre del jugador 1.');
         if (getVal('p1-last').length < 2) msgs.push('Escribe los apellidos del jugador 1.');
-
-        if (!soloMode) {
-            if (getVal('p2-first').length < 2) msgs.push('Escribe el nombre del jugador 2 (o marca «Un único jugador»).');
-            if (getVal('p2-last').length < 2) msgs.push('Escribe los apellidos del jugador 2 (o marca «Un único jugador»).');
-        }
-
+        if (getVal('p2-first').length < 2) msgs.push('Escribe el nombre del jugador 2.');
+        if (getVal('p2-last').length < 2) msgs.push('Escribe los apellidos del jugador 2.');
         if (!getVal('student-group')) msgs.push('Indica el nombre del profesor.');
 
         if (msgs.length) {
@@ -392,25 +371,20 @@
         err.innerHTML = '';
 
         player1Name = getVal('p1-first') + ' ' + getVal('p1-last');
-        player2Name = soloMode ? '' : getVal('p2-first') + ' ' + getVal('p2-last');
+        player2Name = getVal('p2-first') + ' ' + getVal('p2-last');
 
         document.getElementById('lobby').style.display = 'none';
         
         games = [
-            new SnakeGame(0, 'can-1', 'score-1', 'overlay-1', 'area-1', 'name-1', '#3498db', {x:2,y:10}, {x:1,y:0})
+            new SnakeGame(0, 'can-1', 'score-1', 'overlay-1', 'area-1', 'name-1', '#3498db', {x:2,y:10}, {x:1,y:0}),
+            new SnakeGame(1, 'can-2', 'score-2', 'overlay-2', 'area-2', 'name-2', '#e91e63', {x:17,y:10}, {x:-1,y:0})
         ];
 
         games[0].originalName = player1Name;
         games[0].nameEl.innerText = player1Name;
 
-        if (!soloMode) {
-            const p2Game = new SnakeGame(1, 'can-2', 'score-2', 'overlay-2', 'area-2', 'name-2', '#e91e63', {x:17,y:10}, {x:-1,y:0});
-            p2Game.originalName = player2Name;
-            p2Game.nameEl.innerText = player2Name;
-            games.push(p2Game);
-        } else {
-            document.getElementById('area-2').style.display = 'none';
-        }
+        games[1].originalName = player2Name;
+        games[1].nameEl.innerText = player2Name;
         
         requestAnimationFrame(loop);
     }
@@ -436,7 +410,7 @@
             e.preventDefault();
         }
 
-        if (!soloMode && games[1]) {
+        if (games[1]) {
             if (e.key === 'ArrowLeft') {
                 games[1].nextDir = turnRelative(games[1].dir, 'left');
                 e.preventDefault();
@@ -518,11 +492,10 @@
             };
         };
 
-        const recs = [make(player1Name, games[0].score)];
-        if (!soloMode && games[1]) {
-            recs.push(make(player2Name, games[1].score));
-        }
-        return recs;
+        return [
+            make(player1Name, games[0].score),
+            make(player2Name, games[1].score)
+        ];
     }
 
     async function sendResults() {
@@ -556,5 +529,6 @@
     }
 </script>
 
-</body>
-</html>
+
+</body></html>
+```[cite: 5]

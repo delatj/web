@@ -379,10 +379,6 @@
         <input type="text" id="p2-last" autocomplete="off" placeholder="Apellidos. Ej: Díaz Ruiz">
       </div>
       
-      <label style="display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; margin:10px 0;">
-        <input type="checkbox" id="solo-check" style="width:auto; margin:0; padding:0;" onchange="toggleSolo()">
-      </label>
-      
       <input type="text" id="student-group" autocomplete="off" placeholder="Nombre profesor. Ej: Eduardo">
       <div id="team-error"></div>
       
@@ -497,7 +493,6 @@
 
     let player1Name = "";
     let player2Name = "";
-    let soloMode = false;
     let player1Game, player2Game;
 
     let isQuestionActive = false;
@@ -547,38 +542,16 @@
     function cleanName(v) { return v.trim().replace(/\s+/g, ' '); }
     const getVal = id => cleanName(document.getElementById(id).value);
 
-    function toggleSolo() {
-      soloMode = document.getElementById('solo-check').checked;
-      const p2Card = document.getElementById('p2-card');
-      const p2Controls = document.getElementById('controls-player2');
-      const p2Container = document.getElementById('player2-container');
-      
-      ['p2-first', 'p2-last'].forEach(id => {
-        const el = document.getElementById(id);
-        el.disabled = soloMode;
-        if (soloMode) el.value = '';
-      });
-
-      p2Card.style.opacity = soloMode ? '0.4' : '1';
-      p2Controls.style.display = soloMode ? 'none' : 'block';
-      p2Container.style.display = soloMode ? 'none' : 'block';
-    }
-
     startGameButton.addEventListener('click', startGame);
     
     function startGame() {
-      soloMode = document.getElementById('solo-check').checked;
       const err = document.getElementById('team-error');
       const msgs = [];
       
       if (getVal('p1-first').length < 2) msgs.push('Escribe el nombre del jugador 1.');
       if (getVal('p1-last').length < 2) msgs.push('Escribe los apellidos del jugador 1.');
-      
-      if (!soloMode) {
-        if (getVal('p2-first').length < 2) msgs.push('Escribe el nombre del jugador 2 (o marca «Un único jugador»).');
-        if (getVal('p2-last').length < 2) msgs.push('Escribe los apellidos del jugador 2 (o marca «Un único jugador»).');
-      }
-      
+      if (getVal('p2-first').length < 2) msgs.push('Escribe el nombre del jugador 2.');
+      if (getVal('p2-last').length < 2) msgs.push('Escribe los apellidos del jugador 2.');
       if (!getVal('student-group')) msgs.push('Indica nombre profesor.');
       
       if (msgs.length) { 
@@ -588,7 +561,7 @@
       err.innerHTML = '';
 
       player1Name = getVal('p1-first') + ' ' + getVal('p1-last');
-      player2Name = soloMode ? '' : getVal('p2-first') + ' ' + getVal('p2-last');
+      player2Name = getVal('p2-first') + ' ' + getVal('p2-last');
       
       playerNamesModal.style.display = 'none';
       gameArea.style.display = 'flex';
@@ -596,9 +569,7 @@
       gameInstructions.style.display = 'block';
       
       document.getElementById('player1-name').textContent = player1Name;
-      if (!soloMode) {
-        document.getElementById('player2-name').textContent = player2Name;
-      }
+      document.getElementById('player2-name').textContent = player2Name;
       
       initializeGames();
     }
@@ -983,10 +954,8 @@
     function initializeGames() {
       player1Game = new PlayerGame('game1', 'score1', 'message1', 'blocksCount1', 
                                    'player1-container', 'coordX1', 'coordY1', 1, player1Name);
-      if (!soloMode) {
-        player2Game = new PlayerGame('game2', 'score2', 'message2', 'blocksCount2', 
-                                     'player2-container', 'coordX2', 'coordY2', 2, player2Name);
-      }
+      player2Game = new PlayerGame('game2', 'score2', 'message2', 'blocksCount2', 
+                                   'player2-container', 'coordX2', 'coordY2', 2, player2Name);
     }
 
     /* ====== ENVÍO DE RESULTADOS A LA HOJA DE CÁLCULO ====== */
@@ -1060,11 +1029,10 @@
         };
       };
 
-      const recs = [make(player1Name, player1Game.score)];
-      if (!soloMode && player2Game) {
-        recs.push(make(player2Name, player2Game.score));
-      }
-      return recs;
+      return [
+        make(player1Name, player1Game.score),
+        make(player2Name, player2Game.score)
+      ];
     }
 
     async function sendResults() {
@@ -1108,14 +1076,11 @@
       else if (key === 'w') { player1Game.adjustY(1); e.preventDefault(); } 
       else if (key === 's') { player1Game.adjustY(-1); e.preventDefault(); } 
       else if (key === 'e') { player1Game.launch(); e.preventDefault(); }
-      
-      if (!soloMode && player2Game) {
-        if (key === 'i') { player2Game.adjustX(1); e.preventDefault(); } 
-        else if (key === 'k') { player2Game.adjustX(-1); e.preventDefault(); } 
-        else if (key === 'o') { player2Game.adjustY(1); e.preventDefault(); } 
-        else if (key === 'l') { player2Game.adjustY(-1); e.preventDefault(); } 
-        else if (key === 'p') { player2Game.launch(); e.preventDefault(); }
-      }
+      else if (key === 'i') { player2Game.adjustX(1); e.preventDefault(); } 
+      else if (key === 'k') { player2Game.adjustX(-1); e.preventDefault(); } 
+      else if (key === 'o') { player2Game.adjustY(1); e.preventDefault(); } 
+      else if (key === 'l') { player2Game.adjustY(-1); e.preventDefault(); } 
+      else if (key === 'p') { player2Game.launch(); e.preventDefault(); }
     });
   </script>
 

@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Donkey Kong - 2 Jugadores</title>
-    <!-- p5.js Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+    <!-- p5.js Library (con respaldo local si no hay conexión) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js" onerror="this.onerror=null;this.src='./monkey2_files/p5.min.js.descarga';"></script>
     <style>
         /* Reset total para eliminar cualquier espacio superior o lateral */
         * {
@@ -249,12 +249,9 @@
                 <input type="text" id="p2-first" autocomplete="off" placeholder="Nombre. Ej: Marcos"><br>
                 <input type="text" id="p2-last" autocomplete="off" placeholder="Apellidos. Ej: Díaz Ruiz">
             </div>
-            <label style="display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; margin:6px 0; font-size: 13px;">
-                <input type="checkbox" id="solo-check" style="width:auto; margin:0;" onchange="toggleSolo()">
-            </label>
             <input type="text" id="student-group" autocomplete="off" placeholder="Nombre del profesor. Ej: Eduardo">
             <div id="team-error"></div>
-            <button id="start-game">Comenzar Juego</button>
+            <button id="start-game" type="button">Comenzar Juego</button>
         </div>
     </div>
 
@@ -363,7 +360,6 @@
         function setup() {
             let canvas = createCanvas(700, 450);
             canvas.parent('game-area');
-            document.getElementById('start-game').addEventListener('click', startGame);
             generateRandomLadders();
         }
 
@@ -372,7 +368,6 @@
         const BLOQUEO_ENVIO_MS = 5 * 60 * 1000;
 
         let gameStarted = false;
-        let soloMode = false;
         let sendingNow = false;
         let lockTimer = null;
         let pendingRecords = null;
@@ -380,35 +375,23 @@
         function cleanName(v) { return v.trim().replace(/\s+/g, ' '); }
         const getVal = id => cleanName(document.getElementById(id).value);
 
-        function toggleSolo() {
-            const solo = document.getElementById('solo-check').checked;
-            ['p2-first', 'p2-last'].forEach(id => {
-                const el = document.getElementById(id);
-                el.disabled = solo;
-                if (solo) el.value = '';
-            });
-        }
-
         function startGame() {
-            soloMode = document.getElementById('solo-check').checked;
             const err = document.getElementById('team-error');
             const msgs = [];
             if (getVal('p1-first').length < 2) msgs.push('Escribe el nombre del jugador 1.');
             if (getVal('p1-last').length < 2) msgs.push('Escribe los apellidos del jugador 1.');
-            if (!soloMode) {
-                if (getVal('p2-first').length < 2) msgs.push('Escribe el nombre del jugador 2 (o marca «Un único jugador»).');
-                if (getVal('p2-last').length < 2) msgs.push('Escribe los apellidos del jugador 2 (o marca «Un único jugador»).');
-            }
+            if (getVal('p2-first').length < 2) msgs.push('Escribe el nombre del jugador 2.');
+            if (getVal('p2-last').length < 2) msgs.push('Escribe los apellidos del jugador 2.');
             if (!getVal('student-group')) msgs.push('Indica el nombre del profesor.');
             if (msgs.length) { err.innerHTML = msgs.join('<br>'); return; }
             err.innerHTML = '';
 
             player1Name = getVal('p1-first') + ' ' + getVal('p1-last');
-            player2Name = soloMode ? '' : getVal('p2-first') + ' ' + getVal('p2-last');
+            player2Name = getVal('p2-first') + ' ' + getVal('p2-last');
             gameStarted = true;
             
             document.getElementById('label1').innerText = player1Name;
-            document.getElementById('label2').innerText = soloMode ? 'Jugador 2' : player2Name;
+            document.getElementById('label2').innerText = player2Name;
             
             document.getElementById('player-names-modal').style.display = 'none';
             
@@ -437,8 +420,10 @@
             generateRandomLadders();
         }
 
+        document.getElementById('start-game').addEventListener('click', startGame);
+
         function draw() {
-            // Fondo coloreado según los puntos de cada jugador en su mitad correspondientes
+            // Fondo coloreado según los puntos de cada jugador en su mitad correspondiente
             noStroke();
             fill(zoneColor1);
             rect(0, 0, width / 2, height);
@@ -738,9 +723,10 @@
                 };
             };
 
-            const recs = [make(player1Name, mono1.puntos)];
-            if (!soloMode) recs.push(make(player2Name, mono2.puntos));
-            return recs;
+            return [
+                make(player1Name, mono1.puntos),
+                make(player2Name, mono2.puntos)
+            ];
         }
 
         async function sendResults() {
@@ -784,3 +770,4 @@
     </script>
 </body>
 </html>
+```[cite: 7]
